@@ -1,20 +1,19 @@
-package org.ipan.nrgyrent.controller;
+package org.ipan.nrgyrent.service;
 
 import jakarta.persistence.EntityManager;
 import lombok.AllArgsConstructor;
 import org.apache.commons.lang3.NotImplementedException;
 import org.ipan.nrgyrent.commands.userwallet.AddOrUpdateUserWalletCommand;
 import org.ipan.nrgyrent.commands.userwallet.DeleteUserWalletCommand;
+import org.ipan.nrgyrent.model.AppUser;
 import org.ipan.nrgyrent.model.UserWallet;
 import org.ipan.nrgyrent.model.repository.UserWalletRepo;
-import org.ipan.nrgyrent.security.CurrentUserProvider;
 import org.springframework.beans.factory.annotation.Lookup;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -23,34 +22,30 @@ public class WalletService {
     private UserWalletRepo userWalletRepo;
 
     @Transactional
-    public void createWallet(AddOrUpdateUserWalletCommand command) {
+    public UserWallet createWallet(AddOrUpdateUserWalletCommand command) {
+        EntityManager em = getEntityManager();
+
+        List<UserWallet> alreadyPresent = userWalletRepo.findByUserTelegramIdAndAddress(command.getUserId(), command.getWalletAddress());
+        if (!alreadyPresent.isEmpty()) {
+            throw new IllegalArgumentException("Wallet already exists");
+        }
+
+        AppUser user = em.getReference(AppUser.class, command.getUserId());
+
         UserWallet userWallet = new UserWallet();
-        userWallet.setWalletAddress(command.getWalletAddress());
+        userWallet.setAddress(command.getWalletAddress());
         userWallet.setCreatedAt(Instant.now());
+        userWallet.setUser(user);
 
-        getEntityManager().persist(userWallet);
-    }
+        em.persist(userWallet);
 
-    @PutMapping
-    @Transactional(readOnly = true)
-    public void updateWallet(AddOrUpdateUserWalletCommand command) {
-    }
-
-    @DeleteMapping("/{walletId}")
-    @Transactional(readOnly = true)
-    public void deleteWallet(DeleteUserWalletCommand command) {
-    }
-
-    @PostMapping("/reorder")
-    @Transactional(readOnly = true)
-    public void reorderWallets(List<Long> walletIds) {
+        return userWallet;
     }
 
     @GetMapping
     @Transactional(readOnly = true)
-    public List<AddOrUpdateUserWalletCommand> getWallets() {
-        List<UserWallet> userWallets = userWalletRepo.findAll();
-        return new ArrayList<>();
+    public List<UserWallet> getWallets(Long userId) {
+        return userWalletRepo.findByUserTelegramId(userId);
     }
 
     @Lookup

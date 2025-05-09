@@ -8,17 +8,17 @@ import jakarta.persistence.OneToOne;
 import lombok.Getter;
 import lombok.Setter;
 
-/*@Entity
+@Entity
 @Getter
 @Setter
 public class AppUser {
     @Id
     private Long telegramId;
 
-    @OneToOne
-    private DepositWallet depositWallet;
+//    @OneToOne
+//    private DepositWallet depositWallet;
 
     private boolean isActive;
 
     private Instant createdAt;
-}*/
+}

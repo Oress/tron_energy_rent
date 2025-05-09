@@ -2,9 +2,13 @@ package org.ipan.nrgyrent.telegram;
 
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import org.ipan.nrgyrent.commands.users.CreateUserCommand;
 import org.ipan.nrgyrent.commands.userwallet.AddOrUpdateUserWalletCommand;
-import org.ipan.nrgyrent.controller.WalletService;
+import org.ipan.nrgyrent.service.UserService;
+import org.ipan.nrgyrent.service.WalletService;
 import org.ipan.nrgyrent.itrx.ItrxService;
+import org.ipan.nrgyrent.model.UserWallet;
 import org.ipan.nrgyrent.telegram.utils.WalletTools;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.retry.annotation.Retryable;
@@ -22,11 +26,13 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKe
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
 
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 // TODO: transtions
 // TODO: caching state
 // TODO: persisting state
+@Slf4j
 @Component
 @AllArgsConstructor
 public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
@@ -34,6 +40,7 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
 
     private TelegramClient tgClient;
     private WalletService walletService;
+    private UserService userService;
     private ItrxService itrxService;
 
     private final ConcurrentHashMap<Long, UserState> userStateMap = new ConcurrentHashMap<>();
@@ -49,12 +56,14 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
         Long userId = from.getId();
         UserState userState = initUserState(userId);
 
+        handleStartState(userState, update);
+
         switch (userState.getCurrentState()) {
-            case START:
-                handleStartState(userState, update);
-                break;
             case MAIN_MENU:
                 handleMainMenu(userState, update);
+                break;
+            case WALLETS:
+                handleWalletsState(userState, update);
                 break;
             case ADD_WALLETS:
                 handleAddWalletsState(userState, update);
@@ -70,13 +79,9 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
         CallbackQuery callbackQuery = update.getCallbackQuery();
 
         if (message != null && message.hasText()) {
-            String text = message.getText();
-            System.out.println("Message text: " + text);
             deleteMessage(message);
         } else if (callbackQuery != null) {
             String data = callbackQuery.getData();
-
-            System.out.println("Callback query data: " + data);
 
             EditMessageText.builder().replyMarkup(InlineKeyboardMarkup.builder().build());
             if (InlineMenuCallbacks.TO_MAIN_MENU.equals(data)) {
@@ -90,15 +95,15 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
         CallbackQuery callbackQuery = update.getCallbackQuery();
         if (callbackQuery != null) {
             // Use callbackQuery.getData() to determine the wallet selected
-            String data = callbackQuery.getData();
-            System.out.println("Callback query data: " + data);
+            String walletAddress = callbackQuery.getData();
+            if (WalletTools.isValidTronAddress(walletAddress)) {
+                itrxService.placeOrder(walletAddress);
+            }
         }
-
 
         Message message = update.getMessage();
         if (message != null && message.hasText()) {
             String text = message.getText();
-//            deleteMessage(message);
             if (WalletTools.isValidTronAddress(text)) {
                 itrxService.placeOrder(text);
             } else {
@@ -123,9 +128,17 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
 //                sendDeposit(callbackQuery);
                 userState.setCurrentState(States.DEPOSIT);
             } else if (InlineMenuCallbacks.WALLETS.equals(data)) {
-                updMenuToWalletsMenu(callbackQuery);
+                updMenuToWalletsMenu(userState, callbackQuery);
                 userState.setCurrentState(States.WALLETS);
-            } else if (InlineMenuCallbacks.ADD_WALLETS.equals(data)) {
+            }
+        }
+    }
+
+    private void handleWalletsState(UserState userState, Update update) {
+        CallbackQuery callbackQuery = update.getCallbackQuery();
+
+        if (callbackQuery != null) {
+            if (InlineMenuCallbacks.ADD_WALLETS.equals(callbackQuery.getData())) {
                 updMenuToAddWalletsMenu(callbackQuery);
                 userState.setCurrentState(States.ADD_WALLETS);
             }
@@ -134,18 +147,24 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
 
     private void handleAddWalletsState(UserState userState, Update update) {
         Message message = update.getMessage();
+        if (message == null || !message.hasText()) {
+            return;
+        }
+
         String text = message.getText();
 
         if (WalletTools.isValidTronAddress(text)) {
-            // assuming valid address
             walletService.createWallet(
                     AddOrUpdateUserWalletCommand.builder()
                             .walletAddress(text)
+                            .userId(userState.getTelegramId())
                             .build()
             );
-            deleteMessage(message);
-            updMenuToAddWalletSuccessMenu(userState, update.getCallbackQuery());
+//            deleteMessage(message);
+            userState.setCurrentState(States.MAIN_MENU);
+            updMenuToAddWalletSuccessMenu(userState);
         }
+        // TODO: send validation message to user
     }
 
     private void handleStartState(UserState userState, Update update) {
@@ -155,6 +174,11 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
 
             if (START.equals(text)) {
                 sendMainMenu(userState, update.getMessage().getChatId());
+                userService.createUser(
+                        CreateUserCommand.builder()
+                                .telegramId(userState.getTelegramId())
+                                .build()
+                );
             }
         }
     }
@@ -219,12 +243,13 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
     @Retryable
     @SneakyThrows
     private void updMenuToTransaction65kMenu(CallbackQuery callbackQuery) {
+        List<UserWallet> wallets = walletService.getWallets(callbackQuery.getFrom().getId());
         EditMessageText message = EditMessageText
                 .builder()
                 .chatId(callbackQuery.getMessage().getChatId())
                 .messageId(callbackQuery.getMessage().getMessageId())
                 .text(StaticLabels.MSG_TRANSACTION_65K_TEXT)
-                .replyMarkup(getTransactionsMenuMarkup())
+                .replyMarkup(getTransactionsMenuMarkup(wallets))
                 .build();
         tgClient.execute(message);
     }
@@ -232,25 +257,30 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
     @Retryable
     @SneakyThrows
     private void updMenuToTransaction131kMenu(CallbackQuery callbackQuery) {
+        List<UserWallet> wallets = walletService.getWallets(callbackQuery.getFrom().getId());
         EditMessageText message = EditMessageText
                 .builder()
                 .chatId(callbackQuery.getMessage().getChatId())
                 .messageId(callbackQuery.getMessage().getMessageId())
                 .text(StaticLabels.MSG_TRANSACTION_131K_TEXT)
-                .replyMarkup(getTransactionsMenuMarkup())
+                .replyMarkup(getTransactionsMenuMarkup(wallets))
                 .build();
         tgClient.execute(message);
     }
 
     @Retryable
     @SneakyThrows
-    private void updMenuToWalletsMenu(CallbackQuery callbackQuery) {
+    private void updMenuToWalletsMenu(UserState userState, CallbackQuery callbackQuery) {
+        List<UserWallet> wallets = walletService.getWallets(userState.getTelegramId());
+
+        logger.info("Wallets: {}", wallets);
+
         EditMessageText message = EditMessageText
                 .builder()
                 .chatId(callbackQuery.getMessage().getChatId())
                 .messageId(callbackQuery.getMessage().getMessageId())
                 .text(StaticLabels.MSG_WALLETS)
-                .replyMarkup(getWalletsMenuMarkup())
+                .replyMarkup(getWalletsMenuMarkup(wallets))
                 .build();
         tgClient.execute(message);
     }
@@ -270,7 +300,7 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
 
     @Retryable
     @SneakyThrows
-    private void updMenuToAddWalletSuccessMenu(UserState userState, CallbackQuery callbackQuery) {
+    private void updMenuToAddWalletSuccessMenu(UserState userState) {
         EditMessageText message = EditMessageText
                 .builder()
                 .chatId(userState.getChatId())
@@ -281,7 +311,7 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
         tgClient.execute(message);
     }
 
-    private @NotNull UserState initUserState(Long userId) {
+    private UserState initUserState(Long userId) {
         return userStateMap.computeIfAbsent(userId, k -> {
             UserState newUserState = new UserState();
             newUserState.setTelegramId(userId);
@@ -329,28 +359,23 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
                 .build();
     }
 
-    private InlineKeyboardMarkup getTransactionsMenuMarkup() {
-        return InlineKeyboardMarkup
-                .builder()
-                .keyboardRow(
-                        new InlineKeyboardRow(
-                                InlineKeyboardButton
-                                        .builder()
-                                        .text("Wallet 1")
-                                        .callbackData("Wallet 1")
-                                        .build()
-                        )
-                )
-                .keyboardRow(
-                        new InlineKeyboardRow(
-                                InlineKeyboardButton
-                                        .builder()
-                                        .text("Wallet 2")
-                                        .callbackData("Wallet 2")
-                                        .build()
-                        )
-                )
-                .keyboardRow(
+    private InlineKeyboardMarkup getTransactionsMenuMarkup(List<UserWallet> wallets) {
+        List<InlineKeyboardRow> walletRows = wallets.stream().map(wallet -> {
+            InlineKeyboardRow row = new InlineKeyboardRow(
+                    InlineKeyboardButton
+                            .builder()
+                            .text(WalletTools.formatTronAddress(wallet.getAddress()))
+                            .callbackData(wallet.getAddress())
+                            .build()
+            );
+            return row;
+        }).toList();
+        InlineKeyboardMarkup.InlineKeyboardMarkupBuilder<?, ?> builder = InlineKeyboardMarkup
+                .builder();
+        walletRows.forEach(builder::keyboardRow);
+
+
+        return builder.keyboardRow(
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
@@ -363,8 +388,24 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
                 .build();
     }
 
-    private InlineKeyboardMarkup getWalletsMenuMarkup() {
-        return InlineKeyboardMarkup
+    private InlineKeyboardMarkup getWalletsMenuMarkup(List<UserWallet> wallets) {
+        List<InlineKeyboardRow> walletRows = wallets.stream().map(wallet -> {
+            InlineKeyboardRow row = new InlineKeyboardRow(
+                    InlineKeyboardButton
+                            .builder()
+                            .text(WalletTools.formatTronAddress(wallet.getAddress()))
+                            .callbackData(wallet.getId().toString())
+                            .build(),
+                    InlineKeyboardButton
+                            .builder()
+                            .text(StaticLabels.WLT_DELETE_WALLET)
+                            .callbackData("delete_wallet " + wallet.getId().toString())
+                            .build()
+            );
+            return row;
+        }).toList();
+
+        InlineKeyboardMarkup.InlineKeyboardMarkupBuilder<?, ?> builder = InlineKeyboardMarkup
                 .builder()
                 .keyboardRow(
                         new InlineKeyboardRow(
@@ -374,22 +415,10 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
                                         .callbackData(InlineMenuCallbacks.ADD_WALLETS)
                                         .build()
                         )
-                )
-                .keyboardRow(
-                        new InlineKeyboardRow(
-                                InlineKeyboardButton
-                                        .builder()
-                                        .text("Wallet 1")
-                                        .callbackData("Wallet 1")
-                                        .build(),
-                                InlineKeyboardButton
-                                        .builder()
-                                        .text(StaticLabels.WLT_DELETE_WALLET)
-                                        .callbackData("delete_wallet 1")
-                                        .build()
-                        )
-                )
-                .keyboardRow(
+                );
+        walletRows.forEach(builder::keyboardRow);
+
+        return builder.keyboardRow(
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
