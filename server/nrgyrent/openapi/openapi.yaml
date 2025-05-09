@@ -1,0 +1,156 @@
+openapi: 3.0.3
+info:
+  title: Tron Blockchain API
+  description: API for interacting with the Tron blockchain.
+  version: 1.0.0
+servers:
+  - url: https://api.trongrid.io
+    description: Mainnet API
+  - url: https://nile.trongrid.io
+    description: Testnet API
+paths:
+  /v1/accounts/{address}:
+    get:
+      tags:
+        - Account
+      summary: Get account information
+      description: Retrieve account details by address.
+      parameters:
+        - name: address
+          in: path
+          required: true
+          description: owner address in base58 or hex
+          schema:
+            type: string
+        - name: only_confirmed
+          in: query
+          required: false
+          description: true (If no param is specified, then only confirmed)
+          schema:
+            type: boolean
+        - name: only_unconfirmed
+          in: query
+          required: false
+          description: true (If no param is specified, then only confirmed)
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Account information retrieved successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  meta:
+                    type: object
+                    properties:
+                      at:
+                        type: integer
+                      page_size:
+                        type: integer
+        '400':
+          description: Invalid address format.
+
+  /wallet/getaccount:
+    get:
+      tags:
+        - Account
+      summary: Get account information
+      description: Retrieve account details by address.
+      parameters:
+        - name: address
+          in: query
+          required: true
+          description: The Tron account address (base58 format).
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Account information retrieved successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  address:
+                    type: string
+                    description: The account address.
+                  balance:
+                    type: integer
+                    description: The account balance in SUN (1 TRX = 1,000,000 SUN).
+        '400':
+          description: Invalid address format.
+components:
+  schemas:
+    CreateTransactionRequest:
+      type: object
+      properties:
+        extra_data:
+          type: string
+          description: Extra data to include in the transaction.
+        visible:
+          type: boolean
+          description: Whether the transaction is hex or base58.
+        to_address:
+          type: string
+          description: The recipient's address (base58 format).
+        owner_address:
+          type: string
+          description: The sender's address (base58 format).
+        amount:
+          type: integer
+          description: The amount to transfer in SUN.
+      required:
+        - to_address
+        - owner_address
+        - amount
+
+    RawData:
+      type: object
+      properties:
+        ref_block_bytes:
+          type: string
+        ref_block_hash:
+          type: string
+        expiration:
+          type: integer
+        data:
+          type: string
+        timestamp:
+          type: integer
+        fee_limit:
+          type: integer
+        contract:
+          type: array
+          items:
+            type: object
+            properties:
+              type_url:
+                type: string
+              parameter:
+                type: object
+                properties:
+                  value:
+                    type: string
+                  type_url:
+                    type: string
+
+    # https://developers.tron.network/docs/tron-protocol-transaction
+    Transaction:
+      type: object
+      properties:
+        visible:
+          type: boolean
+        txID:
+          type: string
+        raw_data_hex:
+          type: string
+        raw_data:
+          type: string
+        signature:
+          type: array
+          items:
+            type: string

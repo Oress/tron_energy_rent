@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: nrgyrent
+app:
+  trongrid:
+    base-url: ${APP_TRON_URL:"https://nile.trongrid.io"} # For mainnet, use https://api.trongrid.io
+  telegram:
+    bot:
+      token: ${TELEGRAM_BOT_TOKEN}

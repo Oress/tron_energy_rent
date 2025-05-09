@@ -1,0 +1,12 @@
+package org.ipan.nrgyrent.telegram;
+
+public enum States {
+    START,
+    MAIN_MENU,
+    DEPOSIT,
+    WALLETS,
+    ADD_WALLETS,
+    ADD_WALLETS_SUCCESS,
+    TRANSACTION_65k,
+    TRANSACTION_131k,
+}
