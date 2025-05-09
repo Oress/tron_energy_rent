@@ -7,6 +7,7 @@ public class InlineMenuCallbacks {
 
     public static final String WALLETS = "wallets";
     public static final String ADD_WALLETS = "add_wallet";
+    public static final String DELETE_WALLETS = "delete_wallet";
 
     public static final String TRANSACTION_65k = "transaction_65k";
     public static final String TRANSACTION_131k = "transaction_131k";

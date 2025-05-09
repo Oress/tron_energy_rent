@@ -48,6 +48,18 @@ public class WalletService {
         return userWalletRepo.findByUserTelegramId(userId);
     }
 
+    @Transactional
+    public void deleteWallet(DeleteUserWalletCommand command) {
+        EntityManager em = getEntityManager();
+
+        UserWallet userWallet = em.find(UserWallet.class, command.getWalletId());
+        if (userWallet == null) {
+            throw new IllegalArgumentException("Wallet not found");
+        }
+
+        em.remove(userWallet);
+    }
+
     @Lookup
     public EntityManager getEntityManager() {
         throw new NotImplementedException();

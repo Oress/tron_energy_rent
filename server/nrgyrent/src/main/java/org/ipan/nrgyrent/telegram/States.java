@@ -7,6 +7,7 @@ public enum States {
     WALLETS,
     ADD_WALLETS,
     ADD_WALLETS_SUCCESS,
+    DELETE_WALLETS_SUCCESS,
     TRANSACTION_65k,
     TRANSACTION_131k,
 }

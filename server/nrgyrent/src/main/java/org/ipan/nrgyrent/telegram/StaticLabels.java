@@ -28,6 +28,7 @@ public class StaticLabels {
 
     public static final String MSG_ADD_WALLET = "Отправьте адрес кошелька TRC-20, который вы хотите добавить";
     public static final String MSG_ADD_WALLET_SUCCESS = "✅ Кошелек успешно добавлен";
+    public static final String MSG_DELETE_WALLET_SUCCESS = "\uD83D\uDDD1\uFE0F Кошелек успешно удален";
 
 
     // Menu labels

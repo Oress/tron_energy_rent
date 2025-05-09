@@ -5,6 +5,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.ipan.nrgyrent.commands.users.CreateUserCommand;
 import org.ipan.nrgyrent.commands.userwallet.AddOrUpdateUserWalletCommand;
+import org.ipan.nrgyrent.commands.userwallet.DeleteUserWalletCommand;
 import org.ipan.nrgyrent.service.UserService;
 import org.ipan.nrgyrent.service.WalletService;
 import org.ipan.nrgyrent.itrx.ItrxService;
@@ -138,10 +139,17 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
         CallbackQuery callbackQuery = update.getCallbackQuery();
 
         if (callbackQuery != null) {
-            if (InlineMenuCallbacks.ADD_WALLETS.equals(callbackQuery.getData())) {
+            String data = callbackQuery.getData();
+            if (InlineMenuCallbacks.ADD_WALLETS.equals(data)) {
                 updMenuToAddWalletsMenu(callbackQuery);
                 userState.setCurrentState(States.ADD_WALLETS);
+            } else if (data.startsWith(InlineMenuCallbacks.DELETE_WALLETS)) {
+                String walletId = data.split(" ")[1];
+                walletService.deleteWallet(DeleteUserWalletCommand.builder().walletId(Long.parseLong(walletId)).build());
+                updMenuToDeleteWalletSuccessMenu(callbackQuery);
+                userState.setCurrentState(States.DELETE_WALLETS_SUCCESS);
             }
+
         }
     }
 
@@ -297,6 +305,20 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
                 .build();
         tgClient.execute(message);
     }
+
+    @Retryable
+    @SneakyThrows
+    private void updMenuToDeleteWalletSuccessMenu(CallbackQuery callbackQuery) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(callbackQuery.getMessage().getChatId())
+                .messageId(callbackQuery.getMessage().getMessageId())
+                .text(StaticLabels.MSG_DELETE_WALLET_SUCCESS)
+                .replyMarkup(getToMainMenuMarkup())
+                .build();
+        tgClient.execute(message);
+    }
+
 
     @Retryable
     @SneakyThrows
