@@ -2,6 +2,11 @@ spring:
   application:
     name: nrgyrent
 app:
+  itrx:
+    base-url: ${APP_ITRX_BASE_URL:"https://nile.itrx.io"} # For mainnet, use https://api.itrx.io
+    callback-url: ${APP_ITRX_CALLBACK_URL}
+    key: ${APP_ITRX_API_KEY}
+    secret: ${APP_ITRX_API_SECRET}
   trongrid:
     base-url: ${APP_TRON_URL:"https://nile.trongrid.io"} # For mainnet, use https://api.trongrid.io
   telegram:

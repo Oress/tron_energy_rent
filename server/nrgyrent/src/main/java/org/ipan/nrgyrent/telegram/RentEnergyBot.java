@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import org.ipan.nrgyrent.commands.userwallet.AddOrUpdateUserWalletCommand;
 import org.ipan.nrgyrent.controller.WalletService;
+import org.ipan.nrgyrent.itrx.ItrxService;
 import org.ipan.nrgyrent.telegram.utils.WalletTools;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.retry.annotation.Retryable;
@@ -20,7 +21,6 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMa
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
-import org.web3j.crypto.WalletUtils;
 
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -34,6 +34,7 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
 
     private TelegramClient tgClient;
     private WalletService walletService;
+    private ItrxService itrxService;
 
     private final ConcurrentHashMap<Long, UserState> userStateMap = new ConcurrentHashMap<>();
 
@@ -80,6 +81,7 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
             EditMessageText.builder().replyMarkup(InlineKeyboardMarkup.builder().build());
             if (InlineMenuCallbacks.TO_MAIN_MENU.equals(data)) {
                 updateMsgToMainMenu(callbackQuery);
+                userState.setCurrentState(States.MAIN_MENU);
             }
         }
     }
@@ -96,9 +98,9 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
         Message message = update.getMessage();
         if (message != null && message.hasText()) {
             String text = message.getText();
-            deleteMessage(message);
+//            deleteMessage(message);
             if (WalletTools.isValidTronAddress(text)) {
-                // send transaction
+                itrxService.placeOrder(text);
             } else {
                 // warn user
             }
