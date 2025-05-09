@@ -11,7 +11,6 @@ import org.ipan.nrgyrent.service.WalletService;
 import org.ipan.nrgyrent.itrx.ItrxService;
 import org.ipan.nrgyrent.model.UserWallet;
 import org.ipan.nrgyrent.telegram.utils.WalletTools;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.longpolling.util.LongPollingSingleThreadUpdateConsumer;
@@ -73,6 +72,7 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
                 handleTransaction65kState(userState, update);
                 break;
             case TRANSACTION_131k:
+                handleTransaction131kState(userState, update);
                 break;
         }
 
@@ -93,22 +93,36 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
     }
 
     private void handleTransaction65kState(UserState userState, Update update) {
+        handletTransactionState(userState, update, 65_000);
+    }
+
+    private void handleTransaction131kState(UserState userState, Update update) {
+        handletTransactionState(userState, update, 131_000);
+    }
+
+    private void handletTransactionState(UserState userState, Update update, Integer energyAmount) {
         CallbackQuery callbackQuery = update.getCallbackQuery();
         if (callbackQuery != null) {
             // Use callbackQuery.getData() to determine the wallet selected
             String walletAddress = callbackQuery.getData();
             if (WalletTools.isValidTronAddress(walletAddress)) {
-                itrxService.placeOrder(walletAddress);
+                itrxService.placeOrder(energyAmount, walletAddress);
+
+                // TODO: You can't just say "success" here, you need to check if the transaction was successful wait for callback
+                updMenuToTransactionSuccess(userState);
+                userState.setCurrentState(States.TRANSACTION_SUCCESS);
             }
         }
 
         Message message = update.getMessage();
         if (message != null && message.hasText()) {
-            String text = message.getText();
-            if (WalletTools.isValidTronAddress(text)) {
-                itrxService.placeOrder(text);
-            } else {
-                // warn user
+            String walletAddress = message.getText();
+            if (WalletTools.isValidTronAddress(walletAddress)) {
+                itrxService.placeOrder(energyAmount, walletAddress);
+
+                // TODO: You can't just say "success" here, you need to check if the transaction was successful wait for callback
+                updMenuToTransactionSuccess(userState);
+                userState.setCurrentState(States.TRANSACTION_SUCCESS);
             }
         }
     }
@@ -117,7 +131,6 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
         CallbackQuery callbackQuery = update.getCallbackQuery();
         if (callbackQuery != null) {
             String data = callbackQuery.getData();
-            System.out.println("Callback query data: " + data);
 
             if (InlineMenuCallbacks.TRANSACTION_65k.equals(data)) {
                 updMenuToTransaction65kMenu(callbackQuery);
@@ -261,6 +274,20 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
                 .build();
         tgClient.execute(message);
     }
+
+    @Retryable
+    @SneakyThrows
+    private void updMenuToTransactionSuccess(UserState userState) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
+                .text(StaticLabels.MSG_TRANSACTION_SUCCESS)
+                .replyMarkup(getToMainMenuMarkup())
+                .build();
+        tgClient.execute(message);
+    }
+
 
     @Retryable
     @SneakyThrows

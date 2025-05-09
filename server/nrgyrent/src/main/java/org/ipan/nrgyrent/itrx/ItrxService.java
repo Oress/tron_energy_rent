@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 public class ItrxService {
     private final RestClient restClient;
 
-    public void placeOrder(String receiveAddress) {
-        restClient.placeOrder(65_000, "1H", receiveAddress, "1234567890");
+    public void placeOrder(Integer energyAmount,String receiveAddress) {
+        restClient.placeOrder(energyAmount, "1H", receiveAddress, "1234567890");
     }
 }
