@@ -1,5 +1,6 @@
 package org.ipan.nrgyrent.domain.model;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 
 import jakarta.persistence.*;
@@ -16,8 +17,11 @@ public class AppUser {
     @Column(name = "telegram_id")
     private Long telegramId;
 
-//    @OneToOne
-//    private DepositWallet depositWallet;
+    @Column(name = "deposit_address")
+    private String depositAddress;
+
+    @Column(name = "trx_balance", precision = 19, scale = 6)
+    private BigDecimal trxBalance;
 
     private String role;
 

@@ -4,13 +4,34 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
 
+    <changeSet id="create table nrg_deposit_wallets" author="oress">
+        <createTable tableName="nrg_deposit_wallets">
+            <column name="base58_address" type="text">
+                <constraints primaryKey="true" nullable="true" unique="true"/>
+            </column>
+
+            <column name="private_key_enc" type="bytea"/>
+
+            <column name="created_at" type="TIMESTAMP"/>
+        </createTable>
+    </changeSet>
+
+
     <changeSet id="create table nrg_users" author="oress">
         <createTable tableName="nrg_users">
             <column name="telegram_id" type="bigint">
                 <constraints primaryKey="true" nullable="true" unique="true"/>
             </column>
 
-            <column name="role" type="text"/>
+            <column name="role" type="text" defaultValue="user">
+                <constraints nullable="false"/>
+            </column>
+            <column name="deposit_address" type="text">
+                <constraints nullable="false"/>
+            </column>
+            <column name="trx_balance" type="decimal(19,6)" defaultValue="0">
+                <constraints nullable="false"/>
+            </column>
 
             <column name="disabled" type="boolean" defaultValue="false">
                 <constraints nullable="false"/>
@@ -19,6 +40,12 @@
             <column name="created_at" type="TIMESTAMP"/>
             <column name="updated_at" type="TIMESTAMP"/>
         </createTable>
+
+        <addForeignKeyConstraint constraintName="fk_nrg_users_deposit_address"
+                                 baseTableName="nrg_users"
+                                 baseColumnNames="deposit_address"
+                                 referencedTableName="nrg_deposit_wallets"
+                                 referencedColumnNames="base58_address"/>
     </changeSet>
 
     <changeSet id="create table nrg_user_wallets" author="oress">
@@ -43,6 +70,8 @@
                                  referencedTableName="nrg_users"
                                  referencedColumnNames="telegram_id"/>
     </changeSet>
+
+
 
     <changeSet id="create table nrg_orders" author="oress">
         <createSequence sequenceName="nrg_order_seq"

@@ -42,6 +42,25 @@ public class WalletApi {
         return WalletApi.encode58Check(address);
     }
 
+    public static ECKey generatePrivateKeyForNewWallet() throws IOException {
+        SecureRandom secureRandom = Utils.getRandom();
+        int wordsNumber = 12;
+        try {
+            List<String> mnemonicWords = MnemonicUtils.generateMnemonic(secureRandom, wordsNumber);
+            byte[] priKey = MnemonicUtils.getPrivateKeyFromMnemonic(mnemonicWords);
+
+            ECKey ecKey = new ECKey(priKey, true);
+
+            Arrays.fill(priKey, (byte) 0);
+            for (int i = 0; i < mnemonicWords.size(); i++) {
+                mnemonicWords.set(i, null);
+            }
+            return ecKey;
+        } catch (Exception e) {
+            throw new IOException("Mnemonic generation failed", e);
+        }
+    }
+
     /**
      * Creates a new WalletApi with a random ECKey or no ECKey.
      */
