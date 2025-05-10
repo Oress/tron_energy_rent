@@ -5,7 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.ipan.nrgyrent.domain.model.UserWallet;
 import org.ipan.nrgyrent.domain.service.OrderService;
 import org.ipan.nrgyrent.domain.service.UserService;
-import org.ipan.nrgyrent.domain.service.WalletService;
+import org.ipan.nrgyrent.domain.service.UserWalletService;
 import org.ipan.nrgyrent.domain.service.commands.orders.AddOrUpdateOrderCommand;
 import org.ipan.nrgyrent.domain.service.commands.users.CreateUserCommand;
 import org.ipan.nrgyrent.domain.service.commands.userwallet.AddOrUpdateUserWalletCommand;
@@ -36,7 +36,7 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
 
     private TelegramState telegramState;
     private TelegramMessages telegramMessages;
-    private WalletService walletService;
+    private UserWalletService userWalletService;
     private UserService userService;
     private ItrxService itrxService;
     private OrderService orderService;
@@ -162,18 +162,18 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
             String data = callbackQuery.getData();
 
             if (InlineMenuCallbacks.TRANSACTION_65k.equals(data)) {
-                List<UserWallet> wallets = walletService.getWallets(userState.getTelegramId());
+                List<UserWallet> wallets = userWalletService.getWallets(userState.getTelegramId());
                 telegramMessages.updMenuToTransaction65kMenu(wallets, callbackQuery);
                 telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.TRANSACTION_65k));
             } else if (InlineMenuCallbacks.TRANSACTION_131k.equals(data)) {
-                List<UserWallet> wallets = walletService.getWallets(userState.getTelegramId());
+                List<UserWallet> wallets = userWalletService.getWallets(userState.getTelegramId());
                 telegramMessages.updMenuToTransaction131kMenu(wallets, callbackQuery);
                 telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.TRANSACTION_131k));
             } else if (InlineMenuCallbacks.DEPOSIT.equals(data)) {
 //                sendDeposit(callbackQuery);
                 telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.DEPOSIT));
             } else if (InlineMenuCallbacks.WALLETS.equals(data)) {
-                List<UserWallet> wallets = walletService.getWallets(userState.getTelegramId());
+                List<UserWallet> wallets = userWalletService.getWallets(userState.getTelegramId());
                 telegramMessages.updMenuToWalletsMenu(wallets, callbackQuery);
                 telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.WALLETS));
             }
@@ -190,7 +190,7 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
                 telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.ADD_WALLETS));
             } else if (data.startsWith(InlineMenuCallbacks.DELETE_WALLETS)) {
                 String walletId = data.split(" ")[1];
-                walletService.deleteWallet(DeleteUserWalletCommand.builder().walletId(Long.parseLong(walletId)).build());
+                userWalletService.deleteWallet(DeleteUserWalletCommand.builder().walletId(Long.parseLong(walletId)).build());
                 telegramMessages.updMenuToDeleteWalletSuccessMenu(callbackQuery);
                 telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.DELETE_WALLETS_SUCCESS));
             }
@@ -207,7 +207,7 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
         String text = message.getText();
 
         if (WalletTools.isValidTronAddress(text)) {
-            walletService.createWallet(
+            userWalletService.createWallet(
                     AddOrUpdateUserWalletCommand.builder()
                             .walletAddress(text)
                             .userId(userState.getTelegramId())

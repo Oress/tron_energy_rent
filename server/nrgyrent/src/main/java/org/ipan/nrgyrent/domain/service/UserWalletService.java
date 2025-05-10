@@ -18,7 +18,7 @@ import java.util.List;
 
 @Service
 @AllArgsConstructor
-public class WalletService {
+public class UserWalletService {
     private UserWalletRepo userWalletRepo;
 
     @Transactional
