@@ -2,6 +2,7 @@ package org.ipan.nrgyrent.telegram;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.ipan.nrgyrent.domain.model.AppUser;
 import org.ipan.nrgyrent.domain.model.UserWallet;
 import org.ipan.nrgyrent.domain.service.OrderService;
 import org.ipan.nrgyrent.domain.service.UserService;
@@ -73,6 +74,9 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
             case TRANSACTION_131k:
                 handleTransaction131kState(userState, update);
                 break;
+            case DEPOSIT:
+                handleDepositState(userState, update);
+                break;
         }
 
         Message message = update.getMessage();
@@ -98,15 +102,33 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
         }
     }
 
+    private void handleDepositState(UserState userState, Update update) {
+        CallbackQuery callbackQuery = update.getCallbackQuery();
+
+        if (callbackQuery != null) {
+            String data = callbackQuery.getData();
+            if (InlineMenuCallbacks.ADD_WALLETS.equals(data)) {
+                telegramMessages.updMenuToAddWalletsMenu(callbackQuery);
+                telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.ADD_WALLETS));
+            } else if (data.startsWith(InlineMenuCallbacks.DELETE_WALLETS)) {
+                String walletId = data.split(" ")[1];
+                userWalletService.deleteWallet(DeleteUserWalletCommand.builder().walletId(Long.parseLong(walletId)).build());
+                telegramMessages.updMenuToDeleteWalletSuccessMenu(callbackQuery);
+                telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.DELETE_WALLETS_SUCCESS));
+            }
+        }
+    }
+
+
     private void handleTransaction65kState(UserState userState, Update update) {
-        handletTransactionState(userState, update, 65_000);
+        handleTransactionState(userState, update, 65_000);
     }
 
     private void handleTransaction131kState(UserState userState, Update update) {
-        handletTransactionState(userState, update, 131_000);
+        handleTransactionState(userState, update, 131_000);
     }
 
-    private void handletTransactionState(UserState userState, Update update, Integer energyAmount) {
+    private void handleTransactionState(UserState userState, Update update, Integer energyAmount) {
         CallbackQuery callbackQuery = update.getCallbackQuery();
         if (callbackQuery != null) {
             tryMakeTransaction(userState, energyAmount, callbackQuery.getData());
@@ -170,7 +192,8 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
                 telegramMessages.updMenuToTransaction131kMenu(wallets, callbackQuery);
                 telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.TRANSACTION_131k));
             } else if (InlineMenuCallbacks.DEPOSIT.equals(data)) {
-//                sendDeposit(callbackQuery);
+                AppUser user = userService.getById(userState.getTelegramId());
+                telegramMessages.updMenuToDepositsMenu(user, callbackQuery);
                 telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.DEPOSIT));
             } else if (InlineMenuCallbacks.WALLETS.equals(data)) {
                 List<UserWallet> wallets = userWalletService.getWallets(userState.getTelegramId());

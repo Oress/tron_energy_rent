@@ -1,5 +1,9 @@
 package org.ipan.nrgyrent.telegram;
 
+import org.ipan.nrgyrent.domain.model.AppUser;
+
+import java.text.DecimalFormat;
+
 public class StaticLabels {
     public static final String MSG_MAIN_MENU_TEXT = """
             ⚡ Приветствуем в нашем сервисе .... ⚡
@@ -60,14 +64,35 @@ public class StaticLabels {
 
     // Notifications labels
     // TODO: make it label accept params
-    public static final String NTFN_ORDER_SUCCESS= """
+    public static final String NTFN_ORDER_SUCCESS = """
             ✅ Транзакция успешно завершена
             Энергия была переведена на ваш кошелек
             """;
-    public static final String NTFN_ORDER_REFUNDED= """
+    public static final String NTFN_ORDER_REFUNDED = """
             ❌ Транзакция была отменена
             Средства были возвращены на ваш баланс
             """;
 
     public static final String OK = "OK";
+
+    private static DecimalFormat df = new DecimalFormat("# ###.#");
+    public static String getDepositMenuText(AppUser user) {
+        return """
+                💰 Ваш адресс депозита:
+                
+                `%s`
+                
+                💰 Баланс:
+                
+                *%s* TRX
+                
+                ❗️ Вы можете отправить только TRX сети TRC-20❗️
+                
+                ❗️ Минимальный депозит - 1 TRX❗️
+                
+                ⌛️ Среднее время зачисления депозита - 2 минуты."""
+                .formatted(
+                        user.getDepositAddress(),
+                        df.format(user.getTrxBalance()));
+    }
 }

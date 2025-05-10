@@ -58,8 +58,12 @@ public class UserService {
         return depositWallet;
     }
 
+    public AppUser getById(Long telegramId) {
+        return userRepo.findById(telegramId).orElse(null);
+    }
+
     @Lookup
-    public EntityManager getEntityManager() {
+    EntityManager getEntityManager() {
         throw new NotImplementedException();
     }
 }

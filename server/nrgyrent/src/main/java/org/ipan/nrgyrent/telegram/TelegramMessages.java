@@ -3,6 +3,7 @@ package org.ipan.nrgyrent.telegram;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.ipan.nrgyrent.domain.model.AppUser;
 import org.ipan.nrgyrent.domain.model.UserWallet;
 import org.ipan.nrgyrent.telegram.utils.WalletTools;
 import org.springframework.retry.annotation.Retryable;
@@ -145,6 +146,21 @@ public class TelegramMessages {
                 .build();
         tgClient.execute(message);
     }
+
+    @Retryable
+    @SneakyThrows
+    public void updMenuToDepositsMenu(AppUser user, CallbackQuery callbackQuery) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(callbackQuery.getMessage().getChatId())
+                .messageId(callbackQuery.getMessage().getMessageId())
+                .text(StaticLabels.getDepositMenuText(user))
+                .parseMode("MARKDOWN")
+                .replyMarkup(getToMainMenuMarkup())
+                .build();
+        tgClient.execute(message);
+    }
+
 
     @Retryable
     @SneakyThrows

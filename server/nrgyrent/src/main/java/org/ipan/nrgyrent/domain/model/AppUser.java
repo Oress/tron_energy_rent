@@ -21,9 +21,10 @@ public class AppUser {
     private String depositAddress;
 
     @Column(name = "trx_balance", precision = 19, scale = 6)
-    private BigDecimal trxBalance;
+    private BigDecimal trxBalance = new BigDecimal(0);
 
-    private String role;
+    @Enumerated(EnumType.STRING)
+    private UserRole role = UserRole.USER;
 
     private boolean disabled;
 
