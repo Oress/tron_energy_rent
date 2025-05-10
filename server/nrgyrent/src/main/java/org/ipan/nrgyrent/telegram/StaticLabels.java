@@ -27,6 +27,14 @@ public class StaticLabels {
             Энергия была переведена на ваш кошелек
             """;
 
+    public static final String MSG_TRANSACTION_PROGRESS = "Работаем, пожалуйста, подождите...";
+
+    public static final String MSG_TRANSACTION_PENDING = """
+            ⏳ Транзакция в процессе
+            Пожалуйста, подождите 5 минут. Если транзакция не завершится, средства будут возвращены на ваш баланс.
+            Бот отправит вам уведомление, когда транзакция будет завершена.
+            """;
+
 
     public static final String MSG_WALLETS = """
             \uD83D\uDC5B Кошельки

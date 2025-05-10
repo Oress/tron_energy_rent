@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.ipan.nrgyrent.commands.users.CreateUserCommand;
 import org.ipan.nrgyrent.commands.userwallet.AddOrUpdateUserWalletCommand;
 import org.ipan.nrgyrent.commands.userwallet.DeleteUserWalletCommand;
+import org.ipan.nrgyrent.itrx.dto.OrderCallbackRequest;
 import org.ipan.nrgyrent.service.UserService;
 import org.ipan.nrgyrent.service.WalletService;
 import org.ipan.nrgyrent.itrx.ItrxService;
@@ -27,6 +28,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKe
 import org.telegram.telegrambots.meta.generics.TelegramClient;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 // TODO: transtions
@@ -37,6 +39,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @AllArgsConstructor
 public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
     public static final String START = "/start";
+    public static final int WAIT_FOR_CALLBACK = 10;
 
     private TelegramClient tgClient;
     private WalletService walletService;
@@ -103,26 +106,35 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
     private void handletTransactionState(UserState userState, Update update, Integer energyAmount) {
         CallbackQuery callbackQuery = update.getCallbackQuery();
         if (callbackQuery != null) {
-            // Use callbackQuery.getData() to determine the wallet selected
-            String walletAddress = callbackQuery.getData();
-            if (WalletTools.isValidTronAddress(walletAddress)) {
-                itrxService.placeOrder(energyAmount, walletAddress);
-
-                // TODO: You can't just say "success" here, you need to check if the transaction was successful wait for callback
-                updMenuToTransactionSuccess(userState);
-                userState.setCurrentState(States.TRANSACTION_SUCCESS);
-            }
+            tryMakeTransaction(userState, energyAmount, callbackQuery.getData());
         }
 
         Message message = update.getMessage();
         if (message != null && message.hasText()) {
-            String walletAddress = message.getText();
-            if (WalletTools.isValidTronAddress(walletAddress)) {
-                itrxService.placeOrder(energyAmount, walletAddress);
+            tryMakeTransaction(userState, energyAmount, message.getText());
+        }
+    }
 
-                // TODO: You can't just say "success" here, you need to check if the transaction was successful wait for callback
+    private void tryMakeTransaction(UserState userState, Integer energyAmount, String walletAddress) {
+        if (WalletTools.isValidTronAddress(walletAddress)) {
+            updMenuToTransactionInProgress(userState);
+
+            UUID correlationId = UUID.randomUUID();
+            itrxService.placeOrder(energyAmount, walletAddress, correlationId);
+
+            // Waiting WAIT_FOR_CALLBACK seconds for callback from itrx
+            // if callback is not received, enqueue the request and notify the user
+            // otherwise, update the menu to transaction success
+            OrderCallbackRequest orderCallbackRequest = itrxService.getCorrelatedCallbackRequest(correlationId, WAIT_FOR_CALLBACK);
+
+            if (orderCallbackRequest != null) {
                 updMenuToTransactionSuccess(userState);
                 userState.setCurrentState(States.TRANSACTION_SUCCESS);
+                // TODO: add SUCCESSFUL DB record for transaction
+            } else {
+                updMenuToTransactionPending(userState);
+                userState.setCurrentState(States.TRANSACTION_PENDING);
+                // TODO: add PENDING DB record for transaction
             }
         }
     }
@@ -277,12 +289,38 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
 
     @Retryable
     @SneakyThrows
+    private void updMenuToTransactionInProgress(UserState userState) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
+                .text(StaticLabels.MSG_TRANSACTION_PROGRESS)
+                .build();
+        tgClient.execute(message);
+    }
+
+
+    @Retryable
+    @SneakyThrows
     private void updMenuToTransactionSuccess(UserState userState) {
         EditMessageText message = EditMessageText
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
                 .text(StaticLabels.MSG_TRANSACTION_SUCCESS)
+                .replyMarkup(getToMainMenuMarkup())
+                .build();
+        tgClient.execute(message);
+    }
+
+    @Retryable
+    @SneakyThrows
+    private void updMenuToTransactionPending(UserState userState) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
+                .text(StaticLabels.MSG_TRANSACTION_PENDING)
                 .replyMarkup(getToMainMenuMarkup())
                 .build();
         tgClient.execute(message);

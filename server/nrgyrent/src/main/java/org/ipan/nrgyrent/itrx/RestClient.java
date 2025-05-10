@@ -3,6 +3,7 @@ package org.ipan.nrgyrent.itrx;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import okhttp3.*;
+import org.ipan.nrgyrent.itrx.dto.PlaceOrderResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -26,7 +27,7 @@ public class RestClient {
     public String callbackUrl;
 
     // Rental period, 1H/1D/3D/30D
-    public void placeOrder(int energyAmnt, String period, String receiveAddress, String correlationId) {
+    public PlaceOrderResponse placeOrder(int energyAmnt, String period, String receiveAddress, String correlationId) {
         try {
             String timestamp = String.valueOf(Instant.now().getEpochSecond());
 
@@ -56,7 +57,10 @@ public class RestClient {
                     .addHeader("Content-Type", "application/json")
                     .build();
             Response response = client.newCall(request).execute();
-            System.out.println("Response" + response.body().string());
+
+            PlaceOrderResponse placeOrderResponse = gson.fromJson(response.body().charStream(), PlaceOrderResponse.class);
+            System.out.println("Response" + placeOrderResponse);
+            return placeOrderResponse;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

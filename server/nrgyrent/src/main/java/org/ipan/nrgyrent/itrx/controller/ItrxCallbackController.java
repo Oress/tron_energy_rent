@@ -1,17 +1,22 @@
-package org.ipan.nrgyrent.itrx;
+package org.ipan.nrgyrent.itrx.controller;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import org.ipan.nrgyrent.itrx.ItrxService;
+import org.ipan.nrgyrent.itrx.Utils;
 import org.ipan.nrgyrent.itrx.dto.OrderCallbackRequest;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.UUID;
 
 @RestController
 public class ItrxCallbackController {
@@ -21,6 +26,9 @@ public class ItrxCallbackController {
     String apiKey;
     @Value("${app.itrx.secret}")
     String apiSecret;
+
+    @Autowired
+    ItrxService itrxService;
 
     @PostMapping("/api/itrx/callback")
     @Transactional
@@ -40,7 +48,9 @@ public class ItrxCallbackController {
             return ResponseEntity.status(401).body("Invalid signature");
         }
 
-        // Deserialize the callback data and process it ...
+        OrderCallbackRequest placeOrderResponse = gson.fromJson(jsonData, OrderCallbackRequest.class);
+        UUID correlationId = UUID.fromString(placeOrderResponse.out_trade_no);
+        itrxService.setPlaceOrderResponse(correlationId, placeOrderResponse);
 
         return ResponseEntity.ok().build();
     }
