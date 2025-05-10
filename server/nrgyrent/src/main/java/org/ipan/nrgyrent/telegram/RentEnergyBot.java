@@ -56,6 +56,8 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
 
         handleStartState(userState, update);
 
+        tryRemoveNotification(userState, update);
+
         switch (userState.getCurrentState()) {
             case MAIN_MENU:
                 handleMainMenu(userState, update);
@@ -87,6 +89,14 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
                 telegramMessages.updateMsgToMainMenu(callbackQuery);
                 userState.setCurrentState(States.MAIN_MENU);
             }
+        }
+    }
+
+    private void tryRemoveNotification(UserState userState, Update update) {
+        CallbackQuery callbackQuery = update.getCallbackQuery();
+        if (callbackQuery != null && InlineMenuCallbacks.NTFN_OK.equals(callbackQuery.getData())) {
+            telegramMessages.deleteMessage(userState, callbackQuery);
+            userState.setCurrentState(States.MAIN_MENU);
         }
     }
 
@@ -131,6 +141,7 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
                             .receiveAddress(walletAddress)
                             .energyAmount(energyAmount)
                             .correlationId(correlationId.toString())
+                            .serial(placeOrderResponse.getSerial())
                             .build()
             );
             OrderCallbackRequest orderCallbackRequest = itrxService.getCorrelatedCallbackRequest(correlationId, WAIT_FOR_CALLBACK);

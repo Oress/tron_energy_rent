@@ -31,7 +31,7 @@ public class TelegramMessages {
                 .builder()
                 .chatId(userState.getChatId())
                 .text(StaticLabels.NTFN_ORDER_SUCCESS)
-                .replyMarkup(getMainMenuReplyMarkup())
+                .replyMarkup(getOrderSuccessNotificationMarkup())
                 .build();
         tgClient.execute(message);
     }
@@ -42,7 +42,7 @@ public class TelegramMessages {
                 .builder()
                 .chatId(userState.getChatId())
                 .text(StaticLabels.NTFN_ORDER_REFUNDED)
-                .replyMarkup(getMainMenuReplyMarkup())
+                .replyMarkup(getOrderRefundedNotificationMarkup())
                 .build();
         tgClient.execute(message);
     }
@@ -53,6 +53,16 @@ public class TelegramMessages {
                 .builder()
                 .chatId(message.getChatId())
                 .messageId(message.getMessageId())
+                .build();
+        tgClient.execute(deleteMessage);
+    }
+
+    @SneakyThrows
+    public void deleteMessage(UserState userState, CallbackQuery callbackQuery) {
+        DeleteMessage deleteMessage = DeleteMessage
+                .builder()
+                .chatId(userState.getChatId())
+                .messageId(callbackQuery.getMessage().getMessageId())
                 .build();
         tgClient.execute(deleteMessage);
     }
@@ -253,7 +263,7 @@ public class TelegramMessages {
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(StaticLabels.NTFN_ORDER_SUCCESS)
+                                        .text(StaticLabels.OK)
                                         .callbackData(InlineMenuCallbacks.NTFN_OK)
                                         .build()
                         )
@@ -269,7 +279,7 @@ public class TelegramMessages {
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(StaticLabels.NTFN_ORDER_REFUNDED)
+                                        .text(StaticLabels.OK)
                                         .callbackData(InlineMenuCallbacks.NTFN_OK)
                                         .build()
                         )

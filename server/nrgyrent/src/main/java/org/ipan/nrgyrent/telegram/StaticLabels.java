@@ -68,4 +68,6 @@ public class StaticLabels {
             ❌ Транзакция была отменена
             Средства были возвращены на ваш баланс
             """;
+
+    public static final String OK = "OK";
 }

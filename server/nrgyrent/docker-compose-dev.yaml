@@ -1,0 +1,9 @@
+services:
+  postgres:
+    extends:
+      file: docker-compose-base.yaml
+      service: postgresservice
+    ports:
+      - "5432:5432"
+volumes:
+  energy_rent_postgres: { }

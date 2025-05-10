@@ -29,12 +29,12 @@ public class Config {
         return new AccountApi(apiClient());
     }
 
-    @Bean
+/*    @Bean
 //    @Profile("development")
     public DataSource dataSource() {
         return new EmbeddedDatabaseBuilder()
                 .setType(EmbeddedDatabaseType.H2)
 //                .addDefaultScripts()
                 .build();
-    }
+    }*/
 }

@@ -14,14 +14,15 @@ import java.time.Instant;
 @Getter
 @Setter
 @ToString
+@Table(name = "nrg_orders")
 public class Order {
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "order_seq")
-    @SequenceGenerator(name = "order_seq", sequenceName = "order_seq", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "nrg_order_seq")
+    @SequenceGenerator(name = "nrg_order_seq", sequenceName = "nrg_order_seq", allocationSize = 1)
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "user_id", referencedColumnName = "telegramId")
+    @JoinColumn(name = "user_id", referencedColumnName = "telegram_id", foreignKey = @ForeignKey(name = "fk_nrg_orders_user_id"))
     private AppUser user;
 
     @Column(name = "trx_amount", precision = 19, scale = 8)

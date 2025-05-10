@@ -26,7 +26,6 @@ public class UserService {
 
         appUser = new AppUser();
         appUser.setTelegramId(command.getTelegramId());
-        appUser.setActive(true);
         appUser.setCreatedAt(Instant.now());
 
         getEntityManager().persist(appUser);

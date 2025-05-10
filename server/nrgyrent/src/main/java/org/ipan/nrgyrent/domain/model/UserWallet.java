@@ -12,14 +12,15 @@ import org.hibernate.annotations.CreationTimestamp;
 @Getter
 @Setter
 @ToString
+@Table(name = "nrg_user_wallets")
 public class UserWallet {
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "user_wallet_seq")
-    @SequenceGenerator(name = "user_wallet_seq", sequenceName = "user_wallet_seq", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "ngr_user_wallet_seq")
+    @SequenceGenerator(name = "ngr_user_wallet_seq", sequenceName = "ngr_user_wallet_seq", allocationSize = 1)
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "user_id", referencedColumnName = "telegramId")
+    @JoinColumn(name = "user_id", referencedColumnName = "telegram_id", foreignKey = @ForeignKey(name = "fk_nrg_user_wallets_user_id"))
     private AppUser user;
 
     private String address;
