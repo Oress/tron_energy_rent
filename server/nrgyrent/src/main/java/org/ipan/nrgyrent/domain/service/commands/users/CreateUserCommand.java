@@ -1,4 +1,4 @@
-package org.ipan.nrgyrent.commands.users;
+package org.ipan.nrgyrent.domain.service.commands.users;
 
 import lombok.Builder;
 import lombok.Data;

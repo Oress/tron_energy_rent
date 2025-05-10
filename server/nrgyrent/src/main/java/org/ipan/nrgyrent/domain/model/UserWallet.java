@@ -1,4 +1,4 @@
-package org.ipan.nrgyrent.model;
+package org.ipan.nrgyrent.domain.model;
 
 import java.time.Instant;
 
@@ -19,7 +19,7 @@ public class UserWallet {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "user_id", referencedColumnName = "telegramId")
     private AppUser user;
 
     private String address;

@@ -1,13 +1,13 @@
-package org.ipan.nrgyrent.service;
+package org.ipan.nrgyrent.domain.service;
 
 import jakarta.persistence.EntityManager;
 import lombok.AllArgsConstructor;
 import org.apache.commons.lang3.NotImplementedException;
-import org.ipan.nrgyrent.commands.userwallet.AddOrUpdateUserWalletCommand;
-import org.ipan.nrgyrent.commands.userwallet.DeleteUserWalletCommand;
-import org.ipan.nrgyrent.model.AppUser;
-import org.ipan.nrgyrent.model.UserWallet;
-import org.ipan.nrgyrent.model.repository.UserWalletRepo;
+import org.ipan.nrgyrent.domain.service.commands.userwallet.AddOrUpdateUserWalletCommand;
+import org.ipan.nrgyrent.domain.service.commands.userwallet.DeleteUserWalletCommand;
+import org.ipan.nrgyrent.domain.model.AppUser;
+import org.ipan.nrgyrent.domain.model.UserWallet;
+import org.ipan.nrgyrent.domain.model.repository.UserWalletRepo;
 import org.springframework.beans.factory.annotation.Lookup;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

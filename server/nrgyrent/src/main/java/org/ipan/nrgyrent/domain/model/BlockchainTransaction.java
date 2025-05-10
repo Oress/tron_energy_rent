@@ -1,4 +1,4 @@
-package org.ipan.nrgyrent.model;
+package org.ipan.nrgyrent.domain.model;
 
 import java.math.BigDecimal;
 import java.time.Instant;

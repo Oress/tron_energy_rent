@@ -56,4 +56,16 @@ public class StaticLabels {
     // Wallets labels
     public static final String WLT_DELETE_WALLET = "❌";
     public static final String WLT_ADD_WALLET = "➕ Добавить кошелек";
+
+
+    // Notifications labels
+    // TODO: make it label accept params
+    public static final String NTFN_ORDER_SUCCESS= """
+            ✅ Транзакция успешно завершена
+            Энергия была переведена на ваш кошелек
+            """;
+    public static final String NTFN_ORDER_REFUNDED= """
+            ❌ Транзакция была отменена
+            Средства были возвращены на ваш баланс
+            """;
 }

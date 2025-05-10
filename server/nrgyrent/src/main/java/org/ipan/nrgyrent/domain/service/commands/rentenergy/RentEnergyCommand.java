@@ -1,4 +1,4 @@
-package org.ipan.nrgyrent.commands.rentenergy;
+package org.ipan.nrgyrent.domain.service.commands.rentenergy;
 
 import lombok.Data;
 

@@ -1,6 +1,6 @@
-package org.ipan.nrgyrent.model.repository;
+package org.ipan.nrgyrent.domain.model.repository;
 
-import org.ipan.nrgyrent.model.UserWallet;
+import org.ipan.nrgyrent.domain.model.UserWallet;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

@@ -1,4 +1,4 @@
-package org.ipan.nrgyrent.model;
+package org.ipan.nrgyrent.domain.model;
 
 import jakarta.persistence.Entity;
 import lombok.Getter;

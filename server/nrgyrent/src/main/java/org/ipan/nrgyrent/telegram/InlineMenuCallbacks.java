@@ -11,4 +11,7 @@ public class InlineMenuCallbacks {
 
     public static final String TRANSACTION_65k = "transaction_65k";
     public static final String TRANSACTION_131k = "transaction_131k";
+
+
+    public static final String NTFN_OK = "notification_ok";
 }

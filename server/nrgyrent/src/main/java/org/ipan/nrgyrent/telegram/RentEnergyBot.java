@@ -1,38 +1,31 @@
 package org.ipan.nrgyrent.telegram;
 
 import lombok.AllArgsConstructor;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.ipan.nrgyrent.commands.users.CreateUserCommand;
-import org.ipan.nrgyrent.commands.userwallet.AddOrUpdateUserWalletCommand;
-import org.ipan.nrgyrent.commands.userwallet.DeleteUserWalletCommand;
-import org.ipan.nrgyrent.itrx.dto.OrderCallbackRequest;
-import org.ipan.nrgyrent.service.UserService;
-import org.ipan.nrgyrent.service.WalletService;
+import org.ipan.nrgyrent.domain.model.UserWallet;
+import org.ipan.nrgyrent.domain.service.OrderService;
+import org.ipan.nrgyrent.domain.service.UserService;
+import org.ipan.nrgyrent.domain.service.WalletService;
+import org.ipan.nrgyrent.domain.service.commands.orders.AddOrUpdateOrderCommand;
+import org.ipan.nrgyrent.domain.service.commands.users.CreateUserCommand;
+import org.ipan.nrgyrent.domain.service.commands.userwallet.AddOrUpdateUserWalletCommand;
+import org.ipan.nrgyrent.domain.service.commands.userwallet.DeleteUserWalletCommand;
 import org.ipan.nrgyrent.itrx.ItrxService;
-import org.ipan.nrgyrent.model.UserWallet;
+import org.ipan.nrgyrent.itrx.dto.OrderCallbackRequest;
+import org.ipan.nrgyrent.itrx.dto.PlaceOrderResponse;
 import org.ipan.nrgyrent.telegram.utils.WalletTools;
-import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.longpolling.util.LongPollingSingleThreadUpdateConsumer;
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.api.objects.message.Message;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
-import org.telegram.telegrambots.meta.generics.TelegramClient;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
-// TODO: transtions
-// TODO: caching state
 // TODO: persisting state
 @Slf4j
 @Component
@@ -40,13 +33,15 @@ import java.util.concurrent.ConcurrentHashMap;
 public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
     public static final String START = "/start";
     public static final int WAIT_FOR_CALLBACK = 10;
+    public static final int ITRX_OK_CODE = 0;
 
-    private TelegramClient tgClient;
+    private TelegramState telegramState;
+    private TelegramMessages telegramMessages;
     private WalletService walletService;
     private UserService userService;
     private ItrxService itrxService;
+    private OrderService orderService;
 
-    private final ConcurrentHashMap<Long, UserState> userStateMap = new ConcurrentHashMap<>();
 
     @Override
     public void consume(Update update) {
@@ -57,7 +52,7 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
         }
 
         Long userId = from.getId();
-        UserState userState = initUserState(userId);
+        UserState userState = telegramState.getOrCreateUserState(userId);
 
         handleStartState(userState, update);
 
@@ -83,13 +78,13 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
         CallbackQuery callbackQuery = update.getCallbackQuery();
 
         if (message != null && message.hasText()) {
-            deleteMessage(message);
+            telegramMessages.deleteMessage(message);
         } else if (callbackQuery != null) {
             String data = callbackQuery.getData();
 
             EditMessageText.builder().replyMarkup(InlineKeyboardMarkup.builder().build());
             if (InlineMenuCallbacks.TO_MAIN_MENU.equals(data)) {
-                updateMsgToMainMenu(callbackQuery);
+                telegramMessages.updateMsgToMainMenu(callbackQuery);
                 userState.setCurrentState(States.MAIN_MENU);
             }
         }
@@ -117,22 +112,35 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
 
     private void tryMakeTransaction(UserState userState, Integer energyAmount, String walletAddress) {
         if (WalletTools.isValidTronAddress(walletAddress)) {
-            updMenuToTransactionInProgress(userState);
+            telegramMessages.updMenuToTransactionInProgress(userState);
 
             UUID correlationId = UUID.randomUUID();
-            itrxService.placeOrder(energyAmount, walletAddress, correlationId);
+            PlaceOrderResponse placeOrderResponse = itrxService.placeOrder(energyAmount, walletAddress, correlationId);
 
             // Waiting WAIT_FOR_CALLBACK seconds for callback from itrx
             // if callback is not received, enqueue the request and notify the user
             // otherwise, update the menu to transaction success
+            if (placeOrderResponse.getErrno() != ITRX_OK_CODE) {
+                return;
+                // TODO: do something here
+            }
+
+            orderService.createPendingOrder(
+                    AddOrUpdateOrderCommand.builder()
+                            .userId(userState.getTelegramId())
+                            .receiveAddress(walletAddress)
+                            .energyAmount(energyAmount)
+                            .correlationId(correlationId.toString())
+                            .build()
+            );
             OrderCallbackRequest orderCallbackRequest = itrxService.getCorrelatedCallbackRequest(correlationId, WAIT_FOR_CALLBACK);
 
             if (orderCallbackRequest != null) {
-                updMenuToTransactionSuccess(userState);
+                telegramMessages.updMenuToTransactionSuccess(userState);
                 userState.setCurrentState(States.TRANSACTION_SUCCESS);
                 // TODO: add SUCCESSFUL DB record for transaction
             } else {
-                updMenuToTransactionPending(userState);
+                telegramMessages.updMenuToTransactionPending(userState);
                 userState.setCurrentState(States.TRANSACTION_PENDING);
                 // TODO: add PENDING DB record for transaction
             }
@@ -145,16 +153,19 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
             String data = callbackQuery.getData();
 
             if (InlineMenuCallbacks.TRANSACTION_65k.equals(data)) {
-                updMenuToTransaction65kMenu(callbackQuery);
+                List<UserWallet> wallets = walletService.getWallets(userState.getTelegramId());
+                telegramMessages.updMenuToTransaction65kMenu(wallets, callbackQuery);
                 userState.setCurrentState(States.TRANSACTION_65k);
             } else if (InlineMenuCallbacks.TRANSACTION_131k.equals(data)) {
-                updMenuToTransaction131kMenu(callbackQuery);
+                List<UserWallet> wallets = walletService.getWallets(userState.getTelegramId());
+                telegramMessages.updMenuToTransaction131kMenu(wallets, callbackQuery);
                 userState.setCurrentState(States.TRANSACTION_131k);
             } else if (InlineMenuCallbacks.DEPOSIT.equals(data)) {
 //                sendDeposit(callbackQuery);
                 userState.setCurrentState(States.DEPOSIT);
             } else if (InlineMenuCallbacks.WALLETS.equals(data)) {
-                updMenuToWalletsMenu(userState, callbackQuery);
+                List<UserWallet> wallets = walletService.getWallets(userState.getTelegramId());
+                telegramMessages.updMenuToWalletsMenu(wallets, callbackQuery);
                 userState.setCurrentState(States.WALLETS);
             }
         }
@@ -166,12 +177,12 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
         if (callbackQuery != null) {
             String data = callbackQuery.getData();
             if (InlineMenuCallbacks.ADD_WALLETS.equals(data)) {
-                updMenuToAddWalletsMenu(callbackQuery);
+                telegramMessages.updMenuToAddWalletsMenu(callbackQuery);
                 userState.setCurrentState(States.ADD_WALLETS);
             } else if (data.startsWith(InlineMenuCallbacks.DELETE_WALLETS)) {
                 String walletId = data.split(" ")[1];
                 walletService.deleteWallet(DeleteUserWalletCommand.builder().walletId(Long.parseLong(walletId)).build());
-                updMenuToDeleteWalletSuccessMenu(callbackQuery);
+                telegramMessages.updMenuToDeleteWalletSuccessMenu(callbackQuery);
                 userState.setCurrentState(States.DELETE_WALLETS_SUCCESS);
             }
 
@@ -195,7 +206,7 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
             );
 //            deleteMessage(message);
             userState.setCurrentState(States.MAIN_MENU);
-            updMenuToAddWalletSuccessMenu(userState);
+            telegramMessages.updMenuToAddWalletSuccessMenu(userState);
         }
         // TODO: send validation message to user
     }
@@ -206,7 +217,7 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
             String text = message.getText();
 
             if (START.equals(text)) {
-                sendMainMenu(userState, update.getMessage().getChatId());
+                telegramMessages.sendMainMenu(userState, update.getMessage().getChatId());
                 userService.createUser(
                         CreateUserCommand.builder()
                                 .telegramId(userState.getTelegramId())
@@ -214,28 +225,6 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
                 );
             }
         }
-    }
-
-    @SneakyThrows
-    private void deleteMessage(Message message) {
-        DeleteMessage deleteMessage = DeleteMessage
-                .builder()
-                .chatId(message.getChatId())
-                .messageId(message.getMessageId())
-                .build();
-        tgClient.execute(deleteMessage);
-    }
-
-    @SneakyThrows
-    private void updateMsgToMainMenu(CallbackQuery callbackQuery) {
-        EditMessageText message = EditMessageText
-                .builder()
-                .chatId(callbackQuery.getMessage().getChatId())
-                .messageId(callbackQuery.getMessage().getMessageId())
-                .text(StaticLabels.MSG_MAIN_MENU_TEXT)
-                .replyMarkup(getMainMenuReplyMarkup())
-                .build();
-        tgClient.execute(message);
     }
 
     private User getFrom(Update update) {
@@ -251,287 +240,6 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
 
         // TODO: make custom exception for this.
         throw new IllegalStateException("Cannot determine user from update: " + update);
-    }
-
-
-    @Retryable
-    private void sendMainMenu(UserState userState, Long chatId) {
-        SendMessage message = SendMessage
-                .builder()
-                .chatId(chatId)
-                .text(StaticLabels.MSG_MAIN_MENU_TEXT)
-                .replyMarkup(getMainMenuReplyMarkup())
-                .build();
-        try {
-            Message execute = tgClient.execute(message);
-            userState.setCurrentState(States.MAIN_MENU);
-            userState.setMenuMessageId(execute.getMessageId());
-            userState.setChatId(execute.getChatId());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-
-    @Retryable
-    @SneakyThrows
-    private void updMenuToTransaction65kMenu(CallbackQuery callbackQuery) {
-        List<UserWallet> wallets = walletService.getWallets(callbackQuery.getFrom().getId());
-        EditMessageText message = EditMessageText
-                .builder()
-                .chatId(callbackQuery.getMessage().getChatId())
-                .messageId(callbackQuery.getMessage().getMessageId())
-                .text(StaticLabels.MSG_TRANSACTION_65K_TEXT)
-                .replyMarkup(getTransactionsMenuMarkup(wallets))
-                .build();
-        tgClient.execute(message);
-    }
-
-    @Retryable
-    @SneakyThrows
-    private void updMenuToTransactionInProgress(UserState userState) {
-        EditMessageText message = EditMessageText
-                .builder()
-                .chatId(userState.getChatId())
-                .messageId(userState.getMenuMessageId())
-                .text(StaticLabels.MSG_TRANSACTION_PROGRESS)
-                .build();
-        tgClient.execute(message);
-    }
-
-
-    @Retryable
-    @SneakyThrows
-    private void updMenuToTransactionSuccess(UserState userState) {
-        EditMessageText message = EditMessageText
-                .builder()
-                .chatId(userState.getChatId())
-                .messageId(userState.getMenuMessageId())
-                .text(StaticLabels.MSG_TRANSACTION_SUCCESS)
-                .replyMarkup(getToMainMenuMarkup())
-                .build();
-        tgClient.execute(message);
-    }
-
-    @Retryable
-    @SneakyThrows
-    private void updMenuToTransactionPending(UserState userState) {
-        EditMessageText message = EditMessageText
-                .builder()
-                .chatId(userState.getChatId())
-                .messageId(userState.getMenuMessageId())
-                .text(StaticLabels.MSG_TRANSACTION_PENDING)
-                .replyMarkup(getToMainMenuMarkup())
-                .build();
-        tgClient.execute(message);
-    }
-
-
-    @Retryable
-    @SneakyThrows
-    private void updMenuToTransaction131kMenu(CallbackQuery callbackQuery) {
-        List<UserWallet> wallets = walletService.getWallets(callbackQuery.getFrom().getId());
-        EditMessageText message = EditMessageText
-                .builder()
-                .chatId(callbackQuery.getMessage().getChatId())
-                .messageId(callbackQuery.getMessage().getMessageId())
-                .text(StaticLabels.MSG_TRANSACTION_131K_TEXT)
-                .replyMarkup(getTransactionsMenuMarkup(wallets))
-                .build();
-        tgClient.execute(message);
-    }
-
-    @Retryable
-    @SneakyThrows
-    private void updMenuToWalletsMenu(UserState userState, CallbackQuery callbackQuery) {
-        List<UserWallet> wallets = walletService.getWallets(userState.getTelegramId());
-
-        logger.info("Wallets: {}", wallets);
-
-        EditMessageText message = EditMessageText
-                .builder()
-                .chatId(callbackQuery.getMessage().getChatId())
-                .messageId(callbackQuery.getMessage().getMessageId())
-                .text(StaticLabels.MSG_WALLETS)
-                .replyMarkup(getWalletsMenuMarkup(wallets))
-                .build();
-        tgClient.execute(message);
-    }
-
-    @Retryable
-    @SneakyThrows
-    private void updMenuToAddWalletsMenu(CallbackQuery callbackQuery) {
-        EditMessageText message = EditMessageText
-                .builder()
-                .chatId(callbackQuery.getMessage().getChatId())
-                .messageId(callbackQuery.getMessage().getMessageId())
-                .text(StaticLabels.MSG_ADD_WALLET)
-                .replyMarkup(getToMainMenuMarkup())
-                .build();
-        tgClient.execute(message);
-    }
-
-    @Retryable
-    @SneakyThrows
-    private void updMenuToDeleteWalletSuccessMenu(CallbackQuery callbackQuery) {
-        EditMessageText message = EditMessageText
-                .builder()
-                .chatId(callbackQuery.getMessage().getChatId())
-                .messageId(callbackQuery.getMessage().getMessageId())
-                .text(StaticLabels.MSG_DELETE_WALLET_SUCCESS)
-                .replyMarkup(getToMainMenuMarkup())
-                .build();
-        tgClient.execute(message);
-    }
-
-
-    @Retryable
-    @SneakyThrows
-    private void updMenuToAddWalletSuccessMenu(UserState userState) {
-        EditMessageText message = EditMessageText
-                .builder()
-                .chatId(userState.getChatId())
-                .messageId(userState.getMenuMessageId())
-                .text(StaticLabels.MSG_ADD_WALLET_SUCCESS)
-                .replyMarkup(getToMainMenuMarkup())
-                .build();
-        tgClient.execute(message);
-    }
-
-    private UserState initUserState(Long userId) {
-        return userStateMap.computeIfAbsent(userId, k -> {
-            UserState newUserState = new UserState();
-            newUserState.setTelegramId(userId);
-            newUserState.setCurrentState(States.START);
-            return newUserState;
-        });
-    }
-
-    private InlineKeyboardMarkup getMainMenuReplyMarkup() {
-        return InlineKeyboardMarkup
-                .builder()
-                .keyboardRow(
-                        new InlineKeyboardRow(
-                                InlineKeyboardButton
-                                        .builder()
-                                        .text(StaticLabels.MENU_TRANSFER_ENERGY_65K)
-                                        .callbackData(InlineMenuCallbacks.TRANSACTION_65k)
-                                        .build()
-                        )
-                )
-                .keyboardRow(
-                        new InlineKeyboardRow(
-                                InlineKeyboardButton
-                                        .builder()
-                                        .text(StaticLabels.MENU_TRANSFER_ENERGY_131K)
-                                        .callbackData(InlineMenuCallbacks.TRANSACTION_131k)
-                                        .build()
-                        )
-                )
-                .keyboardRow(
-                        new InlineKeyboardRow(
-                                InlineKeyboardButton
-                                        .builder()
-                                        .text(StaticLabels.MENU_DEPOSIT)
-                                        .callbackData(InlineMenuCallbacks.DEPOSIT)
-                                        .build(),
-                                InlineKeyboardButton
-                                        .builder()
-                                        .text(StaticLabels.MENU_WALLETS)
-                                        .callbackData(InlineMenuCallbacks.WALLETS)
-                                        .build()
-                        )
-
-                )
-                .build();
-    }
-
-    private InlineKeyboardMarkup getTransactionsMenuMarkup(List<UserWallet> wallets) {
-        List<InlineKeyboardRow> walletRows = wallets.stream().map(wallet -> {
-            InlineKeyboardRow row = new InlineKeyboardRow(
-                    InlineKeyboardButton
-                            .builder()
-                            .text(WalletTools.formatTronAddress(wallet.getAddress()))
-                            .callbackData(wallet.getAddress())
-                            .build()
-            );
-            return row;
-        }).toList();
-        InlineKeyboardMarkup.InlineKeyboardMarkupBuilder<?, ?> builder = InlineKeyboardMarkup
-                .builder();
-        walletRows.forEach(builder::keyboardRow);
-
-
-        return builder.keyboardRow(
-                        new InlineKeyboardRow(
-                                InlineKeyboardButton
-                                        .builder()
-                                        .text(StaticLabels.TO_MAIN_MENU)
-                                        .callbackData(InlineMenuCallbacks.TO_MAIN_MENU)
-                                        .build()
-                        )
-
-                )
-                .build();
-    }
-
-    private InlineKeyboardMarkup getWalletsMenuMarkup(List<UserWallet> wallets) {
-        List<InlineKeyboardRow> walletRows = wallets.stream().map(wallet -> {
-            InlineKeyboardRow row = new InlineKeyboardRow(
-                    InlineKeyboardButton
-                            .builder()
-                            .text(WalletTools.formatTronAddress(wallet.getAddress()))
-                            .callbackData(wallet.getId().toString())
-                            .build(),
-                    InlineKeyboardButton
-                            .builder()
-                            .text(StaticLabels.WLT_DELETE_WALLET)
-                            .callbackData("delete_wallet " + wallet.getId().toString())
-                            .build()
-            );
-            return row;
-        }).toList();
-
-        InlineKeyboardMarkup.InlineKeyboardMarkupBuilder<?, ?> builder = InlineKeyboardMarkup
-                .builder()
-                .keyboardRow(
-                        new InlineKeyboardRow(
-                                InlineKeyboardButton
-                                        .builder()
-                                        .text(StaticLabels.WLT_ADD_WALLET)
-                                        .callbackData(InlineMenuCallbacks.ADD_WALLETS)
-                                        .build()
-                        )
-                );
-        walletRows.forEach(builder::keyboardRow);
-
-        return builder.keyboardRow(
-                        new InlineKeyboardRow(
-                                InlineKeyboardButton
-                                        .builder()
-                                        .text(StaticLabels.TO_MAIN_MENU)
-                                        .callbackData(InlineMenuCallbacks.TO_MAIN_MENU)
-                                        .build()
-                        )
-
-                )
-                .build();
-    }
-
-    private InlineKeyboardMarkup getToMainMenuMarkup() {
-        return InlineKeyboardMarkup
-                .builder()
-                .keyboardRow(
-                        new InlineKeyboardRow(
-                                InlineKeyboardButton
-                                        .builder()
-                                        .text(StaticLabels.TO_MAIN_MENU)
-                                        .callbackData(InlineMenuCallbacks.TO_MAIN_MENU)
-                                        .build()
-                        )
-
-                )
-                .build();
     }
 
 }

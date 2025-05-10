@@ -1,4 +1,4 @@
-package org.ipan.nrgyrent.commands.userwallet;
+package org.ipan.nrgyrent.domain.service.commands.userwallet;
 
 import lombok.Data;
 

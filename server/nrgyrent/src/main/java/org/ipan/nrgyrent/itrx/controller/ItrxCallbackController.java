@@ -31,7 +31,6 @@ public class ItrxCallbackController {
     ItrxService itrxService;
 
     @PostMapping("/api/itrx/callback")
-    @Transactional
     public ResponseEntity<?> handleCallback(@RequestHeader("TIMESTAMP") String timestamp,
                                             @RequestHeader("SIGNATURE") String signature,
                                             @RequestBody Map<String, Object> requestBody) throws Exception {
@@ -49,8 +48,8 @@ public class ItrxCallbackController {
         }
 
         OrderCallbackRequest placeOrderResponse = gson.fromJson(jsonData, OrderCallbackRequest.class);
-        UUID correlationId = UUID.fromString(placeOrderResponse.out_trade_no);
-        itrxService.setPlaceOrderResponse(correlationId, placeOrderResponse);
+
+        itrxService.processCallback(placeOrderResponse);
 
         return ResponseEntity.ok().build();
     }
