@@ -68,21 +68,15 @@ public class TelegramMessages {
     }
 
     @Retryable
-    public void sendMainMenu(UserState userState, Long chatId) {
+    @SneakyThrows
+    public Message sendMainMenu(Long chatId) {
         SendMessage message = SendMessage
                 .builder()
                 .chatId(chatId)
                 .text(StaticLabels.MSG_MAIN_MENU_TEXT)
                 .replyMarkup(getMainMenuReplyMarkup())
                 .build();
-        try {
-            Message execute = tgClient.execute(message);
-            userState.setCurrentState(States.MAIN_MENU);
-            userState.setMenuMessageId(execute.getMessageId());
-            userState.setChatId(execute.getChatId());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        return tgClient.execute(message);
     }
 
 

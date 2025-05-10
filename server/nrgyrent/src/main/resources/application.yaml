@@ -22,6 +22,8 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         generate_statistics: false
 app:
+  mapdb:
+    db-path: ${APP_MAPDB_PATH:cache/nrgyrent.db}
   itrx:
     base-url: ${APP_ITRX_BASE_URL:"https://nile.itrx.io"} # For mainnet, use https://api.itrx.io
     callback-url: ${APP_ITRX_CALLBACK_URL}

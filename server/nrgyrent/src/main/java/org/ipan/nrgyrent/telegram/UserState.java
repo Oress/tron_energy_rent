@@ -1,17 +1,15 @@
 package org.ipan.nrgyrent.telegram;
 
-import lombok.Data;
+public interface UserState {
+    Long getTelegramId();
+    States getState();
+    Long getChatId();
+    Integer getMenuMessageId();
 
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-
-@Data
-public class UserState {
-    private Long telegramId;
-    private States currentState;
-    private Long chatId;
-    private Integer menuMessageId;
+    UserState withTelegramId(Long value);
+    UserState withState(States value);
+    UserState withChatId(Long value);
+    UserState withMenuMessageId(Integer value);
 
 //    private final ReadWriteLock rwl = new ReentrantReadWriteLock();
 //    private final Lock r = rwl.readLock();

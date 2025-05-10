@@ -26,7 +26,6 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMa
 import java.util.List;
 import java.util.UUID;
 
-// TODO: persisting state
 @Slf4j
 @Component
 @AllArgsConstructor
@@ -58,7 +57,7 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
 
         tryRemoveNotification(userState, update);
 
-        switch (userState.getCurrentState()) {
+        switch (userState.getState()) {
             case MAIN_MENU:
                 handleMainMenu(userState, update);
                 break;
@@ -87,7 +86,7 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
             EditMessageText.builder().replyMarkup(InlineKeyboardMarkup.builder().build());
             if (InlineMenuCallbacks.TO_MAIN_MENU.equals(data)) {
                 telegramMessages.updateMsgToMainMenu(callbackQuery);
-                userState.setCurrentState(States.MAIN_MENU);
+                telegramState.updateUserState(userId, userState.withState(States.MAIN_MENU));
             }
         }
     }
@@ -96,7 +95,6 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
         CallbackQuery callbackQuery = update.getCallbackQuery();
         if (callbackQuery != null && InlineMenuCallbacks.NTFN_OK.equals(callbackQuery.getData())) {
             telegramMessages.deleteMessage(userState, callbackQuery);
-            userState.setCurrentState(States.MAIN_MENU);
         }
     }
 
@@ -148,11 +146,11 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
 
             if (orderCallbackRequest != null) {
                 telegramMessages.updMenuToTransactionSuccess(userState);
-                userState.setCurrentState(States.TRANSACTION_SUCCESS);
+                telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.TRANSACTION_SUCCESS));
                 // TODO: add SUCCESSFUL DB record for transaction
             } else {
                 telegramMessages.updMenuToTransactionPending(userState);
-                userState.setCurrentState(States.TRANSACTION_PENDING);
+                telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.TRANSACTION_PENDING));
                 // TODO: add PENDING DB record for transaction
             }
         }
@@ -166,18 +164,18 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
             if (InlineMenuCallbacks.TRANSACTION_65k.equals(data)) {
                 List<UserWallet> wallets = walletService.getWallets(userState.getTelegramId());
                 telegramMessages.updMenuToTransaction65kMenu(wallets, callbackQuery);
-                userState.setCurrentState(States.TRANSACTION_65k);
+                telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.TRANSACTION_65k));
             } else if (InlineMenuCallbacks.TRANSACTION_131k.equals(data)) {
                 List<UserWallet> wallets = walletService.getWallets(userState.getTelegramId());
                 telegramMessages.updMenuToTransaction131kMenu(wallets, callbackQuery);
-                userState.setCurrentState(States.TRANSACTION_131k);
+                telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.TRANSACTION_131k));
             } else if (InlineMenuCallbacks.DEPOSIT.equals(data)) {
 //                sendDeposit(callbackQuery);
-                userState.setCurrentState(States.DEPOSIT);
+                telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.DEPOSIT));
             } else if (InlineMenuCallbacks.WALLETS.equals(data)) {
                 List<UserWallet> wallets = walletService.getWallets(userState.getTelegramId());
                 telegramMessages.updMenuToWalletsMenu(wallets, callbackQuery);
-                userState.setCurrentState(States.WALLETS);
+                telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.WALLETS));
             }
         }
     }
@@ -189,12 +187,12 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
             String data = callbackQuery.getData();
             if (InlineMenuCallbacks.ADD_WALLETS.equals(data)) {
                 telegramMessages.updMenuToAddWalletsMenu(callbackQuery);
-                userState.setCurrentState(States.ADD_WALLETS);
+                telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.ADD_WALLETS));
             } else if (data.startsWith(InlineMenuCallbacks.DELETE_WALLETS)) {
                 String walletId = data.split(" ")[1];
                 walletService.deleteWallet(DeleteUserWalletCommand.builder().walletId(Long.parseLong(walletId)).build());
                 telegramMessages.updMenuToDeleteWalletSuccessMenu(callbackQuery);
-                userState.setCurrentState(States.DELETE_WALLETS_SUCCESS);
+                telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.DELETE_WALLETS_SUCCESS));
             }
 
         }
@@ -216,7 +214,7 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
                             .build()
             );
 //            deleteMessage(message);
-            userState.setCurrentState(States.MAIN_MENU);
+            telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.MAIN_MENU));
             telegramMessages.updMenuToAddWalletSuccessMenu(userState);
         }
         // TODO: send validation message to user
@@ -228,7 +226,12 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
             String text = message.getText();
 
             if (START.equals(text)) {
-                telegramMessages.sendMainMenu(userState, update.getMessage().getChatId());
+                Message newMenuMsg = telegramMessages.sendMainMenu(update.getMessage().getChatId());
+                telegramState.updateUserState(userState.getTelegramId(), userState
+                        .withState(States.MAIN_MENU)
+                        .withChatId(newMenuMsg.getChatId())
+                        .withMenuMessageId(newMenuMsg.getMessageId())
+                );
                 userService.createUser(
                         CreateUserCommand.builder()
                                 .telegramId(userState.getTelegramId())
