@@ -7,6 +7,7 @@ import org.ipan.nrgyrent.domain.model.DepositWallet;
 import org.ipan.nrgyrent.domain.service.commands.users.CreateUserCommand;
 import org.ipan.nrgyrent.domain.model.AppUser;
 import org.ipan.nrgyrent.domain.model.repository.UserRepo;
+import org.ipan.nrgyrent.domain.service.commands.users.DepositTrxCommand;
 import org.ipan.nrgyrent.tron.crypto.ECKey;
 import org.ipan.nrgyrent.tron.wallet.WalletApi;
 import org.springframework.beans.factory.annotation.Lookup;
@@ -14,7 +15,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.List;
 
 @Service
 @AllArgsConstructor
@@ -62,8 +65,16 @@ public class UserService {
         return userRepo.findById(telegramId).orElse(null);
     }
 
+    public void makeDeposit(DepositTrxCommand comand) {
+        return;
+    }
+
     @Lookup
     EntityManager getEntityManager() {
         throw new NotImplementedException();
+    }
+
+    public List<AppUser> getAllUsers() {
+        return userRepo.findAll();
     }
 }

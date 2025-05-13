@@ -34,4 +34,6 @@ public class AppUser {
     @CreationTimestamp
     @Column(name = "created_at")
     private Instant createdAt;
+
+
 }
