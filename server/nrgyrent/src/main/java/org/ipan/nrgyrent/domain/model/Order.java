@@ -25,8 +25,11 @@ public class Order {
     @JoinColumn(name = "user_id", referencedColumnName = "telegram_id", foreignKey = @ForeignKey(name = "fk_nrg_orders_user_id"))
     private AppUser user;
 
-    @Column(name = "trx_amount", precision = 19, scale = 8)
-    private BigDecimal trxAmount;
+    @Column(name = "itrx_fee_sun_amount")
+    private Long itrxFeeSunAmount;
+
+    @Column(name = "sun_amount")
+    private Long sunAmount;
 
     @Column(name = "energy_amount")
     private Integer energyAmount;

@@ -1,34 +1,39 @@
 package org.ipan.nrgyrent.cron;
 
-import lombok.AllArgsConstructor;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
 import org.ipan.nrgyrent.domain.model.AppUser;
+import org.ipan.nrgyrent.domain.model.Balance;
 import org.ipan.nrgyrent.domain.service.UserService;
 import org.ipan.nrgyrent.trongrid.api.AccountApi;
-import org.ipan.nrgyrent.trongrid.model.V1AccountsAddressTransactionsGet200Response;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.concurrent.TimeUnit;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Configuration
 @EnableScheduling
 @AllArgsConstructor
+@Slf4j
 public class PollForTransactionsJob {
-    private final AccountApi accountApi;
+    private static final Integer BATCH_SIZE = 10;
+
     private final UserService userService;
+    private final PollForTransactionsJobHelper helper;
 
     @Scheduled(fixedRate = 5, timeUnit = TimeUnit.MINUTES)
-    @Transactional
     public void scheduleTasks() {
-        List<AppUser> allUsers = userService.getAllUsers();
+        List<Balance> userWallets = userService.getAllUsers()
+                .stream()
+                .map(AppUser::getBalance)
+                .toList();
 
-        for (AppUser user : allUsers) {
-            V1AccountsAddressTransactionsGet200Response block = accountApi.v1AccountsAddressTransactionsGet(user.getDepositAddress()).block();
-
-            System.out.println("block " + block);
+        for (int i = 0; i < userWallets.size(); i += BATCH_SIZE) {
+            List<Balance> batch = userWallets.subList(i, Math.min(i + BATCH_SIZE, userWallets.size()));
+            helper.processBatch(batch);
         }
     }
 }

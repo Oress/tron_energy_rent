@@ -2,7 +2,11 @@ package org.ipan.nrgyrent.itrx;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+
+import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
+
+import org.ipan.nrgyrent.itrx.dto.EstimateOrderAmountResponse;
 import org.ipan.nrgyrent.itrx.dto.PlaceOrderResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -12,6 +16,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 @Component
+@Slf4j
 public class RestClient {
     private final OkHttpClient client = new OkHttpClient().newBuilder().build();
     private final MediaType mediaType = MediaType.parse("application/json");
@@ -59,7 +64,7 @@ public class RestClient {
             Response response = client.newCall(request).execute();
 
             PlaceOrderResponse placeOrderResponse = gson.fromJson(response.body().charStream(), PlaceOrderResponse.class);
-            System.out.println("Response" + placeOrderResponse);
+            logger.info("Response" + placeOrderResponse);
             return placeOrderResponse;
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -67,4 +72,28 @@ public class RestClient {
     }
 
 
+    public EstimateOrderAmountResponse estimateOrderPrice(int energyAmnt, String period, String receiveAddress) {
+        try {
+            HttpUrl url = HttpUrl.parse(baseUrl + "/api/v1/frontend/order/price").newBuilder()
+                    .addQueryParameter("energy_amount", String.valueOf(energyAmnt))
+                    .addQueryParameter("period", period)
+                    .addQueryParameter("to_address", receiveAddress)
+                    .build();
+
+            Request request = new Request.Builder()
+                    .url(url)
+                    .get()
+                    .addHeader("API-KEY", apiKey)
+                    .addHeader("Content-Type", "application/json")
+                    .build();
+
+            Response response = client.newCall(request).execute();
+
+            EstimateOrderAmountResponse placeOrderResponse = gson.fromJson(response.body().charStream(), EstimateOrderAmountResponse.class);
+            logger.info("Response" + placeOrderResponse);
+            return placeOrderResponse;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

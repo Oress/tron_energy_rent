@@ -149,12 +149,12 @@ public class TelegramMessages {
 
     @Retryable
     @SneakyThrows
-    public void updMenuToDepositsMenu(AppUser user, CallbackQuery callbackQuery) {
+    public void updMenuToDepositsMenu(CallbackQuery callbackQuery, String walletAddress, Long sunBalance) {
         EditMessageText message = EditMessageText
                 .builder()
                 .chatId(callbackQuery.getMessage().getChatId())
                 .messageId(callbackQuery.getMessage().getMessageId())
-                .text(StaticLabels.getDepositMenuText(user))
+                .text(StaticLabels.getDepositMenuText(walletAddress, sunBalance))
                 .parseMode("MARKDOWN")
                 .replyMarkup(getToMainMenuMarkup())
                 .build();

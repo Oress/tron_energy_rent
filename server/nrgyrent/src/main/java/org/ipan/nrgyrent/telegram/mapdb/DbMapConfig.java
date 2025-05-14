@@ -22,13 +22,7 @@ public class DbMapConfig {
                 .fileMmapEnable()
                 .fileMmapPreclearDisable()
                 .closeOnJvmShutdown()
+                // .transactionEnable()
                 .make();
-
-        // alternetive: use WAL(Write Ahead Log) Slower but is more durable.
-//        DB db = DBMaker
-//                .fileDB(file)
-//                .transactionEnable()
-//                .make();
-
     }
 }

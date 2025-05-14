@@ -1,8 +1,8 @@
 package org.ipan.nrgyrent.domain.events;
 
-import lombok.Getter;
-import org.ipan.nrgyrent.domain.service.commands.orders.AddOrUpdateOrderCommand;
 import org.springframework.context.ApplicationEvent;
+
+import lombok.Getter;
 
 @Getter
 public class OrderFailedEvent extends ApplicationEvent {

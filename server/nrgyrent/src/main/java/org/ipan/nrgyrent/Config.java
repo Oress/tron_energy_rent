@@ -5,11 +5,7 @@ import org.ipan.nrgyrent.trongrid.api.AccountApi;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
-import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
 import org.springframework.retry.annotation.EnableRetry;
-
-import javax.sql.DataSource;
 
 @Configuration
 @EnableRetry

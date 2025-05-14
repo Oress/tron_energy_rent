@@ -4,19 +4,55 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
 
+    <!-- This table stores the information about wallets themselfs pub and pri keys -->
     <changeSet id="create table nrg_deposit_wallets" author="oress">
         <createTable tableName="nrg_deposit_wallets">
             <column name="base58_address" type="text">
-                <constraints primaryKey="true" nullable="true" unique="true"/>
+                <constraints primaryKey="true" nullable="false" unique="true"/>
             </column>
 
             <column name="private_key_enc" type="bytea"/>
 
             <column name="created_at" type="TIMESTAMP"/>
         </createTable>
+
+        <createIndex indexName="idx_nrg_deposit_wallets_base58_address"
+                 tableName="nrg_deposit_wallets">
+            <column name="base58_address"/>
+        </createIndex>
     </changeSet>
 
+    <changeSet id="create table nrg_balances" author="oress">
+        <createSequence sequenceName="nrg_balance_seq"
+                        dataType="int"
+                        incrementBy="1"
+                        startValue="1"/>
 
+        <createTable tableName="nrg_balances">
+            <column name="id" type="bigint">
+                <constraints primaryKey="true" nullable="false" unique="true"/>
+            </column>
+            <column name="deposit_address" type="text">
+                <constraints nullable="true"/>
+            </column>
+            <column name="sun_balance" type="bigint" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_tx_id" type="text"/>
+            <column name="last_tx_timestamp" type="bigint"/>
+
+            <column name="created_at" type="TIMESTAMP"/>
+            <column name="version" type="bigint"/>
+        </createTable>
+
+        <addForeignKeyConstraint constraintName="fk_nrg_balances_deposit_address"
+                                 baseTableName="nrg_balances"
+                                 baseColumnNames="deposit_address"
+                                 referencedTableName="nrg_deposit_wallets"
+                                 referencedColumnNames="base58_address"/>
+    </changeSet>
+
+    <!-- This table stores the information about telegram users -->
     <changeSet id="create table nrg_users" author="oress">
         <createTable tableName="nrg_users">
             <column name="telegram_id" type="bigint">
@@ -26,28 +62,26 @@
             <column name="role" type="text" defaultValue="user">
                 <constraints nullable="false"/>
             </column>
-            <column name="deposit_address" type="text">
-                <constraints nullable="false"/>
-            </column>
-            <column name="trx_balance" type="decimal(19,6)" defaultValue="0">
-                <constraints nullable="false"/>
-            </column>
+
+            <column name="balance_id" type="bigint" />
 
             <column name="disabled" type="boolean" defaultValue="false">
                 <constraints nullable="false"/>
             </column>
             <column name="disabled_reason" type="text"/>
+
             <column name="created_at" type="TIMESTAMP"/>
             <column name="updated_at" type="TIMESTAMP"/>
         </createTable>
 
-        <addForeignKeyConstraint constraintName="fk_nrg_users_deposit_address"
+        <addForeignKeyConstraint constraintName="fk_nrg_users_balance_id"
                                  baseTableName="nrg_users"
-                                 baseColumnNames="deposit_address"
-                                 referencedTableName="nrg_deposit_wallets"
-                                 referencedColumnNames="base58_address"/>
+                                 baseColumnNames="balance_id"
+                                 referencedTableName="nrg_balances"
+                                 referencedColumnNames="id"/>
     </changeSet>
 
+    <!-- This table stores the information about user preferred wallets(i.e. where to send energy) -->
     <changeSet id="create table nrg_user_wallets" author="oress">
         <createSequence sequenceName="ngr_user_wallet_seq"
                         dataType="int"
@@ -60,6 +94,7 @@
             </column>
 
             <column name="user_id" type="bigint"/>
+            <column name="label" type="text"/>
             <column name="address" type="text"/>
             <column name="created_at" type="TIMESTAMP"/>
         </createTable>
@@ -71,8 +106,7 @@
                                  referencedColumnNames="telegram_id"/>
     </changeSet>
 
-
-
+    <!-- This table stores the information about orders and their state -->
     <changeSet id="create table nrg_orders" author="oress">
         <createSequence sequenceName="nrg_order_seq"
                         dataType="int"
@@ -85,7 +119,8 @@
             </column>
 
             <column name="user_id" type="bigint"/>
-            <column name="trx_amount" type="text"/>
+            <column name="sun_amount" type="bigint"/>
+            <column name="itrx_fee_sun_amount" type="bigint"/>
             <column name="energy_amount" type="int"/>
             <column name="receive_address" type="text"/>
             <column name="duration" type="text"/>
@@ -104,5 +139,45 @@
                                  baseColumnNames="user_id"
                                  referencedTableName="nrg_users"
                                  referencedColumnNames="telegram_id"/>
+    </changeSet>
+
+    <!-- This table stores the information about deposits -->
+    <changeSet id="create table nrg_deposit_transactions" author="oress">
+        <createSequence sequenceName="nrg_deposit_transactions_seq"
+                        dataType="int"
+                        incrementBy="1"
+                        startValue="1"/>
+
+        <createTable tableName="nrg_deposit_transactions">
+            <column name="id" type="bigint">
+                <constraints primaryKey="true" nullable="false" unique="true"/>
+            </column>
+
+            <column name="wallet_to" type="text">
+                <constraints nullable="false"/>
+            </column>
+            <column name="wallet_from" type="text">
+                <constraints nullable="false"/>
+            </column>
+            <column name="amount" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tx_id" type="text">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="timestamp" type="TIMESTAMP"/>
+        </createTable>
+
+        <addForeignKeyConstraint constraintName="fk_nrg_deposit_transactions_user_id"
+                                 baseTableName="nrg_deposit_transactions"
+                                 baseColumnNames="user_id"
+                                 referencedTableName="nrg_users"
+                                 referencedColumnNames="telegram_id"/>
+
+        <addForeignKeyConstraint constraintName="fk_nrg_deposit_transactions_wallet_to"
+                                    baseTableName="nrg_deposit_transactions"
+                                    baseColumnNames="wallet_to"
+                                    referencedTableName="nrg_deposit_wallets"
+                                    referencedColumnNames="base58_address"/>
     </changeSet>
 </databaseChangeLog>

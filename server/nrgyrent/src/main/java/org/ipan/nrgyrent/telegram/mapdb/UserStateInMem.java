@@ -3,6 +3,8 @@ package org.ipan.nrgyrent.telegram.mapdb;
 import lombok.Builder;
 import lombok.Value;
 import lombok.With;
+import lombok.extern.slf4j.Slf4j;
+
 import org.ipan.nrgyrent.telegram.States;
 import org.ipan.nrgyrent.telegram.UserState;
 import org.jetbrains.annotations.NotNull;
@@ -74,7 +76,8 @@ public class UserStateInMem implements UserState {
                 builder.telegramId(input.readLong());
             }
             if ((fields & FIELD_STATE) != 0) {
-                builder.state(States.valueOf(input.readUTF()));
+                String utf = input.readUTF();
+                builder.state(States.valueOf(utf));
             }
             if ((fields & FIELD_CHAT_ID) != 0) {
                 builder.chatId(input.readLong());

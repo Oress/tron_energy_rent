@@ -23,8 +23,11 @@ public class UserWallet {
     @JoinColumn(name = "user_id", referencedColumnName = "telegram_id", foreignKey = @ForeignKey(name = "fk_nrg_user_wallets_user_id"))
     private AppUser user;
 
+    private String label;
+
     private String address;
 
     @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
     private Instant createdAt;
 }

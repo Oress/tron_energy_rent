@@ -10,8 +10,4 @@ public interface UserState {
     UserState withState(States value);
     UserState withChatId(Long value);
     UserState withMenuMessageId(Integer value);
-
-//    private final ReadWriteLock rwl = new ReentrantReadWriteLock();
-//    private final Lock r = rwl.readLock();
-//    private final Lock w = rwl.writeLock();
 }

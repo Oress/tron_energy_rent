@@ -1,12 +1,19 @@
 package org.ipan.nrgyrent.domain.model;
 
-import java.math.BigDecimal;
 import java.time.Instant;
 
-import jakarta.persistence.*;
+import org.hibernate.annotations.CreationTimestamp;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
-import org.hibernate.annotations.CreationTimestamp;
 
 @Entity
 @Getter
@@ -17,11 +24,9 @@ public class AppUser {
     @Column(name = "telegram_id")
     private Long telegramId;
 
-    @Column(name = "deposit_address")
-    private String depositAddress;
-
-    @Column(name = "trx_balance", precision = 19, scale = 6)
-    private BigDecimal trxBalance = new BigDecimal(0);
+    @JoinColumn(name = "balance_id")
+    @ManyToOne
+    private Balance balance;
 
     @Enumerated(EnumType.STRING)
     private UserRole role = UserRole.USER;
@@ -34,6 +39,4 @@ public class AppUser {
     @CreationTimestamp
     @Column(name = "created_at")
     private Instant createdAt;
-
-
 }

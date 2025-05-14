@@ -1,4 +1,4 @@
-openapi: 3.0.3
+openapi: 3.1.3
 info:
   title: Tron Blockchain API
   description: API for interacting with the Tron blockchain.
@@ -93,28 +93,7 @@ components:
         contract:
           type: array
           items:
-            type: object
-            properties:
-              type:
-                type: string
-              parameter:
-                type: object
-                properties:
-                  value:
-                    type: object
-                    properties:
-                      frozen_balance:
-                        type: integer
-                        format: int64
-                      amount:
-                        type: integer
-                        format: int64
-                      owner_address:
-                        type: string
-                      to_address:
-                        type: string
-                  type_url:
-                    type: string
+            $ref: '#/components/schemas/Contract'
 
     # https://developers.tron.network/docs/tron-protocol-transaction
     Transaction:
@@ -156,3 +135,99 @@ components:
             type: string
         visible:
           type: boolean
+
+    Contract:
+      type: object
+      properties:
+        type:
+          type: string
+        parameter:
+          type: object
+          properties:
+            value:
+              type: object
+              properties:
+                frozen_balance:
+                  type: integer
+                  format: int64
+                balance:
+                  type: integer
+                  format: int64
+                lock_period:
+                  type: integer
+                  format: int64
+                lock:
+                  type: boolean
+                unfreeze_balance:
+                  type: integer
+                  format: int64
+                frozen_duration:
+                  type: integer
+                  format: int64
+                amount:
+                  type: integer
+                  format: int64
+                owner_address:
+                  type: string
+                receiver_address:
+                  type: string
+                account_address:
+                  type: string
+                account_name:
+                  type: string
+                asset_name:
+                  type: string
+                account_id:
+                  type: string
+                to_address:
+                  type: string
+                # type ???
+            type_url:
+              type: string
+
+    Parameter:
+      type: object
+      properties:
+        type_url:
+          type: string
+        value:
+          $ref: '#/components/schemas/ParameterValue'
+
+    ParameterValue:
+      type: object
+      properties:
+        frozen_balance:
+          type: integer
+          format: int64
+        balance:
+          type: integer
+          format: int64
+        lock_period:
+          type: integer
+          format: int64
+        lock:
+          type: boolean
+        unfreeze_balance:
+          type: integer
+          format: int64
+        frozen_duration:
+          type: integer
+          format: int64
+        amount:
+          type: integer
+          format: int64
+        owner_address:
+          type: string
+        receiver_address:
+          type: string
+        account_address:
+          type: string
+        account_name:
+          type: string
+        asset_name:
+          type: string
+        account_id:
+          type: string
+        to_address:
+          type: string
+        # type ???

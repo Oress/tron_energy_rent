@@ -35,7 +35,8 @@ public class OrderService {
         order.setDuration(command.getDuration());
         order.setCorrelationId(command.getCorrelationId());
         order.setEnergyAmount(command.getEnergyAmount());
-        order.setTrxAmount(command.getTrxAmount());
+        order.setSunAmount(command.getSunAmount());
+        order.setItrxFeeSunAmount(command.getItrxFeeSunAmount());
         order.setReceiveAddress(command.getReceiveAddress());
         order.setSerial(command.getSerial());
 

@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.ipan.nrgyrent.domain.model.AppUser;
 import org.ipan.nrgyrent.domain.model.UserWallet;
+import org.ipan.nrgyrent.domain.model.projections.UserWalletBalanceUpdateProj;
 import org.ipan.nrgyrent.domain.service.OrderService;
 import org.ipan.nrgyrent.domain.service.UserService;
 import org.ipan.nrgyrent.domain.service.UserWalletService;
@@ -11,7 +12,9 @@ import org.ipan.nrgyrent.domain.service.commands.orders.AddOrUpdateOrderCommand;
 import org.ipan.nrgyrent.domain.service.commands.users.CreateUserCommand;
 import org.ipan.nrgyrent.domain.service.commands.userwallet.AddOrUpdateUserWalletCommand;
 import org.ipan.nrgyrent.domain.service.commands.userwallet.DeleteUserWalletCommand;
+import org.ipan.nrgyrent.itrx.AppConstants;
 import org.ipan.nrgyrent.itrx.ItrxService;
+import org.ipan.nrgyrent.itrx.dto.EstimateOrderAmountResponse;
 import org.ipan.nrgyrent.itrx.dto.OrderCallbackRequest;
 import org.ipan.nrgyrent.itrx.dto.PlaceOrderResponse;
 import org.ipan.nrgyrent.telegram.utils.WalletTools;
@@ -46,13 +49,17 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
     @Override
     public void consume(Update update) {
         User from = getFrom(update);
+        logger.info("Received update from user: {}", from);
         if (from.getIsBot()) {
+            logger.info("Ignoring update from bot: {}", from);
             // Ignore bots
             return;
         }
 
         Long userId = from.getId();
         UserState userState = telegramState.getOrCreateUserState(userId);
+
+        logger.info("User state: {}", userState);
 
         handleStartState(userState, update);
 
@@ -119,33 +126,34 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
         }
     }
 
-
     private void handleTransaction65kState(UserState userState, Update update) {
-        handleTransactionState(userState, update, 65_000);
+        handleTransactionState(userState, update, AppConstants.ENERGY_65K, AppConstants.PRICE_65K);
     }
 
     private void handleTransaction131kState(UserState userState, Update update) {
-        handleTransactionState(userState, update, 131_000);
+        handleTransactionState(userState, update, AppConstants.ENERGY_131K, AppConstants.PRICE_131K);
     }
 
-    private void handleTransactionState(UserState userState, Update update, Integer energyAmount) {
+    private void handleTransactionState(UserState userState, Update update, Integer energyAmount, Long sunAmount) {
         CallbackQuery callbackQuery = update.getCallbackQuery();
         if (callbackQuery != null) {
-            tryMakeTransaction(userState, energyAmount, callbackQuery.getData());
+            tryMakeTransaction(userState, energyAmount, AppConstants.DURATION_1H, callbackQuery.getData(), sunAmount);
         }
 
         Message message = update.getMessage();
         if (message != null && message.hasText()) {
-            tryMakeTransaction(userState, energyAmount, message.getText());
+            tryMakeTransaction(userState, energyAmount, AppConstants.DURATION_1H, message.getText(), sunAmount);
         }
     }
 
-    private void tryMakeTransaction(UserState userState, Integer energyAmount, String walletAddress) {
+    private void tryMakeTransaction(UserState userState, Integer energyAmount, String duration, String walletAddress, Long sunAmount) {
         if (WalletTools.isValidTronAddress(walletAddress)) {
             telegramMessages.updMenuToTransactionInProgress(userState);
 
             UUID correlationId = UUID.randomUUID();
-            PlaceOrderResponse placeOrderResponse = itrxService.placeOrder(energyAmount, walletAddress, correlationId);
+            // TODO: handle exceptions, network errors, etc.
+            EstimateOrderAmountResponse estimateOrderResponse = itrxService.estimateOrderPrice(energyAmount, duration, walletAddress);
+            PlaceOrderResponse placeOrderResponse = itrxService.placeOrder(energyAmount, duration, walletAddress, correlationId);
 
             // Waiting WAIT_FOR_CALLBACK seconds for callback from itrx
             // if callback is not received, enqueue the request and notify the user
@@ -160,10 +168,14 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
                             .userId(userState.getTelegramId())
                             .receiveAddress(walletAddress)
                             .energyAmount(energyAmount)
+                            .duration(duration)
+                            .sunAmount(sunAmount)
+                            .itrxFeeSunAmount(estimateOrderResponse.getTotal_price())
                             .correlationId(correlationId.toString())
                             .serial(placeOrderResponse.getSerial())
                             .build()
             );
+            // TODO: this will block the bot for incomming messages, handle it without blocking.
             OrderCallbackRequest orderCallbackRequest = itrxService.getCorrelatedCallbackRequest(correlationId, WAIT_FOR_CALLBACK);
 
             if (orderCallbackRequest != null) {
@@ -173,7 +185,6 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
             } else {
                 telegramMessages.updMenuToTransactionPending(userState);
                 telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.TRANSACTION_PENDING));
-                // TODO: add PENDING DB record for transaction
             }
         }
     }
@@ -193,7 +204,7 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
                 telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.TRANSACTION_131k));
             } else if (InlineMenuCallbacks.DEPOSIT.equals(data)) {
                 AppUser user = userService.getById(userState.getTelegramId());
-                telegramMessages.updMenuToDepositsMenu(user, callbackQuery);
+                telegramMessages.updMenuToDepositsMenu(callbackQuery, user.getBalance().getDepositAddress(), user.getBalance().getSunBalance());
                 telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.DEPOSIT));
             } else if (InlineMenuCallbacks.WALLETS.equals(data)) {
                 List<UserWallet> wallets = userWalletService.getWallets(userState.getTelegramId());

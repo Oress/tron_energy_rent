@@ -7,8 +7,7 @@ import java.text.DecimalFormat;
 public class StaticLabels {
     public static final String MSG_MAIN_MENU_TEXT = """
             ⚡ Приветствуем в нашем сервисе .... ⚡
-            Данный бот поможет вам сэкономить ~70% потраченных TRX на транзакции
-            
+
             Выберите действие, нажав кнопку ниже
             """;
 
@@ -76,7 +75,7 @@ public class StaticLabels {
     public static final String OK = "OK";
 
     private static DecimalFormat df = new DecimalFormat("# ###.#");
-    public static String getDepositMenuText(AppUser user) {
+    public static String getDepositMenuText(String depositAddress, Long sunBalance) {
         return """
                 💰 Ваш адресс депозита:
                 
@@ -92,7 +91,7 @@ public class StaticLabels {
                 
                 ⌛️ Среднее время зачисления депозита - 2 минуты."""
                 .formatted(
-                        user.getDepositAddress(),
-                        df.format(user.getTrxBalance()));
+                        depositAddress,
+                        df.format(sunBalance / 1_000_000));
     }
 }
