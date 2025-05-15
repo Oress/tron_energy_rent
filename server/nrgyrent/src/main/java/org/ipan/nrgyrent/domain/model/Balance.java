@@ -31,6 +31,11 @@ public class Balance {
     @Column(name = "deposit_address")
     private String depositAddress;
 
+    private String label;
+
+    @Enumerated(EnumType.STRING)
+    private BalanceType type = BalanceType.INDIVIDUAL;
+
     @Column(name = "sun_balance")
     private Long sunBalance = 0L;
 

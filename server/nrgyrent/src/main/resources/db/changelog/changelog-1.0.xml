@@ -35,6 +35,10 @@
             <column name="deposit_address" type="text">
                 <constraints nullable="true"/>
             </column>
+            <column name="type" type="text" defaultValue="INDIVIDUAL">
+                <constraints nullable="true"/>
+            </column>
+            <column name="label" type="text"/>
             <column name="sun_balance" type="bigint" defaultValueNumeric="0">
                 <constraints nullable="false"/>
             </column>
@@ -64,6 +68,7 @@
             </column>
 
             <column name="balance_id" type="bigint" />
+            <column name="group_balance_id" type="bigint" />
 
             <column name="disabled" type="boolean" defaultValue="false">
                 <constraints nullable="false"/>
@@ -167,12 +172,6 @@
             </column>
             <column name="timestamp" type="TIMESTAMP"/>
         </createTable>
-
-        <addForeignKeyConstraint constraintName="fk_nrg_deposit_transactions_user_id"
-                                 baseTableName="nrg_deposit_transactions"
-                                 baseColumnNames="user_id"
-                                 referencedTableName="nrg_users"
-                                 referencedColumnNames="telegram_id"/>
 
         <addForeignKeyConstraint constraintName="fk_nrg_deposit_transactions_wallet_to"
                                     baseTableName="nrg_deposit_transactions"

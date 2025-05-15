@@ -16,6 +16,7 @@ public class DbMapConfig {
 
     @Bean
     public DB db() {
+        // TODO: handle this shit somehow Caused by: org.mapdb.DBException$FileLocked: File is already opened and is locked: cache/nrgyrent.db 
         File file = new File(dbPath);
         file.getParentFile().mkdirs(); // create folders if they do not exist
         return DBMaker.fileDB(file)

@@ -28,6 +28,10 @@ public class AppUser {
     @ManyToOne
     private Balance balance;
 
+    @JoinColumn(name = "group_balance_id")
+    @ManyToOne
+    private Balance groupBalance;
+
     @Enumerated(EnumType.STRING)
     private UserRole role = UserRole.USER;
 

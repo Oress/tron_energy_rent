@@ -1,10 +1,9 @@
 package org.ipan.nrgyrent.telegram;
 
-import org.ipan.nrgyrent.domain.model.AppUser;
-
 import java.text.DecimalFormat;
 
 public class StaticLabels {
+    // COMMON
     public static final String MSG_MAIN_MENU_TEXT = """
             ⚡ Приветствуем в нашем сервисе .... ⚡
 
@@ -25,11 +24,6 @@ public class StaticLabels {
             👇 Пожалуйста, выберите кошелек, для которого вы желаете перевести энергию 👇
             """;
 
-    public static final String MSG_TRANSACTION_SUCCESS = """
-            ✅ Транзакция успешно завершена
-            Энергия была переведена на ваш кошелек
-            """;
-
     public static final String MSG_TRANSACTION_PROGRESS = "Работаем, пожалуйста, подождите...";
 
     public static final String MSG_TRANSACTION_PENDING = """
@@ -38,6 +32,11 @@ public class StaticLabels {
             Бот отправит вам уведомление, когда транзакция будет завершена.
             """;
 
+    // NOTIFICATIONS
+    public static final String MSG_TRANSACTION_SUCCESS = """
+            ✅ Транзакция успешно завершена
+            Энергия была переведена на ваш кошелек
+            """;
 
     public static final String MSG_WALLETS = """
             \uD83D\uDC5B Кошельки
@@ -48,11 +47,32 @@ public class StaticLabels {
     public static final String MSG_DELETE_WALLET_SUCCESS = "\uD83D\uDDD1\uFE0F Кошелек успешно удален";
 
 
+     // ADMIN
+    public static final String MSG_ADMIN_MENU = """
+            👨‍💻 Админка
+            Здесь вы можете управлять группами, пользователями, а также просматривать и изменять их баланс
+            """;
+
+
+
+    public static final String MSG_MANAGE_GROUPS_SEARCH_NO_RESULTS = "❌ Нет результатов";
+    public static final String MSG_MANAGE_GROUPS_SEARCH_PAGE_RESULTS = """
+            ✅ Результаты поиска
+            Выберите группу, с которой хотите работать
+            """;
+
+
     // Menu labels
+    public static final String MENU_ADMIN = "👨‍💻 Админка";
     public static final String MENU_TRANSFER_ENERGY_65K = "⚡ 65 000 энергии на 1 час (5.5 TRX)";
     public static final String MENU_TRANSFER_ENERGY_131K = "⚡ 131 000 энергии на 1 час (8 TRX)";
     public static final String MENU_DEPOSIT = "\uD83D\uDCB8 Депозит";
     public static final String MENU_WALLETS = "\uD83D\uDC5B Кошельки";
+
+    // Admin menu labels
+    public static final String MENU_ADMIN_MANAGE_GROUPS = "👥 Управление группами";
+    public static final String MENU_ADMIN_MANAGE_USERS = "👤 Управление пользователями";
+
 
     public static final String TO_MAIN_MENU = "\uD83C\uDFE0 Главное меню";
 

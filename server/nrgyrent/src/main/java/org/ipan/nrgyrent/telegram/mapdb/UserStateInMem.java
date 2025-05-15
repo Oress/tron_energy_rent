@@ -1,18 +1,22 @@
 package org.ipan.nrgyrent.telegram.mapdb;
 
-import lombok.Builder;
-import lombok.Value;
-import lombok.With;
-import lombok.extern.slf4j.Slf4j;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
+import org.ipan.nrgyrent.domain.model.UserRole;
 import org.ipan.nrgyrent.telegram.States;
-import org.ipan.nrgyrent.telegram.UserState;
+import org.ipan.nrgyrent.telegram.state.UserState;
 import org.jetbrains.annotations.NotNull;
 import org.mapdb.DataInput2;
 import org.mapdb.DataOutput2;
 import org.mapdb.Serializer;
 
-import java.io.IOException;
+import lombok.Builder;
+import lombok.Value;
+import lombok.With;
 
 @Value
 @With
@@ -22,6 +26,8 @@ public class UserStateInMem implements UserState {
     States state;
     Long chatId;
     Integer menuMessageId;
+    UserRole role;
+    List<Integer> messagesToDelete;
 
     public static UserStateInMem of(UserState prototype) {
         return UserStateInMem.builder()
@@ -29,6 +35,8 @@ public class UserStateInMem implements UserState {
                 .state(prototype.getState())
                 .chatId(prototype.getChatId())
                 .menuMessageId(prototype.getMenuMessageId())
+                .role(prototype.getRole())
+                .messagesToDelete(prototype.getMessagesToDelete() == null ? Collections.emptyList() : new ArrayList<>(prototype.getMessagesToDelete()))
                 .build();
     }
 
@@ -36,9 +44,11 @@ public class UserStateInMem implements UserState {
         private static final int version = 1;
 
         public static final int FIELD_TG = 0b00000001;
-        public static final int FIELD_STATE = 0b00000010;
-        public static final int FIELD_CHAT_ID = 0b00000100;
-        public static final int FIELD_MENU_MSG_ID = 0b00001000;
+        public static final int FIELD_STATE = FIELD_TG << 1;
+        public static final int FIELD_CHAT_ID = FIELD_STATE << 1;
+        public static final int FIELD_MENU_MSG_ID = FIELD_CHAT_ID << 1;
+        public static final int FIELD_ROLE = FIELD_MENU_MSG_ID << 1;
+        public static final int FIELD_MSGS_TO_DELETE = FIELD_ROLE << 1;
 
         @Override
         public void serialize(@NotNull DataOutput2 out, @NotNull UserStateInMem value) throws IOException {
@@ -48,6 +58,8 @@ public class UserStateInMem implements UserState {
             fields = value.state != null ? (fields | FIELD_STATE) : fields;
             fields = value.chatId != null ? (fields | FIELD_CHAT_ID) : fields;
             fields = value.menuMessageId != null ? (fields | FIELD_MENU_MSG_ID) : fields;
+            fields = value.role != null ? (fields | FIELD_ROLE) : fields;
+            fields = value.messagesToDelete != null ? (fields | FIELD_MSGS_TO_DELETE) : fields;
 
             out.writeByte(version);
             out.writeInt(fields);
@@ -63,6 +75,15 @@ public class UserStateInMem implements UserState {
             }
             if (value.menuMessageId != null) {
                 out.writeInt(value.menuMessageId);
+            }
+            if (value.role != null) {
+                out.writeUTF(value.role.name());
+            }
+            if (value.messagesToDelete != null) {
+                out.writeInt(value.messagesToDelete.size());
+                for (Integer messageId : value.messagesToDelete) {
+                    out.writeInt(messageId);
+                }
             }
         }
 
@@ -85,7 +106,18 @@ public class UserStateInMem implements UserState {
             if ((fields & FIELD_MENU_MSG_ID) != 0) {
                 builder.menuMessageId(input.readInt());
             }
-
+            if ((fields & FIELD_ROLE) != 0) {
+                String utf = input.readUTF();
+                builder.role(UserRole.valueOf(utf));
+            }
+            if ((fields & FIELD_MSGS_TO_DELETE) != 0) {
+                int size = input.readInt();
+                List<Integer> messagesToDelete = new ArrayList<>(size);
+                for (int i = 0; i < size; i++) {
+                    messagesToDelete.add(input.readInt());
+                }
+                builder.messagesToDelete(messagesToDelete);
+            }
             return builder.build();
         }
     }

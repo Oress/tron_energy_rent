@@ -1,17 +1,13 @@
 package org.ipan.nrgyrent.domain.service;
 
-import java.io.IOException;
 import java.time.Instant;
 import java.util.List;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.ipan.nrgyrent.domain.model.AppUser;
 import org.ipan.nrgyrent.domain.model.Balance;
-import org.ipan.nrgyrent.domain.model.ManagedWallet;
 import org.ipan.nrgyrent.domain.model.repository.UserRepo;
 import org.ipan.nrgyrent.domain.service.commands.users.CreateUserCommand;
-import org.ipan.nrgyrent.tron.crypto.ECKey;
-import org.ipan.nrgyrent.tron.wallet.WalletApi;
 import org.springframework.beans.factory.annotation.Lookup;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,7 +18,8 @@ import lombok.AllArgsConstructor;
 @Service
 @AllArgsConstructor
 public class UserService {
-    private UserRepo userRepo;
+    private final UserRepo userRepo;
+    private final BalanceService balanceService;
 
     @Transactional
     public AppUser createUser(CreateUserCommand command) {
@@ -36,33 +33,12 @@ public class UserService {
         appUser.setCreatedAt(Instant.now());
 
         EntityManager em = getEntityManager();
-        try {
-            // TODO: persist cascade?
-            ManagedWallet depositWallet = generateDepositWallet();
-            em.persist(depositWallet);
+        Balance individualDepositBalance = balanceService.createIndividualBalance(appUser);
 
-            Balance depositBalance = new Balance();
-            depositBalance.setDepositAddress(depositWallet.getBase58Address());
-            em.persist(depositBalance);
-
-            appUser.setBalance(depositBalance);
-            em.persist(appUser);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        appUser.setBalance(individualDepositBalance);
+        em.persist(appUser);
 
         return appUser;
-    }
-
-    private ManagedWallet generateDepositWallet() throws IOException {
-        ManagedWallet depositWallet = new ManagedWallet();
-
-        ECKey privateKeyForNewWallet = WalletApi.generatePrivateKeyForNewWallet();
-        byte[] address = privateKeyForNewWallet.getAddress();
-        depositWallet.setBase58Address(WalletApi.encode58Check(address));
-        // TODO: Encrypt the private key
-        depositWallet.setPrivateKeyEncrypted(privateKeyForNewWallet.getPrivateKey());
-        return depositWallet;
     }
 
     public AppUser getById(Long telegramId) {
@@ -76,5 +52,9 @@ public class UserService {
     
     public List<AppUser> getAllUsers() {
         return userRepo.findAll();
+    }
+
+    public List<AppUser> getByIds(List<Long> userIds) {
+        return userRepo.findAllById(userIds);
     }
 }

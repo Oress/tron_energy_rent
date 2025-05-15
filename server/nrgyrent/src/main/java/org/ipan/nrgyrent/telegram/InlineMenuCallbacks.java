@@ -11,6 +11,14 @@ public class InlineMenuCallbacks {
 
     public static final String TRANSACTION_65k = "transaction_65k";
     public static final String TRANSACTION_131k = "transaction_131k";
+    public static final String ADMIN_MENU = "admin_menu";
+
+    public static final String MANAGE_GROUPS = "manage_groups";
+    public static final String MANAGE_USERS = "manage_users";
+
+
+    public static final String MANAGE_GROUPS_SEARCH = "manage_groups_search";
+    public static final String MANAGE_GROUPS_ADD = "manage_groups_add_new";
 
 
     public static final String NTFN_OK = "notification_ok";

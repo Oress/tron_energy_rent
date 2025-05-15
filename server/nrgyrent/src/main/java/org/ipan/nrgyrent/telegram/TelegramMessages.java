@@ -4,12 +4,18 @@ import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.ipan.nrgyrent.domain.model.AppUser;
+import org.ipan.nrgyrent.domain.model.Balance;
 import org.ipan.nrgyrent.domain.model.UserWallet;
+import org.ipan.nrgyrent.telegram.state.UserState;
 import org.ipan.nrgyrent.telegram.utils.WalletTools;
+import org.ipan.nrgyrent.telegram.views.ManageGroupNewGroupView;
+import org.ipan.nrgyrent.telegram.views.ManageGroupSearchView;
+import org.springframework.data.domain.Page;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessages;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.message.Message;
@@ -25,6 +31,16 @@ import java.util.List;
 @AllArgsConstructor
 public class TelegramMessages {
     private TelegramClient tgClient;
+    private ManageGroupNewGroupView manageGroupView;
+    private ManageGroupSearchView manageGroupSearchView;
+
+    public ManageGroupNewGroupView manageGroupView() {
+        return manageGroupView;
+    }
+
+    public ManageGroupSearchView manageGroupSearchView() {
+        return manageGroupSearchView;
+    }
 
     @SneakyThrows
     public void sendTransactionSuccessNotification(UserState userState) {
@@ -46,6 +62,26 @@ public class TelegramMessages {
                 .replyMarkup(getOrderRefundedNotificationMarkup())
                 .build();
         tgClient.execute(message);
+    }
+
+    @SneakyThrows
+    public void deleteMessage(Long chatId, Integer messageId) {
+        DeleteMessage deleteMessage = DeleteMessage
+                .builder()
+                .chatId(chatId)
+                .messageId(messageId)
+                .build();
+        tgClient.execute(deleteMessage);
+    }
+
+    @SneakyThrows
+    public void deleteMessages(Long chatId, List<Integer> messageIds) {
+        DeleteMessages deleteMessages = DeleteMessages
+                .builder()
+                .chatId(chatId)
+                .messageIds(messageIds)
+                .build();
+        tgClient.execute(deleteMessages);
     }
 
     @SneakyThrows
@@ -80,6 +116,17 @@ public class TelegramMessages {
         return tgClient.execute(message);
     }
 
+    @Retryable
+    @SneakyThrows
+    public Message sendAdminMainMenu(Long chatId) {
+        SendMessage message = SendMessage
+                .builder()
+                .chatId(chatId)
+                .text(StaticLabels.MSG_MAIN_MENU_TEXT)
+                .replyMarkup(getAdminMainMenuReplyMarkup())
+                .build();
+        return tgClient.execute(message);
+    }
 
     @Retryable
     @SneakyThrows
@@ -106,7 +153,6 @@ public class TelegramMessages {
         tgClient.execute(message);
     }
 
-
     @Retryable
     @SneakyThrows
     public void updMenuToTransactionSuccess(UserState userState) {
@@ -132,7 +178,6 @@ public class TelegramMessages {
                 .build();
         tgClient.execute(message);
     }
-
 
     @Retryable
     @SneakyThrows
@@ -161,7 +206,6 @@ public class TelegramMessages {
         tgClient.execute(message);
     }
 
-
     @Retryable
     @SneakyThrows
     public void updMenuToWalletsMenu(List<UserWallet> wallets, CallbackQuery callbackQuery) {
@@ -171,6 +215,19 @@ public class TelegramMessages {
                 .messageId(callbackQuery.getMessage().getMessageId())
                 .text(StaticLabels.MSG_WALLETS)
                 .replyMarkup(getWalletsMenuMarkup(wallets))
+                .build();
+        tgClient.execute(message);
+    }
+
+    @Retryable
+    @SneakyThrows
+    public void updMenuToAdminMenu(CallbackQuery callbackQuery) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(callbackQuery.getMessage().getChatId())
+                .messageId(callbackQuery.getMessage().getMessageId())
+                .text(StaticLabels.MSG_ADMIN_MENU)
+                .replyMarkup(getAdminMenuReplyMarkup())
                 .build();
         tgClient.execute(message);
     }
@@ -201,7 +258,6 @@ public class TelegramMessages {
         tgClient.execute(message);
     }
 
-
     @Retryable
     @SneakyThrows
     public void updMenuToAddWalletSuccessMenu(UserState userState) {
@@ -227,6 +283,18 @@ public class TelegramMessages {
         tgClient.execute(message);
     }
 
+    @SneakyThrows
+    public void updateMsgToAdminMainMenu(CallbackQuery callbackQuery) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(callbackQuery.getMessage().getChatId())
+                .messageId(callbackQuery.getMessage().getMessageId())
+                .text(StaticLabels.MSG_MAIN_MENU_TEXT)
+                .replyMarkup(getAdminMainMenuReplyMarkup())
+                .build();
+        tgClient.execute(message);
+    }
+
     private InlineKeyboardMarkup getMainMenuReplyMarkup() {
         return InlineKeyboardMarkup
                 .builder()
@@ -236,18 +304,14 @@ public class TelegramMessages {
                                         .builder()
                                         .text(StaticLabels.MENU_TRANSFER_ENERGY_65K)
                                         .callbackData(InlineMenuCallbacks.TRANSACTION_65k)
-                                        .build()
-                        )
-                )
+                                        .build()))
                 .keyboardRow(
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
                                         .text(StaticLabels.MENU_TRANSFER_ENERGY_131K)
                                         .callbackData(InlineMenuCallbacks.TRANSACTION_131k)
-                                        .build()
-                        )
-                )
+                                        .build()))
                 .keyboardRow(
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
@@ -259,12 +323,81 @@ public class TelegramMessages {
                                         .builder()
                                         .text(StaticLabels.MENU_WALLETS)
                                         .callbackData(InlineMenuCallbacks.WALLETS)
-                                        .build()
-                        )
+                                        .build())
 
                 )
                 .build();
     }
+
+    private InlineKeyboardMarkup getAdminMenuReplyMarkup() {
+        return InlineKeyboardMarkup
+                .builder()
+                .keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text(StaticLabels.MENU_ADMIN_MANAGE_GROUPS)
+                                        .callbackData(InlineMenuCallbacks.MANAGE_GROUPS)
+                                        .build()))
+                .keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text(StaticLabels.MENU_ADMIN_MANAGE_USERS)
+                                        .callbackData(InlineMenuCallbacks.MANAGE_USERS)
+                                        .build()))
+                .keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text(StaticLabels.TO_MAIN_MENU)
+                                        .callbackData(InlineMenuCallbacks.TO_MAIN_MENU)
+                                        .build()))
+                .build();
+    }
+
+    private InlineKeyboardMarkup getAdminMainMenuReplyMarkup() {
+        return InlineKeyboardMarkup
+                .builder()
+                .keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text(StaticLabels.MENU_TRANSFER_ENERGY_65K)
+                                        .callbackData(InlineMenuCallbacks.TRANSACTION_65k)
+                                        .build()))
+                .keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text(StaticLabels.MENU_TRANSFER_ENERGY_131K)
+                                        .callbackData(InlineMenuCallbacks.TRANSACTION_131k)
+                                        .build()))
+                .keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text(StaticLabels.MENU_DEPOSIT)
+                                        .callbackData(InlineMenuCallbacks.DEPOSIT)
+                                        .build(),
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text(StaticLabels.MENU_WALLETS)
+                                        .callbackData(InlineMenuCallbacks.WALLETS)
+                                        .build()))
+                .keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text(StaticLabels.MENU_ADMIN)
+                                        .callbackData(InlineMenuCallbacks.ADMIN_MENU)
+                                        .build()))
+                .build();
+    }
+
+
+
+
 
     private InlineKeyboardMarkup getOrderSuccessNotificationMarkup() {
         return InlineKeyboardMarkup
@@ -275,8 +408,7 @@ public class TelegramMessages {
                                         .builder()
                                         .text(StaticLabels.OK)
                                         .callbackData(InlineMenuCallbacks.NTFN_OK)
-                                        .build()
-                        )
+                                        .build())
 
                 )
                 .build();
@@ -291,8 +423,7 @@ public class TelegramMessages {
                                         .builder()
                                         .text(StaticLabels.OK)
                                         .callbackData(InlineMenuCallbacks.NTFN_OK)
-                                        .build()
-                        )
+                                        .build())
 
                 )
                 .build();
@@ -307,10 +438,7 @@ public class TelegramMessages {
                                         .builder()
                                         .text(StaticLabels.TO_MAIN_MENU)
                                         .callbackData(InlineMenuCallbacks.TO_MAIN_MENU)
-                                        .build()
-                        )
-
-                )
+                                        .build()))
                 .build();
     }
 
@@ -326,8 +454,7 @@ public class TelegramMessages {
                             .builder()
                             .text(StaticLabels.WLT_DELETE_WALLET)
                             .callbackData("delete_wallet " + wallet.getId().toString())
-                            .build()
-            );
+                            .build());
             return row;
         }).toList();
 
@@ -339,24 +466,20 @@ public class TelegramMessages {
                                         .builder()
                                         .text(StaticLabels.WLT_ADD_WALLET)
                                         .callbackData(InlineMenuCallbacks.ADD_WALLETS)
-                                        .build()
-                        )
-                );
+                                        .build()));
         walletRows.forEach(builder::keyboardRow);
 
         return builder.keyboardRow(
-                        new InlineKeyboardRow(
-                                InlineKeyboardButton
-                                        .builder()
-                                        .text(StaticLabels.TO_MAIN_MENU)
-                                        .callbackData(InlineMenuCallbacks.TO_MAIN_MENU)
-                                        .build()
-                        )
+                new InlineKeyboardRow(
+                        InlineKeyboardButton
+                                .builder()
+                                .text(StaticLabels.TO_MAIN_MENU)
+                                .callbackData(InlineMenuCallbacks.TO_MAIN_MENU)
+                                .build())
 
-                )
+        )
                 .build();
     }
-
 
     private InlineKeyboardMarkup getTransactionsMenuMarkup(List<UserWallet> wallets) {
         List<InlineKeyboardRow> walletRows = wallets.stream().map(wallet -> {
@@ -365,25 +488,24 @@ public class TelegramMessages {
                             .builder()
                             .text(WalletTools.formatTronAddress(wallet.getAddress()))
                             .callbackData(wallet.getAddress())
-                            .build()
-            );
+                            .build());
             return row;
         }).toList();
         InlineKeyboardMarkup.InlineKeyboardMarkupBuilder<?, ?> builder = InlineKeyboardMarkup
                 .builder();
         walletRows.forEach(builder::keyboardRow);
 
-
         return builder.keyboardRow(
-                        new InlineKeyboardRow(
-                                InlineKeyboardButton
-                                        .builder()
-                                        .text(StaticLabels.TO_MAIN_MENU)
-                                        .callbackData(InlineMenuCallbacks.TO_MAIN_MENU)
-                                        .build()
-                        )
+                new InlineKeyboardRow(
+                        InlineKeyboardButton
+                                .builder()
+                                .text(StaticLabels.TO_MAIN_MENU)
+                                .callbackData(InlineMenuCallbacks.TO_MAIN_MENU)
+                                .build())
 
-                )
+        )
                 .build();
     }
+
+
 }

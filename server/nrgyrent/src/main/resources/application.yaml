@@ -22,6 +22,10 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         generate_statistics: false
 app:
+  cron:
+    tron:
+      transaction:
+        enabled: false
   mapdb:
     db-path: ${APP_MAPDB_PATH:cache/nrgyrent.db}
   itrx:
