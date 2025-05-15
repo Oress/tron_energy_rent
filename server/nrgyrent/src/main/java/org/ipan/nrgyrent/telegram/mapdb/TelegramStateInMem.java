@@ -2,6 +2,7 @@ package org.ipan.nrgyrent.telegram.mapdb;
 
 import org.ipan.nrgyrent.telegram.States;
 import org.ipan.nrgyrent.telegram.state.AddGroupState;
+import org.ipan.nrgyrent.telegram.state.BalanceEdit;
 import org.ipan.nrgyrent.telegram.state.TelegramState;
 import org.ipan.nrgyrent.telegram.state.UserState;
 import org.mapdb.DB;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Service;
 public class TelegramStateInMem implements TelegramState {
     private final HTreeMap<Long, UserStateInMem> userStateMap;
     private final HTreeMap<Long, AddGroupStateInMem> addGroupStateMap;
+    private final HTreeMap<Long, BalanceEditInMem> balanceEditMap;
 
     public TelegramStateInMem(DB db) {
         this.userStateMap = db.hashMap("userState")
@@ -24,11 +26,16 @@ public class TelegramStateInMem implements TelegramState {
                 .keySerializer(Serializer.LONG)
                 .valueSerializer(new AddGroupStateInMem.SerializerImpl())
                 .createOrOpen();
+
+        this.balanceEditMap = db.hashMap("balanceEdit")
+                .keySerializer(Serializer.LONG)
+                .valueSerializer(new BalanceEditInMem.SerializerImpl())
+                .createOrOpen();
     }
 
     @Override
     public UserState getOrCreateUserState(Long userId) {
-        return this.userStateMap.computeIfAbsent(userId, key -> new UserStateInMem(userId, States.START, null, null, null, null));
+        return this.userStateMap.computeIfAbsent(userId, key -> new UserStateInMem(userId, States.START, null, null, null, null, null));
     }
 
     @Override
@@ -49,5 +56,20 @@ public class TelegramStateInMem implements TelegramState {
     @Override
     public AddGroupState removeAddGroupState(Long userId) {
         return this.addGroupStateMap.remove(userId);
+    }
+
+    @Override
+    public BalanceEdit getOrCreateBalanceEdit(Long userId) {
+        return this.balanceEditMap.computeIfAbsent(userId, key -> new BalanceEditInMem(null));
+    }
+
+    @Override
+    public BalanceEdit updateBalanceEdit(Long userId, BalanceEdit balanceEdit) {
+        return this.balanceEditMap.put(userId, BalanceEditInMem.of(balanceEdit));
+    }
+
+    @Override
+    public BalanceEdit removeBalanceEdit(Long userId) {
+        return this.balanceEditMap.remove(userId);
     }
 }

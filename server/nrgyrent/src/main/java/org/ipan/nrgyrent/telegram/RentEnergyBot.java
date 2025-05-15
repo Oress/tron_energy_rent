@@ -1,6 +1,7 @@
 package org.ipan.nrgyrent.telegram;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.ipan.nrgyrent.domain.exception.UserAlreadyHasGroupBalanceException;
@@ -28,6 +29,8 @@ import org.ipan.nrgyrent.telegram.state.AddGroupState;
 import org.ipan.nrgyrent.telegram.state.TelegramState;
 import org.ipan.nrgyrent.telegram.state.UserState;
 import org.ipan.nrgyrent.telegram.utils.WalletTools;
+import org.ipan.nrgyrent.telegram.views.ManageGroupSearchView;
+import org.ipan.nrgyrent.trongrid.api.AccountApi;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
@@ -308,14 +311,26 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
         }
 
         CallbackQuery callbackQuery = update.getCallbackQuery();
+        // Handle search reset + pagination + group selection 
         if (callbackQuery != null) {
             String data = callbackQuery.getData();
 
             if (InlineMenuCallbacks.MANAGE_GROUPS_SEARCH_RESET.equals(data)) {
                 Page<Balance> firstPage = balanceRepo.findAllByTypeOrderById(BalanceType.GROUP, PageRequest.of(0, 10));
                 telegramMessages.manageGroupSearchView().updMenuToManageGroupsSearchResult(firstPage, userState);
+            } else if (data.startsWith(ManageGroupSearchView.OPEN_BALANCE)) {
+                String balanceIdStr = data.split(ManageGroupSearchView.OPEN_BALANCE)[1];
+                Long balanceId = Long.parseLong(balanceIdStr);
+                Optional<Balance> groupBalance = balanceRepo.findById(balanceId);
+                if (groupBalance.isPresent()) {
+                    Balance balance = groupBalance.get();
+                    telegramMessages.manageGroupView().updMenuToManageGroupActionsMenu(callbackQuery, balance);
+                    telegramState.updateBalanceEdit(userState.getTelegramId(), telegramState.getOrCreateBalanceEdit(userState.getTelegramId()).withSelectedBalanceId(balanceId));
+                    telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.ADMIN_MANAGE_GROUPS_ACTION_PREVIEW));
+                } else {
+                    logger.error("Group balance not found for ID: {}", balanceId);
+                }
             }
-
         }
     }
 

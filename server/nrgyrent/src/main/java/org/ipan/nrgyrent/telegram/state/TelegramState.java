@@ -5,6 +5,10 @@ public interface TelegramState {
     UserState updateUserState(Long userId, UserState userState);
 
     AddGroupState getOrCreateAddGroupState(Long userId);
-    AddGroupState removeAddGroupState(Long userId);
+    AddGroupState removeAddGroupState(Long userId); // TODO: cleanup after finishing workflow
     AddGroupState updateAddGroupState(Long userId, AddGroupState addGroupState);
+
+    BalanceEdit getOrCreateBalanceEdit(Long userId);
+    BalanceEdit updateBalanceEdit(Long userId, BalanceEdit balanceEdit);
+    BalanceEdit removeBalanceEdit(Long userId); // TODO: cleanup after finishing workflow
 }

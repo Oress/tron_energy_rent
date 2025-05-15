@@ -21,8 +21,9 @@ import lombok.SneakyThrows;
 @Component
 @AllArgsConstructor
 public class ManageGroupSearchView {
-    public static final String MSG_MANAGE_GROUPS_SEARCH_NO_RESULTS = "❌ Нет результатов";
-    public static final String MSG_MANAGE_GROUPS_SEARCH_PAGE_RESULTS = """
+    public static final String OPEN_BALANCE = "/balance/";
+    private static final String MSG_MANAGE_GROUPS_SEARCH_NO_RESULTS = "❌ Нет результатов";
+    private static final String MSG_MANAGE_GROUPS_SEARCH_PAGE_RESULTS = """
             🔍 Результаты поиска
             Используйте стрелки, чтобы прокручивать результаты, или введите имя группы, чтобы найти ее.
 
@@ -67,13 +68,17 @@ public class ManageGroupSearchView {
         tgClient.execute(message);
     }
 
+    private String openBalanceRequest(Balance balance) {
+        return OPEN_BALANCE + balance.getId();
+    }
+
     private InlineKeyboardMarkup getManageGroupsSearchPageMarkup(Page<Balance> page) {
         List<InlineKeyboardRow> groupBalances = page.getContent().stream().map(balance -> {
             InlineKeyboardRow row = new InlineKeyboardRow(
                     InlineKeyboardButton
                             .builder()
                             .text(balance.getLabel())
-                            .callbackData(balance.getId().toString())
+                            .callbackData(openBalanceRequest(balance))
                             .build());
             return row;
         }).toList();

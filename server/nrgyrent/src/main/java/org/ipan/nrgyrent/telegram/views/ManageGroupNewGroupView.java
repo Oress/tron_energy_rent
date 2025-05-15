@@ -1,5 +1,6 @@
 package org.ipan.nrgyrent.telegram.views;
 
+import org.ipan.nrgyrent.domain.model.Balance;
 import org.ipan.nrgyrent.telegram.InlineMenuCallbacks;
 import org.ipan.nrgyrent.telegram.StaticLabels;
 import org.ipan.nrgyrent.telegram.state.UserState;
@@ -33,14 +34,38 @@ public class ManageGroupNewGroupView {
             👥 Управление группами
             Здесь вы можете управлять группами пользователей, а также просматривать и изменять их баланс
             """;
+    private static final String MSG_MANAGE_GROUP_ACTIONS = """
+            ⚙️ Действия с группой
+
+            Здесь вы можете выполнить различные действия с группой, такие как добавление или удаление участников, а также изменение их баланса
+            """;
 
     private static final String MSG_MANAGE_GROUPS_ADD_PROMPT_USERS = "Выберете пользователей, которых хотите добавить в группу используя меню";
+
+    private static final String MANAGE_GROUP_ACTION_VIEW_USERS = "👥 Просмотреть пользователей";
+    private static final String MANAGE_GROUP_ACTION_SET_MANAGER = "👤 Установить менеджера группы";
+    private static final String MANAGE_GROUP_ACTION_ADD_USERS = "➕ Добавить пользователей";
+    private static final String MANAGE_GROUP_ACTION_REMOVE_USERS = "➖ Удалить пользователей";
+    private static final String MANAGE_GROUP_ACTION_RENAME_GROUP = "✏️ Переименовать группу";
+    private static final String MANAGE_GROUP_ACTION_DELETE_GROUP = "❌ Удалить группу";
 
     private static final String MANAGE_GROUPS_SEARCH = "🔍 Поиск группы";
     private static final String MANAGE_GROUPS_ADD_NEW = "➕ Добавить группу";
 
     private final TelegramClient tgClient;
     private final CommonViews commonViews;
+
+    @SneakyThrows
+    public void updMenuToManageGroupActionsMenu(CallbackQuery callbackQuery, Balance balance) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(callbackQuery.getMessage().getChatId())
+                .messageId(callbackQuery.getMessage().getMessageId())
+                .text(MSG_MANAGE_GROUP_ACTIONS)
+                .replyMarkup(getManageGroupActionsMarkup())
+                .build();
+        tgClient.execute(message);
+    }
 
     @SneakyThrows
     public void updMenuToManageGroupsMenu(CallbackQuery callbackQuery) {
@@ -137,6 +162,61 @@ public class ManageGroupNewGroupView {
                                         .builder()
                                         .text(MANAGE_GROUPS_ADD_NEW)
                                         .callbackData(InlineMenuCallbacks.MANAGE_GROUPS_ADD)
+                                        .build()))
+                .keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text(StaticLabels.TO_MAIN_MENU)
+                                        .callbackData(InlineMenuCallbacks.TO_MAIN_MENU)
+                                        .build()))
+                .build();
+    }
+
+    private InlineKeyboardMarkup getManageGroupActionsMarkup() {
+        return InlineKeyboardMarkup
+                .builder()
+                .keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text(MANAGE_GROUP_ACTION_SET_MANAGER)
+                                        .callbackData(InlineMenuCallbacks.MANAGE_GROUPS_ACTION_SET_MANAGER)
+                                        .build()))
+                .keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text(MANAGE_GROUP_ACTION_RENAME_GROUP)
+                                        .callbackData(InlineMenuCallbacks.MANAGE_GROUPS_ACTION_RENAME)
+                                        .build()))
+                .keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text(MANAGE_GROUP_ACTION_VIEW_USERS)
+                                        .callbackData(InlineMenuCallbacks.MANAGE_GROUPS_ACTION_VIEW_USERS)
+                                        .build()))
+                .keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text(MANAGE_GROUP_ACTION_ADD_USERS)
+                                        .callbackData(InlineMenuCallbacks.MANAGE_GROUPS_ACTION_ADD_USERS)
+                                        .build()))
+                .keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text(MANAGE_GROUP_ACTION_REMOVE_USERS)
+                                        .callbackData(InlineMenuCallbacks.MANAGE_GROUPS_ACTION_REMOVE_USERS)
+                                        .build()))
+                .keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text(MANAGE_GROUP_ACTION_DELETE_GROUP)
+                                        .callbackData(InlineMenuCallbacks.MANAGE_GROUPS_ACTION_DELETE)
                                         .build()))
                 .keyboardRow(
                         new InlineKeyboardRow(

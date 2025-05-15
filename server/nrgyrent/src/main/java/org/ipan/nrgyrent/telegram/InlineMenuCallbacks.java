@@ -21,6 +21,12 @@ public class InlineMenuCallbacks {
     public static final String MANAGE_GROUPS_SEARCH_RESET = "manage_groups_search_reset";
     public static final String MANAGE_GROUPS_ADD = "manage_groups_add_new";
 
+    public static final String MANAGE_GROUPS_ACTION_RENAME = "manage_groups_action_rename";
+    public static final String MANAGE_GROUPS_ACTION_VIEW_USERS = "manage_groups_action_view_users";
+    public static final String MANAGE_GROUPS_ACTION_ADD_USERS = "manage_groups_action_add_users";
+    public static final String MANAGE_GROUPS_ACTION_REMOVE_USERS = "manage_groups_action_remove_users";
+    public static final String MANAGE_GROUPS_ACTION_DELETE = "manage_groups_action_delete";
+    public static final String MANAGE_GROUPS_ACTION_SET_MANAGER = "manage_groups_action_set_manager";
 
     public static final String NTFN_OK = "notification_ok";
 }
