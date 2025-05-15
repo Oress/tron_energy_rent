@@ -35,7 +35,7 @@ public class TelegramStateInMem implements TelegramState {
 
     @Override
     public UserState getOrCreateUserState(Long userId) {
-        return this.userStateMap.computeIfAbsent(userId, key -> new UserStateInMem(userId, States.START, null, null, null, null, null));
+        return this.userStateMap.computeIfAbsent(userId, key -> new UserStateInMem(userId, States.START, null, null, null, null));
     }
 
     @Override
