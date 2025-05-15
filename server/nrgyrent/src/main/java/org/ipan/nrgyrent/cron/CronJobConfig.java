@@ -12,7 +12,7 @@ public class CronJobConfig {
     public static final String TRON_TRANSACTION_EXECUTOR = "tronTransactionExecutor";
 
     @Bean(name = TRON_TRANSACTION_EXECUTOR)
-    @ConditionalOnProperty(name = "app.cron.tron.transaction.enabled", matchIfMissing = true)
+    @ConditionalOnProperty(name = "app.cron.tron.transaction.enabled")
     public Executor asyncExecutor() {
         return Executors.newFixedThreadPool(3, runnable -> {
             Thread thread = new Thread(runnable);

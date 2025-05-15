@@ -54,14 +54,6 @@ public class StaticLabels {
             """;
 
 
-
-    public static final String MSG_MANAGE_GROUPS_SEARCH_NO_RESULTS = "❌ Нет результатов";
-    public static final String MSG_MANAGE_GROUPS_SEARCH_PAGE_RESULTS = """
-            ✅ Результаты поиска
-            Выберите группу, с которой хотите работать
-            """;
-
-
     // Menu labels
     public static final String MENU_ADMIN = "👨‍💻 Админка";
     public static final String MENU_TRANSFER_ENERGY_65K = "⚡ 65 000 энергии на 1 час (5.5 TRX)";

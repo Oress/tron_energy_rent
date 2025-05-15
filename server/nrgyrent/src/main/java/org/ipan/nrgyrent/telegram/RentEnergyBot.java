@@ -115,6 +115,9 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
             case ADMIN_MANAGE_GROUPS:
                 handleManageGroups(userState, update);
                 break;
+            case ADMIN_MANAGE_GROUPS_SEARCH:
+                handleManageGroupsSearch(userState, update);
+                break;
             case ADMIN_MANAGE_GROUPS_ADD_PROMPT_LABEL:
                 handleAddGroupPromptLabel(userState, update);
                 break;
@@ -286,6 +289,36 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
         }
     }
 
+    private void handleManageGroupsSearch(UserState userState, Update update) {
+        Message message = update.getMessage();
+        if (message != null && message.hasText()) {
+            logger.info("Searching for groups with label: {}", message.getText());
+            String queryStr = message.getText();
+            telegramMessages.deleteMessage(message);
+
+            // TODO: validate query string ??
+            if (queryStr.length() < 3) {
+                logger.info("Query string is too short: {}", queryStr);
+                // telegramMessages.manageGroupSearchView().updMenuToManageGroupsSearchResult(null, message);
+                return;
+            }
+
+            Page<Balance> firstPage = balanceRepo.findAllByTypeAndLabelContainingIgnoreCaseOrderById(BalanceType.GROUP, queryStr, PageRequest.of(0, 10));
+            telegramMessages.manageGroupSearchView().updMenuToManageGroupsSearchResult(firstPage, userState);
+        }
+
+        CallbackQuery callbackQuery = update.getCallbackQuery();
+        if (callbackQuery != null) {
+            String data = callbackQuery.getData();
+
+            if (InlineMenuCallbacks.MANAGE_GROUPS_SEARCH_RESET.equals(data)) {
+                Page<Balance> firstPage = balanceRepo.findAllByTypeOrderById(BalanceType.GROUP, PageRequest.of(0, 10));
+                telegramMessages.manageGroupSearchView().updMenuToManageGroupsSearchResult(firstPage, userState);
+            }
+
+        }
+    }
+
     private void handleManageGroups(UserState userState, Update update) {
         CallbackQuery callbackQuery = update.getCallbackQuery();
         if (callbackQuery != null) {
@@ -293,8 +326,7 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
 
             if (InlineMenuCallbacks.MANAGE_GROUPS_SEARCH.equals(data)) {
                 Page<Balance> firstPage = balanceRepo.findAllByTypeOrderById(BalanceType.GROUP, PageRequest.of(0, 10));
-
-                telegramMessages.manageGroupSearchView().updMenuToManageGroupsSearchResult(firstPage, callbackQuery);
+                telegramMessages.manageGroupSearchView().updMenuToManageGroupsSearchResult(firstPage, userState);
                 telegramState.updateUserState(userState.getTelegramId(),
                         userState.withState(States.ADMIN_MANAGE_GROUPS_SEARCH));
             } else if (InlineMenuCallbacks.MANAGE_GROUPS_ADD.equals(data)) {
@@ -311,7 +343,10 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
             // TODO: validate group name
             String newGroupLabel = message.getText();
             Long telegramId = userState.getTelegramId();
-            telegramState.getOrCreateAddGroupState(telegramId).withLabel(newGroupLabel);
+
+            AddGroupState addGroupState = telegramState.getOrCreateAddGroupState(telegramId);
+            telegramState.updateAddGroupState(telegramId, addGroupState.withLabel(newGroupLabel));
+
             Message promptMsg = telegramMessages.manageGroupView().updMenuToManageGroupsAddPromptUsers(userState);
             telegramState.updateUserState(telegramId, userState
                     .withMessagesToDelete(List.of(promptMsg.getMessageId()))

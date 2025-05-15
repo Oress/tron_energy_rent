@@ -6,7 +6,7 @@ import java.util.concurrent.TimeUnit;
 import org.ipan.nrgyrent.domain.model.AppUser;
 import org.ipan.nrgyrent.domain.model.Balance;
 import org.ipan.nrgyrent.domain.service.UserService;
-import org.ipan.nrgyrent.trongrid.api.AccountApi;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -18,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 @EnableScheduling
 @AllArgsConstructor
 @Slf4j
+@ConditionalOnProperty(name = "app.cron.tron.transaction.enabled")
 public class PollForTransactionsJob {
     private static final Integer BATCH_SIZE = 10;
 

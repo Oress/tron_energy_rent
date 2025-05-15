@@ -6,19 +6,13 @@ import org.ipan.nrgyrent.domain.model.Balance;
 import org.ipan.nrgyrent.telegram.InlineMenuCallbacks;
 import org.ipan.nrgyrent.telegram.StaticLabels;
 import org.ipan.nrgyrent.telegram.state.UserState;
-import org.ipan.nrgyrent.telegram.utils.WalletTools;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButtonRequestUsers;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
 
 import lombok.AllArgsConstructor;
@@ -27,13 +21,20 @@ import lombok.SneakyThrows;
 @Component
 @AllArgsConstructor
 public class ManageGroupSearchView {
-    // TODO: move to properties
+    public static final String MSG_MANAGE_GROUPS_SEARCH_NO_RESULTS = "❌ Нет результатов";
+    public static final String MSG_MANAGE_GROUPS_SEARCH_PAGE_RESULTS = """
+            🔍 Результаты поиска
+            Используйте стрелки, чтобы прокручивать результаты, или введите имя группы, чтобы найти ее.
+
+            Выберите группу, с которой хотите работать
+            """;
     private static final String MSG_MANAGE_GROUPS_TXT = """
             👥 Управление группами
             Здесь вы можете управлять группами пользователей, а также просматривать и изменять их баланс
             """;
 
     private static final String MANAGE_GROUPS_SEARCH = "🔍 Поиск группы";
+    private static final String MANAGE_GROUPS_SEARCH_RESET = "🔄 Сбросить поиск";
     private static final String MANAGE_GROUPS_ADD_NEW = "➕ Добавить группу";
 
     private final TelegramClient tgClient;
@@ -52,14 +53,14 @@ public class ManageGroupSearchView {
     }
 
     @SneakyThrows
-    public void updMenuToManageGroupsSearchResult(Page<Balance> page, CallbackQuery callbackQuery) {
-        String text = page.isEmpty() ? StaticLabels.MSG_MANAGE_GROUPS_SEARCH_NO_RESULTS
-                : StaticLabels.MSG_MANAGE_GROUPS_SEARCH_PAGE_RESULTS;
+    public void updMenuToManageGroupsSearchResult(Page<Balance> page, UserState userState) {
+        String text = page.isEmpty() ? MSG_MANAGE_GROUPS_SEARCH_NO_RESULTS
+                : MSG_MANAGE_GROUPS_SEARCH_PAGE_RESULTS;
 
         EditMessageText message = EditMessageText
                 .builder()
-                .chatId(callbackQuery.getMessage().getChatId())
-                .messageId(callbackQuery.getMessage().getMessageId())
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
                 .text(text)
                 .replyMarkup(getManageGroupsSearchPageMarkup(page))
                 .build();
@@ -71,7 +72,7 @@ public class ManageGroupSearchView {
             InlineKeyboardRow row = new InlineKeyboardRow(
                     InlineKeyboardButton
                             .builder()
-                            .text(WalletTools.formatTronAddress(balance.getLabel()))
+                            .text(balance.getLabel())
                             .callbackData(balance.getId().toString())
                             .build());
             return row;
@@ -81,15 +82,21 @@ public class ManageGroupSearchView {
                 .builder();
         groupBalances.forEach(builder::keyboardRow);
 
-        return builder.keyboardRow(
-                new InlineKeyboardRow(
-                        InlineKeyboardButton
-                                .builder()
-                                .text(StaticLabels.TO_MAIN_MENU)
-                                .callbackData(InlineMenuCallbacks.TO_MAIN_MENU)
-                                .build())
-
-        )
+        return builder
+                .keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text(MANAGE_GROUPS_SEARCH_RESET)
+                                        .callbackData(InlineMenuCallbacks.MANAGE_GROUPS_SEARCH_RESET)
+                                        .build()))
+                .keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text(StaticLabels.TO_MAIN_MENU)
+                                        .callbackData(InlineMenuCallbacks.TO_MAIN_MENU)
+                                        .build()))
                 .build();
     }
 

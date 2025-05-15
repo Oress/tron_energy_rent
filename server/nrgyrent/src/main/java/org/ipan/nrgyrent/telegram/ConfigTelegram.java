@@ -9,7 +9,6 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
 
 @Configuration
-//@EnableStateMachine
 public class ConfigTelegram {
     @Value("${app.telegram.bot.token}")
     String botToken = "12345:YOUR_TOKEN";
