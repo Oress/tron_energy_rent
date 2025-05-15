@@ -7,7 +7,7 @@ import java.util.List;
 import org.apache.commons.lang3.NotImplementedException;
 import org.ipan.nrgyrent.domain.model.AppUser;
 import org.ipan.nrgyrent.domain.model.Balance;
-import org.ipan.nrgyrent.domain.model.DepositWallet;
+import org.ipan.nrgyrent.domain.model.ManagedWallet;
 import org.ipan.nrgyrent.domain.model.repository.UserRepo;
 import org.ipan.nrgyrent.domain.service.commands.users.CreateUserCommand;
 import org.ipan.nrgyrent.tron.crypto.ECKey;
@@ -38,7 +38,7 @@ public class UserService {
         EntityManager em = getEntityManager();
         try {
             // TODO: persist cascade?
-            DepositWallet depositWallet = generateDepositWallet();
+            ManagedWallet depositWallet = generateDepositWallet();
             em.persist(depositWallet);
 
             Balance depositBalance = new Balance();
@@ -54,8 +54,8 @@ public class UserService {
         return appUser;
     }
 
-    private DepositWallet generateDepositWallet() throws IOException {
-        DepositWallet depositWallet = new DepositWallet();
+    private ManagedWallet generateDepositWallet() throws IOException {
+        ManagedWallet depositWallet = new ManagedWallet();
 
         ECKey privateKeyForNewWallet = WalletApi.generatePrivateKeyForNewWallet();
         byte[] address = privateKeyForNewWallet.getAddress();

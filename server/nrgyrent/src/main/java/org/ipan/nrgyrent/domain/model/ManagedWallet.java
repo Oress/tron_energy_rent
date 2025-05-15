@@ -16,8 +16,8 @@ import org.hibernate.annotations.CreationTimestamp;
 @Entity
 @Getter
 @Setter
-@Table(name = "nrg_deposit_wallets")
-public class DepositWallet {
+@Table(name = "nrg_managed_wallets")
+public class ManagedWallet {
     @Id
     @Column(name = "base58_address")
     private String base58Address;

@@ -5,8 +5,8 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
 
     <!-- This table stores the information about wallets themselfs pub and pri keys -->
-    <changeSet id="create table nrg_deposit_wallets" author="oress">
-        <createTable tableName="nrg_deposit_wallets">
+    <changeSet id="create table nrg_managed_wallets" author="oress">
+        <createTable tableName="nrg_managed_wallets">
             <column name="base58_address" type="text">
                 <constraints primaryKey="true" nullable="false" unique="true"/>
             </column>
@@ -16,8 +16,8 @@
             <column name="created_at" type="TIMESTAMP"/>
         </createTable>
 
-        <createIndex indexName="idx_nrg_deposit_wallets_base58_address"
-                 tableName="nrg_deposit_wallets">
+        <createIndex indexName="idx_nrg_managed_wallets_base58_address"
+                 tableName="nrg_managed_wallets">
             <column name="base58_address"/>
         </createIndex>
     </changeSet>
@@ -48,7 +48,7 @@
         <addForeignKeyConstraint constraintName="fk_nrg_balances_deposit_address"
                                  baseTableName="nrg_balances"
                                  baseColumnNames="deposit_address"
-                                 referencedTableName="nrg_deposit_wallets"
+                                 referencedTableName="nrg_managed_wallets"
                                  referencedColumnNames="base58_address"/>
     </changeSet>
 
@@ -177,7 +177,7 @@
         <addForeignKeyConstraint constraintName="fk_nrg_deposit_transactions_wallet_to"
                                     baseTableName="nrg_deposit_transactions"
                                     baseColumnNames="wallet_to"
-                                    referencedTableName="nrg_deposit_wallets"
+                                    referencedTableName="nrg_managed_wallets"
                                     referencedColumnNames="base58_address"/>
     </changeSet>
 </databaseChangeLog>
