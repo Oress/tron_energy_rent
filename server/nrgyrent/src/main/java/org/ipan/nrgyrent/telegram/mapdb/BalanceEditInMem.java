@@ -1,15 +1,8 @@
 package org.ipan.nrgyrent.telegram.mapdb;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
 
-import org.ipan.nrgyrent.domain.model.UserRole;
-import org.ipan.nrgyrent.telegram.States;
 import org.ipan.nrgyrent.telegram.state.BalanceEdit;
-import org.ipan.nrgyrent.telegram.state.UserState;
 import org.jetbrains.annotations.NotNull;
 import org.mapdb.DataInput2;
 import org.mapdb.DataOutput2;

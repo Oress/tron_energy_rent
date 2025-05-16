@@ -29,4 +29,7 @@ public class InlineMenuCallbacks {
     public static final String MANAGE_GROUPS_ACTION_SET_MANAGER = "manage_groups_action_set_manager";
 
     public static final String NTFN_OK = "notification_ok";
+
+    public static final String CONFIRM_YES = "confirm_yes";
+    public static final String CONFIRM_NO = "confirm_no";
 }

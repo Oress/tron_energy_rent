@@ -84,6 +84,13 @@
                                  baseColumnNames="balance_id"
                                  referencedTableName="nrg_balances"
                                  referencedColumnNames="id"/>
+
+        <addForeignKeyConstraint constraintName="fk_nrg_users_group_balance_id"
+                                 baseTableName="nrg_users"
+                                 baseColumnNames="group_balance_id"
+                                 referencedTableName="nrg_balances"
+                                 onDelete="SET NULL"
+                                 referencedColumnNames="id"/>
     </changeSet>
 
     <!-- This table stores the information about user preferred wallets(i.e. where to send energy) -->

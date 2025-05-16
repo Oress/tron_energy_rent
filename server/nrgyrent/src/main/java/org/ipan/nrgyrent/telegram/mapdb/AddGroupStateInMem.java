@@ -2,10 +2,7 @@ package org.ipan.nrgyrent.telegram.mapdb;
 
 import java.io.IOException;
 
-import org.ipan.nrgyrent.domain.model.UserRole;
-import org.ipan.nrgyrent.telegram.States;
 import org.ipan.nrgyrent.telegram.state.AddGroupState;
-import org.ipan.nrgyrent.telegram.state.UserState;
 import org.jetbrains.annotations.NotNull;
 import org.mapdb.DataInput2;
 import org.mapdb.DataOutput2;

@@ -10,6 +10,7 @@ import org.ipan.nrgyrent.telegram.handlers.AdminMenuHandler;
 import org.ipan.nrgyrent.telegram.handlers.DepositHandler;
 import org.ipan.nrgyrent.telegram.handlers.MainMenuHandler;
 import org.ipan.nrgyrent.telegram.handlers.ManageGroupNewGroupHandler;
+import org.ipan.nrgyrent.telegram.handlers.ManageGroupActionsHandler;
 import org.ipan.nrgyrent.telegram.handlers.ManageGroupSearchHandler;
 import org.ipan.nrgyrent.telegram.handlers.ManageGroupsHandler;
 import org.ipan.nrgyrent.telegram.handlers.TransactionsHandler;
@@ -48,6 +49,7 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
     private final ManageGroupSearchHandler manageGroupSearchHandler;
     private final ManageGroupNewGroupHandler manageGroupNewGroupHandler;
     private final ManageGroupsHandler manageGroupsHandler;
+    private final ManageGroupActionsHandler manageGroupActionsHandler;
 
 
     @Override
@@ -99,6 +101,9 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
                 break;
             case ADMIN_MANAGE_GROUPS:
                 manageGroupsHandler.handleUpdate(userState, update);
+            case ADMIN_MANAGE_GROUPS_ACTION_PREVIEW:
+            case ADMIN_MANAGE_GROUPS_ACTION_DELETE_CONFIRM:
+                manageGroupActionsHandler.handleUpdate(userState, update);
                 break;
             case ADMIN_MANAGE_GROUPS_SEARCH:
                 manageGroupSearchHandler.handleUpdate(userState, update);

@@ -62,18 +62,23 @@ public class ManageGroupSearchHandler implements AppUpdateHandler {
             } else if (data.startsWith(ManageGroupSearchView.OPEN_BALANCE)) {
                 String balanceIdStr = data.split(ManageGroupSearchView.OPEN_BALANCE)[1];
                 Long balanceId = Long.parseLong(balanceIdStr);
-                Optional<Balance> groupBalance = balanceRepo.findById(balanceId);
-                if (groupBalance.isPresent()) {
-                    Balance balance = groupBalance.get();
-                    telegramMessages.manageGroupView().updMenuToManageGroupActionsMenu(callbackQuery, balance);
-                    telegramState.updateBalanceEdit(userState.getTelegramId(), telegramState
-                            .getOrCreateBalanceEdit(userState.getTelegramId()).withSelectedBalanceId(balanceId));
-                    telegramState.updateUserState(userState.getTelegramId(),
-                            userState.withState(States.ADMIN_MANAGE_GROUPS_ACTION_PREVIEW));
-                } else {
-                    logger.error("Group balance not found for ID: {}", balanceId);
-                }
+                openGroupBalance(userState, callbackQuery, balanceId);
             }
+        }
+    }
+
+    public void openGroupBalance(UserState userState, CallbackQuery callbackQuery, Long balanceId) {
+        Optional<Balance> groupBalance = balanceRepo.findById(balanceId);
+        if (groupBalance.isPresent()) {
+            Balance balance = groupBalance.get();
+            // TODO: make the message to show more details: name, balance, address, manager.
+            telegramMessages.manageGroupView().updMenuToManageGroupActionsMenu(callbackQuery, balance);
+            telegramState.updateBalanceEdit(userState.getTelegramId(), telegramState
+                    .getOrCreateBalanceEdit(userState.getTelegramId()).withSelectedBalanceId(balanceId));
+            telegramState.updateUserState(userState.getTelegramId(),
+                    userState.withState(States.ADMIN_MANAGE_GROUPS_ACTION_PREVIEW));
+        } else {
+            logger.error("Group balance not found for ID: {}", balanceId);
         }
     }
 }
