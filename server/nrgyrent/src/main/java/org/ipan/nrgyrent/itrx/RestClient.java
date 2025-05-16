@@ -6,6 +6,7 @@ import com.google.gson.GsonBuilder;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
 
+import org.ipan.nrgyrent.itrx.dto.ApiUsageResponse;
 import org.ipan.nrgyrent.itrx.dto.EstimateOrderAmountResponse;
 import org.ipan.nrgyrent.itrx.dto.PlaceOrderResponse;
 import org.springframework.beans.factory.annotation.Value;
@@ -92,6 +93,25 @@ public class RestClient {
             EstimateOrderAmountResponse placeOrderResponse = gson.fromJson(response.body().charStream(), EstimateOrderAmountResponse.class);
             logger.info("Response" + placeOrderResponse);
             return placeOrderResponse;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public ApiUsageResponse getApiStats() {
+        try {
+            Request request = new Request.Builder()
+                    .url(baseUrl + "/api/v1/frontend/userapi/summary")
+                    .get()
+                    .addHeader("API-KEY", apiKey)
+                    .addHeader("Content-Type", "application/json")
+                    .build();
+
+            Response response = client.newCall(request).execute();
+
+            ApiUsageResponse apiUsageResponse = gson.fromJson(response.body().charStream(), ApiUsageResponse.class);
+            logger.info("Api usage response" + apiUsageResponse);
+            return apiUsageResponse;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
