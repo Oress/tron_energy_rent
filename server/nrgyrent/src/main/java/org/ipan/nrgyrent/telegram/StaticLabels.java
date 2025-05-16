@@ -1,6 +1,6 @@
 package org.ipan.nrgyrent.telegram;
 
-import java.text.DecimalFormat;
+import org.ipan.nrgyrent.telegram.utils.BalanceTools;
 
 public class StaticLabels {
     // COMMON
@@ -89,7 +89,6 @@ public class StaticLabels {
 
     public static final String OK = "OK";
 
-    private static DecimalFormat df = new DecimalFormat("# ###.#");
     public static String getDepositMenuText(String depositAddress, Long sunBalance) {
         return """
                 💰 Ваш адресс депозита:
@@ -107,6 +106,6 @@ public class StaticLabels {
                 ⌛️ Среднее время зачисления депозита - 2 минуты."""
                 .formatted(
                         depositAddress,
-                        df.format(sunBalance / 1_000_000));
+                        BalanceTools.formatBalance(sunBalance));
     }
 }

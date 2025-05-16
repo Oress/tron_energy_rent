@@ -4,6 +4,7 @@ import org.ipan.nrgyrent.domain.model.Balance;
 import org.ipan.nrgyrent.telegram.InlineMenuCallbacks;
 import org.ipan.nrgyrent.telegram.StaticLabels;
 import org.ipan.nrgyrent.telegram.state.UserState;
+import org.ipan.nrgyrent.telegram.utils.BalanceTools;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
@@ -34,11 +35,6 @@ public class ManageGroupNewGroupView {
             👥 Управление группами
             Здесь вы можете управлять группами пользователей, а также просматривать и изменять их баланс
             """;
-    private static final String MSG_MANAGE_GROUP_ACTIONS = """
-            ⚙️ Действия с группой
-
-            Здесь вы можете выполнить различные действия с группой, такие как добавление или удаление участников, а также изменение их баланса
-            """;
 
     private static final String MSG_MANAGE_GROUPS_ADD_PROMPT_USERS = "Выберете пользователей, которых хотите добавить в группу используя меню";
 
@@ -61,7 +57,7 @@ public class ManageGroupNewGroupView {
                 .builder()
                 .chatId(callbackQuery.getMessage().getChatId())
                 .messageId(callbackQuery.getMessage().getMessageId())
-                .text(MSG_MANAGE_GROUP_ACTIONS)
+                .text(getBalanceDescription(balance))
                 .replyMarkup(getManageGroupActionsMarkup())
                 .build();
         tgClient.execute(message);
@@ -226,5 +222,23 @@ public class ManageGroupNewGroupView {
                                         .callbackData(InlineMenuCallbacks.TO_MAIN_MENU)
                                         .build()))
                 .build();
+    }
+
+    private String getBalanceDescription(Balance balance) {
+        return String.format("""
+                ⚙️ Действия с группой
+
+                ID: %s
+                Название: %s
+                Создана: %s
+
+                Кошелек: %s
+                Баланс: %s TRX
+                """,
+                balance.getLabel(),
+                balance.getId(),
+                balance.getCreatedAt().toString(),
+                balance.getDepositAddress(),
+                BalanceTools.formatBalance(balance.getSunBalance()));
     }
 }
