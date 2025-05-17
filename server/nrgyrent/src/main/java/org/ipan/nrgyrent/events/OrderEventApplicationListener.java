@@ -1,18 +1,18 @@
 package org.ipan.nrgyrent.events;
 
-import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.ipan.nrgyrent.domain.events.OrderCompletedEvent;
 import org.ipan.nrgyrent.domain.events.OrderFailedEvent;
 import org.ipan.nrgyrent.domain.model.Order;
 import org.ipan.nrgyrent.domain.model.repository.OrderRepo;
-import org.ipan.nrgyrent.domain.service.OrderService;
 import org.ipan.nrgyrent.telegram.TelegramMessages;
 import org.ipan.nrgyrent.telegram.state.TelegramState;
 import org.ipan.nrgyrent.telegram.state.UserState;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
 @AllArgsConstructor
@@ -27,9 +27,9 @@ public class OrderEventApplicationListener {
     public void onOrderCompleted(OrderCompletedEvent event) {
         logger.trace("Order completed event received: {}", event);
 
-        Order order = orderRepo.findBySerial(event.getSerial()).orElse(null);
+        Order order = orderRepo.findByCorrelationId(event.getCorrelationId()).orElse(null);
         if (order == null) {
-            logger.error("Order not found for serial: {}", event.getSerial());
+            logger.error("Order not found for correlationId: {}", event.getCorrelationId());
             return;
         }
 
@@ -42,9 +42,9 @@ public class OrderEventApplicationListener {
     public void onOrderFailed(OrderFailedEvent event) {
         logger.trace("Order failed event received: {}", event);
 
-        Order order = orderRepo.findBySerial(event.getSerial()).orElse(null);
+        Order order = orderRepo.findBySerial(event.getCorrelationId()).orElse(null);
         if (order == null) {
-            logger.error("Order not found for serial: {}", event.getSerial());
+            logger.error("Order not found for serial: {}", event.getCorrelationId());
             return;
         }
 

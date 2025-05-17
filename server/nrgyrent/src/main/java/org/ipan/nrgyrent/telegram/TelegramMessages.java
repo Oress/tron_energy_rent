@@ -141,44 +141,6 @@ public class TelegramMessages {
 
     @Retryable
     @SneakyThrows
-    public void updMenuToTransactionInProgress(UserState userState) {
-        EditMessageText message = EditMessageText
-                .builder()
-                .chatId(userState.getChatId())
-                .messageId(userState.getMenuMessageId())
-                .text(StaticLabels.MSG_TRANSACTION_PROGRESS)
-                .build();
-        tgClient.execute(message);
-    }
-
-    @Retryable
-    @SneakyThrows
-    public void updMenuToTransactionSuccess(UserState userState) {
-        EditMessageText message = EditMessageText
-                .builder()
-                .chatId(userState.getChatId())
-                .messageId(userState.getMenuMessageId())
-                .text(StaticLabels.MSG_TRANSACTION_SUCCESS)
-                .replyMarkup(getToMainMenuMarkup())
-                .build();
-        tgClient.execute(message);
-    }
-
-    @Retryable
-    @SneakyThrows
-    public void updMenuToTransactionPending(UserState userState) {
-        EditMessageText message = EditMessageText
-                .builder()
-                .chatId(userState.getChatId())
-                .messageId(userState.getMenuMessageId())
-                .text(StaticLabels.MSG_TRANSACTION_PENDING)
-                .replyMarkup(getToMainMenuMarkup())
-                .build();
-        tgClient.execute(message);
-    }
-
-    @Retryable
-    @SneakyThrows
     public void updMenuToTransaction131kMenu(List<UserWallet> wallets, CallbackQuery callbackQuery) {
         EditMessageText message = EditMessageText
                 .builder()

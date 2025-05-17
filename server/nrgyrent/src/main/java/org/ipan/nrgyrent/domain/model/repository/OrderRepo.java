@@ -9,4 +9,5 @@ import java.util.Optional;
 @Repository
 public interface OrderRepo extends JpaRepository<Order, Long> {
     Optional<Order> findBySerial(String serial);
+    Optional<Order> findByCorrelationId(String correlationId);
 }

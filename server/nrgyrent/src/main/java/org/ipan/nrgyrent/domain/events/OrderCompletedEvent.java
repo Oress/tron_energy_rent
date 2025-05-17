@@ -7,12 +7,12 @@ import org.springframework.context.ApplicationEvent;
 public class OrderCompletedEvent extends ApplicationEvent {
     private final Integer itrxStatus;
     private final String txId;
-    private final String serial;
+    private final String correlationId;
 
-    public OrderCompletedEvent(Object source, String serial, Integer itrxStatus, String txId) {
+    public OrderCompletedEvent(Object source, String correlationId, Integer itrxStatus, String txId) {
         super(source);
         this.itrxStatus = itrxStatus;
         this.txId = txId;
-        this.serial = serial;
+        this.correlationId = correlationId;
     }
 }

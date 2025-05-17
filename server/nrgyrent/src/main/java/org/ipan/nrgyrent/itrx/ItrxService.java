@@ -26,6 +26,7 @@ public class ItrxService {
     private final RestClient restClient;
     private final OrderEventPublisher eventPublisher;
 
+    // TODO: cache responses for 5-10 minutes ??
     public EstimateOrderAmountResponse estimateOrderPrice(Integer energyAmount, String duration, String receiveAddress) {
         logger.trace("Estimating order price for energyAmount: {}, duration: {}, receiveAddress: {}", energyAmount, duration, receiveAddress);
         return restClient.estimateOrderPrice(energyAmount, duration, receiveAddress);
@@ -72,9 +73,9 @@ public class ItrxService {
 
     private void sendOrderEvent(OrderCallbackRequest orderCallbackRequest) {
         if (orderCallbackRequest.status == ITRX_ORDER_SUCCESS) {
-            eventPublisher.publishOrderCompletedEvent(orderCallbackRequest.serial, ITRX_ORDER_SUCCESS, orderCallbackRequest.txid);
+            eventPublisher.publishOrderCompletedEvent(orderCallbackRequest.out_trade_no, ITRX_ORDER_SUCCESS, orderCallbackRequest.txid);
         } else if (orderCallbackRequest.status == ITRX_ORDER_ERROR) {
-            eventPublisher.publishOrderFailedEvent(orderCallbackRequest.serial, ITRX_ORDER_ERROR);
+            eventPublisher.publishOrderFailedEvent(orderCallbackRequest.out_trade_no, ITRX_ORDER_ERROR);
         }
     }
 

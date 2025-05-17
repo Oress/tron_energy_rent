@@ -2,6 +2,7 @@ package org.ipan.nrgyrent.telegram.handlers;
 
 import java.util.UUID;
 
+import org.ipan.nrgyrent.domain.exception.NotEnoughBalanceException;
 import org.ipan.nrgyrent.domain.service.OrderService;
 import org.ipan.nrgyrent.domain.service.commands.orders.AddOrUpdateOrderCommand;
 import org.ipan.nrgyrent.itrx.AppConstants;
@@ -15,6 +16,7 @@ import org.ipan.nrgyrent.telegram.TelegramMessages;
 import org.ipan.nrgyrent.telegram.state.TelegramState;
 import org.ipan.nrgyrent.telegram.state.UserState;
 import org.ipan.nrgyrent.telegram.utils.WalletTools;
+import org.ipan.nrgyrent.telegram.views.TransactionsViews;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Update;
@@ -29,7 +31,7 @@ public class TransactionsHandler implements AppUpdateHandler {
     private static final int ITRX_OK_CODE = 0;
 
     private final TelegramState telegramState;
-    private final TelegramMessages telegramMessages;
+    private final TransactionsViews transactionsViews;
     private final ItrxService itrxService;
     private final OrderService orderService;
 
@@ -41,8 +43,8 @@ public class TransactionsHandler implements AppUpdateHandler {
                 break;
             case TRANSACTION_131k:
                 handleTransaction131kState(userState, update);
-                break;     
-        }    
+                break;
+        }
     }
 
     private void handleTransaction65kState(UserState userState, Update update) {
@@ -68,48 +70,53 @@ public class TransactionsHandler implements AppUpdateHandler {
     private void tryMakeTransaction(UserState userState, Integer energyAmount, String duration, String walletAddress,
             Long sunAmount) {
         if (WalletTools.isValidTronAddress(walletAddress)) {
-            telegramMessages.updMenuToTransactionInProgress(userState);
+            transactionsViews.updMenuToTransactionInProgress(userState);
 
             UUID correlationId = UUID.randomUUID();
-            // TODO: handle exceptions, network errors, etc.
             EstimateOrderAmountResponse estimateOrderResponse = itrxService.estimateOrderPrice(energyAmount, duration,
                     walletAddress);
-            PlaceOrderResponse placeOrderResponse = itrxService.placeOrder(energyAmount, duration, walletAddress,
-                    correlationId);
+            try {
+                orderService.createPendingOrder(
+                        AddOrUpdateOrderCommand.builder()
+                                .userId(userState.getTelegramId())
+                                .receiveAddress(walletAddress)
+                                .energyAmount(energyAmount)
+                                .duration(duration)
+                                .sunAmount(sunAmount)
+                                .itrxFeeSunAmount(estimateOrderResponse.getTotal_price())
+                                .correlationId(correlationId.toString())
+                                // .serial(placeOrderResponse.getSerial())
+                                .build());
 
-            // Waiting WAIT_FOR_CALLBACK seconds for callback from itrx
-            // if callback is not received, enqueue the request and notify the user
-            // otherwise, update the menu to transaction success
-            if (placeOrderResponse.getErrno() != ITRX_OK_CODE) {
-                return;
-                // TODO: do something here
-            }
+                // TODO: handle exceptions, network errors, etc.
+                PlaceOrderResponse placeOrderResponse = itrxService.placeOrder(energyAmount, duration, walletAddress,
+                        correlationId);
 
-            orderService.createPendingOrder(
-                    AddOrUpdateOrderCommand.builder()
-                            .userId(userState.getTelegramId())
-                            .receiveAddress(walletAddress)
-                            .energyAmount(energyAmount)
-                            .duration(duration)
-                            .sunAmount(sunAmount)
-                            .itrxFeeSunAmount(estimateOrderResponse.getTotal_price())
-                            .correlationId(correlationId.toString())
-                            .serial(placeOrderResponse.getSerial())
-                            .build());
-            // TODO: this will block the bot for incomming messages, handle it without
-            // blocking.
-            OrderCallbackRequest orderCallbackRequest = itrxService.getCorrelatedCallbackRequest(correlationId,
-                    WAIT_FOR_CALLBACK);
+                // Waiting WAIT_FOR_CALLBACK seconds for callback from itrx
+                // if callback is not received, enqueue the request and notify the user
+                // otherwise, update the menu to transaction success
+                if (placeOrderResponse.getErrno() != ITRX_OK_CODE) {
+                    return;
+                    // TODO: do something here
+                }
 
-            if (orderCallbackRequest != null) {
-                telegramMessages.updMenuToTransactionSuccess(userState);
-                telegramState.updateUserState(userState.getTelegramId(),
-                        userState.withState(States.TRANSACTION_SUCCESS));
-                // TODO: add SUCCESSFUL DB record for transaction
-            } else {
-                telegramMessages.updMenuToTransactionPending(userState);
-                telegramState.updateUserState(userState.getTelegramId(),
-                        userState.withState(States.TRANSACTION_PENDING));
+                // TODO: this will block the bot for incomming messages, handle it without
+                // blocking.
+                OrderCallbackRequest orderCallbackRequest = itrxService.getCorrelatedCallbackRequest(correlationId,
+                        WAIT_FOR_CALLBACK);
+
+                if (orderCallbackRequest != null) {
+                    transactionsViews.updMenuToTransactionSuccess(userState);
+                    telegramState.updateUserState(userState.getTelegramId(),
+                            userState.withState(States.TRANSACTION_SUCCESS));
+                    // TODO: add SUCCESSFUL DB record for transaction
+                } else {
+                    transactionsViews.updMenuToTransactionPending(userState);
+                    telegramState.updateUserState(userState.getTelegramId(),
+                            userState.withState(States.TRANSACTION_PENDING));
+                }
+            } catch (NotEnoughBalanceException e) {
+                transactionsViews.notEnoughBalance(userState);
             }
         }
     }

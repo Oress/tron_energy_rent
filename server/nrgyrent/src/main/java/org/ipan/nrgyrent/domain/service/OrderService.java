@@ -3,7 +3,9 @@ package org.ipan.nrgyrent.domain.service;
 import jakarta.persistence.EntityManager;
 import lombok.AllArgsConstructor;
 import org.apache.commons.lang3.NotImplementedException;
+import org.ipan.nrgyrent.domain.exception.NotEnoughBalanceException;
 import org.ipan.nrgyrent.domain.model.AppUser;
+import org.ipan.nrgyrent.domain.model.Balance;
 import org.ipan.nrgyrent.domain.model.Order;
 import org.ipan.nrgyrent.domain.model.OrderStatus;
 import org.ipan.nrgyrent.domain.model.repository.OrderRepo;
@@ -19,6 +21,26 @@ import java.util.Optional;
 public class OrderService {
     private final OrderRepo orderRepo;
 
+    @Transactional(readOnly = true)
+    public boolean haveEnoughTrxForOrder(AddOrUpdateOrderCommand command) {
+        EntityManager em = getEntityManager();
+
+        AppUser user = em.getReference(AppUser.class, command.getUserId());
+
+        if (user == null) {
+            throw new IllegalArgumentException("User not found");
+        }
+
+        // TODO: use group balance type in the future
+        
+        Balance balance = user.getBalance();
+        if (balance == null) {
+            throw new IllegalStateException("User balance not found");
+        }
+
+        return balance.getSunBalance() >= command.getSunAmount();
+    }
+
     @Transactional
     public Order createPendingOrder(AddOrUpdateOrderCommand command) {
         EntityManager em = getEntityManager();
@@ -28,6 +50,19 @@ public class OrderService {
         if (user == null) {
             throw new IllegalArgumentException("User not found");
         }
+
+        // TODO: use group balance type in the future
+        
+        Balance balance = user.getBalance();
+        if (balance == null) {
+            throw new IllegalStateException("User balance not found");
+        }
+
+        if (!haveEnoughTrxForOrder(command)) {
+            throw new NotEnoughBalanceException("Not enough balance");
+        }
+
+        balance.setSunBalance(balance.getSunBalance() - command.getSunAmount());
 
         Order order = new Order();
         order.setUser(user);
@@ -47,13 +82,13 @@ public class OrderService {
 
     @Transactional
     public Order completeOrder(AddOrUpdateOrderCommand command) {
-        Optional<Order> bySerial = orderRepo.findBySerial(command.getSerial());
+        Optional<Order> byCorrelationId = orderRepo.findByCorrelationId(command.getCorrelationId());
 
-        if (bySerial.isEmpty()) {
+        if (byCorrelationId.isEmpty()) {
             throw new IllegalArgumentException("Order not found");
         }
 
-        Order order = bySerial.get();
+        Order order = byCorrelationId.get();
         order.setOrderStatus(OrderStatus.COMPLETED);
         order.setItrxStatus(command.getItrxStatus());
         order.setTxId(command.getTxId());
@@ -63,13 +98,13 @@ public class OrderService {
 
     @Transactional
     public Order refundOrder(AddOrUpdateOrderCommand command) {
-        Optional<Order> bySerial = orderRepo.findBySerial(command.getSerial());
+        Optional<Order> byCorrelationId = orderRepo.findByCorrelationId(command.getCorrelationId());
 
-        if (bySerial.isEmpty()) {
+        if (byCorrelationId.isEmpty()) {
             throw new IllegalArgumentException("Order not found");
         }
 
-        Order order = bySerial.get();
+        Order order = byCorrelationId.get();
         order.setOrderStatus(OrderStatus.REFUNDED);
         order.setItrxStatus(command.getItrxStatus());
 

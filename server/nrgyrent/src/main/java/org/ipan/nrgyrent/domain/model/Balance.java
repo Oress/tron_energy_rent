@@ -45,6 +45,10 @@ public class Balance {
     @Column(name = "last_tx_timestamp")
     private Long lastTxTimestamp;
 
+
+    @Column(name = "is_active")
+    private Boolean isActive = Boolean.TRUE;
+
     @CreationTimestamp
     @Column(name = "created_at")
     private Instant createdAt;

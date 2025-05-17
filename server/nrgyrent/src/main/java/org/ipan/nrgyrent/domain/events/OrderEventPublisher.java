@@ -9,11 +9,11 @@ import org.springframework.stereotype.Component;
 public class OrderEventPublisher {
     private final ApplicationEventPublisher eventPublisher;
 
-    public void publishOrderCompletedEvent(String serial, Integer itrxStatus, String txId) {
-        eventPublisher.publishEvent(new OrderCompletedEvent(this, serial, itrxStatus, txId));
+    public void publishOrderCompletedEvent(String correlationId, Integer itrxStatus, String txId) {
+        eventPublisher.publishEvent(new OrderCompletedEvent(this, correlationId, itrxStatus, txId));
     }
 
-    public void publishOrderFailedEvent(String serial, Integer itrxStatus) {
-        eventPublisher.publishEvent(new OrderFailedEvent(this, serial, itrxStatus));
+    public void publishOrderFailedEvent(String correlationId, Integer itrxStatus) {
+        eventPublisher.publishEvent(new OrderFailedEvent(this, correlationId, itrxStatus));
     }
 }
