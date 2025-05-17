@@ -2,6 +2,7 @@ package org.ipan.nrgyrent.telegram.handlers;
 
 import org.ipan.nrgyrent.domain.model.Balance;
 import org.ipan.nrgyrent.domain.model.repository.BalanceRepo;
+import org.ipan.nrgyrent.domain.service.BalanceService;
 import org.ipan.nrgyrent.telegram.AppUpdateHandler;
 import org.ipan.nrgyrent.telegram.InlineMenuCallbacks;
 import org.ipan.nrgyrent.telegram.States;
@@ -23,6 +24,7 @@ public class ManageGroupActionsHandler implements AppUpdateHandler {
     private final ManageGroupActionsView manageGroupActionsView;
     private final TelegramState telegramState;
     private final BalanceRepo balanceRepo;
+    private final BalanceService balanceService;
     private final ManageGroupSearchHandler manageGroupSearchHandler;
 
     @Override
@@ -33,7 +35,7 @@ public class ManageGroupActionsHandler implements AppUpdateHandler {
                 handleGroupPreivew(userState, update);
                 break;
 
-            case ADMIN_MANAGE_GROUPS_ACTION_DELETE_CONFIRM:
+            case ADMIN_MANAGE_GROUPS_ACTION_DEACTIVATE_CONFIRM:
                 handleGroupDeleteConfirm(userState, update);
                 break;
 
@@ -46,15 +48,15 @@ public class ManageGroupActionsHandler implements AppUpdateHandler {
         CallbackQuery callbackQuery = update.getCallbackQuery();
         if (callbackQuery != null) {
             String data = callbackQuery.getData();
-            if (data.equals(InlineMenuCallbacks.MANAGE_GROUPS_ACTION_DELETE)) {
-                handleDeleteGroup(userState, callbackQuery);
+            if (data.equals(InlineMenuCallbacks.MANAGE_GROUPS_ACTION_DEACTIVATE)) {
+                handleDeactivateGroup(userState, callbackQuery);
             }
         }
     }
 
-    private void handleDeleteGroup(UserState userState, CallbackQuery callbackQuery) {
-        manageGroupActionsView.confirmDeleteGroupMsg(callbackQuery);
-        telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.ADMIN_MANAGE_GROUPS_ACTION_DELETE_CONFIRM));
+    private void handleDeactivateGroup(UserState userState, CallbackQuery callbackQuery) {
+        manageGroupActionsView.confirmDeactivateGroupMsg(callbackQuery);
+        telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.ADMIN_MANAGE_GROUPS_ACTION_DEACTIVATE_CONFIRM));
     }
 
     private void handleGroupDeleteConfirm(UserState userState, Update update) {
@@ -64,14 +66,10 @@ public class ManageGroupActionsHandler implements AppUpdateHandler {
             BalanceEdit openBalance = telegramState.getOrCreateBalanceEdit(userState.getTelegramId());
             if (data.equals(InlineMenuCallbacks.CONFIRM_YES)) {
                 // TODO: delete group balance, remove group balance from users, watch out for potential actions with deleted group
-                Balance balance = balanceRepo.findById(openBalance.getSelectedBalanceId()).orElse(null);
-                if (balance != null) {
-                    balanceRepo.delete(balance);
-                    manageGroupActionsView.groupDeleted(callbackQuery);
-                    telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.ADMIN_MANAGE_GROUPS_ACTION_DELETE_SUCCESS));
-                } else {
-                    logger.error("Balance not found for deletion: {}", openBalance.getSelectedBalanceId());
-                }
+                // TODO: handle balance not found exception
+                balanceService.deactivateGroupBalance(openBalance.getSelectedBalanceId());
+                manageGroupActionsView.groupDeleted(callbackQuery);
+                telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.ADMIN_MANAGE_GROUPS_ACTION_DELETE_SUCCESS));
             } else if (data.equals(InlineMenuCallbacks.CONFIRM_NO)) {
                 manageGroupSearchHandler.openGroupBalance(userState, callbackQuery, openBalance.getSelectedBalanceId());
             } else {

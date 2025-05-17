@@ -43,7 +43,7 @@ public class ManageGroupNewGroupView {
     private static final String MANAGE_GROUP_ACTION_ADD_USERS = "➕ Добавить пользователей";
     private static final String MANAGE_GROUP_ACTION_REMOVE_USERS = "➖ Удалить пользователей";
     private static final String MANAGE_GROUP_ACTION_RENAME_GROUP = "✏️ Переименовать группу";
-    private static final String MANAGE_GROUP_ACTION_DELETE_GROUP = "❌ Удалить группу";
+    private static final String MANAGE_GROUP_ACTION_DEACTIVATE_GROUP = "❌ Деактивировать группу";
 
     private static final String MANAGE_GROUPS_SEARCH = "🔍 Поиск группы";
     private static final String MANAGE_GROUPS_ADD_NEW = "➕ Добавить группу";
@@ -211,8 +211,8 @@ public class ManageGroupNewGroupView {
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(MANAGE_GROUP_ACTION_DELETE_GROUP)
-                                        .callbackData(InlineMenuCallbacks.MANAGE_GROUPS_ACTION_DELETE)
+                                        .text(MANAGE_GROUP_ACTION_DEACTIVATE_GROUP)
+                                        .callbackData(InlineMenuCallbacks.MANAGE_GROUPS_ACTION_DEACTIVATE)
                                         .build()))
                 .keyboardRow(
                         new InlineKeyboardRow(

@@ -1,10 +1,10 @@
 package org.ipan.nrgyrent.domain.model;
 
 import java.time.Instant;
+import java.util.List;
 
 import org.hibernate.annotations.CreationTimestamp;
 
-import jakarta.annotation.Generated;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -12,6 +12,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
@@ -32,6 +33,9 @@ public class Balance {
     private String depositAddress;
 
     private String label;
+
+    @OneToMany(mappedBy = AppUser_.GROUP_BALANCE)
+    private List<AppUser> users;
 
     @Enumerated(EnumType.STRING)
     private BalanceType type = BalanceType.INDIVIDUAL;

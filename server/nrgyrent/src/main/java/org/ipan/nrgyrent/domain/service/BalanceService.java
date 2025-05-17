@@ -93,4 +93,18 @@ public class BalanceService {
         throw new NotImplementedException();
     }
 
+    @Transactional
+    public void deactivateGroupBalance(Long balanceId) {
+        Balance balance = balanceRepo.findById(balanceId).orElse(null);
+        if (balance == null) {
+            logger.error("Balance not found for deletion: {}", balanceId);
+            throw new IllegalArgumentException("Balance not found for deletion");
+        }
+
+        balance.setIsActive(false);
+        balance.getUsers().forEach(user -> {
+            user.setGroupBalance(null);
+        });
+    }
+
 }

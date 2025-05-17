@@ -15,8 +15,8 @@ import lombok.SneakyThrows;
 @Component
 @AllArgsConstructor
 public class ManageGroupActionsView {
-    private static final String MSG_DELETE_GROUP_WARNING = "⚠️ Вы уверены, что хотите удалить группу?";
-    private static final String MSG_GROUP_DELETED = "✅ Группа успешно удалена.";
+    private static final String MSG_DELETE_GROUP_WARNING = "⚠️ Вы уверены, что хотите деактивировать группу?";
+    private static final String MSG_GROUP_DELETED = "✅ Группа успешно деактивирована.";
 
     private static final String NO = "❌ Нет";
     private static final String YES = "✅ Да";
@@ -37,7 +37,7 @@ public class ManageGroupActionsView {
     }
 
     @SneakyThrows
-    public void confirmDeleteGroupMsg(CallbackQuery callbackQuery) {
+    public void confirmDeactivateGroupMsg(CallbackQuery callbackQuery) {
         EditMessageText message = EditMessageText
                 .builder()
                 .chatId(callbackQuery.getMessage().getChatId())
