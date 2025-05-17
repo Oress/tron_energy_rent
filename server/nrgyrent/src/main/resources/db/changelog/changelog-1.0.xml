@@ -187,7 +187,7 @@
             <column name="tx_id" type="text">
                 <constraints nullable="false" unique="true" />
             </column>
-            <column name="timestamp" type="TIMESTAMP" />
+            <column name="timestamp" type="bigint" />
         </createTable>
 
         <addForeignKeyConstraint constraintName="fk_nrg_deposit_transactions_wallet_to"

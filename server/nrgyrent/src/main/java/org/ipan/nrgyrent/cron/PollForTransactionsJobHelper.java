@@ -1,11 +1,15 @@
 package org.ipan.nrgyrent.cron;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
 import org.ipan.nrgyrent.domain.model.Balance;
 import org.ipan.nrgyrent.domain.model.DepositTransaction;
+import org.ipan.nrgyrent.domain.model.repository.DepositTransactionRepo;
+import org.ipan.nrgyrent.tron.utils.ByteArray;
+import org.ipan.nrgyrent.tron.wallet.WalletApi;
 import org.ipan.nrgyrent.trongrid.api.AccountApi;
 import org.ipan.nrgyrent.trongrid.model.Contract;
 import org.ipan.nrgyrent.trongrid.model.ContractParameterValue;
@@ -31,6 +35,7 @@ public class PollForTransactionsJobHelper {
     private static final String TRANSFER_CONTRACT = "TransferContract";
     private static final Long MIN_TRANSFER_AMOUNT_SUN = 1_000_000L;
 
+    private final DepositTransactionRepo depositTransactionRepo;
     private final AccountApi accountApi;
 
     @Transactional
@@ -42,6 +47,7 @@ public class PollForTransactionsJobHelper {
 
         for (Balance balance : batch) {
             logger.info("Processing balance: id: {} wallet: {}", balance.getId(), balance.getDepositAddress());
+            // TODO: only_confirmed transactions
             V1AccountsAddressTransactionsGet200Response response = accountApi
                     .v1AccountsAddressTransactionsGet(balance.getDepositAddress())
                     .block();
@@ -83,11 +89,15 @@ public class PollForTransactionsJobHelper {
                 logger.info("Found {} new transactions for address: {}", transactions.size(), balance.getDepositAddress());
 
                 // Contract is a list but only 1 element is used https://developers.tron.network/docs/tron-protocol-transaction
-                Long topUp = transactions
-                        .stream()
-                        .peek(tx -> logger.info("Balance Id: {} wallet: {} Transaction ID: {}, Amount: {}", balance.getId(), balance.getDepositAddress(), tx.getTxID(), tx.getRawData().getContract().getFirst().getParameter().getValue().getAmount()))
-                        .mapToLong(tx -> tx.getRawData().getContract().getFirst().getParameter().getValue().getAmount())
-                        .sum();
+                Long topUp = 0L;
+                List<DepositTransaction> depositTransactions = new ArrayList<>();
+
+                for (Transaction tx : transactions) {
+                    logger.info("Balance Id: {} wallet: {} Transaction ID: {}, Amount: {}", balance.getId(), balance.getDepositAddress(), tx.getTxID(), tx.getRawData().getContract().getFirst().getParameter().getValue().getAmount());
+                    topUp += tx.getRawData().getContract().getFirst().getParameter().getValue().getAmount();
+                    DepositTransaction depositTransaction = createDepositTransaction(tx);
+                    depositTransactions.add(depositTransaction);
+                }
 
                 logger.info("Top up amount for address {} {}", balance.getDepositAddress(), topUp);
                 balance.makeDeposit(topUp);
@@ -95,19 +105,24 @@ public class PollForTransactionsJobHelper {
                 balance.setLastTxId(transactions.get(transactions.size() - 1).getTxID());
                 balance.setLastTxTimestamp(transactions.get(transactions.size() - 1).getRawData().getTimestamp());
 
-                DepositTransaction depositTransaction = createDepositTransaction(transactions.get(transactions.size() - 1));
-                em.persist(depositTransaction);
+                depositTransactionRepo.saveAll(depositTransactions);
                 em.merge(balance);
             }
         }
     }
 
-    private DepositTransaction createDepositTransaction( Transaction tx) {
+    private DepositTransaction createDepositTransaction(Transaction tx) {
         DepositTransaction depositTransaction = new DepositTransaction();
         ContractParameterValue value = tx.getRawData().getContract().getFirst().getParameter().getValue();
 
-        depositTransaction.setWalletTo(value.getToAddress());
-        depositTransaction.setWalletFrom(value.getOwnerAddress());
+        byte[] fromHexString = ByteArray.fromHexString(value.getToAddress());
+        String fromBase58 = WalletApi.encode58Check(fromHexString);
+
+        byte[] toHexString = ByteArray.fromHexString(value.getOwnerAddress());
+        String toBase58 = WalletApi.encode58Check(toHexString);
+
+        depositTransaction.setWalletTo(fromBase58);
+        depositTransaction.setWalletFrom(toBase58);
         depositTransaction.setAmount(value.getAmount());
         depositTransaction.setTxId(tx.getTxID());
         depositTransaction.setTimestamp(tx.getRawData().getTimestamp());
