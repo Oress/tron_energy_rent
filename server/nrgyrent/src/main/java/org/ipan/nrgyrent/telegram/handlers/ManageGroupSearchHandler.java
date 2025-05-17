@@ -11,6 +11,7 @@ import org.ipan.nrgyrent.telegram.States;
 import org.ipan.nrgyrent.telegram.TelegramMessages;
 import org.ipan.nrgyrent.telegram.state.TelegramState;
 import org.ipan.nrgyrent.telegram.state.UserState;
+import org.ipan.nrgyrent.telegram.views.ManageGroupActionsView;
 import org.ipan.nrgyrent.telegram.views.ManageGroupSearchView;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -28,7 +29,8 @@ import lombok.extern.slf4j.Slf4j;
 public class ManageGroupSearchHandler implements AppUpdateHandler {
     private final TelegramState telegramState;
     private final TelegramMessages telegramMessages;
-    private BalanceRepo balanceRepo;
+    private final BalanceRepo balanceRepo;
+    private final ManageGroupActionsView manageGroupActionsView;
 
     @Override
     public void handleUpdate(UserState userState, Update update) {
@@ -72,7 +74,7 @@ public class ManageGroupSearchHandler implements AppUpdateHandler {
         if (groupBalance.isPresent()) {
             Balance balance = groupBalance.get();
             // TODO: make the message to show more details: name, balance, address, manager.
-            telegramMessages.manageGroupView().updMenuToManageGroupActionsMenu(callbackQuery, balance);
+            manageGroupActionsView.updMenuToManageGroupActionsMenu(callbackQuery, balance);
             telegramState.updateBalanceEdit(userState.getTelegramId(), telegramState
                     .getOrCreateBalanceEdit(userState.getTelegramId()).withSelectedBalanceId(balanceId));
             telegramState.updateUserState(userState.getTelegramId(),

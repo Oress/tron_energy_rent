@@ -30,6 +30,23 @@ public class BalanceService {
     private final ManagedWalletService managedWalletService;
 
     @Transactional
+    public Balance renameGroupBalance(Long balanceId, String newLabel) {
+        Balance balance = balanceRepo.findById(balanceId).orElse(null);
+        if (balance == null) {
+            logger.error("Balance not found for renaming: {}", balanceId);
+            throw new IllegalArgumentException("Balance not found for renaming");
+        }
+        // label should be > 3 characters
+        if (newLabel.length() < 3) {
+            logger.info("New label is too short: {}", newLabel);
+            throw new IllegalArgumentException("New label is too short");
+        }
+
+        balance.setLabel(newLabel);
+        return balance;
+    }
+
+    @Transactional
     public Balance createGroupBalance(String label, List<Long> userIds) {
         // 1. Check that users are registered.
         List<AppUser> registeredUsers = userRepo.findAllById(userIds);
