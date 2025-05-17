@@ -17,7 +17,7 @@ public class OrderEventDomainListener {
     public void onOrderCompleted(OrderCompletedEvent event) {
         logger.trace("Order completed event received: {}", event);
         AddOrUpdateOrderCommand command = AddOrUpdateOrderCommand.builder()
-                .serial(event.getCorrelationId())
+                .correlationId(event.getCorrelationId())
                 .itrxStatus(event.getItrxStatus())
                 .txId(event.getTxId())
                 .build();
@@ -28,7 +28,7 @@ public class OrderEventDomainListener {
     public void onOrderFailed(OrderFailedEvent event) {
         logger.trace("Order failed event received: {}", event);
         AddOrUpdateOrderCommand command = AddOrUpdateOrderCommand.builder()
-                .serial(event.getCorrelationId())
+                .correlationId(event.getCorrelationId())
                 .itrxStatus(event.getItrxStatus())
                 .build();
         orderService.refundOrder(command);

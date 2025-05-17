@@ -36,6 +36,10 @@ public class Order {
     @JoinColumn(name = "user_id", referencedColumnName = "telegram_id", foreignKey = @ForeignKey(name = "fk_nrg_orders_user_id"))
     private AppUser user;
 
+    @ManyToOne
+    @JoinColumn(name = "balance_id", referencedColumnName = "id", foreignKey = @ForeignKey(name = "fk_nrg_orders_balance_id"))
+    private Balance balance;
+
     @Column(name = "itrx_fee_sun_amount")
     private Long itrxFeeSunAmount;
 

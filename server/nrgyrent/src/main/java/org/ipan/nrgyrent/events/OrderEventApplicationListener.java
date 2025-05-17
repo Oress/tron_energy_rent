@@ -42,9 +42,9 @@ public class OrderEventApplicationListener {
     public void onOrderFailed(OrderFailedEvent event) {
         logger.trace("Order failed event received: {}", event);
 
-        Order order = orderRepo.findBySerial(event.getCorrelationId()).orElse(null);
+        Order order = orderRepo.findByCorrelationId(event.getCorrelationId()).orElse(null);
         if (order == null) {
-            logger.error("Order not found for serial: {}", event.getCorrelationId());
+            logger.error("Order not found for correlationId: {}", event.getCorrelationId());
             return;
         }
 

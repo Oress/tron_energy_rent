@@ -2,6 +2,8 @@ package org.ipan.nrgyrent.domain.service;
 
 import jakarta.persistence.EntityManager;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import org.apache.commons.lang3.NotImplementedException;
 import org.ipan.nrgyrent.domain.exception.NotEnoughBalanceException;
 import org.ipan.nrgyrent.domain.model.AppUser;
@@ -18,28 +20,9 @@ import java.util.Optional;
 
 @Service
 @AllArgsConstructor
+@Slf4j
 public class OrderService {
     private final OrderRepo orderRepo;
-
-    @Transactional(readOnly = true)
-    public boolean haveEnoughTrxForOrder(AddOrUpdateOrderCommand command) {
-        EntityManager em = getEntityManager();
-
-        AppUser user = em.getReference(AppUser.class, command.getUserId());
-
-        if (user == null) {
-            throw new IllegalArgumentException("User not found");
-        }
-
-        // TODO: use group balance type in the future
-        
-        Balance balance = user.getBalance();
-        if (balance == null) {
-            throw new IllegalStateException("User balance not found");
-        }
-
-        return balance.getSunBalance() >= command.getSunAmount();
-    }
 
     @Transactional
     public Order createPendingOrder(AddOrUpdateOrderCommand command) {
@@ -51,21 +34,21 @@ public class OrderService {
             throw new IllegalArgumentException("User not found");
         }
 
-        // TODO: use group balance type in the future
-        
-        Balance balance = user.getBalance();
-        if (balance == null) {
-            throw new IllegalStateException("User balance not found");
+        Balance targetBalance = command.getUseGroupWallet() ? user.getGroupBalance() : user.getBalance();
+        if (targetBalance == null) {
+            logger.error("Balance not found for user: {}, command {}", user.getTelegramId(), command);
+            throw new IllegalArgumentException("Balance not found");
         }
 
-        if (!haveEnoughTrxForOrder(command)) {
+        if (targetBalance.getSunBalance() < command.getSunAmount()) {
             throw new NotEnoughBalanceException("Not enough balance");
         }
 
-        balance.setSunBalance(balance.getSunBalance() - command.getSunAmount());
+        targetBalance.setSunBalance(targetBalance.getSunBalance() - command.getSunAmount());
 
         Order order = new Order();
         order.setUser(user);
+        order.setBalance(targetBalance);
         order.setOrderStatus(OrderStatus.PENDING);
         order.setDuration(command.getDuration());
         order.setCorrelationId(command.getCorrelationId());
@@ -73,7 +56,6 @@ public class OrderService {
         order.setSunAmount(command.getSunAmount());
         order.setItrxFeeSunAmount(command.getItrxFeeSunAmount());
         order.setReceiveAddress(command.getReceiveAddress());
-        order.setSerial(command.getSerial());
 
         em.persist(order);
 
@@ -82,6 +64,7 @@ public class OrderService {
 
     @Transactional
     public Order completeOrder(AddOrUpdateOrderCommand command) {
+        logger.info("Completing order: {}", command);
         Optional<Order> byCorrelationId = orderRepo.findByCorrelationId(command.getCorrelationId());
 
         if (byCorrelationId.isEmpty()) {
@@ -98,6 +81,7 @@ public class OrderService {
 
     @Transactional
     public Order refundOrder(AddOrUpdateOrderCommand command) {
+        logger.info("Refunding order: {}", command);
         Optional<Order> byCorrelationId = orderRepo.findByCorrelationId(command.getCorrelationId());
 
         if (byCorrelationId.isEmpty()) {
@@ -107,6 +91,9 @@ public class OrderService {
         Order order = byCorrelationId.get();
         order.setOrderStatus(OrderStatus.REFUNDED);
         order.setItrxStatus(command.getItrxStatus());
+
+        Balance balance = order.getBalance();
+        balance.setSunBalance(balance.getSunBalance() + order.getSunAmount());
 
         // TODO: Refund the order amount to the user
         return order;

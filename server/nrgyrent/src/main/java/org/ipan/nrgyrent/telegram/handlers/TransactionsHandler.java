@@ -12,7 +12,6 @@ import org.ipan.nrgyrent.itrx.dto.OrderCallbackRequest;
 import org.ipan.nrgyrent.itrx.dto.PlaceOrderResponse;
 import org.ipan.nrgyrent.telegram.AppUpdateHandler;
 import org.ipan.nrgyrent.telegram.States;
-import org.ipan.nrgyrent.telegram.TelegramMessages;
 import org.ipan.nrgyrent.telegram.state.TelegramState;
 import org.ipan.nrgyrent.telegram.state.UserState;
 import org.ipan.nrgyrent.telegram.utils.WalletTools;
@@ -58,17 +57,17 @@ public class TransactionsHandler implements AppUpdateHandler {
     private void handleTransactionState(UserState userState, Update update, Integer energyAmount, Long sunAmount) {
         CallbackQuery callbackQuery = update.getCallbackQuery();
         if (callbackQuery != null) {
-            tryMakeTransaction(userState, energyAmount, AppConstants.DURATION_1H, callbackQuery.getData(), sunAmount);
+            tryMakeTransaction(userState, energyAmount, AppConstants.DURATION_1H, callbackQuery.getData(), sunAmount,  false);
         }
 
         Message message = update.getMessage();
         if (message != null && message.hasText()) {
-            tryMakeTransaction(userState, energyAmount, AppConstants.DURATION_1H, message.getText(), sunAmount);
+            tryMakeTransaction(userState, energyAmount, AppConstants.DURATION_1H, message.getText(), sunAmount, false);
         }
     }
 
     private void tryMakeTransaction(UserState userState, Integer energyAmount, String duration, String walletAddress,
-            Long sunAmount) {
+            Long sunAmount, boolean useGroupWallet) {
         if (WalletTools.isValidTronAddress(walletAddress)) {
             transactionsViews.updMenuToTransactionInProgress(userState);
 
@@ -79,6 +78,7 @@ public class TransactionsHandler implements AppUpdateHandler {
                 orderService.createPendingOrder(
                         AddOrUpdateOrderCommand.builder()
                                 .userId(userState.getTelegramId())
+                                .useGroupWallet(useGroupWallet)
                                 .receiveAddress(walletAddress)
                                 .energyAmount(energyAmount)
                                 .duration(duration)
