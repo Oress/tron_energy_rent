@@ -4,7 +4,7 @@ import org.ipan.nrgyrent.domain.model.Balance;
 import org.ipan.nrgyrent.telegram.InlineMenuCallbacks;
 import org.ipan.nrgyrent.telegram.StaticLabels;
 import org.ipan.nrgyrent.telegram.state.UserState;
-import org.ipan.nrgyrent.telegram.utils.BalanceTools;
+import org.ipan.nrgyrent.telegram.utils.FormattingTools;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
@@ -239,6 +239,6 @@ public class ManageGroupNewGroupView {
                 balance.getId(),
                 balance.getCreatedAt().toString(),
                 balance.getDepositAddress(),
-                BalanceTools.formatBalance(balance.getSunBalance()));
+                FormattingTools.formatBalance(balance.getSunBalance()));
     }
 }

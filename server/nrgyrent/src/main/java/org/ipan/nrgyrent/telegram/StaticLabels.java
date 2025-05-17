@@ -34,25 +34,12 @@ public class StaticLabels {
     public static final String MSG_DELETE_WALLET_SUCCESS = "\uD83D\uDDD1\uFE0F Кошелек успешно удален";
 
 
-     // ADMIN
-    public static final String MSG_ADMIN_MENU = """
-            👨‍💻 Админка
-
-            Здесь вы можете управлять группами, пользователями, а также просматривать и изменять их баланс
-            """;
-
-
     // Menu labels
     public static final String MENU_ADMIN = "👨‍💻 Админка";
     public static final String MENU_TRANSFER_ENERGY_65K = "⚡ 65 000 энергии на 1 час (5.5 TRX)";
     public static final String MENU_TRANSFER_ENERGY_131K = "⚡ 131 000 энергии на 1 час (8 TRX)";
     public static final String MENU_DEPOSIT = "\uD83D\uDCB8 Депозит";
     public static final String MENU_WALLETS = "\uD83D\uDC5B Кошельки";
-
-    // Admin menu labels
-    public static final String MENU_ADMIN_MANAGE_GROUPS = "👥 Управление группами";
-    public static final String MENU_ADMIN_MANAGE_USERS = "👤 Управление пользователями";
-
 
     public static final String TO_MAIN_MENU = "\uD83C\uDFE0 Главное меню";
 

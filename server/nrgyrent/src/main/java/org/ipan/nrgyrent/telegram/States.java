@@ -17,6 +17,7 @@ public enum States {
     // admin
     ADMIN_MENU,
     ADMIN_MANAGE_GROUPS,
+    ADMIN_VIEW_ITRX_BALANCE,
 
 
     ADMIN_MANAGE_GROUPS_ACTION_PREVIEW,

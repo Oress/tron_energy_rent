@@ -168,19 +168,6 @@ public class TelegramMessages {
 
     @Retryable
     @SneakyThrows
-    public void updMenuToAdminMenu(CallbackQuery callbackQuery) {
-        EditMessageText message = EditMessageText
-                .builder()
-                .chatId(callbackQuery.getMessage().getChatId())
-                .messageId(callbackQuery.getMessage().getMessageId())
-                .text(StaticLabels.MSG_ADMIN_MENU)
-                .replyMarkup(getAdminMenuReplyMarkup())
-                .build();
-        tgClient.execute(message);
-    }
-
-    @Retryable
-    @SneakyThrows
     public void updMenuToAddWalletsMenu(CallbackQuery callbackQuery) {
         EditMessageText message = EditMessageText
                 .builder()
@@ -276,32 +263,7 @@ public class TelegramMessages {
                 .build();
     }
 
-    private InlineKeyboardMarkup getAdminMenuReplyMarkup() {
-        return InlineKeyboardMarkup
-                .builder()
-                .keyboardRow(
-                        new InlineKeyboardRow(
-                                InlineKeyboardButton
-                                        .builder()
-                                        .text(StaticLabels.MENU_ADMIN_MANAGE_GROUPS)
-                                        .callbackData(InlineMenuCallbacks.MANAGE_GROUPS)
-                                        .build()))
-                .keyboardRow(
-                        new InlineKeyboardRow(
-                                InlineKeyboardButton
-                                        .builder()
-                                        .text(StaticLabels.MENU_ADMIN_MANAGE_USERS)
-                                        .callbackData(InlineMenuCallbacks.MANAGE_USERS)
-                                        .build()))
-                .keyboardRow(
-                        new InlineKeyboardRow(
-                                InlineKeyboardButton
-                                        .builder()
-                                        .text(StaticLabels.TO_MAIN_MENU)
-                                        .callbackData(InlineMenuCallbacks.TO_MAIN_MENU)
-                                        .build()))
-                .build();
-    }
+
 
     private InlineKeyboardMarkup getAdminMainMenuReplyMarkup() {
         return InlineKeyboardMarkup

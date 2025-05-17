@@ -2,7 +2,7 @@ package org.ipan.nrgyrent.telegram.views;
 
 import org.ipan.nrgyrent.domain.model.AppUser;
 import org.ipan.nrgyrent.domain.model.Balance;
-import org.ipan.nrgyrent.telegram.utils.BalanceTools;
+import org.ipan.nrgyrent.telegram.utils.FormattingTools;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
@@ -67,8 +67,8 @@ public class DepositViews {
 
                 ⌛️ Среднее время зачисления депозита - 2 минуты."""
                 .formatted(
-                    personalDepositAddress,BalanceTools.formatBalance(personalSunBalance),
-                    groupDepositAddress,BalanceTools.formatBalance(groupSunBalance)
+                    personalDepositAddress,FormattingTools.formatBalance(personalSunBalance),
+                    groupDepositAddress,FormattingTools.formatBalance(groupSunBalance)
                     );
     }
 
@@ -89,6 +89,6 @@ public class DepositViews {
                 ⌛️ Среднее время зачисления депозита - 2 минуты."""
                 .formatted(
                         depositAddress,
-                        BalanceTools.formatBalance(sunBalance));
+                        FormattingTools.formatBalance(sunBalance));
     }
 }

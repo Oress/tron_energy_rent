@@ -12,6 +12,7 @@ import org.ipan.nrgyrent.telegram.States;
 import org.ipan.nrgyrent.telegram.TelegramMessages;
 import org.ipan.nrgyrent.telegram.state.TelegramState;
 import org.ipan.nrgyrent.telegram.state.UserState;
+import org.ipan.nrgyrent.telegram.views.AdminViews;
 import org.ipan.nrgyrent.telegram.views.DepositViews;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
@@ -28,6 +29,7 @@ public class MainMenuHandler implements AppUpdateHandler {
     private final UserService userService;
 
     private final DepositViews depositViews;
+    private final AdminViews adminViews;
 
 
     @Override
@@ -54,7 +56,7 @@ public class MainMenuHandler implements AppUpdateHandler {
                 telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.WALLETS));
             } else if (InlineMenuCallbacks.ADMIN_MENU.equals(data)) {
                 // TODO: extra validation here ??
-                telegramMessages.updMenuToAdminMenu(callbackQuery);
+                adminViews.updMenuToAdminMenu(callbackQuery);
                 telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.ADMIN_MENU));
             }
         }
