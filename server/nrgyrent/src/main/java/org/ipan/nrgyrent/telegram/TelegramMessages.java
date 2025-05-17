@@ -152,19 +152,6 @@ public class TelegramMessages {
         tgClient.execute(message);
     }
 
-    @Retryable
-    @SneakyThrows
-    public void updMenuToDepositsMenu(CallbackQuery callbackQuery, String walletAddress, Long sunBalance) {
-        EditMessageText message = EditMessageText
-                .builder()
-                .chatId(callbackQuery.getMessage().getChatId())
-                .messageId(callbackQuery.getMessage().getMessageId())
-                .text(StaticLabels.getDepositMenuText(walletAddress, sunBalance))
-                .parseMode("MARKDOWN")
-                .replyMarkup(getToMainMenuMarkup())
-                .build();
-        tgClient.execute(message);
-    }
 
     @Retryable
     @SneakyThrows

@@ -12,6 +12,7 @@ import org.ipan.nrgyrent.telegram.States;
 import org.ipan.nrgyrent.telegram.TelegramMessages;
 import org.ipan.nrgyrent.telegram.state.TelegramState;
 import org.ipan.nrgyrent.telegram.state.UserState;
+import org.ipan.nrgyrent.telegram.views.DepositViews;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Update;
@@ -25,6 +26,9 @@ public class MainMenuHandler implements AppUpdateHandler {
     private final TelegramMessages telegramMessages;
     private final UserWalletService userWalletService;
     private final UserService userService;
+
+    private final DepositViews depositViews;
+
 
     @Override
     public void handleUpdate(UserState userState, Update update) {
@@ -42,8 +46,7 @@ public class MainMenuHandler implements AppUpdateHandler {
                 telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.TRANSACTION_131k));
             } else if (InlineMenuCallbacks.DEPOSIT.equals(data)) {
                 AppUser user = userService.getById(userState.getTelegramId());
-                telegramMessages.updMenuToDepositsMenu(callbackQuery, user.getBalance().getDepositAddress(),
-                        user.getBalance().getSunBalance());
+                depositViews.updMenuToDepositsMenu(callbackQuery, user);
                 telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.DEPOSIT));
             } else if (InlineMenuCallbacks.WALLETS.equals(data)) {
                 List<UserWallet> wallets = userWalletService.getWallets(userState.getTelegramId());

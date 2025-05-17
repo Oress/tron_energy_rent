@@ -1,7 +1,5 @@
 package org.ipan.nrgyrent.telegram;
 
-import org.ipan.nrgyrent.telegram.utils.BalanceTools;
-
 public class StaticLabels {
     // COMMON
     public static final String MSG_MAIN_MENU_TEXT = """
@@ -76,23 +74,5 @@ public class StaticLabels {
 
     public static final String OK = "OK";
 
-    public static String getDepositMenuText(String depositAddress, Long sunBalance) {
-        return """
-                💰 Ваш адресс депозита:
-                
-                `%s`
-                
-                💰 Баланс:
-                
-                *%s* TRX
-                
-                ❗️ Вы можете отправить только TRX сети TRC-20❗️
-                
-                ❗️ Минимальный депозит - 1 TRX❗️
-                
-                ⌛️ Среднее время зачисления депозита - 2 минуты."""
-                .formatted(
-                        depositAddress,
-                        BalanceTools.formatBalance(sunBalance));
-    }
+
 }
