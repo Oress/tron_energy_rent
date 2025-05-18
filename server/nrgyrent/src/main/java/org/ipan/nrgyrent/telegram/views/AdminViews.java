@@ -1,5 +1,9 @@
 package org.ipan.nrgyrent.telegram.views;
 
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import org.ipan.nrgyrent.domain.model.CollectionWallet;
 import org.ipan.nrgyrent.itrx.dto.ApiUsageResponse;
 import org.ipan.nrgyrent.telegram.InlineMenuCallbacks;
 import org.ipan.nrgyrent.telegram.StaticLabels;
@@ -29,6 +33,7 @@ public class AdminViews {
     private static final String MENU_ADMIN_MANAGE_GROUPS = "👥 Управление группами";
     private static final String MENU_ADMIN_MANAGE_USERS = "👤 Управление пользователями";
     private static final String MENU_ADMIN_ITRX_BALANCE = "💰 Статистика itrx.io";
+    private static final String MENU_ADMIN_SWEEP_WALLETS_BALANCE = "💰 Статистика sweep кошельков";
 
     private final TelegramClient tgClient;
     private final CommonViews commonViews;
@@ -41,6 +46,19 @@ public class AdminViews {
                 .chatId(callbackQuery.getMessage().getChatId())
                 .messageId(callbackQuery.getMessage().getMessageId())
                 .text(getItrxBalanceMessage(apiUsageResponse))
+                .replyMarkup(commonViews.getToMainMenuMarkup())
+                .build();
+        tgClient.execute(message);
+    }
+
+    @Retryable
+    @SneakyThrows
+    public void sweepWalletsBalance(CallbackQuery callbackQuery, Map<CollectionWallet, Long> results) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(callbackQuery.getMessage().getChatId())
+                .messageId(callbackQuery.getMessage().getMessageId())
+                .text(getSweepBalanceMessage(results))
                 .replyMarkup(commonViews.getToMainMenuMarkup())
                 .build();
         tgClient.execute(message);
@@ -87,6 +105,13 @@ public class AdminViews {
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
+                                        .text(MENU_ADMIN_SWEEP_WALLETS_BALANCE)
+                                        .callbackData(InlineMenuCallbacks.MANAGE_SWEEP_BALANCE)
+                                        .build()))
+                .keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
                                         .text(StaticLabels.TO_MAIN_MENU)
                                         .callbackData(InlineMenuCallbacks.TO_MAIN_MENU)
                                         .build()))
@@ -102,10 +127,21 @@ public class AdminViews {
                 Всего энергии делегировано: %s
                 Комиссия сервиса за все время: %s TRX
                 """.formatted(
-                        FormattingTools.formatBalance(apiUsageResponse.getBalance()),
-                        FormattingTools.formatNumber(apiUsageResponse.getTotal_count()),
-                        FormattingTools.formatNumber(apiUsageResponse.getTotal_sum_energy()),
-                        FormattingTools.formatBalance(apiUsageResponse.getTotal_sum_trx())
-                );
+                FormattingTools.formatBalance(apiUsageResponse.getBalance()),
+                FormattingTools.formatNumber(apiUsageResponse.getTotal_count()),
+                FormattingTools.formatNumber(apiUsageResponse.getTotal_sum_energy()),
+                FormattingTools.formatBalance(apiUsageResponse.getTotal_sum_trx()));
+    }
+
+    private String getSweepBalanceMessage(Map<CollectionWallet, Long> results) {
+        return """
+                💰 Статистика sweep кошельков
+
+                %s
+                """.formatted(
+                results.entrySet().stream()
+                        .map(kv -> String.format("Адрес: %s\n Баланс: %s TRX", kv.getKey().getWalletAddress(),
+                                FormattingTools.formatBalance(kv.getValue())))
+                        .collect(Collectors.joining("\n\n")));
     }
 }
