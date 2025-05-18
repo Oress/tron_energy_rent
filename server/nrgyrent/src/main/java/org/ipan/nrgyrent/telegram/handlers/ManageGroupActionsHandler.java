@@ -41,7 +41,11 @@ public class ManageGroupActionsHandler implements AppUpdateHandler {
                 handleGroupPreivew(userState, update);
                 break;
 
-            case ADMIN_MANAGE_GROUPS_ACTION_ADD_USERS:
+            case ADMIN_MANAGE_GROUPS_ACTION_REMOVE_USERS:
+                handleRemoveUsers(userState, update);
+                break;
+
+            case ADMIN_MANAGE_GROUPS:
                 handleAddNewUsers(userState, update);
                 break;
 
@@ -55,6 +59,24 @@ public class ManageGroupActionsHandler implements AppUpdateHandler {
 
             default:
                 break;
+        }
+    }
+
+    private void handleRemoveUsers(UserState userState, Update update) {
+        Message message = update.getMessage();
+        if (message != null && message.hasUserShared()) {
+            telegramMessages.deleteMessage(message);
+            logger.info("Removing users from group: {}", message.getText());
+            UsersShared usersShared = message.getUsersShared();
+            Long telegramId = userState.getTelegramId();
+
+            BalanceEdit openBalance = telegramState.getOrCreateBalanceEdit(telegramId);
+
+            List<Long> userIds = usersShared.getUsers().stream().map(user -> user.getUserId()).toList();
+            // TODO: handle errors
+            balanceService.removeUsersFromTheGroupBalance(openBalance.getSelectedBalanceId(), userIds);
+
+            manageGroupActionsView.groupUsersRemoved(userState);
         }
     }
 
@@ -112,6 +134,14 @@ public class ManageGroupActionsHandler implements AppUpdateHandler {
                 // TODO: in case user input something else, the message will be deleted, handle it
                 telegramState.updateUserState(userState.getTelegramId(),
                         userState.withState(States.ADMIN_MANAGE_GROUPS_ACTION_ADD_USERS)
+                            .withMessagesToDelete(List.of(msg.getMessageId()))
+                        );
+            } else if (InlineMenuCallbacks.MANAGE_GROUPS_ACTION_REMOVE_USERS.equals(data)) {
+                manageGroupActionsView.updMenuPromptToRemoveUsersFromGroup(callbackQuery);
+                Message msg = manageGroupActionsView.promptToRemoveUsersToGroup(callbackQuery);
+                // TODO: in case user input something else, the message will be deleted, handle it
+                telegramState.updateUserState(userState.getTelegramId(),
+                        userState.withState(States.ADMIN_MANAGE_GROUPS_ACTION_REMOVE_USERS)
                             .withMessagesToDelete(List.of(msg.getMessageId()))
                         );
             } else if (InlineMenuCallbacks.MANAGE_GROUPS_ACTION_VIEW_USERS.equals(data)) {

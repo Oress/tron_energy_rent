@@ -104,6 +104,7 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
             case ADMIN_MANAGE_GROUPS_ACTION_DEACTIVATE_CONFIRM:
             case ADMIN_MANAGE_GROUPS_ACTION_PROMPT_NEW_LABEL:
             case ADMIN_MANAGE_GROUPS_ACTION_ADD_USERS:
+            case ADMIN_MANAGE_GROUPS_ACTION_REMOVE_USERS:
                 manageGroupActionsHandler.handleUpdate(userState, update);
                 break;
             case ADMIN_MANAGE_GROUPS_SEARCH:
@@ -111,6 +112,7 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
                 break;
             case ADMIN_MANAGE_GROUPS_ADD_PROMPT_LABEL:
             case ADMIN_MANAGE_GROUPS_ADD_PROMPT_USERS:
+            case ADMIN_MANAGE_GROUPS_REMOVE_PROMPT_USERS:
                 manageGroupNewGroupHandler.handleUpdate(userState, update);
                 break;
         }

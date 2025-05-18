@@ -19,6 +19,6 @@ public interface BalanceRepo extends JpaRepository<Balance, Long> {
     Page<Balance> findAllByTypeAndLabelContainingIgnoreCaseOrderById(BalanceType group, String label, PageRequest of);
     List<Balance> findAllByIsActive(Boolean isActive);
 
-    @Query(value = "select b from Balance b join fetch b.users u where b.id = :id")
+    @Query(value = "select b from Balance b left join fetch b.users u where b.id = :id")
     Optional<Balance> findByIdWithUsers(Long id);
 }

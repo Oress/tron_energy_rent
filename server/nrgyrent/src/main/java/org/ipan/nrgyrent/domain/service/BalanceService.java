@@ -1,6 +1,9 @@
 package org.ipan.nrgyrent.domain.service;
 
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.ipan.nrgyrent.domain.exception.UserAlreadyHasGroupBalanceException;
@@ -28,6 +31,38 @@ public class BalanceService {
     private final UserRepo userRepo;
     private final BalanceRepo balanceRepo;
     private final ManagedWalletService managedWalletService;
+
+    @Transactional
+    public Balance removeUsersFromTheGroupBalance(Long balanceId, List<Long> userIds) {
+        Balance balance = balanceRepo.findByIdWithUsers(balanceId).orElse(null);
+        if (balance == null) {
+            logger.error("Balance not found for removing users: {}", balanceId);
+            throw new IllegalArgumentException("Balance not found for removing users");
+        }
+
+        // Check if users are already in the group
+        List<AppUser> usersToRemove = userRepo.findAllById(userIds);
+        if (usersToRemove.isEmpty() || usersToRemove.size() != userIds.size()) {
+            logger.info("Some users are not registered: {}", userIds);
+            throw new UserNotRegisteredException("Some users are not registered");
+        }
+
+        if (usersToRemove.stream().anyMatch(user -> user.getGroupBalance() != null && !balanceId.equals(user.getGroupBalance().getId()))) {
+            logger.info("Some users are already in the group: {}", usersToRemove);
+            throw new UserAlreadyHasGroupBalanceException("Some users already have a group balance");
+        }
+
+        Map<Long, AppUser> usersToRemoveMap = usersToRemove.stream().collect(Collectors.toMap(AppUser::getTelegramId, Function.identity()));
+        /* if (usersToAdd.isEmpty()) {
+            logger.info("0 new users to add to group: {}", balanceId);
+            throw new IllegalArgumentException("0 new users to add to group");
+        } */
+
+        balance.getUsers().removeIf(user -> usersToRemoveMap.containsKey(user.getTelegramId()));
+        usersToRemove.forEach(nullableUser -> nullableUser.setGroupBalance(null));
+        // Check if the group is empty after removing users
+        return balance;
+    }
 
     @Transactional
     public Balance addUsersToTheGroupBalance(Long balanceId, List<Long> userIds) {

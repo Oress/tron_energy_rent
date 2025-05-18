@@ -40,8 +40,10 @@ public class ManageGroupActionsView {
     private static final String MSG_GROUP_DELETED = "✅ Группа успешно деактивирована.";
     private static final String MSG_GROUP_PROMPT_NEW_LABEL = "Введите новое название группы";
     private static final String MSG_GROUP_PROMPT_NEW_USERS = "Добавьте пользователей в группу, используя меню";
+    private static final String MSG_GROUP_PROMPT_REMOVE_USERS = "Удалите пользователей из группы, используя меню";
     private static final String MSG_GROUP_RENAMED = "✅ Группа успешно переименована.";
     private static final String MSG_GROUP_USERS_ADDED = "✅ Пользователи успешно добавлены в группу.";
+    private static final String MSG_GROUP_USERS_REMOVED = "✅ Пользователи успешно удалены из группы.";
 
     private static final String NO = "❌ Нет";
     private static final String YES = "✅ Да";
@@ -95,6 +97,41 @@ public class ManageGroupActionsView {
                 .replyMarkup(commonViews.getToMainMenuMarkup())
                 .build();
         tgClient.execute(message);
+    }
+
+    @SneakyThrows
+    public void groupUsersRemoved(UserState userState) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
+                .text(MSG_GROUP_USERS_REMOVED)
+                .replyMarkup(commonViews.getToMainMenuMarkup())
+                .build();
+        tgClient.execute(message);
+    }
+
+    @SneakyThrows
+    public void updMenuPromptToRemoveUsersFromGroup(CallbackQuery callbackQuery) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(callbackQuery.getMessage().getChatId())
+                .messageId(callbackQuery.getMessage().getMessageId())
+                .text(MSG_GROUP_PROMPT_REMOVE_USERS)
+                .replyMarkup(commonViews.getToMainMenuMarkup())
+                .build();
+        tgClient.execute(message);
+    }
+
+    @SneakyThrows
+    public Message promptToRemoveUsersToGroup(CallbackQuery callbackQuery) {
+        SendMessage message = SendMessage
+                .builder()
+                .chatId(callbackQuery.getMessage().getChatId())
+                .text(MSG_GROUP_PROMPT_REMOVE_USERS)
+                .replyMarkup(promptRemoveUsersMarkup())
+                .build();
+        return tgClient.execute(message);
     }
 
     @SneakyThrows
@@ -174,7 +211,26 @@ public class ManageGroupActionsView {
                 .build();
     }
 
-    private ReplyKeyboardMarkup promptAddUsersMarkup() {
+    private ReplyKeyboardMarkup promptRemoveUsersMarkup() {
+        return ReplyKeyboardMarkup
+                .builder()
+                .isPersistent(false)
+                .resizeKeyboard(true)
+                .keyboardRow(
+                        new KeyboardRow(
+                                KeyboardButton.builder()
+                                        .text(MSG_GROUP_PROMPT_REMOVE_USERS)
+                                        .requestUsers(
+                                                KeyboardButtonRequestUsers.builder()
+                                                        .requestId("1")
+                                                        .userIsBot(false)
+                                                        .maxQuantity(ManageGroupNewGroupView.MAX_USERS_IN_GROUP)
+                                                        .build())
+                                        .build()))
+                .build();
+    }
+    
+private ReplyKeyboardMarkup promptAddUsersMarkup() {
         return ReplyKeyboardMarkup
                 .builder()
                 .isPersistent(false)
@@ -269,14 +325,16 @@ public class ManageGroupActionsView {
     }
 
     private String getUsersList(Set<AppUser> users) {
+        String usersStr = users.isEmpty() ? "Пользователей нет" : users.stream()
+                .map(user -> String.format("ID: %s, Логин: %s, Имя: %s", user.getTelegramId(),
+                        user.getTelegramUsername(), user.getTelegramFirstName()))
+                .collect(Collectors.joining("\n"));
+
         return """
                 👥 Список пользователей группы
 
                 %s
                 """
-                .formatted(users.stream()
-                        .map(user -> String.format("ID: %s, Логин: %s, Имя: %s", user.getTelegramId(),
-                                user.getTelegramUsername(), user.getTelegramFirstName()))
-                        .collect(Collectors.joining("\n")));
+                .formatted(usersStr);
     }
 }
