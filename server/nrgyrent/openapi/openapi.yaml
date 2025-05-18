@@ -9,6 +9,90 @@ servers:
   - url: https://nile.trongrid.io
     description: Testnet API
 paths:
+  /wallet/broadcasttransaction:
+    post:
+      summary: Broadcast a transaction
+      description: Broadcast a transaction to the Tron blockchain.
+      tags:
+        - Transaction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Transaction'
+      responses:
+        '200':
+          description: Transaction broadcasted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BroadcastTransactionResponse'
+        '400':
+          description: Invalid request body
+
+  /wallet/createtransaction:
+    post:
+      summary: Create a transaction
+      description: Create a transaction on the Tron blockchain.
+      tags:
+        - Transaction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTransactionRequest'
+      responses:
+        '200':
+          description: Transaction created successfully
+          content:
+            application/json:
+              schema:
+                type: string
+                # $ref: '#/components/schemas/Transaction'
+        '400':
+          description: Invalid request body
+
+  # https://developers.tron.network/reference/get-account-info-by-address
+  /v1/accounts/{address}:
+    get:
+      summary: Get account info by address
+      description: Get account info by account address
+      tags:
+        - Account
+      parameters:
+        - name: address
+          in: path
+          required: true
+          description: owner address in base58 or hex
+          schema:
+            type: string
+      responses:
+        '200':
+          description: success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AccountInfo'
+                  success:
+                    type: boolean
+                  meta:
+                    type: object
+                    properties:
+                      at:
+                        type: integer
+                        format: int64
+                      page_size:
+                        type: integer
+        '400':
+          description: Invalid address format.
+
   /v1/accounts/{address}/transactions:
     get:
       summary: Get transaction info by account address
@@ -49,28 +133,30 @@ paths:
 
 components:
   schemas:
+    BroadcastTransactionResponse:
+      type: object
+      properties:
+        result:
+          type: boolean
+        txid:
+          type: string
+        code:
+          type: string
+        message:
+          type: string
+  
     CreateTransactionRequest:
       type: object
       properties:
-        extra_data:
-          type: string
-          description: Extra data to include in the transaction.
-        visible:
-          type: boolean
-          description: Whether the transaction is hex or base58.
-        to_address:
-          type: string
-          description: The recipient's address (base58 format).
         owner_address:
           type: string
-          description: The sender's address (base58 format).
+        to_address:
+          type: string
         amount:
           type: integer
-          description: The amount to transfer in SUN.
-      required:
-        - to_address
-        - owner_address
-        - amount
+          format: int64
+        visible:
+          type: boolean
 
     RawData:
       type: object
@@ -94,6 +180,19 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Contract'
+
+# https://developers.tron.network/reference/get-account-info-by-address
+    AccountInfo:
+      type: object
+      properties:
+        address:
+          type: string
+        balance:
+          type: integer
+          format: int64
+        create_time:
+          type: integer
+          format: int64
 
     # https://developers.tron.network/docs/tron-protocol-transaction
     Transaction:

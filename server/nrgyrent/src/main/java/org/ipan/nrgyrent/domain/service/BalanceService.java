@@ -204,7 +204,7 @@ public class BalanceService {
     @SneakyThrows
     private ManagedWallet generateDepositWallet() {
         EntityManager em = getEntityManager();
-        ManagedWallet depositWallet = managedWalletService.generateDepositWallet();
+        ManagedWallet depositWallet = managedWalletService.generateManagedWallet();
         em.persist(depositWallet);
         return depositWallet;
     }

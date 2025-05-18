@@ -11,6 +11,7 @@ import javax.crypto.spec.SecretKeySpec;
 
 import org.ipan.nrgyrent.domain.model.ManagedWallet;
 import org.ipan.nrgyrent.tron.crypto.ECKey;
+import org.ipan.nrgyrent.tron.utils.ByteArray;
 import org.ipan.nrgyrent.tron.wallet.WalletApi;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -30,7 +31,7 @@ public class ManagedWalletService {
     }
 
     // TODO: Encrypt the private key
-    public ManagedWallet generateDepositWallet() throws IOException {
+    public ManagedWallet generateManagedWallet() throws IOException {
         ManagedWallet managedWallet = new ManagedWallet();
 
         ECKey privateKeyForNewWallet = WalletApi.generatePrivateKeyForNewWallet();
@@ -44,8 +45,15 @@ public class ManagedWalletService {
         return managedWallet;
     }
 
+    public String sign(ManagedWallet managedWallet, String hexString) {
+        byte[] dataToSign = ByteArray.fromHexString(hexString);
+        byte[] decryptedPrivateKey = decrypt(managedWallet.getPrivateKeyEncrypted(), key);
+        ECKey ecKey = ECKey.fromPrivate(decryptedPrivateKey);
+        return ecKey.sign(dataToSign).toHex();
+    }
+
     @SneakyThrows
-    public static byte[] encrypt(byte[] plaintext, byte[] key) {
+    private static byte[] encrypt(byte[] plaintext, byte[] key) {
         Cipher cipher = Cipher.getInstance(ALGO);
         byte[] iv = new byte[IV_LENGTH];
         new SecureRandom().nextBytes(iv);
@@ -62,7 +70,7 @@ public class ManagedWalletService {
     }
 
     @SneakyThrows
-    public static byte[] decrypt(byte[] ciphertext, byte[] key) {
+    private static byte[] decrypt(byte[] ciphertext, byte[] key) {
         byte[] iv = new byte[IV_LENGTH];
         System.arraycopy(ciphertext, 0, iv, 0, IV_LENGTH);
         GCMParameterSpec spec = new GCMParameterSpec(GCM_TAG_LENGTH, iv);

@@ -21,8 +21,11 @@ spring:
         use_sql_comments: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
         generate_statistics: false
+app..base
 app:
   wallet:
+    sweeping:
+      ensure-count: 4
     encryption:
       keyBase64: ${APP_WALLET_ENCRYPTION_KEY_BASE64:de3AP3DtOeBDXXijf3PmLhrJ1kobB1XLP5poYc3qrkc=}
   cron:
@@ -31,6 +34,8 @@ app:
         enabled: true
   mapdb:
     db-path: ${APP_MAPDB_PATH:cache/nrgyrent.db}
+  tron:
+    base-url: ${APP_TRON_URL:"https://nile.trongrid.io"} # For mainnet, use https://api.trongrid.io
   itrx:
     base-url: ${APP_ITRX_BASE_URL:"https://nile.itrx.io"} # For mainnet, use https://api.itrx.io
     callback-url: ${APP_ITRX_CALLBACK_URL}

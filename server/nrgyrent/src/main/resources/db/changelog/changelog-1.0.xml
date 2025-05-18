@@ -272,4 +272,68 @@
             referencedTableName="nrg_users"
             referencedColumnNames="telegram_id" />
     </changeSet>
+
+
+    <changeSet id="create table nrg_collection_wallets" author="oress">
+        <createSequence sequenceName="nrg_collection_wallets_seq"
+            dataType="bigint"
+            incrementBy="1"
+            startValue="1" />
+
+        <createTable tableName="nrg_collection_wallets">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false" unique="true" />
+            </column>
+            <column name="wallet_address" type="text">
+                <constraints nullable="false" unique="true" />
+            </column>
+            <column name="is_active" type="boolean" />
+            <column name="deactivated_at" type="timestamp" />
+
+            <column name="created_at" type="timestamp" />
+        </createTable>
+
+        <createIndex indexName="idx_nrg_collection_wallets_base58_address"
+            tableName="nrg_collection_wallets">
+            <column name="wallet_address" />
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="create table nrg_sweep_actions" author="oress">
+        <createSequence sequenceName="nrg_sweep_actions_seq"
+            dataType="bigint"
+            incrementBy="1"
+            startValue="1" />
+
+        <createTable tableName="nrg_sweep_actions">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false" unique="true" />
+            </column>
+            <column name="collection_wallet_id" type="bigint">
+                <constraints nullable="false" />
+            </column>
+            <column name="target_address" type="text">
+                <constraints nullable="false" />
+            </column>
+            <column name="amount" type="bigint">
+                <constraints nullable="false" />
+            </column>
+            <column name="tx_id" type="text">
+                <constraints nullable="true" unique="true" />
+            </column>
+            <column name="status" type="text" defaultValue="PENDING">
+                <constraints nullable="false" />
+            </column>
+            <column name="created_at" type="timestamp">
+                <constraints nullable="false" />
+            </column>
+            <column name="completed_at" type="timestamp" />
+        </createTable>
+
+        <addForeignKeyConstraint constraintName="fk_nrg_sweep_actions_collection_wallet_id"
+            baseTableName="nrg_sweep_actions"
+            baseColumnNames="collection_wallet_id"
+            referencedTableName="nrg_collection_wallets"
+            referencedColumnNames="id" />
+    </changeSet>
 </databaseChangeLog>
