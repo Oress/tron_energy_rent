@@ -21,7 +21,6 @@ spring:
         use_sql_comments: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
         generate_statistics: false
-app..base
 app:
   wallet:
     sweeping:
