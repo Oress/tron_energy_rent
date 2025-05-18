@@ -1,11 +1,14 @@
 package org.ipan.nrgyrent.telegram.handlers;
 
+import java.util.List;
+
 import org.ipan.nrgyrent.domain.model.Balance;
 import org.ipan.nrgyrent.domain.model.repository.BalanceRepo;
 import org.ipan.nrgyrent.domain.service.BalanceService;
 import org.ipan.nrgyrent.telegram.AppUpdateHandler;
 import org.ipan.nrgyrent.telegram.InlineMenuCallbacks;
 import org.ipan.nrgyrent.telegram.States;
+import org.ipan.nrgyrent.telegram.TelegramMessages;
 import org.ipan.nrgyrent.telegram.state.BalanceEdit;
 import org.ipan.nrgyrent.telegram.state.TelegramState;
 import org.ipan.nrgyrent.telegram.state.UserState;
@@ -13,6 +16,7 @@ import org.ipan.nrgyrent.telegram.views.ManageGroupActionsView;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.UsersShared;
 import org.telegram.telegrambots.meta.api.objects.message.Message;
 
 import lombok.AllArgsConstructor;
@@ -24,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 public class ManageGroupActionsHandler implements AppUpdateHandler {
     private final ManageGroupActionsView manageGroupActionsView;
     private final TelegramState telegramState;
+    private final TelegramMessages telegramMessages;
     private final BalanceRepo balanceRepo;
     private final BalanceService balanceService;
     private final ManageGroupSearchHandler manageGroupSearchHandler;
@@ -36,6 +41,10 @@ public class ManageGroupActionsHandler implements AppUpdateHandler {
                 handleGroupPreivew(userState, update);
                 break;
 
+            case ADMIN_MANAGE_GROUPS_ACTION_ADD_USERS:
+                handleAddNewUsers(userState, update);
+                break;
+
             case ADMIN_MANAGE_GROUPS_ACTION_PROMPT_NEW_LABEL:
                 handleNewLabel(userState, update);
                 break;
@@ -46,6 +55,24 @@ public class ManageGroupActionsHandler implements AppUpdateHandler {
 
             default:
                 break;
+        }
+    }
+
+    private void handleAddNewUsers(UserState userState, Update update) {
+        Message message = update.getMessage();
+        if (message != null && message.hasUserShared()) {
+            telegramMessages.deleteMessage(message);
+            logger.info("Adding new users to group: {}", message.getText());
+            UsersShared usersShared = message.getUsersShared();
+            Long telegramId = userState.getTelegramId();
+
+            BalanceEdit openBalance = telegramState.getOrCreateBalanceEdit(telegramId);
+
+            List<Long> userIds = usersShared.getUsers().stream().map(user -> user.getUserId()).toList();
+            // TODO: handle errors
+            balanceService.addUsersToTheGroupBalance(openBalance.getSelectedBalanceId(), userIds);
+
+            manageGroupActionsView.groupUsersAdded(userState);
         }
     }
 
@@ -79,12 +106,21 @@ public class ManageGroupActionsHandler implements AppUpdateHandler {
                 manageGroupActionsView.promptNewGroupLabel(callbackQuery);
                 telegramState.updateUserState(userState.getTelegramId(),
                         userState.withState(States.ADMIN_MANAGE_GROUPS_ACTION_PROMPT_NEW_LABEL));
+            } else if (InlineMenuCallbacks.MANAGE_GROUPS_ACTION_ADD_USERS.equals(data)) {
+                manageGroupActionsView.updMenuPromptToAddUsersToGroup(callbackQuery);
+                Message msg = manageGroupActionsView.promptToAddUsersToGroup(callbackQuery);
+                // TODO: in case user input something else, the message will be deleted, handle it
+                telegramState.updateUserState(userState.getTelegramId(),
+                        userState.withState(States.ADMIN_MANAGE_GROUPS_ACTION_ADD_USERS)
+                            .withMessagesToDelete(List.of(msg.getMessageId()))
+                        );
             } else if (InlineMenuCallbacks.MANAGE_GROUPS_ACTION_VIEW_USERS.equals(data)) {
                 BalanceEdit openBalance = telegramState.getOrCreateBalanceEdit(userState.getTelegramId());
                 Balance balance = balanceRepo.findByIdWithUsers(openBalance.getSelectedBalanceId()).orElse(null);
                 manageGroupActionsView.reviewGroupUsers(callbackQuery, balance.getUsers());
-                
-                telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.ADMIN_MANAGE_GROUPS_ACTION_USERS_REVIEW));
+
+                telegramState.updateUserState(userState.getTelegramId(),
+                        userState.withState(States.ADMIN_MANAGE_GROUPS_ACTION_USERS_REVIEW));
             }
         }
     }

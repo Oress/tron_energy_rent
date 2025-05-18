@@ -1,6 +1,6 @@
 package org.ipan.nrgyrent.telegram.views;
 
-import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.ipan.nrgyrent.domain.model.AppUser;
@@ -10,11 +10,17 @@ import org.ipan.nrgyrent.telegram.StaticLabels;
 import org.ipan.nrgyrent.telegram.state.UserState;
 import org.ipan.nrgyrent.telegram.utils.FormattingTools;
 import org.springframework.stereotype.Component;
+import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
+import org.telegram.telegrambots.meta.api.objects.message.Message;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButtonRequestUsers;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
 
 import lombok.AllArgsConstructor;
@@ -33,7 +39,9 @@ public class ManageGroupActionsView {
     private static final String MSG_DELETE_GROUP_WARNING = "⚠️ Вы уверены, что хотите деактивировать группу?";
     private static final String MSG_GROUP_DELETED = "✅ Группа успешно деактивирована.";
     private static final String MSG_GROUP_PROMPT_NEW_LABEL = "Введите новое название группы";
+    private static final String MSG_GROUP_PROMPT_NEW_USERS = "Добавьте пользователей в группу, используя меню";
     private static final String MSG_GROUP_RENAMED = "✅ Группа успешно переименована.";
+    private static final String MSG_GROUP_USERS_ADDED = "✅ Пользователи успешно добавлены в группу.";
 
     private static final String NO = "❌ Нет";
     private static final String YES = "✅ Да";
@@ -78,6 +86,41 @@ public class ManageGroupActionsView {
     }
 
     @SneakyThrows
+    public void groupUsersAdded(UserState userState) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
+                .text(MSG_GROUP_USERS_ADDED)
+                .replyMarkup(commonViews.getToMainMenuMarkup())
+                .build();
+        tgClient.execute(message);
+    }
+
+    @SneakyThrows
+    public void updMenuPromptToAddUsersToGroup(CallbackQuery callbackQuery) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(callbackQuery.getMessage().getChatId())
+                .messageId(callbackQuery.getMessage().getMessageId())
+                .text(MSG_GROUP_PROMPT_NEW_USERS)
+                .replyMarkup(commonViews.getToMainMenuMarkup())
+                .build();
+        tgClient.execute(message);
+    }
+
+    @SneakyThrows
+    public Message promptToAddUsersToGroup(CallbackQuery callbackQuery) {
+        SendMessage message = SendMessage
+                .builder()
+                .chatId(callbackQuery.getMessage().getChatId())
+                .text(MSG_GROUP_PROMPT_NEW_USERS)
+                .replyMarkup(promptAddUsersMarkup())
+                .build();
+        return tgClient.execute(message);
+    }
+
+    @SneakyThrows
     public void promptNewGroupLabel(CallbackQuery callbackQuery) {
         EditMessageText message = EditMessageText
                 .builder()
@@ -90,7 +133,7 @@ public class ManageGroupActionsView {
     }
 
     @SneakyThrows
-    public void reviewGroupUsers(CallbackQuery callbackQuery, List<AppUser> users) {
+    public void reviewGroupUsers(CallbackQuery callbackQuery, Set<AppUser> users) {
         EditMessageText message = EditMessageText
                 .builder()
                 .chatId(callbackQuery.getMessage().getChatId())
@@ -127,6 +170,25 @@ public class ManageGroupActionsView {
                                         .builder()
                                         .text(YES)
                                         .callbackData(InlineMenuCallbacks.CONFIRM_YES)
+                                        .build()))
+                .build();
+    }
+
+    private ReplyKeyboardMarkup promptAddUsersMarkup() {
+        return ReplyKeyboardMarkup
+                .builder()
+                .isPersistent(false)
+                .resizeKeyboard(true)
+                .keyboardRow(
+                        new KeyboardRow(
+                                KeyboardButton.builder()
+                                        .text(MSG_GROUP_PROMPT_NEW_USERS)
+                                        .requestUsers(
+                                                KeyboardButtonRequestUsers.builder()
+                                                        .requestId("1")
+                                                        .userIsBot(false)
+                                                        .maxQuantity(ManageGroupNewGroupView.MAX_USERS_IN_GROUP)
+                                                        .build())
                                         .build()))
                 .build();
     }
@@ -206,7 +268,7 @@ public class ManageGroupActionsView {
                 .build();
     }
 
-    private String getUsersList(List<AppUser> users) {
+    private String getUsersList(Set<AppUser> users) {
         return """
                 👥 Список пользователей группы
 

@@ -1,7 +1,7 @@
 package org.ipan.nrgyrent.domain.model;
 
 import java.time.Instant;
-import java.util.List;
+import java.util.Set;
 
 import org.hibernate.annotations.CreationTimestamp;
 
@@ -41,7 +41,7 @@ public class Balance {
     private String label;
 
     @OneToMany(mappedBy = AppUser_.GROUP_BALANCE)
-    private List<AppUser> users;
+    private Set<AppUser> users;
 
     @Enumerated(EnumType.STRING)
     private BalanceType type = BalanceType.INDIVIDUAL;

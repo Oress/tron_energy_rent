@@ -30,6 +30,40 @@ public class BalanceService {
     private final ManagedWalletService managedWalletService;
 
     @Transactional
+    public Balance addUsersToTheGroupBalance(Long balanceId, List<Long> userIds) {
+        Balance balance = balanceRepo.findByIdWithUsers(balanceId).orElse(null);
+        if (balance == null) {
+            logger.error("Balance not found for adding users: {}", balanceId);
+            throw new IllegalArgumentException("Balance not found for adding users");
+        }
+
+        // Check if users are already in the group
+        List<AppUser> usersToAdd = userRepo.findAllById(userIds);
+        if (usersToAdd.isEmpty() || usersToAdd.size() != userIds.size()) {
+            logger.info("Some users are not registered: {}", userIds);
+            throw new UserNotRegisteredException("Some users are not registered");
+        }
+
+        if (usersToAdd.stream().anyMatch(user -> user.getGroupBalance() != null && !balanceId.equals(user.getGroupBalance().getId()))) {
+            logger.info("Some users are already in the group: {}", usersToAdd);
+            throw new UserAlreadyHasGroupBalanceException("Some users already have a group balance");
+        }
+
+         usersToAdd.removeIf(user -> balance.getUsers().contains(user));
+        /* if (usersToAdd.isEmpty()) {
+            logger.info("0 new users to add to group: {}", balanceId);
+            throw new IllegalArgumentException("0 new users to add to group");
+        } */
+
+        // Add users to the group
+        balance.getUsers().addAll(usersToAdd);
+        usersToAdd.forEach(nullableUser -> {
+            nullableUser.setGroupBalance(balance);
+        });
+        return balance;
+    }
+
+    @Transactional
     public Balance renameGroupBalance(Long balanceId, String newLabel) {
         Balance balance = balanceRepo.findById(balanceId).orElse(null);
         if (balance == null) {

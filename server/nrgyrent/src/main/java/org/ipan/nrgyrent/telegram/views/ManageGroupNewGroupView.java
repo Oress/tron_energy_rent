@@ -24,7 +24,7 @@ import lombok.SneakyThrows;
 @AllArgsConstructor
 public class ManageGroupNewGroupView {
     // TODO: move to properties
-    private static final Integer MAX_USERS_IN_GROUP = 10;
+    public static final Integer MAX_USERS_IN_GROUP = 10;
 
     private static final String MSG_MANAGE_GROUPS_ADD_SUCCESS = "✅ Группа успешно добавлена";
 
