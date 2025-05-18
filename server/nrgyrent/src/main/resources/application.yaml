@@ -22,6 +22,9 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         generate_statistics: false
 app:
+  wallet:
+    encryption:
+      keyBase64: ${APP_WALLET_ENCRYPTION_KEY_BASE64:de3AP3DtOeBDXXijf3PmLhrJ1kobB1XLP5poYc3qrkc=}
   cron:
     tron:
       transaction:
