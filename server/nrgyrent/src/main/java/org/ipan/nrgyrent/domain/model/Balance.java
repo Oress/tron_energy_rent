@@ -12,6 +12,8 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.NamedAttributeNode;
+import jakarta.persistence.NamedEntityGraph;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
@@ -23,6 +25,10 @@ import lombok.Setter;
 @Getter
 @Setter
 @Table(name = "nrg_balances")
+@NamedEntityGraph(
+    name = "Balance.withUsers",
+    attributeNodes = @NamedAttributeNode(Balance_.USERS)
+)
 public class Balance {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "nrg_balance_seq")

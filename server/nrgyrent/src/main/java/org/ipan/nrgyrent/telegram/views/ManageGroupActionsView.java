@@ -1,5 +1,9 @@
 package org.ipan.nrgyrent.telegram.views;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.ipan.nrgyrent.domain.model.AppUser;
 import org.ipan.nrgyrent.domain.model.Balance;
 import org.ipan.nrgyrent.telegram.InlineMenuCallbacks;
 import org.ipan.nrgyrent.telegram.StaticLabels;
@@ -80,6 +84,18 @@ public class ManageGroupActionsView {
                 .chatId(callbackQuery.getMessage().getChatId())
                 .messageId(callbackQuery.getMessage().getMessageId())
                 .text(MSG_GROUP_PROMPT_NEW_LABEL)
+                .replyMarkup(commonViews.getToMainMenuMarkup())
+                .build();
+        tgClient.execute(message);
+    }
+
+    @SneakyThrows
+    public void reviewGroupUsers(CallbackQuery callbackQuery, List<AppUser> users) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(callbackQuery.getMessage().getChatId())
+                .messageId(callbackQuery.getMessage().getMessageId())
+                .text(getUsersList(users))
                 .replyMarkup(commonViews.getToMainMenuMarkup())
                 .build();
         tgClient.execute(message);
@@ -188,5 +204,17 @@ public class ManageGroupActionsView {
                                         .callbackData(InlineMenuCallbacks.TO_MAIN_MENU)
                                         .build()))
                 .build();
+    }
+
+    private String getUsersList(List<AppUser> users) {
+        return """
+                👥 Список пользователей группы
+
+                %s
+                """
+                .formatted(users.stream()
+                        .map(user -> String.format("ID: %s, Логин: %s, Имя: %s", user.getTelegramId(),
+                                user.getTelegramUsername(), user.getTelegramFirstName()))
+                        .collect(Collectors.joining("\n")));
     }
 }

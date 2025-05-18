@@ -29,8 +29,7 @@ public class UserService {
         }
 
         appUser = new AppUser();
-        appUser.setTelegramId(command.getTelegramId());
-        appUser.setCreatedAt(Instant.now());
+        updateModelFromCommand(command, appUser);
 
         EntityManager em = getEntityManager();
         Balance individualDepositBalance = balanceService.createIndividualBalance(appUser);
@@ -39,6 +38,22 @@ public class UserService {
         em.persist(appUser);
 
         return appUser;
+    }
+
+    @Transactional
+    public AppUser updateUser(CreateUserCommand command) {
+        AppUser appUser = userRepo.findById(command.getTelegramId()).orElse(null);
+
+        updateModelFromCommand(command, appUser);
+
+        return appUser;
+    }
+
+    private void updateModelFromCommand(CreateUserCommand command, AppUser appUser) {
+        appUser.setTelegramId(command.getTelegramId());
+        appUser.setTelegramUsername(command.getUsername());
+        appUser.setTelegramFirstName(command.getFirstName());
+        appUser.setCreatedAt(Instant.now());
     }
 
     public AppUser getById(Long telegramId) {

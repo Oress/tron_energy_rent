@@ -7,4 +7,6 @@ import lombok.Data;
 @Builder
 public class CreateUserCommand {
     private Long telegramId;
+    private String username;
+    private String firstName;
 }

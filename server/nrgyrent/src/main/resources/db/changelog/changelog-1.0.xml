@@ -66,6 +66,9 @@
                 <constraints primaryKey="true" nullable="true" unique="true" />
             </column>
 
+            <column name="telegram_username" type="text" />
+            <column name="telegram_first_name" type="text" />
+
             <column name="role" type="text" defaultValue="user">
                 <constraints nullable="false" />
             </column>

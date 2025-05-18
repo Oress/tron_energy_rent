@@ -1,5 +1,7 @@
 package org.ipan.nrgyrent.telegram.handlers;
 
+import org.ipan.nrgyrent.domain.model.Balance;
+import org.ipan.nrgyrent.domain.model.repository.BalanceRepo;
 import org.ipan.nrgyrent.domain.service.BalanceService;
 import org.ipan.nrgyrent.telegram.AppUpdateHandler;
 import org.ipan.nrgyrent.telegram.InlineMenuCallbacks;
@@ -22,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 public class ManageGroupActionsHandler implements AppUpdateHandler {
     private final ManageGroupActionsView manageGroupActionsView;
     private final TelegramState telegramState;
+    private final BalanceRepo balanceRepo;
     private final BalanceService balanceService;
     private final ManageGroupSearchHandler manageGroupSearchHandler;
 
@@ -76,6 +79,12 @@ public class ManageGroupActionsHandler implements AppUpdateHandler {
                 manageGroupActionsView.promptNewGroupLabel(callbackQuery);
                 telegramState.updateUserState(userState.getTelegramId(),
                         userState.withState(States.ADMIN_MANAGE_GROUPS_ACTION_PROMPT_NEW_LABEL));
+            } else if (InlineMenuCallbacks.MANAGE_GROUPS_ACTION_VIEW_USERS.equals(data)) {
+                BalanceEdit openBalance = telegramState.getOrCreateBalanceEdit(userState.getTelegramId());
+                Balance balance = balanceRepo.findByIdWithUsers(openBalance.getSelectedBalanceId()).orElse(null);
+                manageGroupActionsView.reviewGroupUsers(callbackQuery, balance.getUsers());
+                
+                telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.ADMIN_MANAGE_GROUPS_ACTION_USERS_REVIEW));
             }
         }
     }

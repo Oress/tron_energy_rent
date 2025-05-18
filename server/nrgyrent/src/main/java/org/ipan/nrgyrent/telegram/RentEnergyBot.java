@@ -51,7 +51,6 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
     private final ManageGroupsHandler manageGroupsHandler;
     private final ManageGroupActionsHandler manageGroupActionsHandler;
 
-
     @Override
     public void consume(Update update) {
         User from = getFrom(update);
@@ -172,6 +171,15 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
                     userService.createUser(
                             CreateUserCommand.builder()
                                     .telegramId(userState.getTelegramId())
+                                    .firstName(message.getFrom().getFirstName())
+                                    .username(message.getFrom().getUserName())
+                                    .build());
+                } else {
+                    userService.updateUser(
+                            CreateUserCommand.builder()
+                                    .telegramId(userState.getTelegramId())
+                                    .firstName(message.getFrom().getFirstName())
+                                    .username(message.getFrom().getUserName())
                                     .build());
                 }
                 telegramMessages.deleteMessage(message);

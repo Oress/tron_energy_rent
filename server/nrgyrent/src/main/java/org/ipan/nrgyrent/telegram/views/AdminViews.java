@@ -28,9 +28,10 @@ public class AdminViews {
 
     private static final String MENU_ADMIN_MANAGE_GROUPS = "👥 Управление группами";
     private static final String MENU_ADMIN_MANAGE_USERS = "👤 Управление пользователями";
-    private static final String MENU_ADMIN_ITRX_BALANCE = "💰 Баланс ITRX";
+    private static final String MENU_ADMIN_ITRX_BALANCE = "💰 Статистика itrx.io";
 
     private final TelegramClient tgClient;
+    private final CommonViews commonViews;
 
     @Retryable
     @SneakyThrows
@@ -40,7 +41,7 @@ public class AdminViews {
                 .chatId(callbackQuery.getMessage().getChatId())
                 .messageId(callbackQuery.getMessage().getMessageId())
                 .text(getItrxBalanceMessage(apiUsageResponse))
-                .replyMarkup(getAdminMenuReplyMarkup())
+                .replyMarkup(commonViews.getToMainMenuMarkup())
                 .build();
         tgClient.execute(message);
     }
@@ -94,7 +95,7 @@ public class AdminViews {
 
     private String getItrxBalanceMessage(ApiUsageResponse apiUsageResponse) {
         return """
-                💰 Статистика ITRX
+                💰 Статистика itrx.io
 
                 Баланс: %s TRX
                 Всего выполненых заказов: %s

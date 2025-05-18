@@ -24,6 +24,12 @@ public class AppUser {
     @Column(name = "telegram_id")
     private Long telegramId;
 
+    @Column(name = "telegram_username")
+    private String telegramUsername;
+
+    @Column(name = "telegram_first_name")
+    private String telegramFirstName;
+
     @JoinColumn(name = "balance_id")
     @ManyToOne
     private Balance balance;
