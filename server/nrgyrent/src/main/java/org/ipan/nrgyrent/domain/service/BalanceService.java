@@ -12,7 +12,9 @@ import org.ipan.nrgyrent.domain.model.AppUser;
 import org.ipan.nrgyrent.domain.model.Balance;
 import org.ipan.nrgyrent.domain.model.BalanceType;
 import org.ipan.nrgyrent.domain.model.ManagedWallet;
+import org.ipan.nrgyrent.domain.model.ManualBalanceAdjustmentAction;
 import org.ipan.nrgyrent.domain.model.repository.BalanceRepo;
+import org.ipan.nrgyrent.domain.model.repository.ManualBalanceAdjustmentActionRepo;
 import org.ipan.nrgyrent.domain.model.repository.UserRepo;
 import org.springframework.beans.factory.annotation.Lookup;
 import org.springframework.retry.annotation.Retryable;
@@ -30,6 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 public class BalanceService {
     private final UserRepo userRepo;
     private final BalanceRepo balanceRepo;
+    private final ManualBalanceAdjustmentActionRepo manualBalanceAdjustmentActionRepo;
     private final ManagedWalletService managedWalletService;
 
     @Transactional
@@ -113,6 +116,38 @@ public class BalanceService {
 
         balance.setLabel(newLabel);
         return balance;
+    }
+
+    @Transactional
+    public Balance adjustBalance(Long balanceId, Long amountSun, Long createdBy) {
+        Balance balance = balanceRepo.findById(balanceId).orElse(null);
+        if (balance == null) {
+            logger.error("Balance not found for adjusting: {}", balanceId);
+            throw new IllegalArgumentException("Balance not found for adjusting");
+        }
+
+        AppUser referenceById = userRepo.getReferenceById(createdBy);;
+
+        // amountSun should be > 0
+        if (amountSun < 0) {
+            logger.info("New amount is negative: {}", amountSun);
+            throw new IllegalArgumentException("New amount is negative");
+        }
+
+        ManualBalanceAdjustmentAction action = createManualBalanceAdjustmentAction(referenceById, balance, amountSun);
+        manualBalanceAdjustmentActionRepo.save(action);
+
+        balance.setSunBalance(amountSun);
+        return balance;
+    }
+
+    private ManualBalanceAdjustmentAction createManualBalanceAdjustmentAction(AppUser changedBy, Balance balance, Long amountTo) {
+        ManualBalanceAdjustmentAction action = new ManualBalanceAdjustmentAction();
+        action.setBalance(balance);
+        action.setAmountFrom(balance.getSunBalance());
+        action.setAmountTo(amountTo);
+        action.setChangedBy(changedBy);
+        return action;
     }
 
     @Transactional

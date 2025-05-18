@@ -1,5 +1,6 @@
 package org.ipan.nrgyrent.telegram.handlers;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import org.ipan.nrgyrent.domain.model.Balance;
@@ -26,6 +27,8 @@ import lombok.extern.slf4j.Slf4j;
 @AllArgsConstructor
 @Slf4j
 public class ManageGroupActionsHandler implements AppUpdateHandler {
+    private static BigDecimal trxToSunRate = new BigDecimal(1_000_000);
+
     private final ManageGroupActionsView manageGroupActionsView;
     private final TelegramState telegramState;
     private final TelegramMessages telegramMessages;
@@ -39,6 +42,10 @@ public class ManageGroupActionsHandler implements AppUpdateHandler {
         switch (userState.getState()) {
             case ADMIN_MANAGE_GROUPS_ACTION_PREVIEW:
                 handleGroupPreivew(userState, update);
+                break;
+
+            case ADMIN_MANAGE_GROUPS_ACTION_PROMPT_NEW_BALANCE:
+                handleAdjustedBalance(userState, update);
                 break;
 
             case ADMIN_MANAGE_GROUPS_ACTION_REMOVE_USERS:
@@ -118,13 +125,34 @@ public class ManageGroupActionsHandler implements AppUpdateHandler {
         }
     }
 
+    private void handleAdjustedBalance(UserState userState, Update update) {
+        Message message = update.getMessage();
+        if (message != null && message.hasText()) {
+            logger.info("Adjusting group balance: {}", message.getText());
+            String newBalance = message.getText();
+            // TODO: catch NumberFormatException
+            BigDecimal adjustedBalanceInTrx = new BigDecimal(newBalance);
+            BigDecimal adjustedBalanceInSun = adjustedBalanceInTrx.multiply(trxToSunRate);
+            Long telegramId = userState.getTelegramId();
+
+            BalanceEdit openBalance = telegramState.getOrCreateBalanceEdit(telegramId);
+            balanceService.adjustBalance(openBalance.getSelectedBalanceId(), adjustedBalanceInSun.longValue(), telegramId);
+
+            manageGroupActionsView.groupBalanceAdjusted(userState);
+        }
+    }
+
     private void handleGroupPreivew(UserState userState, Update update) {
         CallbackQuery callbackQuery = update.getCallbackQuery();
         if (callbackQuery != null) {
             String data = callbackQuery.getData();
             if (InlineMenuCallbacks.MANAGE_GROUPS_ACTION_DEACTIVATE.equals(data)) {
                 handleDeactivateGroup(userState, callbackQuery);
-            } else if (InlineMenuCallbacks.MANAGE_GROUPS_ACTION_RENAME.equals(data)) {
+            } else if (InlineMenuCallbacks.MANAGE_GROUPS_ACTION_ADJUST_BALANCE_MANUALLY.equals(data)) {
+                manageGroupActionsView.promptNewGroupBalance(callbackQuery);
+                telegramState.updateUserState(userState.getTelegramId(),
+                        userState.withState(States.ADMIN_MANAGE_GROUPS_ACTION_PROMPT_NEW_BALANCE));
+            }  else if (InlineMenuCallbacks.MANAGE_GROUPS_ACTION_RENAME.equals(data)) {
                 manageGroupActionsView.promptNewGroupLabel(callbackQuery);
                 telegramState.updateUserState(userState.getTelegramId(),
                         userState.withState(States.ADMIN_MANAGE_GROUPS_ACTION_PROMPT_NEW_LABEL));

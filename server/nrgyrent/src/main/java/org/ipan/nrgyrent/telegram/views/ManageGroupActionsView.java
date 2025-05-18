@@ -31,6 +31,7 @@ import lombok.SneakyThrows;
 public class ManageGroupActionsView {
     private static final String MANAGE_GROUP_ACTION_VIEW_USERS = "👥 Просмотреть пользователей";
     private static final String MANAGE_GROUP_ACTION_SET_MANAGER = "👤 Установить менеджера группы";
+    private static final String MANAGE_GROUP_ACTION_ADJUST_BALANCE_MANUALLY = "💰 Изменить баланс вручную";
     private static final String MANAGE_GROUP_ACTION_ADD_USERS = "➕ Добавить пользователей";
     private static final String MANAGE_GROUP_ACTION_REMOVE_USERS = "➖ Удалить пользователей";
     private static final String MANAGE_GROUP_ACTION_RENAME_GROUP = "✏️ Переименовать группу";
@@ -39,9 +40,11 @@ public class ManageGroupActionsView {
     private static final String MSG_DELETE_GROUP_WARNING = "⚠️ Вы уверены, что хотите деактивировать группу?";
     private static final String MSG_GROUP_DELETED = "✅ Группа успешно деактивирована.";
     private static final String MSG_GROUP_PROMPT_NEW_LABEL = "Введите новое название группы";
+    private static final String MSG_GROUP_PROMPT_NEW_BALANCE = "Введите новый баланс группы (в TRX)";
     private static final String MSG_GROUP_PROMPT_NEW_USERS = "Добавьте пользователей в группу, используя меню";
     private static final String MSG_GROUP_PROMPT_REMOVE_USERS = "Удалите пользователей из группы, используя меню";
     private static final String MSG_GROUP_RENAMED = "✅ Группа успешно переименована.";
+    private static final String MSG_GROUP_BALANCE_ADJUSTED = "✅ Баланс группы успешно изменен.";
     private static final String MSG_GROUP_USERS_ADDED = "✅ Пользователи успешно добавлены в группу.";
     private static final String MSG_GROUP_USERS_REMOVED = "✅ Пользователи успешно удалены из группы.";
 
@@ -82,6 +85,18 @@ public class ManageGroupActionsView {
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
                 .text(MSG_GROUP_RENAMED)
+                .replyMarkup(commonViews.getToMainMenuMarkup())
+                .build();
+        tgClient.execute(message);
+    }
+
+    @SneakyThrows
+    public void groupBalanceAdjusted(UserState userState) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
+                .text(MSG_GROUP_BALANCE_ADJUSTED)
                 .replyMarkup(commonViews.getToMainMenuMarkup())
                 .build();
         tgClient.execute(message);
@@ -164,6 +179,18 @@ public class ManageGroupActionsView {
                 .chatId(callbackQuery.getMessage().getChatId())
                 .messageId(callbackQuery.getMessage().getMessageId())
                 .text(MSG_GROUP_PROMPT_NEW_LABEL)
+                .replyMarkup(commonViews.getToMainMenuMarkup())
+                .build();
+        tgClient.execute(message);
+    }
+
+    @SneakyThrows
+    public void promptNewGroupBalance(CallbackQuery callbackQuery) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(callbackQuery.getMessage().getChatId())
+                .messageId(callbackQuery.getMessage().getMessageId())
+                .text(MSG_GROUP_PROMPT_NEW_BALANCE)
                 .replyMarkup(commonViews.getToMainMenuMarkup())
                 .build();
         tgClient.execute(message);
@@ -278,6 +305,13 @@ private ReplyKeyboardMarkup promptAddUsersMarkup() {
                                         .builder()
                                         .text(MANAGE_GROUP_ACTION_SET_MANAGER)
                                         .callbackData(InlineMenuCallbacks.MANAGE_GROUPS_ACTION_SET_MANAGER)
+                                        .build()))
+                .keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text(MANAGE_GROUP_ACTION_ADJUST_BALANCE_MANUALLY)
+                                        .callbackData(InlineMenuCallbacks.MANAGE_GROUPS_ACTION_ADJUST_BALANCE_MANUALLY)
                                         .build()))
                 .keyboardRow(
                         new InlineKeyboardRow(
