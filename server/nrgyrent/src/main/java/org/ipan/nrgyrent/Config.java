@@ -9,11 +9,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.retry.annotation.EnableRetry;
+import org.springframework.scheduling.annotation.EnableAsync;
 
 import jakarta.annotation.PostConstruct;
 
 @Configuration
 @EnableRetry
+@EnableAsync
 public class Config {
     @Value("${app.trongrid.base-url}")
     String baseUrl = "https://nile.trongrid.io";

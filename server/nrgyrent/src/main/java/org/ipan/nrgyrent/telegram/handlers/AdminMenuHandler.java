@@ -76,10 +76,10 @@ public class AdminMenuHandler implements AppUpdateHandler {
         }
     }
 
-        private void tryMakeTransaction(UserState userState, String walletAddress) {
+    private void tryMakeTransaction(UserState userState, String walletAddress) {
         if (WalletTools.isValidTronAddress(walletAddress)) {
             adminMenuHandlerHelper.transferTrxFromCollectionWallets(userState.getTelegramId(), walletAddress);
-            adminViews.withdrawTrx(userState);
+            adminViews.withdrawTrxInProgress(userState);
         }
     }
 

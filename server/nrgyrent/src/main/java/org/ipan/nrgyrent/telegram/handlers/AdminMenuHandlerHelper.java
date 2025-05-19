@@ -34,11 +34,10 @@ public class AdminMenuHandlerHelper {
     private final CollectionWalletRepo collectionWalletRepo;
     private final ManagedWalletRepo managedWalletRepo;
     private final ManagedWalletService managedWalletService;
-
     private final TronTransactionHelper tronTransactionHelper;
 
     @Async
-    public Future<Void> transferTrxFromCollectionWallets(Long userId, String toWallet) {
+    public CompletableFuture<Void> transferTrxFromCollectionWallets(Long userId, String toWallet) {
         List<CollectionWallet> collectionWallets = collectionWalletRepo.findAllByIsActive(true);
         List<String> walletAddresses = collectionWallets.stream().map(CollectionWallet::getWalletAddress).toList();
         List<ManagedWallet> managedWallets = managedWalletRepo.findAllById(walletAddresses);

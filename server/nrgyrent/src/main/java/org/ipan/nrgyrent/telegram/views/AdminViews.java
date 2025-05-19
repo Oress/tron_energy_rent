@@ -55,7 +55,7 @@ public class AdminViews {
 
     @Retryable
     @SneakyThrows
-    public void withdrawTrx(UserState userState) {
+    public void withdrawTrxInProgress(UserState userState) {
         EditMessageText message = EditMessageText
                 .builder()
                 .chatId(userState.getChatId())

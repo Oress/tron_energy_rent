@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 import org.ipan.nrgyrent.domain.model.Balance;
 import org.ipan.nrgyrent.domain.model.DepositTransaction;
@@ -40,7 +41,7 @@ public class PollForTransactionsJobHelper {
 
     @Transactional
     @Async(CronJobConfig.TRON_TRANSACTION_EXECUTOR)
-    public void processBatch(List<Balance> batch) {
+    public CompletableFuture<Void> processBatch(List<Balance> batch) {
         // TODO: watch out for OptimisticLockException
 
         EntityManager em = getEntityManager();
@@ -111,6 +112,7 @@ public class PollForTransactionsJobHelper {
                 em.merge(balance);
             }
         }
+        return CompletableFuture.completedFuture(null);
     }
 
     private DepositTransaction createDepositTransaction(Transaction tx) {
