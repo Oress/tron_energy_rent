@@ -4,7 +4,6 @@ import java.util.List;
 
 import org.ipan.nrgyrent.domain.model.UserWallet;
 import org.ipan.nrgyrent.telegram.state.UserState;
-import org.ipan.nrgyrent.telegram.utils.WalletTools;
 import org.ipan.nrgyrent.telegram.views.ManageGroupNewGroupView;
 import org.ipan.nrgyrent.telegram.views.ManageGroupSearchView;
 import org.springframework.retry.annotation.Retryable;
@@ -166,45 +165,6 @@ public class TelegramMessages {
         tgClient.execute(message);
     }
 
-    @Retryable
-    @SneakyThrows
-    public void updMenuToAddWalletsMenu(CallbackQuery callbackQuery) {
-        EditMessageText message = EditMessageText
-                .builder()
-                .chatId(callbackQuery.getMessage().getChatId())
-                .messageId(callbackQuery.getMessage().getMessageId())
-                .text(StaticLabels.MSG_ADD_WALLET)
-                .replyMarkup(getToMainMenuMarkup())
-                .build();
-        tgClient.execute(message);
-    }
-
-    @Retryable
-    @SneakyThrows
-    public void updMenuToDeleteWalletSuccessMenu(CallbackQuery callbackQuery) {
-        EditMessageText message = EditMessageText
-                .builder()
-                .chatId(callbackQuery.getMessage().getChatId())
-                .messageId(callbackQuery.getMessage().getMessageId())
-                .text(StaticLabels.MSG_DELETE_WALLET_SUCCESS)
-                .replyMarkup(getToMainMenuMarkup())
-                .build();
-        tgClient.execute(message);
-    }
-
-    @Retryable
-    @SneakyThrows
-    public void updMenuToAddWalletSuccessMenu(UserState userState) {
-        EditMessageText message = EditMessageText
-                .builder()
-                .chatId(userState.getChatId())
-                .messageId(userState.getMenuMessageId())
-                .text(StaticLabels.MSG_ADD_WALLET_SUCCESS)
-                .replyMarkup(getToMainMenuMarkup())
-                .build();
-        tgClient.execute(message);
-    }
-
     @SneakyThrows
     public void updateMsgToMainMenu(CallbackQuery callbackQuery) {
         EditMessageText message = EditMessageText
@@ -338,25 +298,12 @@ public class TelegramMessages {
                 .build();
     }
 
-    private InlineKeyboardMarkup getToMainMenuMarkup() {
-        return InlineKeyboardMarkup
-                .builder()
-                .keyboardRow(
-                        new InlineKeyboardRow(
-                                InlineKeyboardButton
-                                        .builder()
-                                        .text(StaticLabels.TO_MAIN_MENU)
-                                        .callbackData(InlineMenuCallbacks.TO_MAIN_MENU)
-                                        .build()))
-                .build();
-    }
-
     private InlineKeyboardMarkup getWalletsMenuMarkup(List<UserWallet> wallets) {
         List<InlineKeyboardRow> walletRows = wallets.stream().map(wallet -> {
             InlineKeyboardRow row = new InlineKeyboardRow(
                     InlineKeyboardButton
                             .builder()
-                            .text(WalletTools.formatTronAddress(wallet.getAddress()))
+                            .text(wallet.getLabel())
                             .callbackData(wallet.getId().toString())
                             .build(),
                     InlineKeyboardButton
@@ -395,7 +342,7 @@ public class TelegramMessages {
             InlineKeyboardRow row = new InlineKeyboardRow(
                     InlineKeyboardButton
                             .builder()
-                            .text(WalletTools.formatTronAddress(wallet.getAddress()))
+                            .text(wallet.getLabel())
                             .callbackData(wallet.getAddress())
                             .build());
             return row;

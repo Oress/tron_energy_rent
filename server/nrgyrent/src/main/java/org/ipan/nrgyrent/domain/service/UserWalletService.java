@@ -1,20 +1,20 @@
 package org.ipan.nrgyrent.domain.service;
 
-import jakarta.persistence.EntityManager;
-import lombok.AllArgsConstructor;
+import java.util.List;
+
 import org.apache.commons.lang3.NotImplementedException;
-import org.ipan.nrgyrent.domain.service.commands.userwallet.AddOrUpdateUserWalletCommand;
-import org.ipan.nrgyrent.domain.service.commands.userwallet.DeleteUserWalletCommand;
 import org.ipan.nrgyrent.domain.model.AppUser;
 import org.ipan.nrgyrent.domain.model.UserWallet;
 import org.ipan.nrgyrent.domain.model.repository.UserWalletRepo;
+import org.ipan.nrgyrent.domain.service.commands.userwallet.AddOrUpdateUserWalletCommand;
+import org.ipan.nrgyrent.domain.service.commands.userwallet.DeleteUserWalletCommand;
 import org.springframework.beans.factory.annotation.Lookup;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
 
-import java.time.Instant;
-import java.util.List;
+import jakarta.persistence.EntityManager;
+import lombok.AllArgsConstructor;
 
 @Service
 @AllArgsConstructor
@@ -34,7 +34,7 @@ public class UserWalletService {
 
         UserWallet userWallet = new UserWallet();
         userWallet.setAddress(command.getWalletAddress());
-        userWallet.setCreatedAt(Instant.now());
+        userWallet.setLabel(command.getLabel());
         userWallet.setUser(user);
 
         em.persist(userWallet);

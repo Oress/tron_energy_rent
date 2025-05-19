@@ -8,6 +8,6 @@ import lombok.Data;
 public class AddOrUpdateUserWalletCommand {
     private Long id; // may be null for new wallet
     private Long userId;
-//    private String label;
+    private String label;
     private String walletAddress;
 }

@@ -7,10 +7,9 @@ import org.ipan.nrgyrent.domain.model.UserRole;
 import org.ipan.nrgyrent.domain.service.UserService;
 import org.ipan.nrgyrent.domain.service.commands.users.CreateUserCommand;
 import org.ipan.nrgyrent.telegram.handlers.AdminMenuHandler;
-import org.ipan.nrgyrent.telegram.handlers.DepositHandler;
 import org.ipan.nrgyrent.telegram.handlers.MainMenuHandler;
-import org.ipan.nrgyrent.telegram.handlers.ManageGroupNewGroupHandler;
 import org.ipan.nrgyrent.telegram.handlers.ManageGroupActionsHandler;
+import org.ipan.nrgyrent.telegram.handlers.ManageGroupNewGroupHandler;
 import org.ipan.nrgyrent.telegram.handlers.ManageGroupSearchHandler;
 import org.ipan.nrgyrent.telegram.handlers.ManageGroupsHandler;
 import org.ipan.nrgyrent.telegram.handlers.TransactionsHandler;
@@ -44,7 +43,6 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
     private final MainMenuHandler mainMenuHandler;
     private final UserWalletsHandler userWalletsHandler;
     private final TransactionsHandler transactionsHandler;
-    private final DepositHandler depositHandler;
     private final AdminMenuHandler adminMenuHandler;
     private final ManageGroupSearchHandler manageGroupSearchHandler;
     private final ManageGroupNewGroupHandler manageGroupNewGroupHandler;
@@ -83,15 +81,13 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
                 mainMenuHandler.handleUpdate(userState, update);
                 break;
             case WALLETS:
-            case ADD_WALLETS:
+            case NEW_WALLET_PROMPT_ADDRESS:
+            case NEW_WALLET_PROMPT_LABEL:
                 userWalletsHandler.handleUpdate(userState, update);
                 break;
             case TRANSACTION_65k:
             case TRANSACTION_131k:
                 transactionsHandler.handleUpdate(userState, update);
-                break;
-            case DEPOSIT:
-                depositHandler.handleUpdate(userState, update);
                 break;
 
             // admin

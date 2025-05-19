@@ -2,6 +2,7 @@ package org.ipan.nrgyrent.telegram.mapdb;
 
 import org.ipan.nrgyrent.telegram.States;
 import org.ipan.nrgyrent.telegram.state.AddGroupState;
+import org.ipan.nrgyrent.telegram.state.AddWalletState;
 import org.ipan.nrgyrent.telegram.state.BalanceEdit;
 import org.ipan.nrgyrent.telegram.state.TelegramState;
 import org.ipan.nrgyrent.telegram.state.UserState;
@@ -15,6 +16,7 @@ public class TelegramStateInMem implements TelegramState {
     private final HTreeMap<Long, UserStateInMem> userStateMap;
     private final HTreeMap<Long, AddGroupStateInMem> addGroupStateMap;
     private final HTreeMap<Long, BalanceEditInMem> balanceEditMap;
+    private final HTreeMap<Long, AddWalletStateInMem> addWalletStateMap;
 
     public TelegramStateInMem(DB db) {
         this.userStateMap = db.hashMap("userState")
@@ -30,6 +32,11 @@ public class TelegramStateInMem implements TelegramState {
         this.balanceEditMap = db.hashMap("balanceEdit")
                 .keySerializer(Serializer.LONG)
                 .valueSerializer(new BalanceEditInMem.SerializerImpl())
+                .createOrOpen();
+
+        this.addWalletStateMap = db.hashMap("addWalletState")
+                .keySerializer(Serializer.LONG)
+                .valueSerializer(new AddWalletStateInMem.SerializerImpl())
                 .createOrOpen();
     }
 
@@ -71,5 +78,20 @@ public class TelegramStateInMem implements TelegramState {
     @Override
     public BalanceEdit removeBalanceEdit(Long userId) {
         return this.balanceEditMap.remove(userId);
+    }
+
+    @Override
+    public AddWalletState getOrCreateAddWalletState(Long userId) {
+        return this.addWalletStateMap.computeIfAbsent(userId, key -> new AddWalletStateInMem(null));
+    }
+
+    @Override
+    public AddWalletState removeAddWalletState(Long userId) {
+        return this.addWalletStateMap.remove(userId);
+    }
+
+    @Override
+    public AddWalletState updateAddWalletState(Long userId, AddWalletState addWalletState) {
+        return this.addWalletStateMap.put(userId, AddWalletStateInMem.of(addWalletState));
     }
 }

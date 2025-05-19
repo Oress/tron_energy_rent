@@ -29,11 +29,6 @@ public class StaticLabels {
             \uD83D\uDC5B Кошельки
             Здесь вы можете управлять кошельками, которые добавили в нашем боте""";
 
-    public static final String MSG_ADD_WALLET = "Отправьте адрес кошелька TRC-20, который вы хотите добавить";
-    public static final String MSG_ADD_WALLET_SUCCESS = "✅ Кошелек успешно добавлен";
-    public static final String MSG_DELETE_WALLET_SUCCESS = "\uD83D\uDDD1\uFE0F Кошелек успешно удален";
-
-
     // Menu labels
     public static final String MENU_ADMIN = "👨‍💻 Админка";
     public static final String MENU_TRANSFER_ENERGY_65K = "⚡ 65 000 энергии на 1 час (5.5 TRX)";
