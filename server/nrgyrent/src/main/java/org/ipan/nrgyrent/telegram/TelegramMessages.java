@@ -51,6 +51,28 @@ public class TelegramMessages {
     }
 
     @SneakyThrows
+    public void sendWithdrawalSuccessful(UserState userState) {
+        SendMessage message = SendMessage
+                .builder()
+                .chatId(userState.getChatId())
+                .text(StaticLabels.NTFN_WITHDRWAL_SUCCESS)
+                .replyMarkup(getOrderRefundedNotificationMarkup())
+                .build();
+        tgClient.execute(message);
+    }
+
+    @SneakyThrows
+    public void sendWithdrawalFail(UserState userState) {
+        SendMessage message = SendMessage
+                .builder()
+                .chatId(userState.getChatId())
+                .text(StaticLabels.NTFN_WITHDRWAL_FAIL)
+                .replyMarkup(getOrderRefundedNotificationMarkup())
+                .build();
+        tgClient.execute(message);
+    }
+
+    @SneakyThrows
     public void sendTransactionRefundNotification(UserState userState) {
         SendMessage message = SendMessage
                 .builder()

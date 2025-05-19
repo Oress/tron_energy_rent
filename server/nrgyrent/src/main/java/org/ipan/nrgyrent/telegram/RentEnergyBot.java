@@ -83,7 +83,9 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
             return;
         }
 
-        tryRemoveNotification(userState, update);
+        if (tryRemoveNotification(userState, update)) {
+            return;
+        }
 
         switch (userState.getState()) {
             case MAIN_MENU:
@@ -101,6 +103,7 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
 
             // admin
             case ADMIN_MENU:
+            case ADMIN_VIEW_PROMPT_WITHDRAW_WALLET:
                 adminMenuHandler.handleUpdate(userState, update);
                 break;
             case ADMIN_MANAGE_GROUPS:
@@ -154,11 +157,13 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
         }
     }
 
-    private void tryRemoveNotification(UserState userState, Update update) {
+    private boolean tryRemoveNotification(UserState userState, Update update) {
         CallbackQuery callbackQuery = update.getCallbackQuery();
         if (callbackQuery != null && InlineMenuCallbacks.NTFN_OK.equals(callbackQuery.getData())) {
             telegramMessages.deleteMessage(userState, callbackQuery);
+            return true;
         }
+        return false;
     }
 
     private boolean handleStartState(UserState userState, Update update) {

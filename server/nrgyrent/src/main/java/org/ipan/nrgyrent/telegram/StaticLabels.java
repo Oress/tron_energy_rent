@@ -37,6 +37,11 @@ public class StaticLabels {
             ❌ Транзакция была отменена
             Средства были возвращены на ваш баланс
             """;
+    public static final String NTFN_WITHDRWAL_SUCCESS = """
+            ✅ Вывод средств успешно завершен
+            Средства были переведены на ваш кошелек
+            """;
+    public static final String NTFN_WITHDRWAL_FAIL = "❌ Вывод средств не удался";
 
     public static final String OK = "OK";
 

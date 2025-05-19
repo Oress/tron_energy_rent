@@ -19,6 +19,7 @@ public class InlineMenuCallbacks {
     public static final String MANAGE_USERS = "manage_users";
     public static final String MANAGE_ITRX_BALANCE = "manage_itrx_balance";
     public static final String MANAGE_SWEEP_BALANCE = "manage_sweep_balance";
+    public static final String MANAGE_WITHDRAW_TRX = "manage_withdraw_trx";
 
 
     public static final String MANAGE_GROUPS_SEARCH = "manage_groups_search";
