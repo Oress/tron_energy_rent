@@ -15,4 +15,8 @@ public interface TelegramState {
     BalanceEdit getOrCreateBalanceEdit(Long userId);
     BalanceEdit updateBalanceEdit(Long userId, BalanceEdit balanceEdit);
     BalanceEdit removeBalanceEdit(Long userId); // TODO: cleanup after finishing workflow
+
+    TransactionParams getOrCreateTransactionParams(Long userId);
+    TransactionParams updateTransactionParams(Long userId, TransactionParams transactionParams);
+    TransactionParams removeTransactionParams(Long userId); // TODO: cleanup after finishing workflow
 }

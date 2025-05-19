@@ -1,6 +1,5 @@
 package org.ipan.nrgyrent.telegram.views;
 
-import org.h2.engine.User;
 import org.ipan.nrgyrent.telegram.state.UserState;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Component;

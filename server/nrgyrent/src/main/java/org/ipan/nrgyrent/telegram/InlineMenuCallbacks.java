@@ -8,9 +8,11 @@ public class InlineMenuCallbacks {
     public static final String WALLETS = "wallets";
     public static final String ADD_WALLETS = "add_wallet";
     public static final String DELETE_WALLETS = "delete_wallet";
-
     public static final String TRANSACTION_65k = "transaction_65k";
     public static final String TRANSACTION_131k = "transaction_131k";
+
+    public static final String TRANSACTION_BALANCE_PERSONAL = "transaction_balance_personal";
+    public static final String TRANSACTION_BALANCE_GROUP = "transaction_balance_group";
     public static final String ADMIN_MENU = "admin_menu";
 
     public static final String MANAGE_GROUPS = "manage_groups";

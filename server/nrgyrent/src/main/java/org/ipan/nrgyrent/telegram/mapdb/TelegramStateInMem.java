@@ -5,6 +5,7 @@ import org.ipan.nrgyrent.telegram.state.AddGroupState;
 import org.ipan.nrgyrent.telegram.state.AddWalletState;
 import org.ipan.nrgyrent.telegram.state.BalanceEdit;
 import org.ipan.nrgyrent.telegram.state.TelegramState;
+import org.ipan.nrgyrent.telegram.state.TransactionParams;
 import org.ipan.nrgyrent.telegram.state.UserState;
 import org.mapdb.DB;
 import org.mapdb.HTreeMap;
@@ -17,6 +18,7 @@ public class TelegramStateInMem implements TelegramState {
     private final HTreeMap<Long, AddGroupStateInMem> addGroupStateMap;
     private final HTreeMap<Long, BalanceEditInMem> balanceEditMap;
     private final HTreeMap<Long, AddWalletStateInMem> addWalletStateMap;
+    private final HTreeMap<Long, TransactionParamsInMem> transactionParamsMap;
 
     public TelegramStateInMem(DB db) {
         this.userStateMap = db.hashMap("userState")
@@ -37,6 +39,11 @@ public class TelegramStateInMem implements TelegramState {
         this.addWalletStateMap = db.hashMap("addWalletState")
                 .keySerializer(Serializer.LONG)
                 .valueSerializer(new AddWalletStateInMem.SerializerImpl())
+                .createOrOpen();
+
+        this.transactionParamsMap = db.hashMap("transactionParams")
+                .keySerializer(Serializer.LONG)
+                .valueSerializer(new TransactionParamsInMem.SerializerImpl())
                 .createOrOpen();
     }
 
@@ -93,5 +100,20 @@ public class TelegramStateInMem implements TelegramState {
     @Override
     public AddWalletState updateAddWalletState(Long userId, AddWalletState addWalletState) {
         return this.addWalletStateMap.put(userId, AddWalletStateInMem.of(addWalletState));
+    }
+
+    @Override
+    public TransactionParams getOrCreateTransactionParams(Long userId) {
+        return this.transactionParamsMap.computeIfAbsent(userId, key -> new TransactionParamsInMem(null, null));
+    }
+
+    @Override
+    public TransactionParams updateTransactionParams(Long userId, TransactionParams transactionParams) {
+        return this.transactionParamsMap.put(userId, TransactionParamsInMem.of(transactionParams));
+    }
+
+    @Override
+    public TransactionParams removeTransactionParams(Long userId) {
+        return this.transactionParamsMap.remove(userId);
     }
 }

@@ -6,7 +6,6 @@ import org.ipan.nrgyrent.domain.service.commands.userwallet.DeleteUserWalletComm
 import org.ipan.nrgyrent.telegram.AppUpdateHandler;
 import org.ipan.nrgyrent.telegram.InlineMenuCallbacks;
 import org.ipan.nrgyrent.telegram.States;
-import org.ipan.nrgyrent.telegram.TelegramMessages;
 import org.ipan.nrgyrent.telegram.state.AddWalletState;
 import org.ipan.nrgyrent.telegram.state.TelegramState;
 import org.ipan.nrgyrent.telegram.state.UserState;
@@ -23,7 +22,6 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public class UserWalletsHandler implements AppUpdateHandler {
     private final TelegramState telegramState;
-    private final TelegramMessages telegramMessages;
     private final UserWalletService userWalletService;
     private final WalletsViews walletsViews;
 
