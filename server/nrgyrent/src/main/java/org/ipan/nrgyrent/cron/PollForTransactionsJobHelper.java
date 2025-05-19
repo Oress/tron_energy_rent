@@ -46,10 +46,12 @@ public class PollForTransactionsJobHelper {
         EntityManager em = getEntityManager();
 
         for (Balance balance : batch) {
-            logger.info("Processing balance: id: {} wallet: {}", balance.getId(), balance.getDepositAddress());
+            String depositAddress = balance.getDepositAddress();
+            String hexDepositAddress = ByteArray.toHexString(depositAddress.getBytes());
+            logger.info("Processing balance: id: {} wallet: {}, hex {}", balance.getId(), depositAddress);
             // TODO: only_confirmed transactions
             V1AccountsAddressTransactionsGet200Response response = accountApi
-                    .v1AccountsAddressTransactionsGet(balance.getDepositAddress())
+                    .v1AccountsAddressTransactionsGet(depositAddress)
                     .block();
 
             if (response != null && response.getData() != null) {
@@ -57,33 +59,33 @@ public class PollForTransactionsJobHelper {
                 Long lastTxTimestamp = balance.getLastTxTimestamp();
                 // Use the last transaction ID and timestamp to filter out old transactions, and consider only new ones
 
-                logger.info("Balance Id {} wallet {} Last transaction ID: {}, Last transaction timestamp: {}", balance.getId(), balance.getDepositAddress(), balance.getLastTxId(), balance.getLastTxTimestamp());
+                logger.info("Balance Id {} wallet {} Last transaction ID: {}, Last transaction timestamp: {}", balance.getId(), depositAddress, balance.getLastTxId(), balance.getLastTxTimestamp());
 
                 List<Transaction> transactions = Collections.emptyList();
 
                 if (lastTxTimestamp != null) {
                     transactions = response.getData()
                             .stream()
-                            .filter(tx -> isNewTransferContractWithMinAmount(tx, lastTxTimestamp))
+                            .filter(tx -> isNewIncommingTransferContractWithMinAmount(tx, lastTxTimestamp, depositAddress))
                             .sorted(COMPARING_TX_TS)
                             .toList();
                 } else if (lastTxId != null) {
                     transactions = response.getData()
                             .stream()
                             .sorted(COMPARING_TX_TS)
-                            .dropWhile(tx -> !lastTxId.equals(tx.getTxID()) && isNewTransferContractWithMinAmount(tx, 0L))
+                            .dropWhile(tx -> !lastTxId.equals(tx.getTxID()) && isNewIncommingTransferContractWithMinAmount(tx, 0L, depositAddress))
                             .toList();
                 } else {
                     // No last transaction ID or timestamp, consider all transactions
                     transactions = response.getData()
                             .stream()
-                            .filter(tx -> isNewTransferContractWithMinAmount(tx, 0L))
+                            .filter(tx -> isNewIncommingTransferContractWithMinAmount(tx, 0L, depositAddress))
                             .sorted(COMPARING_TX_TS)
                             .toList();
                 }
 
                 if (transactions.isEmpty()) {
-                    logger.info("No new transactions found for address: {}", balance.getDepositAddress());
+                    logger.info("No new transactions found for address: {}", depositAddress);
                     continue;
                 }
                 logger.info("Found {} new transactions for address: {}", transactions.size(), balance.getDepositAddress());
@@ -93,13 +95,13 @@ public class PollForTransactionsJobHelper {
                 List<DepositTransaction> depositTransactions = new ArrayList<>();
 
                 for (Transaction tx : transactions) {
-                    logger.info("Balance Id: {} wallet: {} Transaction ID: {}, Amount: {}", balance.getId(), balance.getDepositAddress(), tx.getTxID(), tx.getRawData().getContract().getFirst().getParameter().getValue().getAmount());
+                    logger.info("Balance Id: {} wallet: {} Transaction ID: {}, Amount: {}", balance.getId(), depositAddress, tx.getTxID(), tx.getRawData().getContract().getFirst().getParameter().getValue().getAmount());
                     topUp += tx.getRawData().getContract().getFirst().getParameter().getValue().getAmount();
                     DepositTransaction depositTransaction = createDepositTransaction(tx);
                     depositTransactions.add(depositTransaction);
                 }
 
-                logger.info("Top up amount for address {} {}", balance.getDepositAddress(), topUp);
+                logger.info("Top up amount for address {} {}", depositAddress, topUp);
                 balance.makeDeposit(topUp);
 
                 balance.setLastTxId(transactions.get(transactions.size() - 1).getTxID());
@@ -130,7 +132,7 @@ public class PollForTransactionsJobHelper {
         return depositTransaction;
     }
 
-    private boolean isNewTransferContractWithMinAmount(Transaction tx, Long lastTxTimestamp) {
+    private boolean isNewIncommingTransferContractWithMinAmount(Transaction tx, Long lastTxTimestamp, String walletAddress) {
         RawData rawData = tx.getRawData();
 
         // basic null checks
@@ -142,6 +144,7 @@ public class PollForTransactionsJobHelper {
         Contract contract = rawData.getContract().get(0);
         return TRANSFER_CONTRACT.equals(contract.getType())
                 && rawData.getTimestamp() > lastTxTimestamp
+                && WalletApi.encode58Check(ByteArray.fromHexString(contract.getParameter().getValue().getToAddress())).equals(walletAddress)
                 && contract.getParameter().getValue().getAmount() >= MIN_TRANSFER_AMOUNT_SUN;
     }
 

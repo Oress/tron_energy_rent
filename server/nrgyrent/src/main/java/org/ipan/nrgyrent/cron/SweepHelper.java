@@ -13,7 +13,6 @@ import org.ipan.nrgyrent.domain.model.repository.ManagedWalletRepo;
 import org.ipan.nrgyrent.domain.service.ManagedWalletService;
 import org.ipan.nrgyrent.tron.trongrid.TrongridRestClient;
 import org.ipan.nrgyrent.trongrid.api.AccountApi;
-import org.ipan.nrgyrent.trongrid.api.TransactionApi;
 import org.ipan.nrgyrent.trongrid.model.AccountInfo;
 import org.ipan.nrgyrent.trongrid.model.V1AccountsAddressGet200Response;
 import org.springframework.context.annotation.Configuration;
