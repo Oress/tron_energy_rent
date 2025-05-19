@@ -197,14 +197,18 @@ public class TelegramMessages {
                                 InlineKeyboardButton
                                         .builder()
                                         .text(StaticLabels.MENU_WALLETS)
-                                        .callbackData(InlineMenuCallbacks.WALLETS)
-                                        .build())
-
-                )
+                                        .callbackData(
+                                                InlineMenuCallbacks.WALLETS)
+                                        .build()))
+                .keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text(StaticLabels.MENU_HISTORY)
+                                        .callbackData(InlineMenuCallbacks.HISTORY)
+                                        .build()))
                 .build();
     }
-
-
 
     private InlineKeyboardMarkup getAdminMainMenuReplyMarkup() {
         return InlineKeyboardMarkup
@@ -239,15 +243,18 @@ public class TelegramMessages {
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
+                                        .text(StaticLabels.MENU_HISTORY)
+                                        .callbackData(InlineMenuCallbacks.HISTORY)
+                                        .build()))
+                .keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
                                         .text(StaticLabels.MENU_ADMIN)
                                         .callbackData(InlineMenuCallbacks.ADMIN_MENU)
                                         .build()))
                 .build();
     }
-
-
-
-
 
     private InlineKeyboardMarkup getOrderSuccessNotificationMarkup() {
         return InlineKeyboardMarkup

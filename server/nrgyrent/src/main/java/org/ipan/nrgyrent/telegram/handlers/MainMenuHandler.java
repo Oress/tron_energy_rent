@@ -3,7 +3,9 @@ package org.ipan.nrgyrent.telegram.handlers;
 import java.util.List;
 
 import org.ipan.nrgyrent.domain.model.AppUser;
+import org.ipan.nrgyrent.domain.model.Order;
 import org.ipan.nrgyrent.domain.model.UserWallet;
+import org.ipan.nrgyrent.domain.model.repository.OrderRepo;
 import org.ipan.nrgyrent.domain.service.UserService;
 import org.ipan.nrgyrent.domain.service.UserWalletService;
 import org.ipan.nrgyrent.itrx.AppConstants;
@@ -16,8 +18,11 @@ import org.ipan.nrgyrent.telegram.state.TransactionParams;
 import org.ipan.nrgyrent.telegram.state.UserState;
 import org.ipan.nrgyrent.telegram.views.AdminViews;
 import org.ipan.nrgyrent.telegram.views.DepositViews;
+import org.ipan.nrgyrent.telegram.views.HistoryViews;
 import org.ipan.nrgyrent.telegram.views.TransactionsViews;
 import org.ipan.nrgyrent.telegram.views.WalletsViews;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Update;
@@ -28,13 +33,14 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public class MainMenuHandler implements AppUpdateHandler {
     private final TelegramState telegramState;
-    private final TelegramMessages telegramMessages;
     private final UserWalletService userWalletService;
     private final UserService userService;
+    private final OrderRepo orderRepo;
 
     private final WalletsViews walletsViews;
     private final DepositViews depositViews;
     private final AdminViews adminViews;
+    private final HistoryViews historyViews;
     private final TransactionsViews transactionsViews;
 
 
@@ -60,6 +66,10 @@ public class MainMenuHandler implements AppUpdateHandler {
                 // TODO: extra validation here ??
                 adminViews.updMenuToAdminMenu(callbackQuery);
                 telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.ADMIN_MENU));
+            } else if (InlineMenuCallbacks.HISTORY.equals(data)) {
+                Page<Order> page = orderRepo.findAllByUserTelegramIdOrderByCreatedAtDesc(userState.getTelegramId(), PageRequest.of(0, 5));
+                historyViews.updMenuToHistoryMenu(page.toList().reversed(), callbackQuery);
+                telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.HISTORY));
             }
         }
     }

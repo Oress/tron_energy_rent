@@ -14,6 +14,7 @@ public class StaticLabels {
             Здесь вы можете управлять кошельками, которые добавили в нашем боте""";
 
     // Menu labels
+    public static final String MENU_HISTORY = "📜 История транзакций";
     public static final String MENU_ADMIN = "👨‍💻 Админка";
     public static final String MENU_TRANSFER_ENERGY_65K = "⚡ 65 000 энергии на 1 час (5.5 TRX)";
     public static final String MENU_TRANSFER_ENERGY_131K = "⚡ 131 000 энергии на 1 час (8 TRX)";

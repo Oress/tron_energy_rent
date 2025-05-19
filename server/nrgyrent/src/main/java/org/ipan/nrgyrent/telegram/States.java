@@ -5,6 +5,7 @@ public enum States {
     MAIN_MENU,
     DEPOSIT,
     WALLETS,
+    HISTORY,
 
     NEW_WALLET_PROMPT_ADDRESS,
     NEW_WALLET_PROMPT_LABEL,

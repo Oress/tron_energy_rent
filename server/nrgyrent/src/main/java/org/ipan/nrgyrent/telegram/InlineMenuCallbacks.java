@@ -11,6 +11,7 @@ public class InlineMenuCallbacks {
     public static final String DELETE_WALLETS = "delete_wallet";
     public static final String TRANSACTION_65k = "transaction_65k";
     public static final String TRANSACTION_131k = "transaction_131k";
+    public static final String HISTORY = "history";
 
     public static final String TRANSACTION_BALANCE_PERSONAL = "transaction_balance_personal";
     public static final String TRANSACTION_BALANCE_GROUP = "transaction_balance_group";
