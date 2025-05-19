@@ -1,0 +1,229 @@
+package org.ipan.nrgyrent.telegram.views;
+
+import java.util.List;
+
+import org.ipan.nrgyrent.domain.model.AppUser;
+import org.ipan.nrgyrent.telegram.InlineMenuCallbacks;
+import org.ipan.nrgyrent.telegram.StaticLabels;
+import org.ipan.nrgyrent.telegram.state.UserState;
+import org.ipan.nrgyrent.telegram.utils.FormattingTools;
+import org.springframework.data.domain.Page;
+import org.springframework.stereotype.Component;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
+import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
+import org.telegram.telegrambots.meta.generics.TelegramClient;
+
+import lombok.AllArgsConstructor;
+import lombok.SneakyThrows;
+
+@Component
+@AllArgsConstructor
+public class ManageUserActionsView {
+    private static final String MANAGE_USER_ACTION_ADJUST_BALANCE_MANUALLY = "💰 Изменить баланс вручную";
+    private static final String MANAGE_USER_ACTION_DEACTIVATE = "❌ Деактивировать пользователя";
+
+    private static final String MSG_DEACTIVATE_USER_WARNING = "⚠️ Вы уверены, что хотите деактивировать пользователя?";
+    private static final String MSG_USER_DEACTIVATED = "✅ Пользователь успешно деактивирован.";
+    private static final String MSG_USER_PROMPT_NEW_BALANCE = "Введите новый баланс пользователя (в TRX)";
+    private static final String MSG_USER_BALANCE_ADJUSTED = "✅ Баланс пользователя успешно изменен.";
+
+    private static final String MANAGE_USERS_SEARCH_RESET = "🔄 Сбросить поиск";
+
+    public static final String OPEN_BALANCE = "/balance/";
+    private static final String MSG_MANAGE_USERS_SEARCH_NO_RESULTS = "❌ Нет результатов";
+    private static final String MSG_MANAGE_USERS_SEARCH_PAGE_RESULTS = """
+            🔍 Результаты поиска
+            Используйте стрелки, чтобы прокручивать результаты, или введите имя пользователя, чтобы найти его.
+
+            Выберите пользователя, с которой хотите работать
+            """;
+
+    private static final String NO = "❌ Нет";
+    private static final String YES = "✅ Да";
+
+    private final TelegramClient tgClient;
+    private final CommonViews commonViews;
+
+    @SneakyThrows
+    public void updMenuToManageUsersSearchResult(Page<AppUser> page, UserState userState) {
+        String text = page.isEmpty() ? MSG_MANAGE_USERS_SEARCH_NO_RESULTS
+                : MSG_MANAGE_USERS_SEARCH_PAGE_RESULTS;
+
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
+                .text(text)
+                .replyMarkup(getUsersSearchPageMarkup(page))
+                .build();
+        tgClient.execute(message);
+    }
+
+    @SneakyThrows
+    public void updMenuToManageUserActionsMenu(CallbackQuery callbackQuery, AppUser appUser) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(callbackQuery.getMessage().getChatId())
+                .messageId(callbackQuery.getMessage().getMessageId())
+                .text(getBalanceDescription(appUser))
+                .replyMarkup(getManageUserActionsMarkup())
+                .build();
+        tgClient.execute(message);
+    }
+
+    @SneakyThrows
+    public void userDeleted(CallbackQuery callbackQuery) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(callbackQuery.getMessage().getChatId())
+                .messageId(callbackQuery.getMessage().getMessageId())
+                .text(MSG_USER_DEACTIVATED)
+                .replyMarkup(commonViews.getToMainMenuMarkup())
+                .build();
+        tgClient.execute(message);
+    }
+
+    @SneakyThrows
+    public void userBalanceAdjusted(UserState userState) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
+                .text(MSG_USER_BALANCE_ADJUSTED)
+                .replyMarkup(commonViews.getToMainMenuMarkup())
+                .build();
+        tgClient.execute(message);
+    }
+
+    @SneakyThrows
+    public void promptNewUserBalance(CallbackQuery callbackQuery) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(callbackQuery.getMessage().getChatId())
+                .messageId(callbackQuery.getMessage().getMessageId())
+                .text(MSG_USER_PROMPT_NEW_BALANCE)
+                .replyMarkup(commonViews.getToMainMenuMarkup())
+                .build();
+        tgClient.execute(message);
+    }
+
+    @SneakyThrows
+    public void confirmDeactivateUserMsg(CallbackQuery callbackQuery) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(callbackQuery.getMessage().getChatId())
+                .messageId(callbackQuery.getMessage().getMessageId())
+                .text(MSG_DEACTIVATE_USER_WARNING)
+                .replyMarkup(confirmDeleteGroupMarkup())
+                .build();
+        tgClient.execute(message);
+    }
+
+    public InlineKeyboardMarkup confirmDeleteGroupMarkup() {
+        return InlineKeyboardMarkup
+                .builder()
+                .keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text(NO)
+                                        .callbackData(InlineMenuCallbacks.CONFIRM_NO)
+                                        .build(),
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text(YES)
+                                        .callbackData(InlineMenuCallbacks.CONFIRM_YES)
+                                        .build()))
+                .build();
+    }
+
+    private String getBalanceDescription(AppUser user) {
+        return String.format("""
+                ⚙️ Действия с пользователем
+
+                ID: %s
+                Логин: %s
+                Имя пользователя: %s
+                Активен: %s
+                Причина деактивации: %s
+
+                Кошелек: %s
+                Баланс: %s TRX
+                """, 
+                user.getTelegramId(),
+                user.getTelegramUsername(),
+                user.getTelegramFirstName(),
+                user.getDisabled() ? "❌" : "✅",
+                user.getDisabledReason(),
+                user.getBalance().getDepositAddress(),
+                FormattingTools.formatBalance(user.getBalance().getSunBalance())
+                );
+    }
+
+    private InlineKeyboardMarkup getManageUserActionsMarkup() {
+        return InlineKeyboardMarkup
+                .builder()
+                .keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text(MANAGE_USER_ACTION_ADJUST_BALANCE_MANUALLY)
+                                        .callbackData(InlineMenuCallbacks.MANAGE_USER_ACTION_ADJUST_BALANCE_MANUALLY)
+                                        .build()))
+                .keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text(MANAGE_USER_ACTION_DEACTIVATE)
+                                        .callbackData(InlineMenuCallbacks.MANAGE_USER_ACTION_DEACTIVATE)
+                                        .build()))
+                .keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text(StaticLabels.TO_MAIN_MENU)
+                                        .callbackData(InlineMenuCallbacks.TO_MAIN_MENU)
+                                        .build()))
+                .build();
+    }
+
+    private InlineKeyboardMarkup getUsersSearchPageMarkup(Page<AppUser> page) {
+        List<InlineKeyboardRow> users = page.getContent().stream().map(user -> {
+            InlineKeyboardRow row = new InlineKeyboardRow(
+                    InlineKeyboardButton
+                            .builder()
+                            .text(user.getTelegramUsername())
+                            .callbackData(openBalanceRequest(user))
+                            .build());
+            return row;
+        }).toList();
+
+        InlineKeyboardMarkup.InlineKeyboardMarkupBuilder<?, ?> builder = InlineKeyboardMarkup
+                .builder();
+        users.forEach(builder::keyboardRow);
+
+        return builder
+                .keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text(MANAGE_USERS_SEARCH_RESET)
+                                        .callbackData(InlineMenuCallbacks.MANAGE_GROUPS_SEARCH_RESET)
+                                        .build()))
+                .keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text(StaticLabels.TO_MAIN_MENU)
+                                        .callbackData(InlineMenuCallbacks.TO_MAIN_MENU)
+                                        .build()))
+                .build();
+    }
+
+    private String openBalanceRequest(AppUser user) {
+        return OPEN_BALANCE + user.getTelegramId();
+    }
+}

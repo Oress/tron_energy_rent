@@ -6,6 +6,7 @@ import org.ipan.nrgyrent.telegram.state.AddWalletState;
 import org.ipan.nrgyrent.telegram.state.BalanceEdit;
 import org.ipan.nrgyrent.telegram.state.TelegramState;
 import org.ipan.nrgyrent.telegram.state.TransactionParams;
+import org.ipan.nrgyrent.telegram.state.UserEdit;
 import org.ipan.nrgyrent.telegram.state.UserState;
 import org.mapdb.DB;
 import org.mapdb.HTreeMap;
@@ -19,6 +20,7 @@ public class TelegramStateInMem implements TelegramState {
     private final HTreeMap<Long, BalanceEditInMem> balanceEditMap;
     private final HTreeMap<Long, AddWalletStateInMem> addWalletStateMap;
     private final HTreeMap<Long, TransactionParamsInMem> transactionParamsMap;
+    private final HTreeMap<Long, UserEditInMem> userEditMap;
 
     public TelegramStateInMem(DB db) {
         this.userStateMap = db.hashMap("userState")
@@ -44,6 +46,11 @@ public class TelegramStateInMem implements TelegramState {
         this.transactionParamsMap = db.hashMap("transactionParams")
                 .keySerializer(Serializer.LONG)
                 .valueSerializer(new TransactionParamsInMem.SerializerImpl())
+                .createOrOpen();
+
+        this.userEditMap = db.hashMap("userEdit")
+                .keySerializer(Serializer.LONG)
+                .valueSerializer(new UserEditInMem.SerializerImpl())
                 .createOrOpen();
     }
 
@@ -115,5 +122,20 @@ public class TelegramStateInMem implements TelegramState {
     @Override
     public TransactionParams removeTransactionParams(Long userId) {
         return this.transactionParamsMap.remove(userId);
+    }
+
+    @Override
+    public UserEdit getOrCreateUserEdit(Long userId) {
+        return this.userEditMap.computeIfAbsent(userId, key -> new UserEditInMem(null));
+    }
+
+    @Override
+    public UserEdit updateUserEdit(Long userId, UserEdit userEdit) {
+        return this.userEditMap.put(userId, UserEditInMem.of(userEdit));
+    }
+
+    @Override
+    public UserEdit removeUserEdit(Long userId) {
+        return this.userEditMap.remove(userId);
     }
 }

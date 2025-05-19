@@ -12,8 +12,10 @@ import org.ipan.nrgyrent.telegram.handlers.ManageGroupActionsHandler;
 import org.ipan.nrgyrent.telegram.handlers.ManageGroupNewGroupHandler;
 import org.ipan.nrgyrent.telegram.handlers.ManageGroupSearchHandler;
 import org.ipan.nrgyrent.telegram.handlers.ManageGroupsHandler;
+import org.ipan.nrgyrent.telegram.handlers.ManageUsersSearchHandler;
 import org.ipan.nrgyrent.telegram.handlers.TransactionsHandler;
 import org.ipan.nrgyrent.telegram.handlers.UserWalletsHandler;
+import org.ipan.nrgyrent.telegram.handlers.UsersActionHandler;
 import org.ipan.nrgyrent.telegram.state.TelegramState;
 import org.ipan.nrgyrent.telegram.state.UserState;
 import org.springframework.stereotype.Component;
@@ -48,6 +50,8 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
     private final ManageGroupNewGroupHandler manageGroupNewGroupHandler;
     private final ManageGroupsHandler manageGroupsHandler;
     private final ManageGroupActionsHandler manageGroupActionsHandler;
+    private final ManageUsersSearchHandler manageUsersSearchHandler;
+    private final UsersActionHandler usersActionHandler;
 
     @Override
     public void consume(Update update) {
@@ -71,6 +75,11 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
         logger.info("User state: {}", userState);
 
         if (handleStartState(userState, update)) {
+            return;
+        }
+
+        AppUser byId = userService.getById(userId);
+        if (byId != null && Boolean.TRUE.equals(byId.getDisabled())) {
             return;
         }
 
@@ -103,6 +112,14 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
             case ADMIN_MANAGE_GROUPS_ACTION_REMOVE_USERS:
             case ADMIN_MANAGE_GROUPS_ACTION_PROMPT_NEW_BALANCE:
                 manageGroupActionsHandler.handleUpdate(userState, update);
+                break;
+            case ADMIN_MANAGE_USERS:
+                manageUsersSearchHandler.handleUpdate(userState, update);
+                break;
+            case ADMIN_MANAGE_USERS_ACTION_PREVIEW:
+            case ADMIN_MANAGE_USER_ACTION_PROMPT_NEW_BALANCE:
+            case ADMIN_MANAGE_USER_ACTION_DEACTIVATE_CONFIRM:
+                usersActionHandler.handleUpdate(userState, update);
                 break;
             case ADMIN_MANAGE_GROUPS_SEARCH:
                 manageGroupSearchHandler.handleUpdate(userState, update);

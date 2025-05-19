@@ -25,6 +25,9 @@ public class InlineMenuCallbacks {
     public static final String MANAGE_GROUPS_SEARCH_RESET = "manage_groups_search_reset";
     public static final String MANAGE_GROUPS_ADD = "manage_groups_add_new";
 
+    public static final String MANAGE_USERS_SEARCH = "manage_groups_search";
+    public static final String MANAGE_USERS_SEARCH_RESET = "manage_groups_search_reset";
+
     public static final String MANAGE_GROUPS_ACTION_ADJUST_BALANCE_MANUALLY = "manage_groups_action_adjust_balance_manually";
     public static final String MANAGE_GROUPS_ACTION_RENAME = "manage_groups_action_rename";
     public static final String MANAGE_GROUPS_ACTION_VIEW_USERS = "manage_groups_action_view_users";
@@ -32,6 +35,10 @@ public class InlineMenuCallbacks {
     public static final String MANAGE_GROUPS_ACTION_REMOVE_USERS = "manage_groups_action_remove_users";
     public static final String MANAGE_GROUPS_ACTION_DEACTIVATE = "manage_groups_action_deactivate";
     public static final String MANAGE_GROUPS_ACTION_SET_MANAGER = "manage_groups_action_set_manager";
+
+    public static final String MANAGE_USER_ACTION_DEACTIVATE = "manage_user_action_deactivate";
+    public static final String MANAGE_USER_ACTION_ADJUST_BALANCE_MANUALLY = "manage_user_action_adjust_balance_manually";
+
 
     public static final String NTFN_OK = "notification_ok";
 

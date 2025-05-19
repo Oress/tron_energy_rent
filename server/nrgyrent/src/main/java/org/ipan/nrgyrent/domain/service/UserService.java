@@ -49,6 +49,15 @@ public class UserService {
         return appUser;
     }
 
+    @Transactional
+    public void deactivateUser(Long selectedUserId) {
+        AppUser appUser = userRepo.findById(selectedUserId).orElse(null);
+        if (appUser != null) {
+            appUser.setDisabled(true);
+            userRepo.save(appUser);
+        }
+    }
+
     private void updateModelFromCommand(CreateUserCommand command, AppUser appUser) {
         appUser.setTelegramId(command.getTelegramId());
         appUser.setTelegramUsername(command.getUsername());

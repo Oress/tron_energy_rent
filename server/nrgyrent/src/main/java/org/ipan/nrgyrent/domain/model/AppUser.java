@@ -41,7 +41,7 @@ public class AppUser {
     @Enumerated(EnumType.STRING)
     private UserRole role = UserRole.USER;
 
-    private boolean disabled;
+    private Boolean disabled;
 
     @Column(name = "disabled_reason")
     private String disabledReason;
