@@ -2,7 +2,6 @@ package org.ipan.nrgyrent.telegram.handlers;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Future;
 
 import org.ipan.nrgyrent.domain.model.CollectionWallet;
 import org.ipan.nrgyrent.domain.model.ManagedWallet;

@@ -12,10 +12,12 @@ import org.springframework.retry.annotation.EnableRetry;
 import org.springframework.scheduling.annotation.EnableAsync;
 
 import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
 
 @Configuration
 @EnableRetry
 @EnableAsync
+@Slf4j
 public class Config {
     @Value("${app.trongrid.base-url}")
     String baseUrl = "https://nile.trongrid.io";
@@ -26,6 +28,7 @@ public class Config {
     @Bean
     public ApiClient apiClient() {
         ApiClient defaultClient = new ApiClient();
+        logger.info("Base URL: {}", baseUrl);
         defaultClient.setBasePath(baseUrl);
         // defaultClient.addDefaultHeader("nrgyrent/0.1");
         return defaultClient;
@@ -34,11 +37,6 @@ public class Config {
     @Bean
     public AccountApi accountApi() {
         return new AccountApi(apiClient());
-    }
-
-    @Bean
-    public TransactionApi transactionApi() {
-        return new TransactionApi(apiClient());
     }
 
     @PostConstruct

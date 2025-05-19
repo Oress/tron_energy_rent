@@ -14,7 +14,7 @@ spring:
   jpa:
     #    hibernate:
     #      # ddl-auto: create-drop
-    show-sql: true
+    show-sql: false
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     properties:
       hibernate:
@@ -41,7 +41,7 @@ app:
     key: ${APP_ITRX_API_KEY}
     secret: ${APP_ITRX_API_SECRET}
   trongrid:
-    base-url: ${APP_TRON_URL:"https://nile.trongrid.io"} # For mainnet, use https://api.trongrid.io
+    base-url: ${APP_TRONGRID_URL:https://nile.trongrid.io} # For mainnet, use https://api.trongrid.io
   telegram:
     bot:
       token: ${TELEGRAM_BOT_TOKEN}
