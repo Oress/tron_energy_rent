@@ -31,7 +31,6 @@ import lombok.AllArgsConstructor;
 @Component
 @AllArgsConstructor
 public class TransactionsHandler implements AppUpdateHandler {
-    private static final int WAIT_FOR_CALLBACK = 10;
     private static final int ITRX_OK_CODE = 0;
 
     private final TelegramState telegramState;
@@ -139,29 +138,13 @@ public class TransactionsHandler implements AppUpdateHandler {
                 PlaceOrderResponse placeOrderResponse = itrxService.placeOrder(energyAmount, duration, walletAddress,
                         correlationId);
 
-                // Waiting WAIT_FOR_CALLBACK seconds for callback from itrx
-                // if callback is not received, enqueue the request and notify the user
-                // otherwise, update the menu to transaction success
                 if (placeOrderResponse.getErrno() != ITRX_OK_CODE) {
                     return;
                     // TODO: do something here
                 }
 
-                // TODO: this will block the bot for incomming messages, handle it without
-                // blocking.
-                OrderCallbackRequest orderCallbackRequest = itrxService.getCorrelatedCallbackRequest(correlationId,
-                        WAIT_FOR_CALLBACK);
-
-                if (orderCallbackRequest != null) {
-                    transactionsViews.updMenuToTransactionSuccess(userState);
-                    telegramState.updateUserState(userState.getTelegramId(),
-                            userState.withState(States.TRANSACTION_SUCCESS));
-                    // TODO: add SUCCESSFUL DB record for transaction
-                } else {
-                    transactionsViews.updMenuToTransactionPending(userState);
-                    telegramState.updateUserState(userState.getTelegramId(),
-                            userState.withState(States.TRANSACTION_PENDING));
-                }
+                transactionsViews.updMenuToTransactionPending(userState);
+                telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.TRANSACTION_PENDING));
             } catch (NotEnoughBalanceException e) {
                 transactionsViews.notEnoughBalance(userState);
             }
