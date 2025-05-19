@@ -16,8 +16,8 @@ public class StaticLabels {
     // Menu labels
     public static final String MENU_HISTORY = "📜 История транзакций";
     public static final String MENU_ADMIN = "👨‍💻 Админка";
-    public static final String MENU_TRANSFER_ENERGY_65K = "⚡ 65 000 энергии на 1 час (5.5 TRX)";
-    public static final String MENU_TRANSFER_ENERGY_131K = "⚡ 131 000 энергии на 1 час (8 TRX)";
+    public static final String MENU_TRANSFER_ENERGY_65K = "⚡ 1 тр на кош с USDT (5.5 TRX)";
+    public static final String MENU_TRANSFER_ENERGY_131K = "⚡ 1 тр на кош без USDT или биржу (8.55 TRX)";
     public static final String MENU_DEPOSIT = "\uD83D\uDCB8 Депозит";
     public static final String MENU_WALLETS = "\uD83D\uDC5B Кошельки";
 
