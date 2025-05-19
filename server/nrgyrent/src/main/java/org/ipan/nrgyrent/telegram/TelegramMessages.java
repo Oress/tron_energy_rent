@@ -2,7 +2,6 @@ package org.ipan.nrgyrent.telegram;
 
 import java.util.List;
 
-import org.ipan.nrgyrent.domain.model.UserWallet;
 import org.ipan.nrgyrent.telegram.state.UserState;
 import org.ipan.nrgyrent.telegram.views.ManageGroupNewGroupView;
 import org.ipan.nrgyrent.telegram.views.ManageGroupSearchView;
@@ -147,19 +146,6 @@ public class TelegramMessages {
         return tgClient.execute(message);
     }
 
-    @Retryable
-    @SneakyThrows
-    public void updMenuToWalletsMenu(List<UserWallet> wallets, CallbackQuery callbackQuery) {
-        EditMessageText message = EditMessageText
-                .builder()
-                .chatId(callbackQuery.getMessage().getChatId())
-                .messageId(callbackQuery.getMessage().getMessageId())
-                .text(StaticLabels.MSG_WALLETS)
-                .replyMarkup(getWalletsMenuMarkup(wallets))
-                .build();
-        tgClient.execute(message);
-    }
-
     @SneakyThrows
     public void updateMsgToMainMenu(CallbackQuery callbackQuery) {
         EditMessageText message = EditMessageText
@@ -292,44 +278,4 @@ public class TelegramMessages {
                 )
                 .build();
     }
-
-    private InlineKeyboardMarkup getWalletsMenuMarkup(List<UserWallet> wallets) {
-        List<InlineKeyboardRow> walletRows = wallets.stream().map(wallet -> {
-            InlineKeyboardRow row = new InlineKeyboardRow(
-                    InlineKeyboardButton
-                            .builder()
-                            .text(wallet.getLabel())
-                            .callbackData(wallet.getId().toString())
-                            .build(),
-                    InlineKeyboardButton
-                            .builder()
-                            .text(StaticLabels.WLT_DELETE_WALLET)
-                            .callbackData("delete_wallet " + wallet.getId().toString())
-                            .build());
-            return row;
-        }).toList();
-
-        InlineKeyboardMarkup.InlineKeyboardMarkupBuilder<?, ?> builder = InlineKeyboardMarkup
-                .builder()
-                .keyboardRow(
-                        new InlineKeyboardRow(
-                                InlineKeyboardButton
-                                        .builder()
-                                        .text(StaticLabels.WLT_ADD_WALLET)
-                                        .callbackData(InlineMenuCallbacks.ADD_WALLETS)
-                                        .build()));
-        walletRows.forEach(builder::keyboardRow);
-
-        return builder.keyboardRow(
-                new InlineKeyboardRow(
-                        InlineKeyboardButton
-                                .builder()
-                                .text(StaticLabels.TO_MAIN_MENU)
-                                .callbackData(InlineMenuCallbacks.TO_MAIN_MENU)
-                                .build())
-
-        )
-                .build();
-    }
-
 }

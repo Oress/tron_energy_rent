@@ -1,10 +1,18 @@
 package org.ipan.nrgyrent.telegram.views;
 
+import java.util.List;
+
+import org.ipan.nrgyrent.domain.model.UserWallet;
+import org.ipan.nrgyrent.telegram.InlineMenuCallbacks;
+import org.ipan.nrgyrent.telegram.StaticLabels;
 import org.ipan.nrgyrent.telegram.state.UserState;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
 
 import lombok.AllArgsConstructor;
@@ -13,6 +21,8 @@ import lombok.SneakyThrows;
 @Component
 @AllArgsConstructor
 public class WalletsViews {
+    public static final String OPEN_WALLET = "/wallet/";
+
     public static final String MSG_PROMPT_WALLET_ADDRESS = "Отправьте адрес кошелька TRC-20, который вы хотите добавить";
     public static final String MSG_PROMPT_WALLET_LABEL = "Отправьте название кошелька, который вы хотите добавить";
     public static final String MSG_ADD_WALLET_SUCCESS = "✅ Кошелек успешно добавлен";
@@ -20,6 +30,32 @@ public class WalletsViews {
 
     private final TelegramClient tgClient;
     private final CommonViews commonViews;
+
+    @Retryable
+    @SneakyThrows
+    public void updMenuToWalletsMenu(List<UserWallet> wallets, CallbackQuery callbackQuery) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(callbackQuery.getMessage().getChatId())
+                .messageId(callbackQuery.getMessage().getMessageId())
+                .text(StaticLabels.MSG_WALLETS)
+                .replyMarkup(getWalletsMenuMarkup(wallets))
+                .build();
+        tgClient.execute(message);
+    }
+
+    @Retryable
+    @SneakyThrows
+    public void showWalletDetails(UserWallet wallet, CallbackQuery callbackQuery) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(callbackQuery.getMessage().getChatId())
+                .messageId(callbackQuery.getMessage().getMessageId())
+                .text(getWalletDetails(wallet))
+                .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
+                .build();
+        tgClient.execute(message);
+    }
 
     @Retryable
     @SneakyThrows
@@ -71,5 +107,48 @@ public class WalletsViews {
                 .replyMarkup(commonViews.getToMainMenuMarkup())
                 .build();
         tgClient.execute(message);
+    }
+
+    private String getWalletDetails(UserWallet wallet) {
+        return String.format("Кошелек: %s\nАдрес: %s", wallet.getLabel(), wallet.getAddress());
+    }
+
+    private InlineKeyboardMarkup getWalletsMenuMarkup(List<UserWallet> wallets) {
+        List<InlineKeyboardRow> walletRows = wallets.stream().map(wallet -> {
+            InlineKeyboardRow row = new InlineKeyboardRow(
+                    InlineKeyboardButton
+                            .builder()
+                            .text(wallet.getLabel())
+                            .callbackData(OPEN_WALLET + wallet.getId().toString())
+                            .build(),
+                    InlineKeyboardButton
+                            .builder()
+                            .text(StaticLabels.WLT_DELETE_WALLET)
+                            .callbackData("delete_wallet " + wallet.getId().toString())
+                            .build());
+            return row;
+        }).toList();
+
+        InlineKeyboardMarkup.InlineKeyboardMarkupBuilder<?, ?> builder = InlineKeyboardMarkup
+                .builder()
+                .keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text(StaticLabels.WLT_ADD_WALLET)
+                                        .callbackData(InlineMenuCallbacks.ADD_WALLETS)
+                                        .build()));
+        walletRows.forEach(builder::keyboardRow);
+
+        return builder.keyboardRow(
+                new InlineKeyboardRow(
+                        InlineKeyboardButton
+                                .builder()
+                                .text(StaticLabels.TO_MAIN_MENU)
+                                .callbackData(InlineMenuCallbacks.TO_MAIN_MENU)
+                                .build())
+
+        )
+                .build();
     }
 }

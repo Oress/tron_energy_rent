@@ -94,6 +94,7 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
             case WALLETS:
             case NEW_WALLET_PROMPT_ADDRESS:
             case NEW_WALLET_PROMPT_LABEL:
+            case USER_WALLET_PREVIEW:
                 userWalletsHandler.handleUpdate(userState, update);
                 break;
             case TRANSACTION_PROMPT_WALLET:

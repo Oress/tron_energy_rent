@@ -17,6 +17,7 @@ import org.ipan.nrgyrent.telegram.state.UserState;
 import org.ipan.nrgyrent.telegram.views.AdminViews;
 import org.ipan.nrgyrent.telegram.views.DepositViews;
 import org.ipan.nrgyrent.telegram.views.TransactionsViews;
+import org.ipan.nrgyrent.telegram.views.WalletsViews;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Update;
@@ -31,6 +32,7 @@ public class MainMenuHandler implements AppUpdateHandler {
     private final UserWalletService userWalletService;
     private final UserService userService;
 
+    private final WalletsViews walletsViews;
     private final DepositViews depositViews;
     private final AdminViews adminViews;
     private final TransactionsViews transactionsViews;
@@ -52,7 +54,7 @@ public class MainMenuHandler implements AppUpdateHandler {
                 telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.DEPOSIT));
             } else if (InlineMenuCallbacks.WALLETS.equals(data)) {
                 List<UserWallet> wallets = userWalletService.getWallets(userState.getTelegramId());
-                telegramMessages.updMenuToWalletsMenu(wallets, callbackQuery);
+                walletsViews.updMenuToWalletsMenu(wallets, callbackQuery);
                 telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.WALLETS));
             } else if (InlineMenuCallbacks.ADMIN_MENU.equals(data)) {
                 // TODO: extra validation here ??

@@ -21,6 +21,7 @@ public class StaticLabels {
     public static final String MENU_WALLETS = "\uD83D\uDC5B Кошельки";
 
     public static final String TO_MAIN_MENU = "\uD83C\uDFE0 Главное меню";
+    public static final String GO_BACK = "🔙 Назад";
 
     // Wallets labels
     public static final String WLT_DELETE_WALLET = "❌";

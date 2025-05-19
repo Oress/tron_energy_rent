@@ -1,5 +1,9 @@
 package org.ipan.nrgyrent.telegram.handlers;
 
+import org.ipan.nrgyrent.domain.model.UserWallet;
+import java.util.Optional;
+
+import org.ipan.nrgyrent.domain.model.repository.UserWalletRepo;
 import org.ipan.nrgyrent.domain.service.UserWalletService;
 import org.ipan.nrgyrent.domain.service.commands.userwallet.AddOrUpdateUserWalletCommand;
 import org.ipan.nrgyrent.domain.service.commands.userwallet.DeleteUserWalletCommand;
@@ -23,6 +27,7 @@ import lombok.AllArgsConstructor;
 public class UserWalletsHandler implements AppUpdateHandler {
     private final TelegramState telegramState;
     private final UserWalletService userWalletService;
+    private final UserWalletRepo userWalletRepo;
     private final WalletsViews walletsViews;
 
     @Override
@@ -56,6 +61,11 @@ public class UserWalletsHandler implements AppUpdateHandler {
                 walletsViews.updMenuToDeleteWalletSuccessMenu(callbackQuery);
                 telegramState.updateUserState(userState.getTelegramId(),
                         userState.withState(States.DELETE_WALLETS_SUCCESS));
+            } else if (data.startsWith(WalletsViews.OPEN_WALLET)) {
+                String walletId = data.split(WalletsViews.OPEN_WALLET)[1];
+             Optional<UserWallet> byId = userWalletRepo.findById(Long.parseLong(walletId));
+                walletsViews.showWalletDetails(byId.get(), callbackQuery);
+                telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.USER_WALLET_PREVIEW));
             }
         }
     }
