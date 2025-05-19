@@ -103,7 +103,7 @@ public class TransactionsHandler implements AppUpdateHandler {
                 TransactionParams transactionParams = telegramState
                         .getOrCreateTransactionParams(userState.getTelegramId());
                 telegramState.updateTransactionParams(userState.getTelegramId(),
-                        transactionParams.withGroupBalance(true));
+                        transactionParams.withGroupBalance(false));
                 telegramState.updateUserState(userState.getTelegramId(),
                         userState.withState(States.TRANSACTION_PROMPT_WALLET));
 

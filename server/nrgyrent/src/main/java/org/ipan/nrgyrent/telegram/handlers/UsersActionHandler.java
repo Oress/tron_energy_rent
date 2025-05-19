@@ -1,6 +1,11 @@
 package org.ipan.nrgyrent.telegram.handlers;
 
+import java.math.BigDecimal;
+
+import org.ipan.nrgyrent.domain.model.AppUser;
+import org.ipan.nrgyrent.domain.service.BalanceService;
 import org.ipan.nrgyrent.domain.service.UserService;
+import org.ipan.nrgyrent.itrx.AppConstants;
 import org.ipan.nrgyrent.telegram.AppUpdateHandler;
 import org.ipan.nrgyrent.telegram.InlineMenuCallbacks;
 import org.ipan.nrgyrent.telegram.States;
@@ -11,6 +16,7 @@ import org.ipan.nrgyrent.telegram.views.ManageUserActionsView;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.message.Message;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 public class UsersActionHandler implements AppUpdateHandler {
     private final TelegramState telegramState;
     private final UserService userService;
+    private final BalanceService balanceService;
     private final ManageUserActionsView manageUserActionsView;
     private final ManageUsersSearchHandler manageUsersSearchHandler;
 
@@ -31,9 +38,9 @@ public class UsersActionHandler implements AppUpdateHandler {
                 handleGroupPreivew(userState, update);
                 break;
 
-            // case ADMIN_MANAGE_GROUPS_ACTION_PROMPT_NEW_BALANCE:
-            // handleAdjustedBalance(userState, update);
-            // break;
+            case ADMIN_MANAGE_USER_ACTION_PROMPT_NEW_BALANCE:
+                handleAdjustedBalance(userState, update);
+                break;
 
             // case ADMIN_MANAGE_GROUPS_ACTION_REMOVE_USERS:
             // handleRemoveUsers(userState, update);
@@ -87,6 +94,25 @@ public class UsersActionHandler implements AppUpdateHandler {
             } else {
                 logger.error("Unknown callback data when confirming group deletion: {}", data);
             }
+        }
+    }
+
+    private void handleAdjustedBalance(UserState userState, Update update) {
+        Message message = update.getMessage();
+        if (message != null && message.hasText()) {
+            logger.info("Adjusting user balance: {}", message.getText());
+            String newBalance = message.getText();
+            // TODO: catch NumberFormatException
+            BigDecimal adjustedBalanceInTrx = new BigDecimal(newBalance);
+            BigDecimal adjustedBalanceInSun = adjustedBalanceInTrx.multiply(AppConstants.trxToSunRate);
+            Long telegramId = userState.getTelegramId();
+
+            UserEdit userEdit = telegramState.getOrCreateUserEdit(telegramId);
+            AppUser byId = userService.getById(userEdit.getSelectedUserId());
+
+            balanceService.adjustBalance(byId.getBalance().getId(), adjustedBalanceInSun.longValue(), telegramId);
+
+            manageUserActionsView.userBalanceAdjusted(userState);
         }
     }
 }

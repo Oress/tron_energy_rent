@@ -1,7 +1,10 @@
 package org.ipan.nrgyrent.itrx;
 
+import java.math.BigDecimal;
+
 public class AppConstants {
     public static final String DURATION_1H = "1H";
+    public static BigDecimal trxToSunRate = new BigDecimal(1_000_000);
 
     public static final int ENERGY_65K = 65_000;
     public static final int ENERGY_131K = 131_000;

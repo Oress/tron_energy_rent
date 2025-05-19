@@ -67,9 +67,9 @@ public class MainMenuHandler implements AppUpdateHandler {
         AppUser byId = userService.getById(userState.getTelegramId());
         // If no group balance, proceed to 
         TransactionParams transactionParams = telegramState.getOrCreateTransactionParams(userState.getTelegramId());
-        boolean useGroupBalance = false;
+        boolean useGroupBalance = true;
         if (byId.getGroupBalance() == null) {
-            useGroupBalance = true;
+            useGroupBalance = false;
             List<UserWallet> wallets = userWalletService.getWallets(userState.getTelegramId());
 
             if (energyAmount == AppConstants.ENERGY_131K) {

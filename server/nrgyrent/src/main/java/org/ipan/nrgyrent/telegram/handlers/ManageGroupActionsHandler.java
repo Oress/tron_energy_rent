@@ -6,6 +6,7 @@ import java.util.List;
 import org.ipan.nrgyrent.domain.model.Balance;
 import org.ipan.nrgyrent.domain.model.repository.BalanceRepo;
 import org.ipan.nrgyrent.domain.service.BalanceService;
+import org.ipan.nrgyrent.itrx.AppConstants;
 import org.ipan.nrgyrent.telegram.AppUpdateHandler;
 import org.ipan.nrgyrent.telegram.InlineMenuCallbacks;
 import org.ipan.nrgyrent.telegram.States;
@@ -27,8 +28,6 @@ import lombok.extern.slf4j.Slf4j;
 @AllArgsConstructor
 @Slf4j
 public class ManageGroupActionsHandler implements AppUpdateHandler {
-    private static BigDecimal trxToSunRate = new BigDecimal(1_000_000);
-
     private final ManageGroupActionsView manageGroupActionsView;
     private final TelegramState telegramState;
     private final TelegramMessages telegramMessages;
@@ -132,7 +131,7 @@ public class ManageGroupActionsHandler implements AppUpdateHandler {
             String newBalance = message.getText();
             // TODO: catch NumberFormatException
             BigDecimal adjustedBalanceInTrx = new BigDecimal(newBalance);
-            BigDecimal adjustedBalanceInSun = adjustedBalanceInTrx.multiply(trxToSunRate);
+            BigDecimal adjustedBalanceInSun = adjustedBalanceInTrx.multiply(AppConstants.trxToSunRate);
             Long telegramId = userState.getTelegramId();
 
             BalanceEdit openBalance = telegramState.getOrCreateBalanceEdit(telegramId);
