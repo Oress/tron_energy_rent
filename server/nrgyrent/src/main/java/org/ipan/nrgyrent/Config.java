@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.retry.annotation.EnableRetry;
 import org.springframework.scheduling.annotation.EnableAsync;
 
@@ -17,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 @Configuration
 @EnableRetry
 @EnableAsync
+@EnableAspectJAutoProxy
 @Slf4j
 public class Config {
     @Value("${app.trongrid.base-url}")

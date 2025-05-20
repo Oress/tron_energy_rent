@@ -1,79 +1,73 @@
 package org.ipan.nrgyrent.telegram.handlers;
 
-import org.ipan.nrgyrent.domain.model.UserWallet;
 import java.util.Optional;
 
+import org.ipan.nrgyrent.domain.model.UserWallet;
 import org.ipan.nrgyrent.domain.model.repository.UserWalletRepo;
 import org.ipan.nrgyrent.domain.service.UserWalletService;
 import org.ipan.nrgyrent.domain.service.commands.userwallet.AddOrUpdateUserWalletCommand;
 import org.ipan.nrgyrent.domain.service.commands.userwallet.DeleteUserWalletCommand;
-import org.ipan.nrgyrent.telegram.AppUpdateHandler;
 import org.ipan.nrgyrent.telegram.InlineMenuCallbacks;
 import org.ipan.nrgyrent.telegram.States;
 import org.ipan.nrgyrent.telegram.state.AddWalletState;
 import org.ipan.nrgyrent.telegram.state.TelegramState;
 import org.ipan.nrgyrent.telegram.state.UserState;
+import org.ipan.nrgyrent.telegram.statetransitions.MatchState;
+import org.ipan.nrgyrent.telegram.statetransitions.TransitionHandler;
+import org.ipan.nrgyrent.telegram.statetransitions.UpdateType;
 import org.ipan.nrgyrent.telegram.utils.WalletTools;
 import org.ipan.nrgyrent.telegram.views.WalletsViews;
-import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.message.Message;
 
 import lombok.AllArgsConstructor;
 
-@Component
 @AllArgsConstructor
-public class UserWalletsHandler implements AppUpdateHandler {
+@TransitionHandler
+public class UserWalletsHandler {
     private final TelegramState telegramState;
     private final UserWalletService userWalletService;
     private final UserWalletRepo userWalletRepo;
     private final WalletsViews walletsViews;
 
-    @Override
-    public void handleUpdate(UserState userState, Update update) {
-        switch (userState.getState()) {
-            case WALLETS:
-                handleWalletsState(userState, update);
-                break;
-            case NEW_WALLET_PROMPT_ADDRESS:
-                handlePromptNewAddress(userState, update);
-                break;
-            case NEW_WALLET_PROMPT_LABEL:
-                handlePromptNewLabel(userState, update);
-                break;
-        }
+    @MatchState(state = States.WALLETS, callbackData = InlineMenuCallbacks.ADD_WALLETS)
+    public void handleAddNewWallet(UserState userState, Update update) {
+        walletsViews.updMenuToPromptWalletAddress(update.getCallbackQuery());
+        telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.NEW_WALLET_PROMPT_ADDRESS));
     }
 
-    private void handleWalletsState(UserState userState, Update update) {
+    @MatchState(state = States.WALLETS, updateTypes = UpdateType.CALLBACK_QUERY)
+    public void handleDeleteWallet(UserState userState, Update update) {
         CallbackQuery callbackQuery = update.getCallbackQuery();
+        String data = callbackQuery.getData();
+        if (data.startsWith(InlineMenuCallbacks.DELETE_WALLETS)) {
+            String walletId = data.split(" ")[1];
+            userWalletService
+                    .deleteWallet(DeleteUserWalletCommand.builder().walletId(Long.parseLong(walletId)).build());
+            walletsViews.updMenuToDeleteWalletSuccessMenu(callbackQuery);
+            telegramState.updateUserState(userState.getTelegramId(),
+                    userState.withState(States.DELETE_WALLETS_SUCCESS));
+        }
+    }
 
-        if (callbackQuery != null) {
-            String data = callbackQuery.getData();
-
-            if (InlineMenuCallbacks.ADD_WALLETS.equals(data)) {
-                walletsViews.updMenuToPromptWalletAddress(callbackQuery);
-                telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.NEW_WALLET_PROMPT_ADDRESS));
-            } else if (data.startsWith(InlineMenuCallbacks.DELETE_WALLETS)) {
-                String walletId = data.split(" ")[1];
-                userWalletService
-                        .deleteWallet(DeleteUserWalletCommand.builder().walletId(Long.parseLong(walletId)).build());
-                walletsViews.updMenuToDeleteWalletSuccessMenu(callbackQuery);
-                telegramState.updateUserState(userState.getTelegramId(),
-                        userState.withState(States.DELETE_WALLETS_SUCCESS));
-            } else if (data.startsWith(WalletsViews.OPEN_WALLET)) {
-                String walletId = data.split(WalletsViews.OPEN_WALLET)[1];
-             Optional<UserWallet> byId = userWalletRepo.findById(Long.parseLong(walletId));
-                walletsViews.showWalletDetails(byId.get(), callbackQuery);
-                telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.USER_WALLET_PREVIEW));
-            }
+    @MatchState(state = States.WALLETS, updateTypes = UpdateType.CALLBACK_QUERY)
+    public void handleOpenWallet(UserState userState, Update update) {
+        CallbackQuery callbackQuery = update.getCallbackQuery();
+        String data = callbackQuery.getData();
+        if (data.startsWith(WalletsViews.OPEN_WALLET)) {
+            String walletId = data.split(WalletsViews.OPEN_WALLET)[1];
+            Optional<UserWallet> byId = userWalletRepo.findById(Long.parseLong(walletId));
+            walletsViews.showWalletDetails(byId.get(), callbackQuery);
+            telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.USER_WALLET_PREVIEW));
         }
     }
 
 
-    private void handlePromptNewAddress(UserState userState, Update update) {
+    @MatchState(state = States.NEW_WALLET_PROMPT_ADDRESS, updateTypes = UpdateType.MESSAGE)
+    public void handlePromptNewAddress(UserState userState, Update update) {
         Message message = update.getMessage();
-        if (message == null || !message.hasText()) {
+        if (!message.hasText()) {
             return;
         }
 
@@ -82,13 +76,15 @@ public class UserWalletsHandler implements AppUpdateHandler {
         if (WalletTools.isValidTronAddress(text)) {
             AddWalletState addWalletState = telegramState.getOrCreateAddWalletState(userState.getTelegramId());
             telegramState.updateAddWalletState(userState.getTelegramId(), addWalletState.withAddress(text));
-            telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.NEW_WALLET_PROMPT_LABEL));
+            telegramState.updateUserState(userState.getTelegramId(),
+                    userState.withState(States.NEW_WALLET_PROMPT_LABEL));
             walletsViews.updMenuToPromptWalletLabel(userState);
         }
         // TODO: send validation message to user
     }
 
-    private void handlePromptNewLabel(UserState userState, Update update) {
+    @MatchState(state = States.NEW_WALLET_PROMPT_LABEL, updateTypes = UpdateType.MESSAGE)
+    public void handlePromptNewLabel(UserState userState, Update update) {
         Message message = update.getMessage();
         if (message == null || !message.hasText()) {
             return;

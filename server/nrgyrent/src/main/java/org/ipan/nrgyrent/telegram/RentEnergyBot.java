@@ -1,5 +1,6 @@
 package org.ipan.nrgyrent.telegram;
 
+import java.lang.reflect.Method;
 import java.util.List;
 
 import org.ipan.nrgyrent.domain.model.AppUser;
@@ -18,6 +19,9 @@ import org.ipan.nrgyrent.telegram.handlers.UserWalletsHandler;
 import org.ipan.nrgyrent.telegram.handlers.UsersActionHandler;
 import org.ipan.nrgyrent.telegram.state.TelegramState;
 import org.ipan.nrgyrent.telegram.state.UserState;
+import org.ipan.nrgyrent.telegram.statetransitions.StateHandlerRegistry;
+import org.ipan.nrgyrent.telegram.statetransitions.TransitionMatcher;
+import org.ipan.nrgyrent.telegram.statetransitions.UpdateType;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.longpolling.util.LongPollingSingleThreadUpdateConsumer;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
@@ -52,6 +56,7 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
     private final ManageGroupActionsHandler manageGroupActionsHandler;
     private final ManageUsersSearchHandler manageUsersSearchHandler;
     private final UsersActionHandler usersActionHandler;
+    private final StateHandlerRegistry stateHandlerRegistry;
 
     @Override
     public void consume(Update update) {
@@ -87,7 +92,31 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
             return;
         }
 
-        switch (userState.getState()) {
+        int updateType = UpdateType.NONE;
+        if (update.hasCallbackQuery()) {
+            updateType |= UpdateType.CALLBACK_QUERY;
+        } else if (update.hasMessage()) {
+            updateType |= UpdateType.MESSAGE;
+        }
+
+        List<TransitionMatcher> handlers = stateHandlerRegistry.getHandlers(userState.getState(), updateType);
+
+        for (TransitionMatcher handler : handlers) {
+            if (!handler.matches(update)) {
+                continue;
+            }
+
+            Object stateHandler = handler.getBean();
+            Method method = handler.getMethod();
+
+            try {
+                method.invoke(stateHandler, userState, update);
+            } catch (Exception e) {
+                logger.error("Error invoking state handler method", e);
+            }
+        }
+
+/*         switch (userState.getState()) {
             case MAIN_MENU:
                 mainMenuHandler.handleUpdate(userState, update);
                 break;
@@ -133,7 +162,7 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
             case ADMIN_MANAGE_GROUPS_REMOVE_PROMPT_USERS:
                 manageGroupNewGroupHandler.handleUpdate(userState, update);
                 break;
-        }
+        } */
 
         Message message = update.getMessage();
         CallbackQuery callbackQuery = update.getCallbackQuery();

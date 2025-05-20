@@ -5,13 +5,20 @@ import java.util.List;
 import org.ipan.nrgyrent.domain.exception.UserAlreadyHasGroupBalanceException;
 import org.ipan.nrgyrent.domain.exception.UserNotRegisteredException;
 import org.ipan.nrgyrent.domain.model.Balance;
+import org.ipan.nrgyrent.domain.model.BalanceType;
 import org.ipan.nrgyrent.domain.service.BalanceService;
 import org.ipan.nrgyrent.telegram.AppUpdateHandler;
+import org.ipan.nrgyrent.telegram.InlineMenuCallbacks;
 import org.ipan.nrgyrent.telegram.States;
 import org.ipan.nrgyrent.telegram.TelegramMessages;
 import org.ipan.nrgyrent.telegram.state.AddGroupState;
 import org.ipan.nrgyrent.telegram.state.TelegramState;
 import org.ipan.nrgyrent.telegram.state.UserState;
+import org.ipan.nrgyrent.telegram.statetransitions.MatchState;
+import org.ipan.nrgyrent.telegram.statetransitions.TransitionHandler;
+import org.ipan.nrgyrent.telegram.statetransitions.UpdateType;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.UserShared;
@@ -21,29 +28,18 @@ import org.telegram.telegrambots.meta.api.objects.message.Message;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-@Component
+@TransitionHandler
 @AllArgsConstructor
 @Slf4j
-public class ManageGroupNewGroupHandler implements AppUpdateHandler {
+public class ManageGroupNewGroupHandler {
     private final TelegramState telegramState;
     private final TelegramMessages telegramMessages;
     private BalanceService balanceService;
 
-    @Override
-    public void handleUpdate(UserState userState, Update update) {
-        switch (userState.getState()) {
-            case ADMIN_MANAGE_GROUPS_ADD_PROMPT_LABEL:
-                handleAddGroupPromptLabel(userState, update);
-                break;
-            case ADMIN_MANAGE_GROUPS_ADD_PROMPT_USERS:
-                handleAddGroupPromptUsers(userState, update);
-                break;
-        }
-    }
-
-    private void handleAddGroupPromptLabel(UserState userState, Update update) {
+    @MatchState(state = States.ADMIN_MANAGE_GROUPS_ADD_PROMPT_LABEL, updateTypes = UpdateType.MESSAGE)
+    public void handleAddGroupPromptLabel(UserState userState, Update update) {
         Message message = update.getMessage();
-        if (message != null && message.hasText()) {
+        if (message.hasText()) {
             // TODO: validate group name
             String newGroupLabel = message.getText();
             Long telegramId = userState.getTelegramId();
@@ -58,7 +54,8 @@ public class ManageGroupNewGroupHandler implements AppUpdateHandler {
         }
     }
 
-    private void handleAddGroupPromptUsers(UserState userState, Update update) {
+    @MatchState(state = States.ADMIN_MANAGE_GROUPS_ADD_PROMPT_USERS, updateTypes = UpdateType.MESSAGE)
+    public void handleAddGroupPromptUsers(UserState userState, Update update) {
         Message message = update.getMessage();
         if (message != null && message.hasUserShared()) {
             telegramMessages.deleteMessage(message);
