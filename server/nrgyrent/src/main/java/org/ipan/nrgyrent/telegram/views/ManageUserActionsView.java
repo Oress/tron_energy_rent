@@ -93,36 +93,36 @@ public class ManageUserActionsView {
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
                 .text(MSG_USER_BALANCE_ADJUSTED)
-                .replyMarkup(commonViews.getToMainMenuMarkup())
+                .replyMarkup(mainMenuAndBackToUserMarkup(userState))
                 .build();
         tgClient.execute(message);
     }
 
     @SneakyThrows
-    public void promptNewUserBalance(CallbackQuery callbackQuery) {
+    public void promptNewUserBalance(UserState userState, CallbackQuery callbackQuery) {
         EditMessageText message = EditMessageText
                 .builder()
                 .chatId(callbackQuery.getMessage().getChatId())
                 .messageId(callbackQuery.getMessage().getMessageId())
                 .text(MSG_USER_PROMPT_NEW_BALANCE)
-                .replyMarkup(commonViews.getToMainMenuMarkup())
+                .replyMarkup(mainMenuAndBackToUserMarkup(userState))
                 .build();
         tgClient.execute(message);
     }
 
     @SneakyThrows
-    public void confirmDeactivateUserMsg(CallbackQuery callbackQuery) {
+    public void confirmDeactivateUserMsg(UserState userState, CallbackQuery callbackQuery) {
         EditMessageText message = EditMessageText
                 .builder()
                 .chatId(callbackQuery.getMessage().getChatId())
                 .messageId(callbackQuery.getMessage().getMessageId())
                 .text(MSG_DEACTIVATE_USER_WARNING)
-                .replyMarkup(confirmDeleteGroupMarkup())
+                .replyMarkup(confirmDeleteGroupMarkup(userState))
                 .build();
         tgClient.execute(message);
     }
 
-    public InlineKeyboardMarkup confirmDeleteGroupMarkup() {
+    public InlineKeyboardMarkup confirmDeleteGroupMarkup(UserState userState) {
         return InlineKeyboardMarkup
                 .builder()
                 .keyboardRow(
@@ -130,7 +130,7 @@ public class ManageUserActionsView {
                                 InlineKeyboardButton
                                         .builder()
                                         .text(NO)
-                                        .callbackData(InlineMenuCallbacks.CONFIRM_NO)
+                                        .callbackData(openBalanceRequest(userState.getTelegramId()))
                                         .build(),
                                 InlineKeyboardButton
                                         .builder()
@@ -186,6 +186,29 @@ public class ManageUserActionsView {
                                         .builder()
                                         .text(StaticLabels.TO_MAIN_MENU)
                                         .callbackData(InlineMenuCallbacks.TO_MAIN_MENU)
+                                        .build(),
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text(StaticLabels.GO_BACK)
+                                        .callbackData(InlineMenuCallbacks.GO_BACK)
+                                        .build()))
+                .build();
+    }
+
+    private InlineKeyboardMarkup mainMenuAndBackToUserMarkup(UserState userState) {
+        return InlineKeyboardMarkup
+                .builder()
+                .keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text(StaticLabels.TO_MAIN_MENU)
+                                        .callbackData(InlineMenuCallbacks.TO_MAIN_MENU)
+                                        .build(),
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text(StaticLabels.GO_BACK)
+                                        .callbackData(openBalanceRequest(userState.getTelegramId()))
                                         .build()))
                 .build();
     }
@@ -196,7 +219,7 @@ public class ManageUserActionsView {
                     InlineKeyboardButton
                             .builder()
                             .text(user.getTelegramUsername())
-                            .callbackData(openBalanceRequest(user))
+                            .callbackData(openBalanceRequest(user.getTelegramId()))
                             .build());
             return row;
         }).toList();
@@ -219,11 +242,16 @@ public class ManageUserActionsView {
                                         .builder()
                                         .text(StaticLabels.TO_MAIN_MENU)
                                         .callbackData(InlineMenuCallbacks.TO_MAIN_MENU)
+                                        .build(),
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text(StaticLabels.GO_BACK)
+                                        .callbackData(InlineMenuCallbacks.GO_BACK)
                                         .build()))
                 .build();
     }
 
-    private String openBalanceRequest(AppUser user) {
-        return OPEN_BALANCE + user.getTelegramId();
+    private String openBalanceRequest(Long userId) {
+        return OPEN_BALANCE + userId;
     }
 }

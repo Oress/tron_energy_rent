@@ -61,7 +61,7 @@ public class ManageGroupNewGroupView {
                 .chatId(callbackQuery.getMessage().getChatId())
                 .messageId(callbackQuery.getMessage().getMessageId())
                 .text(MSG_MANAGE_GROUPS_ADD_PROMPT_LABEL)
-                .replyMarkup(getManageGroupsNewGroupMarkup())
+                .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
         tgClient.execute(message);
     }
@@ -84,24 +84,9 @@ public class ManageGroupNewGroupView {
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
                 .text(MSG_MANAGE_GROUPS_ADD_SUCCESS)
-                .replyMarkup(commonViews.getToMainMenuMarkup())
+                .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
         tgClient.execute(message);
-    }
-
-    private InlineKeyboardMarkup getManageGroupsNewGroupMarkup() {
-        return InlineKeyboardMarkup
-                .builder()
-                .keyboardRow(
-                        new InlineKeyboardRow(
-                                InlineKeyboardButton
-                                        .builder()
-                                        .text(StaticLabels.TO_MAIN_MENU)
-                                        .callbackData(InlineMenuCallbacks.TO_MAIN_MENU)
-                                        .build())
-
-                )
-                .build();
     }
 
     private ReplyKeyboardMarkup getManageGroupsNewGroupPromptUsersMarkup() {
@@ -144,6 +129,11 @@ public class ManageGroupNewGroupView {
                                         .builder()
                                         .text(StaticLabels.TO_MAIN_MENU)
                                         .callbackData(InlineMenuCallbacks.TO_MAIN_MENU)
+                                        .build(),
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text(StaticLabels.GO_BACK)
+                                        .callbackData(InlineMenuCallbacks.GO_BACK)
                                         .build()))
                 .build();
     }

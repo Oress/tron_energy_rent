@@ -8,9 +8,11 @@ import org.ipan.nrgyrent.domain.model.repository.BalanceRepo;
 import org.ipan.nrgyrent.telegram.InlineMenuCallbacks;
 import org.ipan.nrgyrent.telegram.States;
 import org.ipan.nrgyrent.telegram.TelegramMessages;
+import org.ipan.nrgyrent.telegram.state.BalanceEdit;
 import org.ipan.nrgyrent.telegram.state.TelegramState;
 import org.ipan.nrgyrent.telegram.state.UserState;
 import org.ipan.nrgyrent.telegram.statetransitions.MatchState;
+import org.ipan.nrgyrent.telegram.statetransitions.MatchStates;
 import org.ipan.nrgyrent.telegram.statetransitions.TransitionHandler;
 import org.ipan.nrgyrent.telegram.statetransitions.UpdateType;
 import org.ipan.nrgyrent.telegram.views.ManageGroupActionsView;
@@ -39,13 +41,26 @@ public class ManageGroupSearchHandler {
         telegramMessages.manageGroupSearchView().updMenuToManageGroupsSearchResult(firstPage, userState);
     }
 
-    @MatchState(state = States.ADMIN_MANAGE_GROUPS_SEARCH, updateTypes = UpdateType.CALLBACK_QUERY)
+    @MatchStates({
+        @MatchState(state = States.ADMIN_MANAGE_GROUPS_SEARCH, updateTypes = UpdateType.CALLBACK_QUERY),
+        @MatchState(state = States.ADMIN_MANAGE_GROUPS_ACTION_PROMPT_NEW_BALANCE, callbackData = InlineMenuCallbacks.GO_BACK),
+        @MatchState(state = States.ADMIN_MANAGE_GROUPS_ACTION_PROMPT_NEW_LABEL, callbackData = InlineMenuCallbacks.GO_BACK),
+        @MatchState(state = States.ADMIN_MANAGE_GROUPS_ACTION_ADD_USERS, callbackData = InlineMenuCallbacks.GO_BACK),
+        @MatchState(state = States.ADMIN_MANAGE_GROUPS_ACTION_REMOVE_USERS, callbackData = InlineMenuCallbacks.GO_BACK),
+        @MatchState(state = States.ADMIN_MANAGE_GROUPS_ACTION_USERS_REVIEW, callbackData = InlineMenuCallbacks.GO_BACK),
+
+    })
     public void openGroup(UserState userState, Update update) {
         CallbackQuery callbackQuery = update.getCallbackQuery();
         String data = callbackQuery.getData();
+        BalanceEdit balanceEdit = telegramState.getOrCreateBalanceEdit(userState.getTelegramId());
+
         if (data.startsWith(ManageGroupSearchView.OPEN_BALANCE)) {
             String balanceIdStr = data.split(ManageGroupSearchView.OPEN_BALANCE)[1];
             Long balanceId = Long.parseLong(balanceIdStr);
+            openGroupBalance(userState, callbackQuery, balanceId);
+        } else if (balanceEdit.getSelectedBalanceId() != null) {
+            Long balanceId = balanceEdit.getSelectedBalanceId();
             openGroupBalance(userState, callbackQuery, balanceId);
         }
     }

@@ -11,6 +11,7 @@ import org.ipan.nrgyrent.telegram.state.TelegramState;
 import org.ipan.nrgyrent.telegram.state.UserEdit;
 import org.ipan.nrgyrent.telegram.state.UserState;
 import org.ipan.nrgyrent.telegram.statetransitions.MatchState;
+import org.ipan.nrgyrent.telegram.statetransitions.MatchStates;
 import org.ipan.nrgyrent.telegram.statetransitions.TransitionHandler;
 import org.ipan.nrgyrent.telegram.statetransitions.UpdateType;
 import org.ipan.nrgyrent.telegram.views.ManageUserActionsView;
@@ -33,14 +34,18 @@ public class ManageUsersSearchHandler {
     private final AppUserRepo appUserRepo;
     private final ManageUserActionsView manageUserActionsView;
 
-    @MatchState(state = States.ADMIN_MANAGE_USERS, callbackData = InlineMenuCallbacks.MANAGE_USERS_SEARCH_RESET)
+    // @MatchState(state = States.ADMIN_MANAGE_USERS, callbackData = InlineMenuCallbacks.MANAGE_USERS_SEARCH_RESET)
     public void resetUserSearch(UserState userState, Update update) {
         Page<AppUser> firstPage = appUserRepo.findAllByTelegramUsernameContainingIgnoreCaseOrderByTelegramId("",
                 PageRequest.of(0, 10));
         manageUserActionsView.updMenuToManageUsersSearchResult(firstPage, userState);
     }
 
-    @MatchState(state = States.ADMIN_MANAGE_USERS, updateTypes = UpdateType.CALLBACK_QUERY)
+    @MatchStates({
+        @MatchState(state = States.ADMIN_MANAGE_USERS, updateTypes = UpdateType.CALLBACK_QUERY),
+        @MatchState(state = States.ADMIN_MANAGE_USER_ACTION_DEACTIVATE_CONFIRM, updateTypes = UpdateType.CALLBACK_QUERY),
+        @MatchState(state = States.ADMIN_MANAGE_USER_ACTION_PROMPT_NEW_BALANCE, updateTypes = UpdateType.CALLBACK_QUERY),
+    })
     public void openUserByCallback(UserState userState, Update update) {
         CallbackQuery callbackQuery = update.getCallbackQuery();
         String data = callbackQuery.getData();

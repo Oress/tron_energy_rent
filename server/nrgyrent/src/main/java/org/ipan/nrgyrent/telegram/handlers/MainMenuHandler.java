@@ -15,6 +15,7 @@ import org.ipan.nrgyrent.telegram.state.TelegramState;
 import org.ipan.nrgyrent.telegram.state.TransactionParams;
 import org.ipan.nrgyrent.telegram.state.UserState;
 import org.ipan.nrgyrent.telegram.statetransitions.MatchState;
+import org.ipan.nrgyrent.telegram.statetransitions.MatchStates;
 import org.ipan.nrgyrent.telegram.statetransitions.TransitionHandler;
 import org.ipan.nrgyrent.telegram.views.AdminViews;
 import org.ipan.nrgyrent.telegram.views.DepositViews;
@@ -67,7 +68,14 @@ public class MainMenuHandler {
     }
 
     // TODO: extra validation here ??
-    @MatchState(state = States.MAIN_MENU, callbackData = InlineMenuCallbacks.ADMIN_MENU)
+    @MatchStates({
+        @MatchState(state = States.MAIN_MENU, callbackData = InlineMenuCallbacks.ADMIN_MENU),
+        @MatchState(state = States.ADMIN_VIEW_ITRX_BALANCE, callbackData = InlineMenuCallbacks.GO_BACK),
+        @MatchState(state = States.ADMIN_VIEW_SWEEP_BALANCE, callbackData = InlineMenuCallbacks.GO_BACK),
+        @MatchState(state = States.ADMIN_VIEW_PROMPT_WITHDRAW_WALLET, callbackData = InlineMenuCallbacks.GO_BACK),
+        @MatchState(state = States.ADMIN_MANAGE_GROUPS, callbackData = InlineMenuCallbacks.GO_BACK),
+        @MatchState(state = States.ADMIN_MANAGE_USERS, callbackData = InlineMenuCallbacks.GO_BACK),
+    })
     public void handleAdminMenu(UserState userState, Update update) {
         adminViews.updMenuToAdminMenu(update.getCallbackQuery());
         telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.ADMIN_MENU));

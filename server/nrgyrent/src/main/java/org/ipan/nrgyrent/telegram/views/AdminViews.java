@@ -87,7 +87,7 @@ public class AdminViews {
                 .chatId(callbackQuery.getMessage().getChatId())
                 .messageId(callbackQuery.getMessage().getMessageId())
                 .text(getItrxBalanceMessage(apiUsageResponse))
-                .replyMarkup(commonViews.getToMainMenuMarkup())
+                .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
         tgClient.execute(message);
     }
@@ -100,7 +100,7 @@ public class AdminViews {
                 .chatId(callbackQuery.getMessage().getChatId())
                 .messageId(callbackQuery.getMessage().getMessageId())
                 .text(getSweepBalanceMessage(results))
-                .replyMarkup(commonViews.getToMainMenuMarkup())
+                .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
         tgClient.execute(message);
     }
@@ -214,9 +214,12 @@ public class AdminViews {
                                         .builder()
                                         .text(StaticLabels.TO_MAIN_MENU)
                                         .callbackData(InlineMenuCallbacks.TO_MAIN_MENU)
-                                        .build())
-
-                )
+                                        .build(),
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text(StaticLabels.GO_BACK)
+                                        .callbackData(InlineMenuCallbacks.GO_BACK)
+                                        .build()))
                 .build();
     }
 }

@@ -39,7 +39,6 @@ public class ManageGroupSearchView {
     private static final String MANAGE_GROUPS_ADD_NEW = "➕ Добавить группу";
 
     private final TelegramClient tgClient;
-    private final CommonViews commonViews;
 
     @SneakyThrows
     public void updMenuToManageGroupsMenu(CallbackQuery callbackQuery) {
@@ -68,8 +67,8 @@ public class ManageGroupSearchView {
         tgClient.execute(message);
     }
 
-    private String openBalanceRequest(Balance balance) {
-        return OPEN_BALANCE + balance.getId();
+    public String openBalanceRequest(Long balanceId) {
+        return OPEN_BALANCE + balanceId;
     }
 
     private InlineKeyboardMarkup getManageGroupsSearchPageMarkup(Page<Balance> page) {
@@ -78,7 +77,7 @@ public class ManageGroupSearchView {
                     InlineKeyboardButton
                             .builder()
                             .text(balance.getLabel())
-                            .callbackData(openBalanceRequest(balance))
+                            .callbackData(openBalanceRequest(balance.getId()))
                             .build());
             return row;
         }).toList();
@@ -101,6 +100,11 @@ public class ManageGroupSearchView {
                                         .builder()
                                         .text(StaticLabels.TO_MAIN_MENU)
                                         .callbackData(InlineMenuCallbacks.TO_MAIN_MENU)
+                                        .build(),
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text(StaticLabels.GO_BACK)
+                                        .callbackData(InlineMenuCallbacks.GO_BACK)
                                         .build()))
                 .build();
     }
@@ -128,6 +132,11 @@ public class ManageGroupSearchView {
                                         .builder()
                                         .text(StaticLabels.TO_MAIN_MENU)
                                         .callbackData(InlineMenuCallbacks.TO_MAIN_MENU)
+                                        .build(),
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text(StaticLabels.GO_BACK)
+                                        .callbackData(InlineMenuCallbacks.GO_BACK)
                                         .build()))
                 .build();
     }

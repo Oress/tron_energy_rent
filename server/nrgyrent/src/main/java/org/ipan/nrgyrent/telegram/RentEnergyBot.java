@@ -46,16 +46,6 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
     private TelegramMessages telegramMessages;
     private UserService userService;
 
-    private final MainMenuHandler mainMenuHandler;
-    private final UserWalletsHandler userWalletsHandler;
-    private final TransactionsHandler transactionsHandler;
-    private final AdminMenuHandler adminMenuHandler;
-    private final ManageGroupSearchHandler manageGroupSearchHandler;
-    private final ManageGroupNewGroupHandler manageGroupNewGroupHandler;
-    private final ManageGroupsHandler manageGroupsHandler;
-    private final ManageGroupActionsHandler manageGroupActionsHandler;
-    private final ManageUsersSearchHandler manageUsersSearchHandler;
-    private final UsersActionHandler usersActionHandler;
     private final StateHandlerRegistry stateHandlerRegistry;
 
     @Override

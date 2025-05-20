@@ -34,7 +34,7 @@ public class UsersActionHandler {
 
     @MatchState(state = States.ADMIN_MANAGE_USERS_ACTION_PREVIEW, callbackData = InlineMenuCallbacks.MANAGE_USER_ACTION_DEACTIVATE)
     public void startDeactivateUser(UserState userState, Update update) {
-        manageUserActionsView.confirmDeactivateUserMsg(update.getCallbackQuery());
+        manageUserActionsView.confirmDeactivateUserMsg(userState, update.getCallbackQuery());
         telegramState.updateUserState(userState.getTelegramId(),
                 userState.withState(States.ADMIN_MANAGE_USER_ACTION_DEACTIVATE_CONFIRM));
     }
@@ -50,7 +50,7 @@ public class UsersActionHandler {
         telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.ADMIN_MANAGE_USER_ACTION_DEACTIVATE_SUCCESS));
     }
 
-    @MatchState(state = States.ADMIN_MANAGE_USER_ACTION_DEACTIVATE_CONFIRM, callbackData = InlineMenuCallbacks.CONFIRM_NO)
+    // @MatchState(state = States.ADMIN_MANAGE_USER_ACTION_DEACTIVATE_CONFIRM, callbackData = InlineMenuCallbacks.CONFIRM_NO)
     public void declineDeactivateUser(UserState userState, Update update) {
         UserEdit openUser = telegramState.getOrCreateUserEdit(userState.getTelegramId());
         manageUsersSearchHandler.openUser(userState, update.getCallbackQuery(), openUser.getSelectedUserId());
@@ -58,7 +58,7 @@ public class UsersActionHandler {
 
     @MatchState(state = States.ADMIN_MANAGE_USERS_ACTION_PREVIEW, callbackData = InlineMenuCallbacks.MANAGE_USER_ACTION_ADJUST_BALANCE_MANUALLY)
     public void startAdjustBalanceManually(UserState userState, Update update) {
-        manageUserActionsView.promptNewUserBalance(update.getCallbackQuery());
+        manageUserActionsView.promptNewUserBalance(userState, update.getCallbackQuery());
         telegramState.updateUserState(userState.getTelegramId(),
                 userState.withState(States.ADMIN_MANAGE_USER_ACTION_PROMPT_NEW_BALANCE));
     }

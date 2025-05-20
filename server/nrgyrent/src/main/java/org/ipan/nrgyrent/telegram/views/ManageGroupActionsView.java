@@ -121,7 +121,7 @@ public class ManageGroupActionsView {
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
                 .text(MSG_GROUP_USERS_REMOVED)
-                .replyMarkup(commonViews.getToMainMenuMarkup())
+                .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
         tgClient.execute(message);
     }
@@ -133,7 +133,7 @@ public class ManageGroupActionsView {
                 .chatId(callbackQuery.getMessage().getChatId())
                 .messageId(callbackQuery.getMessage().getMessageId())
                 .text(MSG_GROUP_PROMPT_REMOVE_USERS)
-                .replyMarkup(commonViews.getToMainMenuMarkup())
+                .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
         tgClient.execute(message);
     }
@@ -156,7 +156,7 @@ public class ManageGroupActionsView {
                 .chatId(callbackQuery.getMessage().getChatId())
                 .messageId(callbackQuery.getMessage().getMessageId())
                 .text(MSG_GROUP_PROMPT_NEW_USERS)
-                .replyMarkup(commonViews.getToMainMenuMarkup())
+                .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
         tgClient.execute(message);
     }
@@ -179,7 +179,7 @@ public class ManageGroupActionsView {
                 .chatId(callbackQuery.getMessage().getChatId())
                 .messageId(callbackQuery.getMessage().getMessageId())
                 .text(MSG_GROUP_PROMPT_NEW_LABEL)
-                .replyMarkup(commonViews.getToMainMenuMarkup())
+                .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
         tgClient.execute(message);
     }
@@ -191,7 +191,7 @@ public class ManageGroupActionsView {
                 .chatId(callbackQuery.getMessage().getChatId())
                 .messageId(callbackQuery.getMessage().getMessageId())
                 .text(MSG_GROUP_PROMPT_NEW_BALANCE)
-                .replyMarkup(commonViews.getToMainMenuMarkup())
+                .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
         tgClient.execute(message);
     }
@@ -203,7 +203,7 @@ public class ManageGroupActionsView {
                 .chatId(callbackQuery.getMessage().getChatId())
                 .messageId(callbackQuery.getMessage().getMessageId())
                 .text(getUsersList(users))
-                .replyMarkup(commonViews.getToMainMenuMarkup())
+                .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
         tgClient.execute(message);
     }
@@ -256,8 +256,8 @@ public class ManageGroupActionsView {
                                         .build()))
                 .build();
     }
-    
-private ReplyKeyboardMarkup promptAddUsersMarkup() {
+
+    private ReplyKeyboardMarkup promptAddUsersMarkup() {
         return ReplyKeyboardMarkup
                 .builder()
                 .isPersistent(false)
@@ -354,15 +354,21 @@ private ReplyKeyboardMarkup promptAddUsersMarkup() {
                                         .builder()
                                         .text(StaticLabels.TO_MAIN_MENU)
                                         .callbackData(InlineMenuCallbacks.TO_MAIN_MENU)
+                                        .build(),
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text(StaticLabels.GO_BACK)
+                                        .callbackData(InlineMenuCallbacks.GO_BACK)
                                         .build()))
                 .build();
     }
 
     private String getUsersList(Set<AppUser> users) {
-        String usersStr = users.isEmpty() ? "Пользователей нет" : users.stream()
-                .map(user -> String.format("ID: %s, Логин: %s, Имя: %s", user.getTelegramId(),
-                        user.getTelegramUsername(), user.getTelegramFirstName()))
-                .collect(Collectors.joining("\n"));
+        String usersStr = users.isEmpty() ? "Пользователей нет"
+                : users.stream()
+                        .map(user -> String.format("ID: %s, Логин: %s, Имя: %s", user.getTelegramId(),
+                                user.getTelegramUsername(), user.getTelegramFirstName()))
+                        .collect(Collectors.joining("\n"));
 
         return """
                 👥 Список пользователей группы
