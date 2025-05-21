@@ -33,13 +33,13 @@ public class SweepDepositToCollectionWalletJob {
         int numOfBatches = collectionWallets.size();
 
         List<Balance> balances = balanceRepo.findAllByIsActive(true);
-        int batchSize = balances.size() < numOfBatches 
-            ? numOfBatches 
-            : balances.size() / numOfBatches;
-        for (int i = 0; i < balances.size(); i+= batchSize) {
-            CollectionWallet collectionWallet = collectionWallets.get(i);
-            List<Balance> batch = balances.subList(i * batchSize, Math.min((i + 1) * batchSize, balances.size()));
+        int batchSize = balances.size() < numOfBatches
+            ? numOfBatches
+            : (int) Math.ceil(balances.size() / (double) numOfBatches);
 
+        for (int i = 0, j = 0; i < balances.size(); i += batchSize, j++) {
+            CollectionWallet collectionWallet = collectionWallets.get(j);
+            List<Balance> batch = balances.subList(i, Math.min(i + batchSize, balances.size()));
             sweepHelper.processBatch(collectionWallet, batch);
         }
     }
