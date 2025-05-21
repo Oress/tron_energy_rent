@@ -57,12 +57,12 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
 
         logger.info("User state: {}", userState);
 
-        if (handleStartState(userState, update)) {
+        AppUser byId = userService.getById(userId);
+        if (byId != null && Boolean.TRUE.equals(byId.getDisabled())) {
             return;
         }
 
-        AppUser byId = userService.getById(userId);
-        if (byId != null && Boolean.TRUE.equals(byId.getDisabled())) {
+        if (handleStartState(userState, update)) {
             return;
         }
 
