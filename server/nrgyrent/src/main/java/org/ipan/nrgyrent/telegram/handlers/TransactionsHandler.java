@@ -13,6 +13,7 @@ import org.ipan.nrgyrent.domain.service.UserWalletService;
 import org.ipan.nrgyrent.domain.service.commands.orders.AddOrUpdateOrderCommand;
 import org.ipan.nrgyrent.itrx.AppConstants;
 import org.ipan.nrgyrent.itrx.InactiveAddressException;
+import org.ipan.nrgyrent.itrx.ItrxInsufficientFundsException;
 import org.ipan.nrgyrent.itrx.ItrxService;
 import org.ipan.nrgyrent.itrx.dto.EstimateOrderAmountResponse;
 import org.ipan.nrgyrent.itrx.dto.PlaceOrderResponse;
@@ -32,9 +33,11 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.message.Message;
 
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @AllArgsConstructor
 @TransitionHandler
+@Slf4j
 public class TransactionsHandler {
     private static final int ITRX_OK_CODE = 0;
 
@@ -149,7 +152,7 @@ public class TransactionsHandler {
             UUID correlationId = UUID.randomUUID();
             EstimateOrderAmountResponse estimateOrderResponse = itrxService.estimateOrderPrice(energyAmount, duration,
                     walletAddress);
-            
+
             Order pendingOrder = null;
             try {
                 pendingOrder = orderService.createPendingOrder(
@@ -165,7 +168,6 @@ public class TransactionsHandler {
                                 // .serial(placeOrderResponse.getSerial())
                                 .build());
 
-                // TODO: handle exceptions, network errors, etc.
                 PlaceOrderResponse placeOrderResponse = itrxService.placeOrder(energyAmount, duration, walletAddress,
                         correlationId);
 
@@ -174,8 +176,9 @@ public class TransactionsHandler {
                             AddOrUpdateOrderCommand.builder()
                                     .correlationId(correlationId.toString())
                                     .build());
-                    transactionsViews.notEnoughBalance(userState);
-                    telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.TRANSACTION_ERROR));
+                    transactionsViews.somethingWentWrong(userState);
+                    telegramState.updateUserState(userState.getTelegramId(),
+                            userState.withState(States.TRANSACTION_ERROR));
                     return;
                 }
 
@@ -195,6 +198,24 @@ public class TransactionsHandler {
                                     .correlationId(correlationId.toString())
                                     .build());
                 }
+            } catch (ItrxInsufficientFundsException e) {
+                transactionsViews.itrxBalanceNotEnoughFunds(userState);
+                telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.TRANSACTION_ERROR));
+
+                if (pendingOrder != null) {
+                    orderService.refundOrder(
+                            AddOrUpdateOrderCommand.builder()
+                                    .correlationId(correlationId.toString())
+                                    .build());
+                }
+            } catch (Exception e) {
+                logger.error("Error during transaction", e);
+                orderService.refundOrder(
+                        AddOrUpdateOrderCommand.builder()
+                                .correlationId(correlationId.toString())
+                                .build());
+                transactionsViews.somethingWentWrong(userState);
+                telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.TRANSACTION_ERROR));
             }
         }
     }

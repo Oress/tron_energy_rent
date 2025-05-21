@@ -139,6 +139,19 @@ public class TransactionsViews {
 
     @Retryable
     @SneakyThrows
+    public void itrxBalanceNotEnoughFunds(UserState userState) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
+                .text("❌ Сервис временно недоступен. Пожалуйста, свяжитесь с администратором.")
+                .replyMarkup(commonViews.getToMainMenuMarkup())
+                .build();
+        tgClient.execute(message);
+    }
+
+    @Retryable
+    @SneakyThrows
     public void updMenuToTransactionInProgress(UserState userState) {
         EditMessageText message = EditMessageText
                 .builder()

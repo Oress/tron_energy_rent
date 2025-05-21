@@ -11,7 +11,6 @@ import org.ipan.nrgyrent.itrx.dto.ApiUsageResponse;
 import org.ipan.nrgyrent.itrx.dto.EstimateOrderAmountResponse;
 import org.ipan.nrgyrent.itrx.dto.PlaceOrderResponse;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
@@ -36,7 +35,7 @@ public class RestClient {
 
     // Rental period, 1H/1D/3D/30D
     @SneakyThrows
-    @Retryable(noRetryFor = {InactiveAddressException.class})
+    // @Retryable(noRetryFor = {InactiveAddressException.class, ItrxInsufficientFundsException.class})
     public PlaceOrderResponse placeOrder(int energyAmnt, String period, String receiveAddress, String correlationId) {
         String timestamp = String.valueOf(Instant.now().getEpochSecond());
 
@@ -69,9 +68,15 @@ public class RestClient {
 
         PlaceOrderResponse placeOrderResponse = gson.fromJson(response.body().charStream(), PlaceOrderResponse.class);
 
-        if (placeOrderResponse.getDetail().contains("is the inactive address.")) {
-            logger.error("Transaction attempt to inactive address: {} correlation id: {}", placeOrderResponse.getDetail(), correlationId);
-            throw new InactiveAddressException("Transaction attempt to inactive address: " + placeOrderResponse.getDetail());
+        String details = placeOrderResponse.getDetail() != null ? placeOrderResponse.getDetail() : "";
+        if (details.contains("is the inactive address.")) {
+            logger.error("Transaction attempt to inactive address: {} correlation id: {}", details, correlationId);
+            throw new InactiveAddressException("Transaction attempt to inactive address: " + details);
+        }
+
+        if (details.contains("Insufficient funds")) {
+            logger.error("ITRX balance is insufficient: {} correlation id: {}", details, correlationId);
+            throw new ItrxInsufficientFundsException("ITRX balance is insufficient: " + details);
         }
 
         logger.info("Response" + placeOrderResponse);
