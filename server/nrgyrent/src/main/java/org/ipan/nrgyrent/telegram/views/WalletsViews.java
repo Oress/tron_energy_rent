@@ -91,7 +91,7 @@ public class WalletsViews {
                 .chatId(callbackQuery.getMessage().getChatId())
                 .messageId(callbackQuery.getMessage().getMessageId())
                 .text(MSG_PROMPT_WALLET_ADDRESS)
-                .replyMarkup(commonViews.getToMainMenuMarkup())
+                .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
         tgClient.execute(message);
     }

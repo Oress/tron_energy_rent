@@ -86,7 +86,6 @@ public class OrderService {
         Balance balance = order.getBalance();
         balance.setSunBalance(balance.getSunBalance() + order.getSunAmount());
 
-        // TODO: Refund the order amount to the user
         return order;
     }
 

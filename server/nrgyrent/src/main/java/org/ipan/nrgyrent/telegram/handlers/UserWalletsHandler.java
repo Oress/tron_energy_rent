@@ -1,5 +1,6 @@
 package org.ipan.nrgyrent.telegram.handlers;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.ipan.nrgyrent.domain.model.UserWallet;
@@ -13,6 +14,7 @@ import org.ipan.nrgyrent.telegram.state.AddWalletState;
 import org.ipan.nrgyrent.telegram.state.TelegramState;
 import org.ipan.nrgyrent.telegram.state.UserState;
 import org.ipan.nrgyrent.telegram.statetransitions.MatchState;
+import org.ipan.nrgyrent.telegram.statetransitions.MatchStates;
 import org.ipan.nrgyrent.telegram.statetransitions.TransitionHandler;
 import org.ipan.nrgyrent.telegram.statetransitions.UpdateType;
 import org.ipan.nrgyrent.telegram.utils.WalletTools;
@@ -30,6 +32,17 @@ public class UserWalletsHandler {
     private final UserWalletService userWalletService;
     private final UserWalletRepo userWalletRepo;
     private final WalletsViews walletsViews;
+
+    @MatchStates({
+        @MatchState(state = States.MAIN_MENU, callbackData = InlineMenuCallbacks.WALLETS),
+        @MatchState(state = States.USER_WALLET_PREVIEW, callbackData = InlineMenuCallbacks.GO_BACK),
+        @MatchState(state = States.NEW_WALLET_PROMPT_ADDRESS, callbackData = InlineMenuCallbacks.GO_BACK)
+    })
+    public void viewUserWallets(UserState userState, Update update) {
+        List<UserWallet> wallets = userWalletService.getWallets(userState.getTelegramId());
+        walletsViews.updMenuToWalletsMenu(wallets, update.getCallbackQuery());
+        telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.WALLETS));
+    }
 
     @MatchState(state = States.WALLETS, callbackData = InlineMenuCallbacks.ADD_WALLETS)
     public void handleAddNewWallet(UserState userState, Update update) {

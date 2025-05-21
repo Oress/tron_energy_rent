@@ -34,11 +34,17 @@ public class ManageUsersSearchHandler {
     private final AppUserRepo appUserRepo;
     private final ManageUserActionsView manageUserActionsView;
 
-    // @MatchState(state = States.ADMIN_MANAGE_USERS, callbackData = InlineMenuCallbacks.MANAGE_USERS_SEARCH_RESET)
-    public void resetUserSearch(UserState userState, Update update) {
+    @MatchStates({
+        @MatchState(state = States.ADMIN_MENU, callbackData = InlineMenuCallbacks.MANAGE_USERS),
+        @MatchState(state = States.ADMIN_MANAGE_USERS, callbackData = InlineMenuCallbacks.MANAGE_USERS_SEARCH_RESET),
+        @MatchState(state = States.ADMIN_MANAGE_USERS_ACTION_PREVIEW, callbackData = InlineMenuCallbacks.GO_BACK),
+    })
+    public void showManageUsersMenu(UserState userState, Update update) {
         Page<AppUser> firstPage = appUserRepo.findAllByTelegramUsernameContainingIgnoreCaseOrderByTelegramId("",
                 PageRequest.of(0, 10));
         manageUserActionsView.updMenuToManageUsersSearchResult(firstPage, userState);
+        telegramState.updateUserState(userState.getTelegramId(),
+                userState.withState(States.ADMIN_MANAGE_USERS));
     }
 
     @MatchStates({

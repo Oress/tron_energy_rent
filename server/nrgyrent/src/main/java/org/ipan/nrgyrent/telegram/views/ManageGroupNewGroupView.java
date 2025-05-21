@@ -67,7 +67,19 @@ public class ManageGroupNewGroupView {
     }
 
     @SneakyThrows
-    public Message updMenuToManageGroupsAddPromptUsers(UserState userState) {
+    public void updMenuToManageGroupsAddPromptUsers(UserState userState) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
+                .text(MSG_MANAGE_GROUPS_ADD_PROMPT_USERS)
+                .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
+                .build();
+        tgClient.execute(message);
+    }
+    
+        @SneakyThrows
+    public Message sendAddPromptUsers(UserState userState) {
         SendMessage message = SendMessage
                 .builder()
                 .chatId(userState.getChatId())
@@ -92,6 +104,8 @@ public class ManageGroupNewGroupView {
     private ReplyKeyboardMarkup getManageGroupsNewGroupPromptUsersMarkup() {
         return ReplyKeyboardMarkup
                 .builder()
+                .isPersistent(false)
+                .resizeKeyboard(true)
                 .keyboardRow(
                         new KeyboardRow(
                                 KeyboardButton.builder()

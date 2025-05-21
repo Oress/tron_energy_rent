@@ -30,7 +30,6 @@ public class ManagedWalletService {
         this.key = Base64.getDecoder().decode(key);
     }
 
-    // TODO: Encrypt the private key
     public ManagedWallet generateManagedWallet() throws IOException {
         ManagedWallet managedWallet = new ManagedWallet();
 

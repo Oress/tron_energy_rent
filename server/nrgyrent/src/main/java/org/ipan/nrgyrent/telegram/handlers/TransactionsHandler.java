@@ -4,8 +4,10 @@ import java.util.List;
 import java.util.UUID;
 
 import org.ipan.nrgyrent.domain.exception.NotEnoughBalanceException;
+import org.ipan.nrgyrent.domain.model.AppUser;
 import org.ipan.nrgyrent.domain.model.UserWallet;
 import org.ipan.nrgyrent.domain.service.OrderService;
+import org.ipan.nrgyrent.domain.service.UserService;
 import org.ipan.nrgyrent.domain.service.UserWalletService;
 import org.ipan.nrgyrent.domain.service.commands.orders.AddOrUpdateOrderCommand;
 import org.ipan.nrgyrent.itrx.AppConstants;
@@ -37,8 +39,45 @@ public class TransactionsHandler {
     private final TelegramState telegramState;
     private final TransactionsViews transactionsViews;
     private final ItrxService itrxService;
+    private final UserService userService;
     private final OrderService orderService;
     private final UserWalletService userWalletService;
+
+    @MatchState(state = States.MAIN_MENU, callbackData = InlineMenuCallbacks.TRANSACTION_65k)
+    public void handleTransaction65k(UserState userState, Update update) {
+        proceedToTransactions(userState, update.getCallbackQuery(), AppConstants.ENERGY_65K);
+    }
+
+    @MatchState(state = States.MAIN_MENU, callbackData = InlineMenuCallbacks.TRANSACTION_131k)
+    public void handleTransaction131k(UserState userState, Update update) {
+        proceedToTransactions(userState, update.getCallbackQuery(), AppConstants.ENERGY_131K);
+    }
+
+    private void proceedToTransactions(UserState userState, CallbackQuery callbackQuery, Integer energyAmount) {
+        AppUser byId = userService.getById(userState.getTelegramId());
+        // If no group balance, proceed to
+        TransactionParams transactionParams = telegramState.getOrCreateTransactionParams(userState.getTelegramId());
+        boolean useGroupBalance = true;
+        if (byId.getGroupBalance() == null) {
+            useGroupBalance = false;
+            List<UserWallet> wallets = userWalletService.getWallets(userState.getTelegramId());
+
+            if (energyAmount == AppConstants.ENERGY_131K) {
+                transactionsViews.updMenuToTransaction131kMenu(wallets, callbackQuery);
+            } else {
+                transactionsViews.updMenuToTransaction65kMenu(wallets, callbackQuery);
+            }
+
+            telegramState.updateUserState(userState.getTelegramId(),
+                    userState.withState(States.TRANSACTION_PROMPT_WALLET));
+        } else {
+            transactionsViews.updMenuToPromptBalanceType(callbackQuery);
+            telegramState.updateUserState(userState.getTelegramId(),
+                    userState.withState(States.TRANSACTION_PROMPT_BALANCE_TYPE));
+        }
+        telegramState.updateTransactionParams(userState.getTelegramId(),
+                transactionParams.withGroupBalance(useGroupBalance).withEnergyAmount(energyAmount));
+    }
 
     @MatchStates({
         @MatchState(state = States.TRANSACTION_PROMPT_WALLET, updateTypes = UpdateType.CALLBACK_QUERY),

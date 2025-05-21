@@ -4,10 +4,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.ipan.nrgyrent.domain.model.AppUser;
 import org.ipan.nrgyrent.domain.model.CollectionWallet;
 import org.ipan.nrgyrent.domain.model.UserWallet;
-import org.ipan.nrgyrent.domain.model.repository.AppUserRepo;
 import org.ipan.nrgyrent.domain.model.repository.CollectionWalletRepo;
 import org.ipan.nrgyrent.domain.service.UserWalletService;
 import org.ipan.nrgyrent.itrx.RestClient;
@@ -23,13 +21,9 @@ import org.ipan.nrgyrent.telegram.statetransitions.TransitionHandler;
 import org.ipan.nrgyrent.telegram.statetransitions.UpdateType;
 import org.ipan.nrgyrent.telegram.utils.WalletTools;
 import org.ipan.nrgyrent.telegram.views.AdminViews;
-import org.ipan.nrgyrent.telegram.views.ManageGroupNewGroupView;
-import org.ipan.nrgyrent.telegram.views.ManageUserActionsView;
 import org.ipan.nrgyrent.trongrid.api.AccountApi;
 import org.ipan.nrgyrent.trongrid.model.AccountInfo;
 import org.ipan.nrgyrent.trongrid.model.V1AccountsAddressGet200Response;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.message.Message;
@@ -45,39 +39,23 @@ public class AdminMenuHandler {
     private final RestClient restClient;
     private final AccountApi accountApi;
     private final CollectionWalletRepo collectionWalletRepo;
-    private final AppUserRepo appUserRepo;
     private final UserWalletService userWalletService;
     private final AdminMenuHandlerHelper adminMenuHandlerHelper;
 
-    private final ManageGroupNewGroupView manageGroupNewGroupView;
-    private final ManageUserActionsView manageUserActionsView;
     private final AdminViews adminViews;
 
-
+    // TODO: extra validation here ??
     @MatchStates({
-        @MatchState(state = States.ADMIN_MENU, callbackData = InlineMenuCallbacks.MANAGE_GROUPS),
-        @MatchState(state = States.ADMIN_MANAGE_GROUPS_SEARCH, callbackData = InlineMenuCallbacks.GO_BACK),
-        @MatchState(state = States.ADMIN_MANAGE_GROUPS_ADD_PROMPT_LABEL, callbackData = InlineMenuCallbacks.GO_BACK),
-        @MatchState(state = States.ADMIN_MANAGE_GROUPS_ACTION_PREVIEW, callbackData = InlineMenuCallbacks.GO_BACK),
-        @MatchState(state = States.ADMIN_MANAGE_GROUPS_ADD_SUCCESS, callbackData = InlineMenuCallbacks.GO_BACK),
+        @MatchState(state = States.MAIN_MENU, callbackData = InlineMenuCallbacks.ADMIN_MENU),
+        @MatchState(state = States.ADMIN_VIEW_ITRX_BALANCE, callbackData = InlineMenuCallbacks.GO_BACK),
+        @MatchState(state = States.ADMIN_VIEW_SWEEP_BALANCE, callbackData = InlineMenuCallbacks.GO_BACK),
+        @MatchState(state = States.ADMIN_VIEW_PROMPT_WITHDRAW_WALLET, callbackData = InlineMenuCallbacks.GO_BACK),
+        @MatchState(state = States.ADMIN_MANAGE_GROUPS, callbackData = InlineMenuCallbacks.GO_BACK),
+        @MatchState(state = States.ADMIN_MANAGE_USERS, callbackData = InlineMenuCallbacks.GO_BACK),
     })
-    public void showManageGroupsMenu(UserState userState, Update update) {
-        manageGroupNewGroupView.updMenuToManageGroupsMenu(update.getCallbackQuery());
-        telegramState.updateUserState(userState.getTelegramId(),
-                userState.withState(States.ADMIN_MANAGE_GROUPS));
-    }
-
-    @MatchStates({
-        @MatchState(state = States.ADMIN_MENU, callbackData = InlineMenuCallbacks.MANAGE_USERS),
-        @MatchState(state = States.ADMIN_MANAGE_USERS, callbackData = InlineMenuCallbacks.MANAGE_USERS_SEARCH_RESET),
-        @MatchState(state = States.ADMIN_MANAGE_USERS_ACTION_PREVIEW, callbackData = InlineMenuCallbacks.GO_BACK),
-    })
-    public void showManageUsersMenu(UserState userState, Update update) {
-        Page<AppUser> firstPage = appUserRepo.findAllByTelegramUsernameContainingIgnoreCaseOrderByTelegramId("",
-                PageRequest.of(0, 10));
-        manageUserActionsView.updMenuToManageUsersSearchResult(firstPage, userState);
-        telegramState.updateUserState(userState.getTelegramId(),
-                userState.withState(States.ADMIN_MANAGE_USERS));
+    public void handleAdminMenu(UserState userState, Update update) {
+        adminViews.updMenuToAdminMenu(update.getCallbackQuery());
+        telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.ADMIN_MENU));
     }
 
     @MatchState(state = States.ADMIN_MENU, callbackData = InlineMenuCallbacks.MANAGE_ITRX_BALANCE)

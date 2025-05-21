@@ -68,7 +68,7 @@ public class WithdrawalOrderService {
         return withdrawalOrder;
     }
 
-    @Transactional
+/*     @Transactional
     public Order refundOrder(AddOrUpdateOrderCommand command) {
         logger.info("Refunding order: {}", command);
         Optional<Order> byCorrelationId = orderRepo.findByCorrelationId(command.getCorrelationId());
@@ -84,9 +84,8 @@ public class WithdrawalOrderService {
         Balance balance = order.getBalance();
         balance.setSunBalance(balance.getSunBalance() + order.getSunAmount());
 
-        // TODO: Refund the order amount to the user
         return order;
-    }
+    } */
 
 
     @Lookup
