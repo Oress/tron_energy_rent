@@ -103,7 +103,7 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
         Message message = update.getMessage();
         CallbackQuery callbackQuery = update.getCallbackQuery();
 
-        if (message != null && message.hasText()) {
+        if (message != null) {
             telegramMessages.deleteMessage(message);
         } else if (callbackQuery != null) {
             String data = callbackQuery.getData();
