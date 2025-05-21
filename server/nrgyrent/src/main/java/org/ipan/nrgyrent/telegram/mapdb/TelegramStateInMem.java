@@ -13,6 +13,8 @@ import org.mapdb.HTreeMap;
 import org.mapdb.Serializer;
 import org.springframework.stereotype.Service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 @Service
 public class TelegramStateInMem implements TelegramState {
     private final HTreeMap<Long, UserStateInMem> userStateMap;
@@ -22,35 +24,35 @@ public class TelegramStateInMem implements TelegramState {
     private final HTreeMap<Long, TransactionParamsInMem> transactionParamsMap;
     private final HTreeMap<Long, UserEditInMem> userEditMap;
 
-    public TelegramStateInMem(DB db) {
+    public TelegramStateInMem(DB db, ObjectMapper objectMapper) {
         this.userStateMap = db.hashMap("userState")
                 .keySerializer(Serializer.LONG)
-                .valueSerializer(new UserStateInMem.SerializerImpl())
+                .valueSerializer(new GenericSerializer<>(UserStateInMem.class, objectMapper))
                 .createOrOpen();
 
         this.addGroupStateMap = db.hashMap("addGroupState")
                 .keySerializer(Serializer.LONG)
-                .valueSerializer(new AddGroupStateInMem.SerializerImpl())
+                .valueSerializer(new GenericSerializer<>(AddGroupStateInMem.class, objectMapper))
                 .createOrOpen();
 
         this.balanceEditMap = db.hashMap("balanceEdit")
                 .keySerializer(Serializer.LONG)
-                .valueSerializer(new BalanceEditInMem.SerializerImpl())
+                .valueSerializer(new GenericSerializer<>(BalanceEditInMem.class, objectMapper))
                 .createOrOpen();
 
         this.addWalletStateMap = db.hashMap("addWalletState")
                 .keySerializer(Serializer.LONG)
-                .valueSerializer(new AddWalletStateInMem.SerializerImpl())
+                .valueSerializer(new GenericSerializer<>(AddWalletStateInMem.class, objectMapper))
                 .createOrOpen();
 
         this.transactionParamsMap = db.hashMap("transactionParams")
                 .keySerializer(Serializer.LONG)
-                .valueSerializer(new TransactionParamsInMem.SerializerImpl())
+                .valueSerializer(new GenericSerializer<>(TransactionParamsInMem.class, objectMapper))
                 .createOrOpen();
 
         this.userEditMap = db.hashMap("userEdit")
                 .keySerializer(Serializer.LONG)
-                .valueSerializer(new UserEditInMem.SerializerImpl())
+                .valueSerializer(new GenericSerializer<>(UserEditInMem.class, objectMapper))
                 .createOrOpen();
     }
 

@@ -11,10 +11,12 @@ import org.mapdb.Serializer;
 import lombok.Builder;
 import lombok.Value;
 import lombok.With;
+import lombok.extern.jackson.Jacksonized;
 
 @Value
 @With
 @Builder
+@Jacksonized
 public class BalanceEditInMem implements BalanceEdit {
     Long selectedBalanceId;
 
@@ -22,41 +24,5 @@ public class BalanceEditInMem implements BalanceEdit {
         return BalanceEditInMem.builder()
                 .selectedBalanceId(prototype.getSelectedBalanceId())
                 .build();
-    }
-
-    public static class SerializerImpl implements Serializer<BalanceEditInMem> {
-        private static final int version = 1;
-
-        public static final int FIELD_BALANCE_ID = 0b00000001;
-
-        @Override
-        public void serialize(@NotNull DataOutput2 out, @NotNull BalanceEditInMem value) throws IOException {
-            int fields = 0;
-
-            fields = value.selectedBalanceId != null ? (fields | FIELD_BALANCE_ID) : fields;
-
-            out.writeByte(version);
-            out.writeInt(fields);
-
-            if (value.selectedBalanceId != null) {
-                out.writeLong(value.selectedBalanceId);
-            }
-        }
-
-        @Override
-        public BalanceEditInMem deserialize(@NotNull DataInput2 input, int available) throws IOException {
-            int version = input.readByte();
-            int fields = input.readInt();
-
-            Long selectedBalanceId = null;
-
-            if ((fields & FIELD_BALANCE_ID) != 0) {
-                selectedBalanceId = input.readLong();
-            }
-
-            return BalanceEditInMem.builder()
-                    .selectedBalanceId(selectedBalanceId)
-                    .build();
-        }
     }
 }
