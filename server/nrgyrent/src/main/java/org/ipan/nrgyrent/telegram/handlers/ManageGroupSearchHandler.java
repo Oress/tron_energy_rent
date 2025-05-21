@@ -61,14 +61,30 @@ public class ManageGroupSearchHandler {
         if (data.startsWith(ManageGroupSearchView.OPEN_BALANCE)) {
             String balanceIdStr = data.split(ManageGroupSearchView.OPEN_BALANCE)[1];
             Long balanceId = Long.parseLong(balanceIdStr);
-            openGroupBalance(userState, callbackQuery, balanceId);
+            openGroupBalance(userState, balanceId);
         } else if (balanceEdit.getSelectedBalanceId() != null) {
             Long balanceId = balanceEdit.getSelectedBalanceId();
-            openGroupBalance(userState, callbackQuery, balanceId);
+            openGroupBalance(userState, balanceId);
         }
     }
 
-    @MatchState(state = States.ADMIN_MANAGE_GROUPS_SEARCH, updateTypes = UpdateType.MESSAGE)
+    @MatchStates({
+        @MatchState(state = States.MAIN_MENU, callbackData = InlineMenuCallbacks.MANAGE_GROUP),
+        @MatchState(state = States.MANAGER_GROUPS_ACTION_ADD_USERS, callbackData = InlineMenuCallbacks.GO_BACK),
+        @MatchState(state = States.MANAGER_GROUPS_ACTION_REMOVE_USERS, callbackData = InlineMenuCallbacks.GO_BACK),
+        @MatchState(state = States.MANAGER_GROUP_VIEW_USERS, callbackData = InlineMenuCallbacks.GO_BACK),
+    })
+    public void openGroupForManager(UserState userState, Update update) {
+        Long managingGroupId = userState.getManagingGroupId();
+
+        if (managingGroupId != null) {
+            openGroupBalanceForManager(userState, managingGroupId);
+        } else {
+            logger.error("Selected balance ID is null for user: {}", userState.getTelegramId());
+        }
+    }
+
+    @MatchState(forAdmin = true, state = States.ADMIN_MANAGE_GROUPS_SEARCH, updateTypes = UpdateType.MESSAGE)
     public void searchGroupByLabel(UserState userState, Update update) {
         Message message = update.getMessage();
         if (message.hasText()) {
@@ -89,15 +105,29 @@ public class ManageGroupSearchHandler {
         }
     }
 
-    public void openGroupBalance(UserState userState, CallbackQuery callbackQuery, Long balanceId) {
+    public void openGroupBalance(UserState userState, Long balanceId) {
         Optional<Balance> groupBalance = balanceRepo.findById(balanceId);
         if (groupBalance.isPresent()) {
             Balance balance = groupBalance.get();
-            manageGroupActionsView.updMenuToManageGroupActionsMenu(callbackQuery, balance);
+            manageGroupActionsView.updMenuToManageGroupActionsMenu(userState, balance);
             telegramState.updateBalanceEdit(userState.getTelegramId(), telegramState
                     .getOrCreateBalanceEdit(userState.getTelegramId()).withSelectedBalanceId(balanceId));
             telegramState.updateUserState(userState.getTelegramId(),
                     userState.withState(States.ADMIN_MANAGE_GROUPS_ACTION_PREVIEW));
+        } else {
+            logger.error("Group balance not found for ID: {}", balanceId);
+        }
+    }
+
+    public void openGroupBalanceForManager(UserState userState, Long balanceId) {
+        Optional<Balance> groupBalance = balanceRepo.findById(balanceId);
+        if (groupBalance.isPresent()) {
+            Balance balance = groupBalance.get();
+            manageGroupActionsView.updMenuToManageGroupActionsMenuForManager(userState, balance);
+            telegramState.updateBalanceEdit(userState.getTelegramId(), telegramState
+                    .getOrCreateBalanceEdit(userState.getTelegramId()).withSelectedBalanceId(balanceId));
+            telegramState.updateUserState(userState.getTelegramId(),
+                    userState.withState(States.MANAGER_GROUP_PREVIEW));
         } else {
             logger.error("Group balance not found for ID: {}", balanceId);
         }

@@ -5,9 +5,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 
+import org.ipan.nrgyrent.domain.model.UserRole;
 import org.ipan.nrgyrent.telegram.States;
+import org.ipan.nrgyrent.telegram.state.UserState;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
@@ -33,28 +36,33 @@ public class StateHandlerRegistry {
     }
 
 
-    private Predicate<Update> createPredicate(MatchState state) {
+    private BiPredicate<UserState, Update> createPredicate(MatchState state) {
+
+        BiPredicate<UserState, Update> predicate = (userState, update) -> true;
+
+        if (state.forAdmin()) {
+            predicate = (userState, update) -> UserRole.ADMIN.equals(userState.getRole());
+        }
+
         // Match by callback data
         if (state.callbackData() != null && !state.callbackData().isEmpty()) {
-            return update -> {
+            return predicate.and((userState, update) -> {
                 if (update.hasCallbackQuery()) {
                     String callbackData = update.getCallbackQuery().getData();
                     return callbackData.equals(state.callbackData());
                 }
                 return false;
-            };
+            });
         }
 
         // Match by update type
         if (state.updateTypes() == UpdateType.CALLBACK_QUERY) {
-            return update -> update.hasCallbackQuery();
+            return predicate.and(((userState, update) -> update.hasCallbackQuery()));
         } else if (state.updateTypes() == UpdateType.MESSAGE) {
-            return update -> update.hasMessage();
+            return predicate.and(((userState, update) -> update.hasMessage()));
         }
 
-        return update -> {
-            // Default case, return false for all updates
-            return false;
-        };
+        // Default case, return false for all updates
+        return (userState, update) -> {return false;};
     }
 }

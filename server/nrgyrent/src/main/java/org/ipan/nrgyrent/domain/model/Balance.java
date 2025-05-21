@@ -1,7 +1,6 @@
 package org.ipan.nrgyrent.domain.model;
 
 import java.time.Instant;
-import java.util.Set;
 
 import org.hibernate.annotations.CreationTimestamp;
 
@@ -12,9 +11,8 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.NamedAttributeNode;
-import jakarta.persistence.NamedEntityGraph;
-import jakarta.persistence.OneToMany;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
@@ -25,10 +23,6 @@ import lombok.Setter;
 @Getter
 @Setter
 @Table(name = "nrg_balances")
-@NamedEntityGraph(
-    name = "Balance.withUsers",
-    attributeNodes = @NamedAttributeNode(Balance_.USERS)
-)
 public class Balance {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "nrg_balance_seq")
@@ -40,8 +34,9 @@ public class Balance {
 
     private String label;
 
-    @OneToMany(mappedBy = AppUser_.GROUP_BALANCE)
-    private Set<AppUser> users;
+    @JoinColumn(name = "manager_id")
+    @OneToOne
+    private AppUser manager;
 
     @Enumerated(EnumType.STRING)
     private BalanceType type = BalanceType.INDIVIDUAL;

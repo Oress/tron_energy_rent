@@ -34,9 +34,9 @@ public class ManageUsersSearchHandler {
     private final ManageUserActionsView manageUserActionsView;
 
     @MatchStates({
-        @MatchState(state = States.ADMIN_MENU, callbackData = InlineMenuCallbacks.MANAGE_USERS),
-        @MatchState(state = States.ADMIN_MANAGE_USERS, callbackData = InlineMenuCallbacks.MANAGE_USERS_SEARCH_RESET),
-        @MatchState(state = States.ADMIN_MANAGE_USERS_ACTION_PREVIEW, callbackData = InlineMenuCallbacks.GO_BACK),
+        @MatchState(forAdmin = true, state = States.ADMIN_MENU, callbackData = InlineMenuCallbacks.MANAGE_USERS),
+        @MatchState(forAdmin = true, state = States.ADMIN_MANAGE_USERS, callbackData = InlineMenuCallbacks.MANAGE_USERS_SEARCH_RESET),
+        @MatchState(forAdmin = true, state = States.ADMIN_MANAGE_USERS_ACTION_PREVIEW, callbackData = InlineMenuCallbacks.GO_BACK),
     })
     public void showManageUsersMenu(UserState userState, Update update) {
         Page<AppUser> firstPage = appUserRepo.findAllByTelegramUsernameContainingIgnoreCaseOrderByTelegramId("",
@@ -47,9 +47,9 @@ public class ManageUsersSearchHandler {
     }
 
     @MatchStates({
-        @MatchState(state = States.ADMIN_MANAGE_USERS, updateTypes = UpdateType.CALLBACK_QUERY),
-        @MatchState(state = States.ADMIN_MANAGE_USER_ACTION_DEACTIVATE_CONFIRM, updateTypes = UpdateType.CALLBACK_QUERY),
-        @MatchState(state = States.ADMIN_MANAGE_USER_ACTION_PROMPT_NEW_BALANCE, updateTypes = UpdateType.CALLBACK_QUERY),
+        @MatchState(forAdmin = true, state = States.ADMIN_MANAGE_USERS, updateTypes = UpdateType.CALLBACK_QUERY),
+        @MatchState(forAdmin = true, state = States.ADMIN_MANAGE_USER_ACTION_DEACTIVATE_CONFIRM, updateTypes = UpdateType.CALLBACK_QUERY),
+        @MatchState(forAdmin = true, state = States.ADMIN_MANAGE_USER_ACTION_PROMPT_NEW_BALANCE, updateTypes = UpdateType.CALLBACK_QUERY),
     })
     public void openUserByCallback(UserState userState, Update update) {
         CallbackQuery callbackQuery = update.getCallbackQuery();
@@ -61,7 +61,7 @@ public class ManageUsersSearchHandler {
         }
     }
 
-    @MatchState(state = States.ADMIN_MANAGE_USERS, updateTypes = UpdateType.MESSAGE)
+    @MatchState(forAdmin = true, state = States.ADMIN_MANAGE_USERS, updateTypes = UpdateType.MESSAGE)
     public void searchUsersByUsername(UserState userState, Update update) {
         Message message = update.getMessage();
         if (message.hasText()) {

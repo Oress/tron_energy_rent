@@ -35,6 +35,7 @@
             <column name="deposit_address" type="text">
                 <constraints nullable="true" />
             </column>
+            <column name="manager_id" type="bigint" />
             <column name="type" type="text" defaultValue="INDIVIDUAL">
                 <constraints nullable="true" />
             </column>
@@ -97,6 +98,14 @@
             referencedTableName="nrg_balances"
             onDelete="SET NULL"
             referencedColumnNames="id" />
+    </changeSet>
+
+    <changeSet id="add foreign key constraint to nrg_balances" author="oress">
+        <addForeignKeyConstraint constraintName="fk_nrg_balances_manager_id"
+            baseTableName="nrg_balances"
+            baseColumnNames="manager_id"
+            referencedTableName="nrg_users"
+            referencedColumnNames="telegram_id" />
     </changeSet>
 
     <!-- This table stores the information about user preferred wallets(i.e. where to send energy) -->

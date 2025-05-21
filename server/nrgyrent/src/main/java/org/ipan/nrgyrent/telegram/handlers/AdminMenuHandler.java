@@ -45,19 +45,19 @@ public class AdminMenuHandler {
     private final AdminViews adminViews;
 
     @MatchStates({
-        @MatchState(state = States.MAIN_MENU, callbackData = InlineMenuCallbacks.ADMIN_MENU),
-        @MatchState(state = States.ADMIN_VIEW_ITRX_BALANCE, callbackData = InlineMenuCallbacks.GO_BACK),
-        @MatchState(state = States.ADMIN_VIEW_SWEEP_BALANCE, callbackData = InlineMenuCallbacks.GO_BACK),
-        @MatchState(state = States.ADMIN_VIEW_PROMPT_WITHDRAW_WALLET, callbackData = InlineMenuCallbacks.GO_BACK),
-        @MatchState(state = States.ADMIN_MANAGE_GROUPS, callbackData = InlineMenuCallbacks.GO_BACK),
-        @MatchState(state = States.ADMIN_MANAGE_USERS, callbackData = InlineMenuCallbacks.GO_BACK),
+        @MatchState(forAdmin = true, state = States.MAIN_MENU, callbackData = InlineMenuCallbacks.ADMIN_MENU),
+        @MatchState(forAdmin = true, state = States.ADMIN_VIEW_ITRX_BALANCE, callbackData = InlineMenuCallbacks.GO_BACK),
+        @MatchState(forAdmin = true, state = States.ADMIN_VIEW_SWEEP_BALANCE, callbackData = InlineMenuCallbacks.GO_BACK),
+        @MatchState(forAdmin = true, state = States.ADMIN_VIEW_PROMPT_WITHDRAW_WALLET, callbackData = InlineMenuCallbacks.GO_BACK),
+        @MatchState(forAdmin = true, state = States.ADMIN_MANAGE_GROUPS, callbackData = InlineMenuCallbacks.GO_BACK),
+        @MatchState(forAdmin = true, state = States.ADMIN_MANAGE_USERS, callbackData = InlineMenuCallbacks.GO_BACK),
     })
     public void handleAdminMenu(UserState userState, Update update) {
         adminViews.updMenuToAdminMenu(update.getCallbackQuery());
         telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.ADMIN_MENU));
     }
 
-    @MatchState(state = States.ADMIN_MENU, callbackData = InlineMenuCallbacks.MANAGE_ITRX_BALANCE)
+    @MatchState(forAdmin = true, state = States.ADMIN_MENU, callbackData = InlineMenuCallbacks.MANAGE_ITRX_BALANCE)
     public void showItrxBalance(UserState userState, Update update) {
         ApiUsageResponse apiStats = restClient.getApiStats();
         adminViews.itrxBalance(update.getCallbackQuery(), apiStats);
@@ -65,7 +65,7 @@ public class AdminMenuHandler {
                 userState.withState(States.ADMIN_VIEW_ITRX_BALANCE));
     }
 
-    @MatchState(state = States.ADMIN_MENU, callbackData = InlineMenuCallbacks.MANAGE_SWEEP_BALANCE)
+    @MatchState(forAdmin = true, state = States.ADMIN_MENU, callbackData = InlineMenuCallbacks.MANAGE_SWEEP_BALANCE)
     public void showSweepBalance(UserState userState, Update update) {
         List<CollectionWallet> activeSweepWallets = collectionWalletRepo.findAllByIsActive(true);
         Map<CollectionWallet, Long> sweepWalletsToBalance = new HashMap<>();
@@ -81,7 +81,7 @@ public class AdminMenuHandler {
                 userState.withState(States.ADMIN_VIEW_SWEEP_BALANCE));
     }
 
-    @MatchState(state = States.ADMIN_MENU, callbackData = InlineMenuCallbacks.MANAGE_WITHDRAW_TRX)
+    @MatchState(forAdmin = true, state = States.ADMIN_MENU, callbackData = InlineMenuCallbacks.MANAGE_WITHDRAW_TRX)
     public void showWithdrawTrxMenu(UserState userState, Update update) {
         TransactionParams transactionParams = telegramState
                 .getOrCreateTransactionParams(userState.getTelegramId());
@@ -94,13 +94,13 @@ public class AdminMenuHandler {
                 userState.withState(States.ADMIN_VIEW_PROMPT_WITHDRAW_WALLET));
     }
 
-    @MatchState(state = States.ADMIN_VIEW_PROMPT_WITHDRAW_WALLET, updateTypes = UpdateType.CALLBACK_QUERY)
+    @MatchState(forAdmin = true, state = States.ADMIN_VIEW_PROMPT_WITHDRAW_WALLET, updateTypes = UpdateType.CALLBACK_QUERY)
     public void handleWalletForWithdrawalCallback(UserState userState, Update update) {
         CallbackQuery callbackQuery = update.getCallbackQuery();
         tryMakeTransaction(userState, callbackQuery.getData());
     }
 
-    @MatchState(state = States.ADMIN_VIEW_PROMPT_WITHDRAW_WALLET, updateTypes = UpdateType.MESSAGE)
+    @MatchState(forAdmin = true, state = States.ADMIN_VIEW_PROMPT_WITHDRAW_WALLET, updateTypes = UpdateType.MESSAGE)
     public void handleWalletForWithdrawalMessage(UserState userState, Update update) {
         Message message = update.getMessage();
         if (message.hasText()) {

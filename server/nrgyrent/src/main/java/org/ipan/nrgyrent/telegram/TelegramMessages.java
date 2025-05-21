@@ -124,54 +124,54 @@ public class TelegramMessages {
 
     @Retryable
     @SneakyThrows
-    public Message sendMainMenu(Long chatId) {
+    public Message sendMainMenu(UserState userState, Long chatId) {
         SendMessage message = SendMessage
                 .builder()
                 .chatId(chatId)
                 .text(StaticLabels.MSG_MAIN_MENU_TEXT)
-                .replyMarkup(getMainMenuReplyMarkup())
+                .replyMarkup(getMainMenuReplyMarkup(userState.isManager(), false))
                 .build();
         return tgClient.execute(message);
     }
 
     @Retryable
     @SneakyThrows
-    public Message sendAdminMainMenu(Long chatId) {
+    public Message sendAdminMainMenu(UserState userState, Long chatId) {
         SendMessage message = SendMessage
                 .builder()
                 .chatId(chatId)
                 .text(StaticLabels.MSG_MAIN_MENU_TEXT)
-                .replyMarkup(getAdminMainMenuReplyMarkup())
+                .replyMarkup(getMainMenuReplyMarkup(userState.isManager(), true))
                 .build();
         return tgClient.execute(message);
     }
 
     @SneakyThrows
-    public void updateMsgToMainMenu(CallbackQuery callbackQuery) {
+    public void updateMsgToMainMenu(UserState userState) {
         EditMessageText message = EditMessageText
                 .builder()
-                .chatId(callbackQuery.getMessage().getChatId())
-                .messageId(callbackQuery.getMessage().getMessageId())
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
                 .text(StaticLabels.MSG_MAIN_MENU_TEXT)
-                .replyMarkup(getMainMenuReplyMarkup())
+                .replyMarkup(getMainMenuReplyMarkup(userState.isManager(), false))
                 .build();
         tgClient.execute(message);
     }
 
     @SneakyThrows
-    public void updateMsgToAdminMainMenu(CallbackQuery callbackQuery) {
+    public void updateMsgToAdminMainMenu(UserState userState, CallbackQuery callbackQuery) {
         EditMessageText message = EditMessageText
                 .builder()
                 .chatId(callbackQuery.getMessage().getChatId())
                 .messageId(callbackQuery.getMessage().getMessageId())
                 .text(StaticLabels.MSG_MAIN_MENU_TEXT)
-                .replyMarkup(getAdminMainMenuReplyMarkup())
+                .replyMarkup(getMainMenuReplyMarkup(userState.isManager(), true))
                 .build();
         tgClient.execute(message);
     }
 
-    private InlineKeyboardMarkup getMainMenuReplyMarkup() {
-        return InlineKeyboardMarkup
+    private InlineKeyboardMarkup getMainMenuReplyMarkup(Boolean isManager, Boolean isAdmin) {
+        var builder = InlineKeyboardMarkup
                 .builder()
                 .keyboardRow(
                         new InlineKeyboardRow(
@@ -213,61 +213,28 @@ public class TelegramMessages {
                                         .builder()
                                         .text(StaticLabels.WITHDRAW_TRX)
                                         .callbackData(InlineMenuCallbacks.WITHDRAW_TRX)
-                                        .build()))
-                .build();
-    }
+                                        .build()));
 
-    private InlineKeyboardMarkup getAdminMainMenuReplyMarkup() {
-        return InlineKeyboardMarkup
-                .builder()
-                .keyboardRow(
+        if (isManager) {
+                builder.keyboardRow(
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(StaticLabels.MENU_TRANSFER_ENERGY_65K)
-                                        .callbackData(InlineMenuCallbacks.TRANSACTION_65k)
-                                        .build()))
-                .keyboardRow(
-                        new InlineKeyboardRow(
-                                InlineKeyboardButton
-                                        .builder()
-                                        .text(StaticLabels.MENU_TRANSFER_ENERGY_131K)
-                                        .callbackData(InlineMenuCallbacks.TRANSACTION_131k)
-                                        .build()))
-                .keyboardRow(
-                        new InlineKeyboardRow(
-                                InlineKeyboardButton
-                                        .builder()
-                                        .text(StaticLabels.MENU_DEPOSIT)
-                                        .callbackData(InlineMenuCallbacks.DEPOSIT)
-                                        .build(),
-                                InlineKeyboardButton
-                                        .builder()
-                                        .text(StaticLabels.MENU_WALLETS)
-                                        .callbackData(InlineMenuCallbacks.WALLETS)
-                                        .build()))
-                .keyboardRow(
-                        new InlineKeyboardRow(
-                                InlineKeyboardButton
-                                        .builder()
-                                        .text(StaticLabels.MENU_HISTORY)
-                                        .callbackData(InlineMenuCallbacks.HISTORY)
-                                        .build()))
-                .keyboardRow(
-                        new InlineKeyboardRow(
-                                InlineKeyboardButton
-                                        .builder()
-                                        .text(StaticLabels.WITHDRAW_TRX)
-                                        .callbackData(InlineMenuCallbacks.WITHDRAW_TRX)
-                                        .build()))
-                .keyboardRow(
+                                        .text(StaticLabels.MENU_MANAGE_GROUP)
+                                        .callbackData(InlineMenuCallbacks.MANAGE_GROUP)
+                                        .build()));
+        }
+
+        if (isAdmin) {
+                builder.keyboardRow(
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
                                         .text(StaticLabels.MENU_ADMIN)
                                         .callbackData(InlineMenuCallbacks.ADMIN_MENU)
-                                        .build()))
-                .build();
+                                        .build()));
+        }
+        return builder.build();
     }
 
     private InlineKeyboardMarkup getOrderSuccessNotificationMarkup() {

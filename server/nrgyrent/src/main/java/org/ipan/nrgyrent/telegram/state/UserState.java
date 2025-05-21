@@ -10,6 +10,7 @@ public interface UserState {
     States getState();
     Long getChatId();
     Integer getMenuMessageId();
+    Long getManagingGroupId();
     UserRole getRole();
     List<Integer> getMessagesToDelete();
 
@@ -19,4 +20,9 @@ public interface UserState {
     UserState withMenuMessageId(Integer value);
     UserState withRole(UserRole value);
     UserState withMessagesToDelete(List<Integer> value);
+    UserState withManagingGroupId(Long value);
+
+    default boolean isManager() {
+        return getManagingGroupId() != null;
+    }
 }

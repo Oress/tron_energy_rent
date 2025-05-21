@@ -1,6 +1,5 @@
 package org.ipan.nrgyrent.telegram.mapdb;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -8,10 +7,6 @@ import java.util.List;
 import org.ipan.nrgyrent.domain.model.UserRole;
 import org.ipan.nrgyrent.telegram.States;
 import org.ipan.nrgyrent.telegram.state.UserState;
-import org.jetbrains.annotations.NotNull;
-import org.mapdb.DataInput2;
-import org.mapdb.DataOutput2;
-import org.mapdb.Serializer;
 
 import lombok.Builder;
 import lombok.Value;
@@ -29,6 +24,7 @@ public class UserStateInMem implements UserState {
     Integer menuMessageId;
     UserRole role;
     List<Integer> messagesToDelete;
+    Long managingGroupId; // The group the user is managing, indicates the user is a manager
 
     public static UserStateInMem of(UserState prototype) {
         return UserStateInMem.builder()
@@ -38,6 +34,7 @@ public class UserStateInMem implements UserState {
                 .menuMessageId(prototype.getMenuMessageId())
                 .role(prototype.getRole())
                 .messagesToDelete(prototype.getMessagesToDelete() == null ? Collections.emptyList() : new ArrayList<>(prototype.getMessagesToDelete()))
+                .managingGroupId(prototype.getManagingGroupId())
                 .build();
     }
 }

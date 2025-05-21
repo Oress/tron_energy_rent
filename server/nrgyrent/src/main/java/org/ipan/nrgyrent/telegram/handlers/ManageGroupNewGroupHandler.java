@@ -5,6 +5,7 @@ import java.util.List;
 import org.ipan.nrgyrent.domain.exception.UserAlreadyHasGroupBalanceException;
 import org.ipan.nrgyrent.domain.model.Balance;
 import org.ipan.nrgyrent.domain.service.BalanceService;
+import org.ipan.nrgyrent.telegram.InlineMenuCallbacks;
 import org.ipan.nrgyrent.telegram.States;
 import org.ipan.nrgyrent.telegram.TelegramMessages;
 import org.ipan.nrgyrent.telegram.state.AddGroupState;
@@ -34,8 +35,15 @@ public class ManageGroupNewGroupHandler {
     private final ManageGroupNewGroupView manageGroupNewGroupView;
     private final ManageGroupActionsView manageGroupActionsView;
 
-    @MatchState(state = States.ADMIN_MANAGE_GROUPS_ADD_PROMPT_LABEL, updateTypes = UpdateType.MESSAGE)
-    public void handleAddGroupPromptLabel(UserState userState, Update update) {
+    @MatchState(forAdmin = true, state = States.ADMIN_MANAGE_GROUPS, callbackData = InlineMenuCallbacks.MANAGE_GROUPS_ADD)
+    public void start_promptLabel(UserState userState, Update update) {
+        telegramMessages.manageGroupView().updMenuToManageGroupsAddPromptLabel(update.getCallbackQuery());
+        telegramState.updateUserState(userState.getTelegramId(),
+                userState.withState(States.ADMIN_MANAGE_GROUPS_ADD_PROMPT_LABEL));
+    }
+
+    @MatchState(forAdmin = true, state = States.ADMIN_MANAGE_GROUPS_ADD_PROMPT_LABEL, updateTypes = UpdateType.MESSAGE)
+    public void handleLabel_promptManager(UserState userState, Update update) {
         Message message = update.getMessage();
         if (message.hasText()) {
             String newGroupLabel = message.getText();
@@ -50,27 +58,28 @@ public class ManageGroupNewGroupHandler {
             AddGroupState addGroupState = telegramState.getOrCreateAddGroupState(telegramId);
             telegramState.updateAddGroupState(telegramId, addGroupState.withLabel(newGroupLabel));
 
-            manageGroupNewGroupView.updMenuToManageGroupsAddPromptUsers(userState);
-            Message promptMsg = manageGroupNewGroupView.sendAddPromptUsers(userState);
+            manageGroupNewGroupView.updMenuPromptManager(userState);
+            Message promptMsg = manageGroupNewGroupView.sendAddPromptManager(userState);
             telegramState.updateUserState(telegramId, userState
                     .withMessagesToDelete(List.of(promptMsg.getMessageId()))
-                    .withState(States.ADMIN_MANAGE_GROUPS_ADD_PROMPT_USERS));
+                    .withState(States.ADMIN_MANAGE_GROUPS_ADD_PROMPT_MANAGER));
         }
     }
 
-    @MatchState(state = States.ADMIN_MANAGE_GROUPS_ADD_PROMPT_USERS, updateTypes = UpdateType.MESSAGE)
-    public void handleAddGroupPromptUsers(UserState userState, Update update) {
+    @MatchState(forAdmin = true, state = States.ADMIN_MANAGE_GROUPS_ADD_PROMPT_MANAGER, updateTypes = UpdateType.MESSAGE)
+    public void handleManager_end(UserState userState, Update update) {
         Message message = update.getMessage();
         if (message != null && message.hasUserShared()) {
             telegramMessages.deleteMessage(message);
 
             UsersShared usersShared = message.getUsersShared();
-            List<UserShared> users = usersShared.getUsers();
+            UserShared manager = usersShared.getUsers().getFirst();
 
             AddGroupState addGroupState = telegramState.getOrCreateAddGroupState(userState.getTelegramId());
-            List<Long> userIds = users.stream().map(user -> user.getUserId()).toList();
+            // List<Long> userIds = users.stream().map(user -> user.getUserId()).toList();
+            Long managerId = manager.getUserId();
             try {
-                Balance groupBalance = balanceService.createGroupBalance(addGroupState.getLabel(), userIds);
+                Balance groupBalance = balanceService.createGroupBalance(addGroupState.getLabel(), managerId);
             } catch (UserAlreadyHasGroupBalanceException e) {
                 // TODO: send message to user that some users are already in the group, and
                 // specify which ones

@@ -3,7 +3,6 @@ package org.ipan.nrgyrent;
 import org.ipan.nrgyrent.domain.service.CollectionWalletService;
 import org.ipan.nrgyrent.trongrid.ApiClient;
 import org.ipan.nrgyrent.trongrid.api.AccountApi;
-import org.ipan.nrgyrent.trongrid.api.TransactionApi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;

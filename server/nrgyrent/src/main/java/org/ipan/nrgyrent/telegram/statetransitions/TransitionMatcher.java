@@ -1,8 +1,9 @@
 package org.ipan.nrgyrent.telegram.statetransitions;
 
 import java.lang.reflect.Method;
-import java.util.function.Predicate;
+import java.util.function.BiPredicate;
 
+import org.ipan.nrgyrent.telegram.state.UserState;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
 import lombok.AllArgsConstructor;
@@ -11,13 +12,13 @@ import lombok.Getter;
 
 @AllArgsConstructor
 public class TransitionMatcher {
-    private final Predicate<Update> test;
+    private final BiPredicate<UserState, Update> test;
     @Getter
     private final Object bean;
     @Getter
     private final Method method;
 
-    public boolean matches(Update update) {
-        return test.test(update);
+    public boolean matches(UserState userState, Update update) {
+        return test.test(userState, update);
     }
 }

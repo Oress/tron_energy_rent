@@ -57,12 +57,18 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
 
         logger.info("User state: {}", userState);
 
-        AppUser byId = userService.getById(userId);
-        if (byId != null && Boolean.TRUE.equals(byId.getDisabled())) {
+        AppUser user = userService.getById(userId);
+        if (user != null && Boolean.TRUE.equals(user.getDisabled())) {
             return;
+        } else {
+            if (user.getGroupBalance() != null && user.getTelegramId() == user.getGroupBalance().getManager().getTelegramId()) {
+                userState = userState.withManagingGroupId(user.getGroupBalance().getId());
+            } else {
+                userState = userState.withManagingGroupId(null);
+            }
         }
 
-        if (handleStartState(userState, update)) {
+        if (handleStartState(user, userState, update)) {
             return;
         }
 
@@ -80,7 +86,7 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
         List<TransitionMatcher> handlers = stateHandlerRegistry.getHandlers(userState.getState(), updateType);
 
         for (TransitionMatcher handler : handlers) {
-            if (!handler.matches(update)) {
+            if (!handler.matches(userState, update)) {
                 continue;
             }
 
@@ -105,10 +111,10 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
             if (InlineMenuCallbacks.TO_MAIN_MENU.equals(data)) {
                 switch (userState.getRole()) {
                     case ADMIN:
-                        telegramMessages.updateMsgToAdminMainMenu(callbackQuery);
+                        telegramMessages.updateMsgToAdminMainMenu(userState, callbackQuery);
                         break;
                     default:
-                        telegramMessages.updateMsgToMainMenu(callbackQuery);
+                        telegramMessages.updateMsgToMainMenu(userState);
                         break;
                 }
                 telegramState.updateUserState(userId, userState.withState(States.MAIN_MENU));
@@ -125,7 +131,7 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
         return false;
     }
 
-    private boolean handleStartState(UserState userState, Update update) {
+    private boolean handleStartState(AppUser user, UserState userState, Update update) {
         Message message = update.getMessage();
 
         if (message != null && message.hasText()) {
@@ -133,14 +139,11 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
 
             if (START.equals(text)) {
                 // may be null if user is not registered
-                AppUser user = userService.getById(userState.getTelegramId());
                 UserRole role = user != null ? user.getRole() : UserRole.USER;
 
-                // TODO: remove keyboard from it exists
                 Message newMenuMsg = switch (role) {
-                    case ADMIN -> telegramMessages.sendAdminMainMenu(update.getMessage().getChatId());
-                    case USER -> telegramMessages.sendMainMenu(update.getMessage().getChatId());
-                    default -> telegramMessages.sendMainMenu(update.getMessage().getChatId());
+                    case ADMIN -> telegramMessages.sendAdminMainMenu(userState, update.getMessage().getChatId());
+                    default -> telegramMessages.sendMainMenu(userState, update.getMessage().getChatId());
                 };
 
                 telegramState.updateUserState(userState.getTelegramId(), userState
@@ -150,13 +153,6 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
                         .withMenuMessageId(newMenuMsg.getMessageId()));
                 if (user == null) {
                     userService.createUser(
-                            CreateUserCommand.builder()
-                                    .telegramId(userState.getTelegramId())
-                                    .firstName(message.getFrom().getFirstName())
-                                    .username(message.getFrom().getUserName())
-                                    .build());
-                } else {
-                    userService.updateUser(
                             CreateUserCommand.builder()
                                     .telegramId(userState.getTelegramId())
                                     .firstName(message.getFrom().getFirstName())

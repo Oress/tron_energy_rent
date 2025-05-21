@@ -35,9 +35,15 @@ public class ManageGroupNewGroupView {
             """;
 
     private static final String MSG_MANAGE_GROUPS_ADD_PROMPT_USERS = "Выберете пользователей, которых хотите добавить в группу используя меню";
+    private static final String MSG_MANAGE_GROUPS_ADD_PROMPT_MANAGER = """
+            Выберете менеджера группы используя меню.
+
+            Ему будет доступно управление группой, а также возможность добавлять и удалять пользователей из группы.
+            """;
 
     private static final String MANAGE_GROUPS_SEARCH = "🔍 Поиск группы";
     private static final String MANAGE_GROUPS_ADD_NEW = "➕ Добавить группу";
+    private static final String MANAGE_GROUPS_ADD_MANAGER = "👤 Выбрать менеджера группы";
 
     private final TelegramClient tgClient;
     private final CommonViews commonViews;
@@ -48,6 +54,18 @@ public class ManageGroupNewGroupView {
                 .builder()
                 .chatId(callbackQuery.getMessage().getChatId())
                 .messageId(callbackQuery.getMessage().getMessageId())
+                .text(MSG_MANAGE_GROUPS_TXT)
+                .replyMarkup(getManageGroupsMarkup())
+                .build();
+        tgClient.execute(message);
+    }
+    
+    @SneakyThrows
+    public void updMenuToManageGroupsMenuForManager(UserState userState) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
                 .text(MSG_MANAGE_GROUPS_TXT)
                 .replyMarkup(getManageGroupsMarkup())
                 .build();
@@ -77,14 +95,37 @@ public class ManageGroupNewGroupView {
                 .build();
         tgClient.execute(message);
     }
-    
-        @SneakyThrows
+
+    @SneakyThrows
+    public void updMenuPromptManager(UserState userState) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
+                .text(MSG_MANAGE_GROUPS_ADD_PROMPT_MANAGER)
+                .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
+                .build();
+        tgClient.execute(message);
+    }
+
+    @SneakyThrows
     public Message sendAddPromptUsers(UserState userState) {
         SendMessage message = SendMessage
                 .builder()
                 .chatId(userState.getChatId())
                 .text(MSG_MANAGE_GROUPS_ADD_PROMPT_USERS)
                 .replyMarkup(getManageGroupsNewGroupPromptUsersMarkup())
+                .build();
+        return tgClient.execute(message);
+    }
+
+    @SneakyThrows
+    public Message sendAddPromptManager(UserState userState) {
+        SendMessage message = SendMessage
+                .builder()
+                .chatId(userState.getChatId())
+                .text(MSG_MANAGE_GROUPS_ADD_PROMPT_MANAGER)
+                .replyMarkup(getManageGroupsNewGroupPromptManagerMarkup())
                 .build();
         return tgClient.execute(message);
     }
@@ -115,6 +156,25 @@ public class ManageGroupNewGroupView {
                                                         .requestId("1")
                                                         .userIsBot(false)
                                                         .maxQuantity(MAX_USERS_IN_GROUP)
+                                                        .build())
+                                        .build()))
+                .build();
+    }
+
+    private ReplyKeyboardMarkup getManageGroupsNewGroupPromptManagerMarkup() {
+        return ReplyKeyboardMarkup
+                .builder()
+                .isPersistent(false)
+                .resizeKeyboard(true)
+                .keyboardRow(
+                        new KeyboardRow(
+                                KeyboardButton.builder()
+                                        .text(MANAGE_GROUPS_ADD_MANAGER)
+                                        .requestUsers(
+                                                KeyboardButtonRequestUsers.builder()
+                                                        .requestId("1")
+                                                        .userIsBot(false)
+                                                        .maxQuantity(1)
                                                         .build())
                                         .build()))
                 .build();

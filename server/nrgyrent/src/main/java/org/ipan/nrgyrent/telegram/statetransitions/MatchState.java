@@ -11,7 +11,10 @@ import org.ipan.nrgyrent.telegram.States;
 @Target({ElementType.METHOD})
 public @interface MatchState {
     States state() default States.START;
+
     int updateTypes() default UpdateType.NONE;
+
+    boolean forAdmin() default false;
 
     String callbackData() default "";
 }

@@ -28,7 +28,7 @@ import lombok.SneakyThrows;
 
 @Component
 @AllArgsConstructor
-public class ManageGroupActionsView {
+public class ManageGroupViews {
     private static final String MANAGE_GROUP_ACTION_VIEW_USERS = "👥 Просмотреть пользователей";
     private static final String MANAGE_GROUP_ACTION_SET_MANAGER = "👤 Установить менеджера группы";
     private static final String MANAGE_GROUP_ACTION_ADJUST_BALANCE_MANUALLY = "💰 Изменить баланс вручную";
@@ -124,19 +124,7 @@ public class ManageGroupActionsView {
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
                 .text(getBalanceDescription(balance))
-                .replyMarkup(getManageGroupActionsMarkup(true))
-                .build();
-        tgClient.execute(message);
-    }
-
-    @SneakyThrows
-    public void updMenuToManageGroupActionsMenuForManager(UserState userState, Balance balance) {
-        EditMessageText message = EditMessageText
-                .builder()
-                .chatId(userState.getChatId())
-                .messageId(userState.getMenuMessageId())
-                .text(getBalanceDescription(balance))
-                .replyMarkup(getManageGroupActionsMarkupForManager())
+                .replyMarkup(getManageGroupActionsMarkup())
                 .build();
         tgClient.execute(message);
     }
@@ -383,23 +371,7 @@ public class ManageGroupActionsView {
                 FormattingTools.formatBalance(balance.getSunBalance()));
     }
 
-    private InlineKeyboardMarkup getManageGroupActionsMarkup(Boolean showBackButton) {
-        InlineKeyboardRow inlineKeyboardRow = new InlineKeyboardRow(
-                InlineKeyboardButton
-                        .builder()
-                        .text(StaticLabels.TO_MAIN_MENU)
-                        .callbackData(InlineMenuCallbacks.TO_MAIN_MENU)
-                        .build());
-
-        if (showBackButton) {
-            inlineKeyboardRow.add(
-                    InlineKeyboardButton
-                            .builder()
-                            .text(StaticLabels.GO_BACK)
-                            .callbackData(InlineMenuCallbacks.GO_BACK)
-                            .build());
-        }
-
+    private InlineKeyboardMarkup getManageGroupActionsMarkup() {
         return InlineKeyboardMarkup
                 .builder()
                 .keyboardRow(
@@ -462,40 +434,6 @@ public class ManageGroupActionsView {
                                         .builder()
                                         .text(StaticLabels.GO_BACK)
                                         .callbackData(InlineMenuCallbacks.GO_BACK)
-                                        .build()))
-                .build();
-    }
-
-    private InlineKeyboardMarkup getManageGroupActionsMarkupForManager() {
-        return InlineKeyboardMarkup
-                .builder()
-                .keyboardRow(
-                        new InlineKeyboardRow(
-                                InlineKeyboardButton
-                                        .builder()
-                                        .text(MANAGE_GROUP_ACTION_VIEW_USERS)
-                                        .callbackData(InlineMenuCallbacks.MANAGE_GROUPS_ACTION_VIEW_USERS)
-                                        .build()))
-                .keyboardRow(
-                        new InlineKeyboardRow(
-                                InlineKeyboardButton
-                                        .builder()
-                                        .text(MANAGE_GROUP_ACTION_ADD_USERS)
-                                        .callbackData(InlineMenuCallbacks.MANAGE_GROUPS_ACTION_ADD_USERS)
-                                        .build()))
-                .keyboardRow(
-                        new InlineKeyboardRow(
-                                InlineKeyboardButton
-                                        .builder()
-                                        .text(MANAGE_GROUP_ACTION_REMOVE_USERS)
-                                        .callbackData(InlineMenuCallbacks.MANAGE_GROUPS_ACTION_REMOVE_USERS)
-                                        .build()))
-                .keyboardRow(
-                        new InlineKeyboardRow(
-                                InlineKeyboardButton
-                                        .builder()
-                                        .text(StaticLabels.TO_MAIN_MENU)
-                                        .callbackData(InlineMenuCallbacks.TO_MAIN_MENU)
                                         .build()))
                 .build();
     }

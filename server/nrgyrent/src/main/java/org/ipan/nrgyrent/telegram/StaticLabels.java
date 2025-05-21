@@ -14,6 +14,7 @@ public class StaticLabels {
             Здесь вы можете управлять кошельками, которые добавили в нашем боте""";
 
     // Menu labels
+    public static final String MENU_MANAGE_GROUP = "👥 Управление группой";
     public static final String WITHDRAW_TRX = "💰 Вывод TRX";
     public static final String MENU_HISTORY = "📜 История транзакций";
     public static final String MENU_ADMIN = "👨‍💻 Админка";

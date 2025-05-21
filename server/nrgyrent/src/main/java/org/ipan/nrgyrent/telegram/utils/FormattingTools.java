@@ -5,10 +5,18 @@ import java.text.DecimalFormat;
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
 
+import org.ipan.nrgyrent.domain.model.AppUser;
 import org.ipan.nrgyrent.domain.model.OrderStatus;
 
 public class FormattingTools {
     private static DecimalFormat df = new DecimalFormat("# ###.##");
+
+    public static String formatUser(AppUser user) {
+        if (user == null) {
+            return "-";
+        }
+        return String.format("%s %s", user.getTelegramUsername(), user.getTelegramFirstName());
+    }
 
     public static String formatBalance(Long balanceSun) {
         return df.format(BigDecimal.valueOf(balanceSun).divide(BigDecimal.valueOf(1_000_000D)));

@@ -12,6 +12,7 @@ public class InlineMenuCallbacks {
     public static final String TRANSACTION_65k = "transaction_65k";
     public static final String TRANSACTION_131k = "transaction_131k";
     public static final String HISTORY = "history";
+    public static final String MANAGE_GROUP = "manage_group";
     public static final String WITHDRAW_TRX = "withdraw_trx";
     public static final String WITHDRAW_BALANCE_PERSONAL = "withdraw_balance_personal";
     public static final String WITHDRAW_BALANCE_GROUP = "withdraw_balance_group";
@@ -34,6 +35,7 @@ public class InlineMenuCallbacks {
     public static final String MANAGE_USERS_SEARCH = "manage_groups_search";
     public static final String MANAGE_USERS_SEARCH_RESET = "manage_groups_search_reset";
 
+    public static final String MANAGE_GROUPS_ACTION_CHANGE_MANAGER = "manage_groups_action_change_manager";
     public static final String MANAGE_GROUPS_ACTION_ADJUST_BALANCE_MANUALLY = "manage_groups_action_adjust_balance_manually";
     public static final String MANAGE_GROUPS_ACTION_RENAME = "manage_groups_action_rename";
     public static final String MANAGE_GROUPS_ACTION_VIEW_USERS = "manage_groups_action_view_users";
