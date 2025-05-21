@@ -6,6 +6,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.NotImplementedException;
+import org.ipan.nrgyrent.domain.exception.NotEnoughBalanceException;
 import org.ipan.nrgyrent.domain.exception.UserAlreadyHasGroupBalanceException;
 import org.ipan.nrgyrent.domain.exception.UserNotRegisteredException;
 import org.ipan.nrgyrent.domain.model.AppUser;
@@ -50,16 +51,20 @@ public class BalanceService {
             throw new UserNotRegisteredException("Some users are not registered");
         }
 
-        if (usersToRemove.stream().anyMatch(user -> user.getGroupBalance() != null && !balanceId.equals(user.getGroupBalance().getId()))) {
+        if (usersToRemove.stream().anyMatch(
+                user -> user.getGroupBalance() != null && !balanceId.equals(user.getGroupBalance().getId()))) {
             logger.info("Some users are already in the group: {}", usersToRemove);
             throw new UserAlreadyHasGroupBalanceException("Some users already have a group balance");
         }
 
-        Map<Long, AppUser> usersToRemoveMap = usersToRemove.stream().collect(Collectors.toMap(AppUser::getTelegramId, Function.identity()));
-        /* if (usersToAdd.isEmpty()) {
-            logger.info("0 new users to add to group: {}", balanceId);
-            throw new IllegalArgumentException("0 new users to add to group");
-        } */
+        Map<Long, AppUser> usersToRemoveMap = usersToRemove.stream()
+                .collect(Collectors.toMap(AppUser::getTelegramId, Function.identity()));
+        /*
+         * if (usersToAdd.isEmpty()) {
+         * logger.info("0 new users to add to group: {}", balanceId);
+         * throw new IllegalArgumentException("0 new users to add to group");
+         * }
+         */
 
         balance.getUsers().removeIf(user -> usersToRemoveMap.containsKey(user.getTelegramId()));
         usersToRemove.forEach(nullableUser -> nullableUser.setGroupBalance(null));
@@ -82,16 +87,19 @@ public class BalanceService {
             throw new UserNotRegisteredException("Some users are not registered");
         }
 
-        if (usersToAdd.stream().anyMatch(user -> user.getGroupBalance() != null && !balanceId.equals(user.getGroupBalance().getId()))) {
+        if (usersToAdd.stream().anyMatch(
+                user -> user.getGroupBalance() != null && !balanceId.equals(user.getGroupBalance().getId()))) {
             logger.info("Some users are already in the group: {}", usersToAdd);
             throw new UserAlreadyHasGroupBalanceException("Some users already have a group balance");
         }
 
-         usersToAdd.removeIf(user -> balance.getUsers().contains(user));
-        /* if (usersToAdd.isEmpty()) {
-            logger.info("0 new users to add to group: {}", balanceId);
-            throw new IllegalArgumentException("0 new users to add to group");
-        } */
+        usersToAdd.removeIf(user -> balance.getUsers().contains(user));
+        /*
+         * if (usersToAdd.isEmpty()) {
+         * logger.info("0 new users to add to group: {}", balanceId);
+         * throw new IllegalArgumentException("0 new users to add to group");
+         * }
+         */
 
         // Add users to the group
         balance.getUsers().addAll(usersToAdd);
@@ -126,7 +134,7 @@ public class BalanceService {
             throw new IllegalArgumentException("Balance not found for adjusting");
         }
 
-        AppUser referenceById = userRepo.getReferenceById(createdBy);;
+        AppUser referenceById = userRepo.getReferenceById(createdBy);
 
         // amountSun should be > 0
         if (amountSun < 0) {
@@ -141,7 +149,8 @@ public class BalanceService {
         return balance;
     }
 
-    private ManualBalanceAdjustmentAction createManualBalanceAdjustmentAction(AppUser changedBy, Balance balance, Long amountTo) {
+    private ManualBalanceAdjustmentAction createManualBalanceAdjustmentAction(AppUser changedBy, Balance balance,
+            Long amountTo) {
         ManualBalanceAdjustmentAction action = new ManualBalanceAdjustmentAction();
         action.setBalance(balance);
         action.setAmountFrom(balance.getSunBalance());
@@ -226,6 +235,19 @@ public class BalanceService {
         balance.getUsers().forEach(user -> {
             user.setGroupBalance(null);
         });
+    }
+
+    @Transactional
+    public void subtractSunBalance(Balance targetBalance, Long sunAmount) {
+        if (targetBalance == null) {
+            throw new IllegalArgumentException("Balance not found");
+        }
+
+        if (targetBalance.getSunBalance() < sunAmount) {
+            throw new NotEnoughBalanceException("Not enough balance");
+        }
+
+        targetBalance.setSunBalance(targetBalance.getSunBalance() - sunAmount);
     }
 
 }

@@ -48,7 +48,7 @@ public class AdminViews {
     private static final String MENU_ADMIN_MANAGE_USERS = "👤 Управление пользователями";
     private static final String MENU_ADMIN_ITRX_BALANCE = "💰 Статистика itrx.io";
     private static final String MENU_ADMIN_SWEEP_WALLETS_BALANCE = "💰 Статистика sweep кошельков";
-    private static final String MENU_ADMIN_WITHDRAW_TRX = "💰 Вывод TRX";
+    private static final String MENU_ADMIN_WITHDRAW_TRX = "💰 Вывод TRX со sweep кошельков";
 
     private final TelegramClient tgClient;
     private final CommonViews commonViews;
@@ -188,7 +188,7 @@ public class AdminViews {
                 %s
                 """.formatted(
                 results.entrySet().stream()
-                        .map(kv -> String.format("Адрес: %s\n Баланс: %s TRX", kv.getKey().getWalletAddress(),
+                        .map(kv -> String.format("Адрес: %s\nБаланс: %s TRX", kv.getKey().getWalletAddress(),
                                 FormattingTools.formatBalance(kv.getValue())))
                         .collect(Collectors.joining("\n\n")));
     }

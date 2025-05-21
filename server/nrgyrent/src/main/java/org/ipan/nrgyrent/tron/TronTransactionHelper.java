@@ -20,7 +20,7 @@ public class TronTransactionHelper {
     private final TrongridRestClient trongridRestClient;
 
     @Retryable
-    public void performTransferTransaction(String fromAddress, String toAddress, Long amountToTransfer, Function<String, String> signFunction) {
+    public String performTransferTransaction(String fromAddress, String toAddress, Long amountToTransfer, Function<String, String> signFunction) {
         logger.info("Performing transfer transaction from {} to {} with amount {}", fromAddress, toAddress, amountToTransfer);
         TreeMap<String, Object> responseProps = trongridRestClient.createTransaction(
                 fromAddress,
@@ -39,5 +39,6 @@ public class TronTransactionHelper {
         } else {
             logger.error("Transaction failed: {}", broadcastResult.get("message"));
         }
+        return txId;
     }
 }

@@ -23,4 +23,8 @@ public interface TelegramState {
     TransactionParams getOrCreateTransactionParams(Long userId);
     TransactionParams updateTransactionParams(Long userId, TransactionParams transactionParams);
     TransactionParams removeTransactionParams(Long userId); // TODO: cleanup after finishing workflow
+
+    WithdrawParams getOrCreateWithdrawParams(Long userId);
+    WithdrawParams updateWithdrawParams(Long userId, WithdrawParams withdrawParams);
+    WithdrawParams removeWithdrawParams(Long userId); // TODO: cleanup after finishing workflow
 }

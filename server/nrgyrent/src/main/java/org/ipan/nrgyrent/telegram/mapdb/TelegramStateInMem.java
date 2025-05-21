@@ -8,6 +8,7 @@ import org.ipan.nrgyrent.telegram.state.TelegramState;
 import org.ipan.nrgyrent.telegram.state.TransactionParams;
 import org.ipan.nrgyrent.telegram.state.UserEdit;
 import org.ipan.nrgyrent.telegram.state.UserState;
+import org.ipan.nrgyrent.telegram.state.WithdrawParams;
 import org.mapdb.DB;
 import org.mapdb.HTreeMap;
 import org.mapdb.Serializer;
@@ -23,6 +24,7 @@ public class TelegramStateInMem implements TelegramState {
     private final HTreeMap<Long, AddWalletStateInMem> addWalletStateMap;
     private final HTreeMap<Long, TransactionParamsInMem> transactionParamsMap;
     private final HTreeMap<Long, UserEditInMem> userEditMap;
+    private final HTreeMap<Long, WithdrawParamsInMem> withdrawParamsMap;
 
     public TelegramStateInMem(DB db, ObjectMapper objectMapper) {
         this.userStateMap = db.hashMap("userState")
@@ -53,6 +55,11 @@ public class TelegramStateInMem implements TelegramState {
         this.userEditMap = db.hashMap("userEdit")
                 .keySerializer(Serializer.LONG)
                 .valueSerializer(new GenericSerializer<>(UserEditInMem.class, objectMapper))
+                .createOrOpen();
+
+        this.withdrawParamsMap = db.hashMap("withdrawParams")
+                .keySerializer(Serializer.LONG)
+                .valueSerializer(new GenericSerializer<>(WithdrawParamsInMem.class, objectMapper))
                 .createOrOpen();
     }
 
@@ -139,5 +146,20 @@ public class TelegramStateInMem implements TelegramState {
     @Override
     public UserEdit removeUserEdit(Long userId) {
         return this.userEditMap.remove(userId);
+    }
+
+    @Override
+    public WithdrawParams getOrCreateWithdrawParams(Long userId) {
+        return this.withdrawParamsMap.computeIfAbsent(userId, key -> new WithdrawParamsInMem(null, null));
+    }
+
+    @Override
+    public WithdrawParams updateWithdrawParams(Long userId, WithdrawParams withdrawParams) {
+        return this.withdrawParamsMap.put(userId, WithdrawParamsInMem.of(withdrawParams));
+    }
+
+    @Override
+    public WithdrawParams removeWithdrawParams(Long userId) {
+        return this.withdrawParamsMap.remove(userId);
     }
 }

@@ -24,7 +24,7 @@ spring:
 app:
   wallet:
     sweeping:
-      ensure-count: 4
+      ensure-count: ${APP_SWEEP_WALLETS_COUNT:1}
     encryption:
       keyBase64: ${APP_WALLET_ENCRYPTION_KEY_BASE64:de3AP3DtOeBDXXijf3PmLhrJ1kobB1XLP5poYc3qrkc=}
   cron:

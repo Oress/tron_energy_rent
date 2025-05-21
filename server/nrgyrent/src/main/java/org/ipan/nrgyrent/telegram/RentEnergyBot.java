@@ -7,16 +7,6 @@ import org.ipan.nrgyrent.domain.model.AppUser;
 import org.ipan.nrgyrent.domain.model.UserRole;
 import org.ipan.nrgyrent.domain.service.UserService;
 import org.ipan.nrgyrent.domain.service.commands.users.CreateUserCommand;
-import org.ipan.nrgyrent.telegram.handlers.AdminMenuHandler;
-import org.ipan.nrgyrent.telegram.handlers.MainMenuHandler;
-import org.ipan.nrgyrent.telegram.handlers.ManageGroupActionsHandler;
-import org.ipan.nrgyrent.telegram.handlers.ManageGroupNewGroupHandler;
-import org.ipan.nrgyrent.telegram.handlers.ManageGroupSearchHandler;
-import org.ipan.nrgyrent.telegram.handlers.ManageGroupsHandler;
-import org.ipan.nrgyrent.telegram.handlers.ManageUsersSearchHandler;
-import org.ipan.nrgyrent.telegram.handlers.TransactionsHandler;
-import org.ipan.nrgyrent.telegram.handlers.UserWalletsHandler;
-import org.ipan.nrgyrent.telegram.handlers.UsersActionHandler;
 import org.ipan.nrgyrent.telegram.state.TelegramState;
 import org.ipan.nrgyrent.telegram.state.UserState;
 import org.ipan.nrgyrent.telegram.statetransitions.StateHandlerRegistry;
@@ -24,12 +14,10 @@ import org.ipan.nrgyrent.telegram.statetransitions.TransitionMatcher;
 import org.ipan.nrgyrent.telegram.statetransitions.UpdateType;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.longpolling.util.LongPollingSingleThreadUpdateConsumer;
-import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.api.objects.message.Message;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -106,54 +94,6 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
             }
         }
 
-/*         switch (userState.getState()) {
-            case MAIN_MENU:
-                mainMenuHandler.handleUpdate(userState, update);
-                break;
-            case WALLETS:
-            case NEW_WALLET_PROMPT_ADDRESS:
-            case NEW_WALLET_PROMPT_LABEL:
-            case USER_WALLET_PREVIEW:
-                userWalletsHandler.handleUpdate(userState, update);
-                break;
-            case TRANSACTION_PROMPT_WALLET:
-            case TRANSACTION_PROMPT_BALANCE_TYPE:
-                transactionsHandler.handleUpdate(userState, update);
-                break;
-
-            // admin
-            case ADMIN_MENU:
-            case ADMIN_VIEW_PROMPT_WITHDRAW_WALLET:
-                adminMenuHandler.handleUpdate(userState, update);
-                break;
-            case ADMIN_MANAGE_GROUPS:
-                manageGroupsHandler.handleUpdate(userState, update);
-            case ADMIN_MANAGE_GROUPS_ACTION_PREVIEW:
-            case ADMIN_MANAGE_GROUPS_ACTION_DEACTIVATE_CONFIRM:
-            case ADMIN_MANAGE_GROUPS_ACTION_PROMPT_NEW_LABEL:
-            case ADMIN_MANAGE_GROUPS_ACTION_ADD_USERS:
-            case ADMIN_MANAGE_GROUPS_ACTION_REMOVE_USERS:
-            case ADMIN_MANAGE_GROUPS_ACTION_PROMPT_NEW_BALANCE:
-                manageGroupActionsHandler.handleUpdate(userState, update);
-                break;
-            case ADMIN_MANAGE_USERS:
-                manageUsersSearchHandler.handleUpdate(userState, update);
-                break;
-            case ADMIN_MANAGE_USERS_ACTION_PREVIEW:
-            case ADMIN_MANAGE_USER_ACTION_PROMPT_NEW_BALANCE:
-            case ADMIN_MANAGE_USER_ACTION_DEACTIVATE_CONFIRM:
-                usersActionHandler.handleUpdate(userState, update);
-                break;
-            case ADMIN_MANAGE_GROUPS_SEARCH:
-                manageGroupSearchHandler.handleUpdate(userState, update);
-                break;
-            case ADMIN_MANAGE_GROUPS_ADD_PROMPT_LABEL:
-            case ADMIN_MANAGE_GROUPS_ADD_PROMPT_USERS:
-            case ADMIN_MANAGE_GROUPS_REMOVE_PROMPT_USERS:
-                manageGroupNewGroupHandler.handleUpdate(userState, update);
-                break;
-        } */
-
         Message message = update.getMessage();
         CallbackQuery callbackQuery = update.getCallbackQuery();
 
@@ -162,7 +102,6 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
         } else if (callbackQuery != null) {
             String data = callbackQuery.getData();
 
-            EditMessageText.builder().replyMarkup(InlineKeyboardMarkup.builder().build());
             if (InlineMenuCallbacks.TO_MAIN_MENU.equals(data)) {
                 switch (userState.getRole()) {
                     case ADMIN:

@@ -207,6 +207,13 @@ public class TelegramMessages {
                                         .text(StaticLabels.MENU_HISTORY)
                                         .callbackData(InlineMenuCallbacks.HISTORY)
                                         .build()))
+                .keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text(StaticLabels.WITHDRAW_TRX)
+                                        .callbackData(InlineMenuCallbacks.WITHDRAW_TRX)
+                                        .build()))
                 .build();
     }
 
@@ -245,6 +252,13 @@ public class TelegramMessages {
                                         .builder()
                                         .text(StaticLabels.MENU_HISTORY)
                                         .callbackData(InlineMenuCallbacks.HISTORY)
+                                        .build()))
+                .keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text(StaticLabels.WITHDRAW_TRX)
+                                        .callbackData(InlineMenuCallbacks.WITHDRAW_TRX)
                                         .build()))
                 .keyboardRow(
                         new InlineKeyboardRow(

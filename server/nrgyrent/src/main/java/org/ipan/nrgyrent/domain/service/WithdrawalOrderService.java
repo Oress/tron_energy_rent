@@ -9,7 +9,11 @@ import org.ipan.nrgyrent.domain.model.AppUser;
 import org.ipan.nrgyrent.domain.model.Balance;
 import org.ipan.nrgyrent.domain.model.Order;
 import org.ipan.nrgyrent.domain.model.OrderStatus;
+import org.ipan.nrgyrent.domain.model.WithdrawalOrder;
+import org.ipan.nrgyrent.domain.model.WithdrawalStatus;
 import org.ipan.nrgyrent.domain.model.repository.OrderRepo;
+import org.ipan.nrgyrent.domain.model.repository.UserRepo;
+import org.ipan.nrgyrent.domain.model.repository.WithdrawalOrderRepo;
 import org.ipan.nrgyrent.domain.service.commands.orders.AddOrUpdateOrderCommand;
 import org.springframework.beans.factory.annotation.Lookup;
 import org.springframework.stereotype.Service;
@@ -20,54 +24,48 @@ import java.util.Optional;
 @Service
 @AllArgsConstructor
 @Slf4j
-public class OrderService {
+public class WithdrawalOrderService {
     private final OrderRepo orderRepo;
+    private final UserRepo userRepo;
+    private final WithdrawalOrderRepo withdrawalOrderRepo;
     private final BalanceService balanceService;
 
     @Transactional
-    public Order createPendingOrder(AddOrUpdateOrderCommand command) {
-        EntityManager em = getEntityManager();
-
-        AppUser user = em.getReference(AppUser.class, command.getUserId());
-
+    public WithdrawalOrder createPendingOrder(Long userId, Boolean useGroup, Long amountSun, Long feeAmountSun, String receiveAddress) {
+        AppUser user = userRepo.findById(userId).orElse(null);
         if (user == null) {
             throw new IllegalArgumentException("User not found");
         }
 
-        Balance targetBalance = command.getUseGroupWallet() ? user.getGroupBalance() : user.getBalance();
-        balanceService.subtractSunBalance(targetBalance, command.getSunAmount());
+        Balance targetBalance = useGroup ? user.getGroupBalance() : user.getBalance();
+        balanceService.subtractSunBalance(targetBalance, amountSun + feeAmountSun);
 
-        Order order = new Order();
+        WithdrawalOrder order = new WithdrawalOrder();
         order.setUser(user);
         order.setBalance(targetBalance);
-        order.setOrderStatus(OrderStatus.PENDING);
-        order.setDuration(command.getDuration());
-        order.setCorrelationId(command.getCorrelationId());
-        order.setEnergyAmount(command.getEnergyAmount());
-        order.setSunAmount(command.getSunAmount());
-        order.setItrxFeeSunAmount(command.getItrxFeeSunAmount());
-        order.setReceiveAddress(command.getReceiveAddress());
+        order.setStatus(WithdrawalStatus.PENDING);
+        order.setSunAmount(amountSun);
+        order.setFeeSunAmount(feeAmountSun);
+        order.setReceiveAddress(receiveAddress);
 
-        em.persist(order);
+        withdrawalOrderRepo.save(order);
 
         return order;
     }
 
     @Transactional
-    public Order completeOrder(AddOrUpdateOrderCommand command) {
-        logger.info("Completing order: {}", command);
-        Optional<Order> byCorrelationId = orderRepo.findByCorrelationId(command.getCorrelationId());
+    public WithdrawalOrder completeOrder(Long withdrawalOrderId, String txId) {
+        Optional<WithdrawalOrder> order = withdrawalOrderRepo.findById(withdrawalOrderId);
 
-        if (byCorrelationId.isEmpty()) {
+        if (order.isEmpty()) {
             throw new IllegalArgumentException("Order not found");
         }
 
-        Order order = byCorrelationId.get();
-        order.setOrderStatus(OrderStatus.COMPLETED);
-        order.setItrxStatus(command.getItrxStatus());
-        order.setTxId(command.getTxId());
+        WithdrawalOrder withdrawalOrder = order.get();
+        withdrawalOrder.setStatus(WithdrawalStatus.COMPLETED);
+        withdrawalOrder.setTxId(txId);
 
-        return order;
+        return withdrawalOrder;
     }
 
     @Transactional
