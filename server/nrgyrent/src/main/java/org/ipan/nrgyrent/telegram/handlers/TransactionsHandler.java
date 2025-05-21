@@ -18,6 +18,7 @@ import org.ipan.nrgyrent.telegram.state.TelegramState;
 import org.ipan.nrgyrent.telegram.state.TransactionParams;
 import org.ipan.nrgyrent.telegram.state.UserState;
 import org.ipan.nrgyrent.telegram.statetransitions.MatchState;
+import org.ipan.nrgyrent.telegram.statetransitions.MatchStates;
 import org.ipan.nrgyrent.telegram.statetransitions.TransitionHandler;
 import org.ipan.nrgyrent.telegram.statetransitions.UpdateType;
 import org.ipan.nrgyrent.telegram.utils.WalletTools;
@@ -39,7 +40,10 @@ public class TransactionsHandler {
     private final OrderService orderService;
     private final UserWalletService userWalletService;
 
-    @MatchState(state = States.TRANSACTION_PROMPT_WALLET, updateTypes = UpdateType.CALLBACK_QUERY | UpdateType.MESSAGE)
+    @MatchStates({
+        @MatchState(state = States.TRANSACTION_PROMPT_WALLET, updateTypes = UpdateType.CALLBACK_QUERY),
+        @MatchState(state = States.TRANSACTION_PROMPT_WALLET, updateTypes = UpdateType.MESSAGE)
+    })
     public void processWalletForTransaction(UserState userState, Update update) {
         TransactionParams transactionParams = telegramState
                 .getOrCreateTransactionParams(userState.getTelegramId());
