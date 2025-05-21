@@ -5,12 +5,14 @@ import java.util.UUID;
 
 import org.ipan.nrgyrent.domain.exception.NotEnoughBalanceException;
 import org.ipan.nrgyrent.domain.model.AppUser;
+import org.ipan.nrgyrent.domain.model.Order;
 import org.ipan.nrgyrent.domain.model.UserWallet;
 import org.ipan.nrgyrent.domain.service.OrderService;
 import org.ipan.nrgyrent.domain.service.UserService;
 import org.ipan.nrgyrent.domain.service.UserWalletService;
 import org.ipan.nrgyrent.domain.service.commands.orders.AddOrUpdateOrderCommand;
 import org.ipan.nrgyrent.itrx.AppConstants;
+import org.ipan.nrgyrent.itrx.InactiveAddressException;
 import org.ipan.nrgyrent.itrx.ItrxService;
 import org.ipan.nrgyrent.itrx.dto.EstimateOrderAmountResponse;
 import org.ipan.nrgyrent.itrx.dto.PlaceOrderResponse;
@@ -147,8 +149,10 @@ public class TransactionsHandler {
             UUID correlationId = UUID.randomUUID();
             EstimateOrderAmountResponse estimateOrderResponse = itrxService.estimateOrderPrice(energyAmount, duration,
                     walletAddress);
+            
+            Order pendingOrder = null;
             try {
-                orderService.createPendingOrder(
+                pendingOrder = orderService.createPendingOrder(
                         AddOrUpdateOrderCommand.builder()
                                 .userId(userState.getTelegramId())
                                 .useGroupWallet(useGroupWallet)
@@ -166,15 +170,31 @@ public class TransactionsHandler {
                         correlationId);
 
                 if (placeOrderResponse.getErrno() != ITRX_OK_CODE) {
+                    orderService.refundOrder(
+                            AddOrUpdateOrderCommand.builder()
+                                    .correlationId(correlationId.toString())
+                                    .build());
+                    transactionsViews.notEnoughBalance(userState);
+                    telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.TRANSACTION_ERROR));
                     return;
-                    // TODO: do something here
                 }
 
                 transactionsViews.updMenuToTransactionPending(userState);
                 telegramState.updateUserState(userState.getTelegramId(),
                         userState.withState(States.TRANSACTION_PENDING));
-            } catch (NotEnoughBalanceException e) {
+            } catch (NotEnoughBalanceException e) { // Not enough balance on our service
                 transactionsViews.notEnoughBalance(userState);
+                telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.TRANSACTION_ERROR));
+            } catch (InactiveAddressException e) {
+                transactionsViews.transactionToInactiveWallet(userState);
+                telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.TRANSACTION_ERROR));
+
+                if (pendingOrder != null) {
+                    orderService.refundOrder(
+                            AddOrUpdateOrderCommand.builder()
+                                    .correlationId(correlationId.toString())
+                                    .build());
+                }
             }
         }
     }

@@ -113,6 +113,32 @@ public class TransactionsViews {
 
     @Retryable
     @SneakyThrows
+    public void somethingWentWrong(UserState userState) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
+                .text("❌ Что-то пошло не так. Пожалуйста, попробуйте позже.")
+                .replyMarkup(commonViews.getToMainMenuMarkup())
+                .build();
+        tgClient.execute(message);
+    }
+
+    @Retryable
+    @SneakyThrows
+    public void transactionToInactiveWallet(UserState userState) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
+                .text("❌ Кошелек не активен. Пожалуйста, выберите другой кошелек.")
+                .replyMarkup(commonViews.getToMainMenuMarkup())
+                .build();
+        tgClient.execute(message);
+    }
+
+    @Retryable
+    @SneakyThrows
     public void updMenuToTransactionInProgress(UserState userState) {
         EditMessageText message = EditMessageText
                 .builder()

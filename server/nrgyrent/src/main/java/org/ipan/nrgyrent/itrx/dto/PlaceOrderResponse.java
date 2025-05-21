@@ -8,4 +8,5 @@ public class PlaceOrderResponse {
     private String serial; // serial number of the order
     private Long amount; // amount of TRX in sun
     private Long balance;
+    private String detail; // error message
 }

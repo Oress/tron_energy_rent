@@ -3,6 +3,7 @@ package org.ipan.nrgyrent.itrx;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
 
@@ -10,6 +11,7 @@ import org.ipan.nrgyrent.itrx.dto.ApiUsageResponse;
 import org.ipan.nrgyrent.itrx.dto.EstimateOrderAmountResponse;
 import org.ipan.nrgyrent.itrx.dto.PlaceOrderResponse;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
@@ -33,43 +35,47 @@ public class RestClient {
     public String callbackUrl;
 
     // Rental period, 1H/1D/3D/30D
+    @SneakyThrows
+    @Retryable(noRetryFor = {InactiveAddressException.class})
     public PlaceOrderResponse placeOrder(int energyAmnt, String period, String receiveAddress, String correlationId) {
-        try {
-            String timestamp = String.valueOf(Instant.now().getEpochSecond());
+        String timestamp = String.valueOf(Instant.now().getEpochSecond());
 
-            Map<String, Object> data = Map.of(
-                    "energy_amount", energyAmnt,
-                    "period", period,
-                    "receive_address", receiveAddress,
-                    "callback_url", callbackUrl,
-                    "out_trade_no", correlationId
-            );
+        Map<String, Object> data = Map.of(
+                "energy_amount", energyAmnt,
+                "period", period,
+                "receive_address", receiveAddress,
+                "callback_url", callbackUrl,
+                "out_trade_no", correlationId
+        );
 
-            // Sorting the keys
-            TreeMap<String, Object> sortedData = new TreeMap<>(data);
-            String json_data = gson.toJson(sortedData);
+        // Sorting the keys
+        TreeMap<String, Object> sortedData = new TreeMap<>(data);
+        String json_data = gson.toJson(sortedData);
 
-            String message = timestamp + "&" + json_data;
-            String signature = null;
-            signature = Utils.encodeHmacSHA256(message, apiSecret);
+        String message = timestamp + "&" + json_data;
+        String signature = null;
+        signature = Utils.encodeHmacSHA256(message, apiSecret);
 
-            RequestBody body = RequestBody.create(json_data, mediaType);
-            Request request = new Request.Builder()
-                    .url(baseUrl + "/api/v1/frontend/order")
-                    .method("POST", body)
-                    .addHeader("API-KEY", apiKey)
-                    .addHeader("TIMESTAMP", timestamp)
-                    .addHeader("SIGNATURE", signature)
-                    .addHeader("Content-Type", "application/json")
-                    .build();
-            Response response = client.newCall(request).execute();
+        RequestBody body = RequestBody.create(json_data, mediaType);
+        Request request = new Request.Builder()
+                .url(baseUrl + "/api/v1/frontend/order")
+                .method("POST", body)
+                .addHeader("API-KEY", apiKey)
+                .addHeader("TIMESTAMP", timestamp)
+                .addHeader("SIGNATURE", signature)
+                .addHeader("Content-Type", "application/json")
+                .build();
+        Response response = client.newCall(request).execute();
 
-            PlaceOrderResponse placeOrderResponse = gson.fromJson(response.body().charStream(), PlaceOrderResponse.class);
-            logger.info("Response" + placeOrderResponse);
-            return placeOrderResponse;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        PlaceOrderResponse placeOrderResponse = gson.fromJson(response.body().charStream(), PlaceOrderResponse.class);
+
+        if (placeOrderResponse.getDetail().contains("is the inactive address.")) {
+            logger.error("Transaction attempt to inactive address: {} correlation id: {}", placeOrderResponse.getDetail(), correlationId);
+            throw new InactiveAddressException("Transaction attempt to inactive address: " + placeOrderResponse.getDetail());
         }
+
+        logger.info("Response" + placeOrderResponse);
+        return placeOrderResponse;
     }
 
 
