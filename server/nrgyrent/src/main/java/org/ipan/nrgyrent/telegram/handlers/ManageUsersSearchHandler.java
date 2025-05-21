@@ -27,7 +27,6 @@ import lombok.extern.slf4j.Slf4j;
 @TransitionHandler
 @AllArgsConstructor
 @Slf4j
-//TODO: Handle search reset + pagination + group selection
 public class ManageUsersSearchHandler {
     private final TelegramState telegramState;
     private final TelegramMessages telegramMessages;
@@ -70,7 +69,6 @@ public class ManageUsersSearchHandler {
             String queryStr = message.getText();
             telegramMessages.deleteMessage(message);
 
-            // TODO: validate query string ??
             if (queryStr.length() < 3) {
                 logger.info("Query string is too short: {}", queryStr);
                 // telegramMessages.manageGroupSearchView().updMenuToManageGroupsSearchResult(null,
@@ -89,7 +87,6 @@ public class ManageUsersSearchHandler {
         Optional<AppUser> appUser = appUserRepo.findById(telegramId);
         if (appUser.isPresent()) {
             AppUser user = appUser.get();
-            // TODO: make the message to show more details: name, balance, address, manager.
             manageUserActionsView.updMenuToManageUserActionsMenu(callbackQuery, user);
             UserEdit userEdit = telegramState.getOrCreateUserEdit(userState.getTelegramId());
             telegramState.updateUserEdit(userState.getTelegramId(), userEdit.withSelectedUserId(telegramId));

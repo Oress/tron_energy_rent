@@ -26,7 +26,6 @@ public class ItrxService {
     private final RestClient restClient;
     private final OrderEventPublisher eventPublisher;
 
-    // TODO: cache responses for 5-10 minutes ??
     public EstimateOrderAmountResponse estimateOrderPrice(Integer energyAmount, String duration, String receiveAddress) {
         logger.trace("Estimating order price for energyAmount: {}, duration: {}, receiveAddress: {}", energyAmount, duration, receiveAddress);
         return restClient.estimateOrderPrice(energyAmount, duration, receiveAddress);

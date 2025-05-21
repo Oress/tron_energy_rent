@@ -131,8 +131,8 @@ public class ManageGroupActionsHandler {
             Long telegramId = userState.getTelegramId();
 
             if (newLabel.length() < 3) {
-                logger.info("New label is too short: {}", newLabel);
-                // TODO: send warning message
+                logger.warn("New label is too short: {}", newLabel);
+                manageGroupActionsView.groupNameIsTooShort(userState);
                 return;
             }
 
@@ -140,6 +140,8 @@ public class ManageGroupActionsHandler {
             balanceService.renameGroupBalance(openBalance.getSelectedBalanceId(), newLabel);
 
             manageGroupActionsView.groupRenamed(userState);
+            telegramState.updateUserState(userState.getTelegramId(),
+                userState.withState(States.ADMIN_MANAGE_GROUPS_ACTION_RENAMED_SUCCESS));
         }
     }
 
@@ -159,6 +161,8 @@ public class ManageGroupActionsHandler {
                     telegramId);
 
             manageGroupActionsView.groupBalanceAdjusted(userState);
+            telegramState.updateUserState(userState.getTelegramId(),
+                    userState.withState(States.ADMIN_MANAGE_GROUPS_ACTION_BALANCE_ADJUSTED_SUCCESS));
         }
     }
 
@@ -173,13 +177,10 @@ public class ManageGroupActionsHandler {
     public void confirmGroupDeactivate(UserState userState, Update update) {
         CallbackQuery callbackQuery = update.getCallbackQuery();
         BalanceEdit openBalance = telegramState.getOrCreateBalanceEdit(userState.getTelegramId());
-        // TODO: delete group balance, remove group balance from users, watch out for
-        // potential actions with deleted group
-        // TODO: handle balance not found exception
         balanceService.deactivateGroupBalance(openBalance.getSelectedBalanceId());
         manageGroupActionsView.groupDeleted(callbackQuery);
         telegramState.updateUserState(userState.getTelegramId(),
-                userState.withState(States.ADMIN_MANAGE_GROUPS_ACTION_DELETE_SUCCESS));
+                userState.withState(States.ADMIN_MANAGE_GROUPS_ACTION_DEACTIVATE_SUCCESS));
     }
 
     @MatchState(state = States.ADMIN_MANAGE_GROUPS_ACTION_DEACTIVATE_CONFIRM, callbackData = InlineMenuCallbacks.CONFIRM_NO)

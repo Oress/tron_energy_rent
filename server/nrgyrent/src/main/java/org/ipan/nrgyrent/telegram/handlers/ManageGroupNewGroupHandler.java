@@ -3,7 +3,6 @@ package org.ipan.nrgyrent.telegram.handlers;
 import java.util.List;
 
 import org.ipan.nrgyrent.domain.exception.UserAlreadyHasGroupBalanceException;
-import org.ipan.nrgyrent.domain.exception.UserNotRegisteredException;
 import org.ipan.nrgyrent.domain.model.Balance;
 import org.ipan.nrgyrent.domain.service.BalanceService;
 import org.ipan.nrgyrent.telegram.States;
@@ -14,6 +13,7 @@ import org.ipan.nrgyrent.telegram.state.UserState;
 import org.ipan.nrgyrent.telegram.statetransitions.MatchState;
 import org.ipan.nrgyrent.telegram.statetransitions.TransitionHandler;
 import org.ipan.nrgyrent.telegram.statetransitions.UpdateType;
+import org.ipan.nrgyrent.telegram.views.ManageGroupActionsView;
 import org.ipan.nrgyrent.telegram.views.ManageGroupNewGroupView;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.UserShared;
@@ -32,14 +32,20 @@ public class ManageGroupNewGroupHandler {
     private final BalanceService balanceService;
 
     private final ManageGroupNewGroupView manageGroupNewGroupView;
+    private final ManageGroupActionsView manageGroupActionsView;
 
     @MatchState(state = States.ADMIN_MANAGE_GROUPS_ADD_PROMPT_LABEL, updateTypes = UpdateType.MESSAGE)
     public void handleAddGroupPromptLabel(UserState userState, Update update) {
         Message message = update.getMessage();
         if (message.hasText()) {
-            // TODO: validate group name
             String newGroupLabel = message.getText();
             Long telegramId = userState.getTelegramId();
+
+            if (newGroupLabel.length() < 3) {
+                logger.warn("New label is too short: {}", newGroupLabel);
+                manageGroupActionsView.groupNameIsTooShort(userState);
+                return;
+            }
 
             AddGroupState addGroupState = telegramState.getOrCreateAddGroupState(telegramId);
             telegramState.updateAddGroupState(telegramId, addGroupState.withLabel(newGroupLabel));
@@ -58,7 +64,6 @@ public class ManageGroupNewGroupHandler {
         if (message != null && message.hasUserShared()) {
             telegramMessages.deleteMessage(message);
 
-            // TODO: validate group name.
             UsersShared usersShared = message.getUsersShared();
             List<UserShared> users = usersShared.getUsers();
 
@@ -66,9 +71,6 @@ public class ManageGroupNewGroupHandler {
             List<Long> userIds = users.stream().map(user -> user.getUserId()).toList();
             try {
                 Balance groupBalance = balanceService.createGroupBalance(addGroupState.getLabel(), userIds);
-            } catch (UserNotRegisteredException e) {
-                // TODO: send message to user that some users are not registered, and specify
-                // which ones
             } catch (UserAlreadyHasGroupBalanceException e) {
                 // TODO: send message to user that some users are already in the group, and
                 // specify which ones

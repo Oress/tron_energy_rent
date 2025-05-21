@@ -149,7 +149,7 @@ public class AdminViews {
                                         .text(MENU_ADMIN_SWEEP_WALLETS_BALANCE)
                                         .callbackData(InlineMenuCallbacks.MANAGE_SWEEP_BALANCE)
                                         .build()))
-                .keyboardRow( // TODO: show this button only for admin
+                .keyboardRow(
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()

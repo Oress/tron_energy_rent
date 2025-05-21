@@ -41,9 +41,6 @@ public class UsersActionHandler {
 
     @MatchState(state = States.ADMIN_MANAGE_USER_ACTION_DEACTIVATE_CONFIRM, callbackData = InlineMenuCallbacks.CONFIRM_YES)
     public void confirmDeactivateUser(UserState userState, Update update) {
-        // TODO: delete group balance, remove group balance from users, watch out for
-        // potential actions with deleted group
-        // TODO: handle balance not found exception
         UserEdit openUser = telegramState.getOrCreateUserEdit(userState.getTelegramId());
         userService.deactivateUser(openUser.getSelectedUserId());
         manageUserActionsView.userDeleted(update.getCallbackQuery());

@@ -44,6 +44,7 @@ public class ManageGroupActionsView {
     private static final String MSG_GROUP_PROMPT_NEW_USERS = "Добавьте пользователей в группу, используя меню";
     private static final String MSG_GROUP_PROMPT_REMOVE_USERS = "Удалите пользователей из группы, используя меню";
     private static final String MSG_GROUP_RENAMED = "✅ Группа успешно переименована.";
+    private static final String MSG_GROUP_TOO_SHORT = "❌ Название группы слишком короткое. Минимум 3 символа. Попробуйте снова.";
     private static final String MSG_GROUP_BALANCE_ADJUSTED = "✅ Баланс группы успешно изменен.";
     private static final String MSG_GROUP_USERS_ADDED = "✅ Пользователи успешно добавлены в группу.";
     private static final String MSG_GROUP_USERS_REMOVED = "✅ Пользователи успешно удалены из группы.";
@@ -73,7 +74,7 @@ public class ManageGroupActionsView {
                 .chatId(callbackQuery.getMessage().getChatId())
                 .messageId(callbackQuery.getMessage().getMessageId())
                 .text(MSG_GROUP_DELETED)
-                .replyMarkup(commonViews.getToMainMenuMarkup())
+                .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
         tgClient.execute(message);
     }
@@ -85,6 +86,18 @@ public class ManageGroupActionsView {
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
                 .text(MSG_GROUP_RENAMED)
+                .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
+                .build();
+        tgClient.execute(message);
+    }
+
+@SneakyThrows
+    public void groupNameIsTooShort(UserState userState) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
+                .text(MSG_GROUP_TOO_SHORT)
                 .replyMarkup(commonViews.getToMainMenuMarkup())
                 .build();
         tgClient.execute(message);
@@ -97,7 +110,7 @@ public class ManageGroupActionsView {
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
                 .text(MSG_GROUP_BALANCE_ADJUSTED)
-                .replyMarkup(commonViews.getToMainMenuMarkup())
+                .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
         tgClient.execute(message);
     }

@@ -31,7 +31,6 @@ public class StaticLabels {
 
 
     // Notifications labels
-    // TODO: make it label accept params
     public static final String NTFN_ORDER_SUCCESS = """
             ✅ Транзакция успешно завершена
             Энергия была переведена на ваш кошелек

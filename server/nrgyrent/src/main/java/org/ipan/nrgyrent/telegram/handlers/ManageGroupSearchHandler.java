@@ -48,6 +48,9 @@ public class ManageGroupSearchHandler {
         @MatchState(state = States.ADMIN_MANAGE_GROUPS_ACTION_ADD_USERS, callbackData = InlineMenuCallbacks.GO_BACK),
         @MatchState(state = States.ADMIN_MANAGE_GROUPS_ACTION_REMOVE_USERS, callbackData = InlineMenuCallbacks.GO_BACK),
         @MatchState(state = States.ADMIN_MANAGE_GROUPS_ACTION_USERS_REVIEW, callbackData = InlineMenuCallbacks.GO_BACK),
+        @MatchState(state = States.ADMIN_MANAGE_GROUPS_ACTION_RENAMED_SUCCESS, callbackData = InlineMenuCallbacks.GO_BACK),
+        @MatchState(state = States.ADMIN_MANAGE_GROUPS_ACTION_BALANCE_ADJUSTED_SUCCESS, callbackData = InlineMenuCallbacks.GO_BACK),
+        @MatchState(state = States.ADMIN_MANAGE_GROUPS_ACTION_DEACTIVATE_SUCCESS, callbackData = InlineMenuCallbacks.GO_BACK),
 
     })
     public void openGroup(UserState userState, Update update) {
@@ -73,7 +76,6 @@ public class ManageGroupSearchHandler {
             String queryStr = message.getText();
             telegramMessages.deleteMessage(message);
 
-            // TODO: validate query string ??
             if (queryStr.length() < 3) {
                 logger.info("Query string is too short: {}", queryStr);
                 // telegramMessages.manageGroupSearchView().updMenuToManageGroupsSearchResult(null,
@@ -91,7 +93,6 @@ public class ManageGroupSearchHandler {
         Optional<Balance> groupBalance = balanceRepo.findById(balanceId);
         if (groupBalance.isPresent()) {
             Balance balance = groupBalance.get();
-            // TODO: make the message to show more details: name, balance, address, manager.
             manageGroupActionsView.updMenuToManageGroupActionsMenu(callbackQuery, balance);
             telegramState.updateBalanceEdit(userState.getTelegramId(), telegramState
                     .getOrCreateBalanceEdit(userState.getTelegramId()).withSelectedBalanceId(balanceId));

@@ -112,9 +112,7 @@ public class UserWalletsHandler {
                         .label(text)
                         .userId(userState.getTelegramId())
                         .build());
-        // deleteMessage(message);
         telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.ADD_WALLETS_SUCCESS));
         walletsViews.updMenuToAddWalletSuccessMenu(userState);
-        // TODO: send validation message to user
     }
 }
