@@ -238,6 +238,17 @@ public class BalanceService {
     }
 
     @Transactional
+    public void deactivateUserBalance(Long balanceId) {
+        Balance balance = balanceRepo.findById(balanceId).orElse(null);
+        if (balance == null) {
+            logger.error("Balance not found for deletion: {}", balanceId);
+            throw new IllegalArgumentException("Balance not found for deletion");
+        }
+
+        balance.setIsActive(false);
+    }
+
+    @Transactional
     public void subtractSunBalance(Balance targetBalance, Long sunAmount) {
         if (targetBalance == null) {
             throw new IllegalArgumentException("Balance not found");

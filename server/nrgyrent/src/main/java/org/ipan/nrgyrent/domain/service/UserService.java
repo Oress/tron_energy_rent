@@ -54,7 +54,8 @@ public class UserService {
         AppUser appUser = userRepo.findById(selectedUserId).orElse(null);
         if (appUser != null) {
             appUser.setDisabled(true);
-            userRepo.save(appUser);
+            balanceService.deactivateUserBalance(appUser.getBalance().getId());
+            appUser.getBalance();
         }
     }
 
