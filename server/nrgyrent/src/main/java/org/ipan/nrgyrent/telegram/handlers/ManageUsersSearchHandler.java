@@ -54,10 +54,15 @@ public class ManageUsersSearchHandler {
     public void openUserByCallback(UserState userState, Update update) {
         CallbackQuery callbackQuery = update.getCallbackQuery();
         String data = callbackQuery.getData();
+        UserEdit userEdit = telegramState.getOrCreateUserEdit(userState.getTelegramId());
+
         if (data.startsWith(ManageUserActionsView.OPEN_BALANCE)) {
             String telegramIdStr = data.split(ManageUserActionsView.OPEN_BALANCE)[1];
             Long telegramId = Long.parseLong(telegramIdStr);
-            openUser(userState, callbackQuery, telegramId);
+            openUser(userState, telegramId);
+        } else if (userEdit.getSelectedUserId() != null && userState.getState() != States.ADMIN_MANAGE_USERS) {
+            Long userId = userEdit.getSelectedUserId();
+            openUser(userState, userId);
         }
     }
 
@@ -83,11 +88,11 @@ public class ManageUsersSearchHandler {
         }
     }
 
-    public void openUser(UserState userState, CallbackQuery callbackQuery, Long telegramId) {
+    public void openUser(UserState userState, Long telegramId) {
         Optional<AppUser> appUser = appUserRepo.findById(telegramId);
         if (appUser.isPresent()) {
             AppUser user = appUser.get();
-            manageUserActionsView.updMenuToManageUserActionsMenu(callbackQuery, user);
+            manageUserActionsView.updMenuToManageUserActionsMenu(userState, user);
             UserEdit userEdit = telegramState.getOrCreateUserEdit(userState.getTelegramId());
             telegramState.updateUserEdit(userState.getTelegramId(), userEdit.withSelectedUserId(telegramId));
             telegramState.updateUserState(userState.getTelegramId(),

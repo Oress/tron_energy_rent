@@ -9,12 +9,6 @@ public class WalletTools {
         return TRON_ADDRESS_PATTERN.matcher(address).matches();
     }
 
-    /**
-     * Formats a Tron address replaces middle characters with asterisks.
-     *
-     * @param address the Tron address to format
-     * @return the formatted Tron address
-     */
     public static String formatTronAddress(String address) {
         if (address == null || address.length() < 6) {
             return address; // Return the original address if it's null or too short
@@ -25,6 +19,14 @@ public class WalletTools {
         String middlePart = "****";
 
         return firstPart + middlePart + lastPart;
+    }
 
+    public static String formatTronAddressSuffixOnly(String address) {
+        if (address == null || address.length() < 6) {
+            return address; // Return the original address if it's null or too short
+        }
+
+        String lastPart = address.substring(address.length() - 6);
+        return "****" + lastPart;
     }
 }

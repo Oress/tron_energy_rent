@@ -9,6 +9,7 @@ import java.util.concurrent.CompletableFuture;
 import org.ipan.nrgyrent.domain.model.Balance;
 import org.ipan.nrgyrent.domain.model.DepositTransaction;
 import org.ipan.nrgyrent.domain.model.repository.DepositTransactionRepo;
+import org.ipan.nrgyrent.itrx.AppConstants;
 import org.ipan.nrgyrent.tron.utils.ByteArray;
 import org.ipan.nrgyrent.tron.wallet.WalletApi;
 import org.ipan.nrgyrent.trongrid.api.AccountApi;
@@ -34,7 +35,6 @@ import lombok.extern.slf4j.Slf4j;
 public class PollForTransactionsJobHelper {
     private static final Comparator<Transaction> COMPARING_TX_TS = Comparator.<Transaction>comparingLong(tx -> tx.getRawData().getTimestamp());
     private static final String TRANSFER_CONTRACT = "TransferContract";
-    private static final Long MIN_TRANSFER_AMOUNT_SUN = 1_000_000L;
 
     private final DepositTransactionRepo depositTransactionRepo;
     private final AccountApi accountApi;
@@ -147,7 +147,7 @@ public class PollForTransactionsJobHelper {
         return TRANSFER_CONTRACT.equals(contract.getType())
                 && rawData.getTimestamp() > lastTxTimestamp
                 && WalletApi.encode58Check(ByteArray.fromHexString(contract.getParameter().getValue().getToAddress())).equals(walletAddress)
-                && contract.getParameter().getValue().getAmount() >= MIN_TRANSFER_AMOUNT_SUN;
+                && contract.getParameter().getValue().getAmount() >= AppConstants.MIN_TRANSFER_AMOUNT_SUN;
     }
 
     @Lookup

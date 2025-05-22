@@ -19,7 +19,6 @@ import lombok.extern.slf4j.Slf4j;
 public class TronTransactionHelper {
     private final TrongridRestClient trongridRestClient;
 
-    @Retryable
     public String performTransferTransaction(String fromAddress, String toAddress, Long amountToTransfer, Function<String, String> signFunction) {
         logger.info("Performing transfer transaction from {} to {} with amount {}", fromAddress, toAddress, amountToTransfer);
         TreeMap<String, Object> responseProps = trongridRestClient.createTransaction(

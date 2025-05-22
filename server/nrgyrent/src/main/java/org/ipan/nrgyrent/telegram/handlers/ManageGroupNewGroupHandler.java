@@ -2,7 +2,8 @@ package org.ipan.nrgyrent.telegram.handlers;
 
 import java.util.List;
 
-import org.ipan.nrgyrent.domain.exception.UserAlreadyHasGroupBalanceException;
+import org.ipan.nrgyrent.domain.exception.UserIsManagerException;
+import org.ipan.nrgyrent.domain.exception.UserNotRegisteredException;
 import org.ipan.nrgyrent.domain.model.Balance;
 import org.ipan.nrgyrent.domain.service.BalanceService;
 import org.ipan.nrgyrent.telegram.InlineMenuCallbacks;
@@ -80,14 +81,19 @@ public class ManageGroupNewGroupHandler {
             Long managerId = manager.getUserId();
             try {
                 Balance groupBalance = balanceService.createGroupBalance(addGroupState.getLabel(), managerId);
-            } catch (UserAlreadyHasGroupBalanceException e) {
-                // TODO: send message to user that some users are already in the group, and
-                // specify which ones
+            } catch (UserNotRegisteredException e) {
+                manageGroupNewGroupView.someUsersAreNotRegistered(userState);
+                return;
+            }catch (UserIsManagerException e) {
+                manageGroupNewGroupView.userIsManagerInAnotherGroup(userState);
+                return;
             }
+
+            telegramMessages.deleteMessages(userState.getChatId(), userState.getMessagesToDelete());
 
             telegramMessages.manageGroupView().updMenuToManageGroupsAddSuccess(userState);
             telegramState.updateUserState(userState.getTelegramId(),
-                    userState.withState(States.ADMIN_MANAGE_GROUPS_ADD_SUCCESS));
+                    userState.withMessagesToDelete(null).withState(States.ADMIN_MANAGE_GROUPS_ADD_SUCCESS));
         }
     }
 }

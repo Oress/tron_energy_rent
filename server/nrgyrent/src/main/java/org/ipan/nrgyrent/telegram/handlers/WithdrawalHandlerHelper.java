@@ -46,7 +46,6 @@ public class WithdrawalHandlerHelper {
         // Manager can withdraw from the personal balance or from the group balance
         // Regular users or members of a group can withdraw only from the personal balance
 
-        // TODO: what to do with the activation fee?
         Balance withdrawBalance;
 
         AppUser user = userRepo.findById(userId).get();
@@ -58,6 +57,8 @@ public class WithdrawalHandlerHelper {
 
         if (withdrawBalance == null) {
             logger.error("User {} has no balance for withdrawal", userId);
+            UserState userState = telegramState.getOrCreateUserState(userId);
+            withdrawViews.sendWithdrawalFail(userState);
             return CompletableFuture.completedFuture(null);
         }
 
@@ -86,8 +87,9 @@ public class WithdrawalHandlerHelper {
 
         ManagedWallet managedWallet = managedWalletRepo.findById(walletToWithdrawFrom).get();
 
+        WithdrawalOrder withdrawalOrder = null;
         try {
-            WithdrawalOrder withdrawalOrder = withdrawalOrderService.createPendingOrder(userId, useGroupBalance, amountSun, fee, walletToWithdrawFrom);
+            withdrawalOrder = withdrawalOrderService.createPendingOrder(userId, useGroupBalance, amountSun, fee, walletToWithdrawFrom);
 
             String resultingTxId = tronTransactionHelper.performTransferTransaction(
                     walletToWithdrawFrom,
@@ -104,6 +106,9 @@ public class WithdrawalHandlerHelper {
             logger.error("Error while transferring TRX from collection wallets", e);
             UserState userState = telegramState.getOrCreateUserState(userId);
             withdrawViews.sendWithdrawalFail(userState);
+            if (withdrawalOrder != null) {
+                withdrawalOrderService.refundOrder(withdrawalOrder.getId());
+            }
         }
         return CompletableFuture.completedFuture(null);
     }

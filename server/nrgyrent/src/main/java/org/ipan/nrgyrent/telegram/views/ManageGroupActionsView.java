@@ -64,6 +64,66 @@ public class ManageGroupActionsView {
     private final CommonViews commonViews;
 
     @SneakyThrows
+    public void somethingWentWrong(UserState userState) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
+                .text("❌ Произошла ошибка. Попробуйте снова.")
+                .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
+                .build();
+        tgClient.execute(message);
+    }
+
+    @SneakyThrows
+    public void userAlreadyManagesAnotherGroup(UserState userState) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
+                .text("❌ Пользователь уже управляет другой группой.")
+                .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
+                .build();
+        tgClient.execute(message);
+    }
+
+        @SneakyThrows
+    public void cannotRemoveManager(UserState userState) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
+                .text("❌ Пользователь не может быть удален из группы, так как он является менеджером.")
+                .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
+                .build();
+        tgClient.execute(message);
+    }
+
+    @SneakyThrows
+    public void someUsersAreNotRegistered(UserState userState) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
+                .text("❌ Некоторые пользователи не зарегистрированы. Попробуйте снова.")
+                .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
+                .build();
+        tgClient.execute(message);
+    }
+
+    @SneakyThrows
+    public void groupBalanceIsNegative(UserState userState) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
+                .text("❌ Баланс группы не может быть отрицательным. Попробуйте снова.")
+                .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
+                .build();
+        tgClient.execute(message);
+    }
+
+    @SneakyThrows
     public void updMenuManagerChanged(UserState userState) {
         EditMessageText message = EditMessageText
                 .builder()
@@ -196,7 +256,7 @@ public class ManageGroupActionsView {
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
                 .text(MSG_GROUP_USERS_ADDED)
-                .replyMarkup(commonViews.getToMainMenuMarkup())
+                .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
         tgClient.execute(message);
     }
@@ -407,7 +467,7 @@ public class ManageGroupActionsView {
                                 InlineKeyboardButton
                                         .builder()
                                         .text(MANAGE_GROUP_ACTION_SET_MANAGER)
-                                        .callbackData(InlineMenuCallbacks.MANAGE_GROUPS_ACTION_SET_MANAGER)
+                                        .callbackData(InlineMenuCallbacks.MANAGE_GROUPS_ACTION_CHANGE_MANAGER)
                                         .build()))
                 .keyboardRow(
                         new InlineKeyboardRow(

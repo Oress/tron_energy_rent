@@ -6,9 +6,11 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.NotImplementedException;
+import org.ipan.nrgyrent.domain.exception.InvalidAdjustedBalanceException;
 import org.ipan.nrgyrent.domain.exception.NotEnoughBalanceException;
-import org.ipan.nrgyrent.domain.exception.UserAlreadyHasGroupBalanceException;
+import org.ipan.nrgyrent.domain.exception.UserIsManagerException;
 import org.ipan.nrgyrent.domain.exception.UserNotRegisteredException;
+import org.ipan.nrgyrent.domain.exception.UsersMustBelongToTheSameGroupException;
 import org.ipan.nrgyrent.domain.model.AppUser;
 import org.ipan.nrgyrent.domain.model.Balance;
 import org.ipan.nrgyrent.domain.model.BalanceType;
@@ -39,27 +41,43 @@ public class BalanceService {
     @Transactional
     public Balance removeUsersFromTheGroupBalance(Long balanceId, List<Long> userIds) {
         Balance balance = balanceRepo.findById(balanceId).orElse(null);
-        // Balance balance = balanceRepo.findByIdWithUsers(balanceId).orElse(null);
         if (balance == null) {
             logger.error("Balance not found for removing users: {}", balanceId);
             throw new IllegalArgumentException("Balance not found for removing users");
         }
 
-        // Check if users are already in the group
         List<AppUser> usersToRemove = userRepo.findAllById(userIds);
         if (usersToRemove.isEmpty() || usersToRemove.size() != userIds.size()) {
             logger.info("Some users are not registered: {}", userIds);
-            throw new UserNotRegisteredException("Some users are not registered");
+            Long notRegisteredUserId = userIds.stream()
+                    .filter(userId -> usersToRemove.stream().noneMatch(user -> user.getTelegramId() == userId))
+                    .findFirst().orElse(null);
+            throw new UserNotRegisteredException("Some users are not registered: " + notRegisteredUserId);
         }
 
-        if (usersToRemove.stream().anyMatch(
+        // Check that all users belong to the same group balance
+        if (usersToRemove.stream().anyMatch(user -> user.getGroupBalance() == null 
+                || !user.getGroupBalance().getId().equals(balanceId))) {
+            logger.info("Some users are not in the group: {}", usersToRemove);
+            throw new UsersMustBelongToTheSameGroupException("Some users are not in the group");
+        }
+
+/*         if (usersToRemove.stream().anyMatch(
                 user -> user.getGroupBalance() != null && !balanceId.equals(user.getGroupBalance().getId()))) {
             logger.info("Some users are already in the group: {}", usersToRemove);
-            throw new UserAlreadyHasGroupBalanceException("Some users already have a group balance");
-        }
+            throw new UserIsManagerException("Some users already have a group balance");
+        } */
 
-        Map<Long, AppUser> usersToRemoveMap = usersToRemove.stream()
-                .collect(Collectors.toMap(AppUser::getTelegramId, Function.identity()));
+        for (AppUser userToRemove : usersToRemove) {
+            Balance groupBalance = userToRemove.getGroupBalance();
+            // Check if the user is a manager of another group balance
+            if (groupBalance != null && groupBalance.getManager().getTelegramId() == userToRemove.getTelegramId()) {
+                throw new UserIsManagerException(
+                        "User is already a manager of another group balance: " + userToRemove.getTelegramId());
+            }
+
+            userToRemove.setGroupBalance(null);
+        }
         /*
          * if (usersToAdd.isEmpty()) {
          * logger.info("0 new users to add to group: {}", balanceId);
@@ -77,42 +95,36 @@ public class BalanceService {
     @Transactional
     public Balance addUsersToTheGroupBalance(Long balanceId, List<Long> userIds) {
         Balance balance = balanceRepo.findById(balanceId).orElse(null);
-        // Balance balance = balanceRepo.findByIdWithUsers(balanceId).orElse(null);
         if (balance == null) {
             logger.error("Balance not found for adding users: {}", balanceId);
             throw new IllegalArgumentException("Balance not found for adding users");
         }
 
-        // Check if users are already in the group
         List<AppUser> usersToAdd = userRepo.findAllById(userIds);
         if (usersToAdd.isEmpty() || usersToAdd.size() != userIds.size()) {
             logger.info("Some users are not registered: {}", userIds);
-            throw new UserNotRegisteredException("Some users are not registered");
+            Long notRegisteredUserId = userIds.stream()
+                    .filter(userId -> usersToAdd.stream().noneMatch(user -> user.getTelegramId() == userId))
+                    .findFirst().orElse(null);
+            throw new UserNotRegisteredException("Some users are not registered: " + notRegisteredUserId);
         }
 
-        if (usersToAdd.stream().anyMatch(
+/*         if (usersToAdd.stream().anyMatch(
                 user -> user.getGroupBalance() != null && !balanceId.equals(user.getGroupBalance().getId()))) {
             logger.info("Some users are already in the group: {}", usersToAdd);
             throw new UserAlreadyHasGroupBalanceException("Some users already have a group balance");
-        }
+        } */
 
         for (AppUser userToAdd : usersToAdd) {
+            Balance groupBalance = userToAdd.getGroupBalance();
+            // Check if the user is a manager of another group balance
+            if (groupBalance != null && groupBalance.getManager().getTelegramId() == userToAdd.getTelegramId()) {
+                throw new UserIsManagerException(
+                        "User is already a manager of another group balance: " + userToAdd.getTelegramId());
+            }
+
             userToAdd.setGroupBalance(balance);
         }
-
-        // usersToAdd.removeIf(user -> balance.getUsers().contains(user));
-        /*
-         * if (usersToAdd.isEmpty()) {
-         * logger.info("0 new users to add to group: {}", balanceId);
-         * throw new IllegalArgumentException("0 new users to add to group");
-         * }
-         */
-
-        // Add users to the group
-        // balance.getUsers().addAll(usersToAdd);
-        // usersToAdd.forEach(nullableUser -> {
-        //     nullableUser.setGroupBalance(balance);
-        // });
         return balance;
     }
 
@@ -145,8 +157,8 @@ public class BalanceService {
 
         // amountSun should be > 0
         if (amountSun < 0) {
-            logger.info("New amount is negative: {}", amountSun);
-            throw new IllegalArgumentException("New amount is negative");
+            logger.warn("New amount is negative: {}", amountSun);
+            throw new InvalidAdjustedBalanceException("New amount is negative");
         }
 
         ManualBalanceAdjustmentAction action = createManualBalanceAdjustmentAction(referenceById, balance, amountSun);
@@ -177,9 +189,10 @@ public class BalanceService {
         }
 
         // 2. Check that manager is not already in the group balance.
-        if (manager.getGroupBalance() != null) {
+        Balance groupBalance = manager.getGroupBalance();
+        if (groupBalance != null && groupBalance.getManager().getTelegramId() == managerId) {
             logger.info("Manager is already in a group: {}", managerId);
-            throw new UserAlreadyHasGroupBalanceException("Manager is already in a group");
+            throw new UserIsManagerException("Manager is already in a group");
         }
 
         // 3. Create group balance and add users to it.
@@ -302,6 +315,7 @@ public class BalanceService {
         targetBalance.setSunBalance(targetBalance.getSunBalance() - sunAmount);
     }
 
+    @Transactional
     public void changeManager(Long selectedBalanceId, Long userId) {
         Balance selectedBalance = balanceRepo.findById(selectedBalanceId).orElse(null);
         if (selectedBalance == null) {

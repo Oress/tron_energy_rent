@@ -51,6 +51,10 @@ public class ManageGroupSearchHandler {
         @MatchState(state = States.ADMIN_MANAGE_GROUPS_ACTION_RENAMED_SUCCESS, callbackData = InlineMenuCallbacks.GO_BACK),
         @MatchState(state = States.ADMIN_MANAGE_GROUPS_ACTION_BALANCE_ADJUSTED_SUCCESS, callbackData = InlineMenuCallbacks.GO_BACK),
         @MatchState(state = States.ADMIN_MANAGE_GROUPS_ACTION_DEACTIVATE_SUCCESS, callbackData = InlineMenuCallbacks.GO_BACK),
+        @MatchState(state = States.ADMIN_MANAGE_GROUPS_ACTION_PROMPT_NEW_MANAGER, callbackData = InlineMenuCallbacks.GO_BACK),
+        @MatchState(state = States.ADMIN_MANAGE_GROUPS_ACTION_MANAGER_CHANGED_SUCCESS, callbackData = InlineMenuCallbacks.GO_BACK),
+        @MatchState(state = States.ADMIN_MANAGE_GROUPS_ACTION_ADD_USERS_SUCCESS, callbackData = InlineMenuCallbacks.GO_BACK),
+        @MatchState(state = States.ADMIN_MANAGE_GROUPS_ACTION_REMOVE_USERS_SUCCESS, callbackData = InlineMenuCallbacks.GO_BACK),
 
     })
     public void openGroup(UserState userState, Update update) {
@@ -73,6 +77,8 @@ public class ManageGroupSearchHandler {
         @MatchState(state = States.MANAGER_GROUPS_ACTION_ADD_USERS, callbackData = InlineMenuCallbacks.GO_BACK),
         @MatchState(state = States.MANAGER_GROUPS_ACTION_REMOVE_USERS, callbackData = InlineMenuCallbacks.GO_BACK),
         @MatchState(state = States.MANAGER_GROUP_VIEW_USERS, callbackData = InlineMenuCallbacks.GO_BACK),
+        @MatchState(state = States.MANAGER_GROUPS_ACTION_ADD_USERS_SUCCESS, callbackData = InlineMenuCallbacks.GO_BACK),
+        @MatchState(state = States.MANAGER_GROUPS_ACTION_REMOVE_USERS_SUCCESS, callbackData = InlineMenuCallbacks.GO_BACK),
     })
     public void openGroupForManager(UserState userState, Update update) {
         Long managingGroupId = userState.getManagingGroupId();

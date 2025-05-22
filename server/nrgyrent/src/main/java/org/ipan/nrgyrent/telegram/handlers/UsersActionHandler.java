@@ -50,7 +50,7 @@ public class UsersActionHandler {
     // @MatchState(state = States.ADMIN_MANAGE_USER_ACTION_DEACTIVATE_CONFIRM, callbackData = InlineMenuCallbacks.CONFIRM_NO)
     public void declineDeactivateUser(UserState userState, Update update) {
         UserEdit openUser = telegramState.getOrCreateUserEdit(userState.getTelegramId());
-        manageUsersSearchHandler.openUser(userState, update.getCallbackQuery(), openUser.getSelectedUserId());
+        manageUsersSearchHandler.openUser(userState, openUser.getSelectedUserId());
     }
 
     @MatchState(state = States.ADMIN_MANAGE_USERS_ACTION_PREVIEW, callbackData = InlineMenuCallbacks.MANAGE_USER_ACTION_ADJUST_BALANCE_MANUALLY)
@@ -71,10 +71,17 @@ public class UsersActionHandler {
             BigDecimal adjustedBalanceInSun = adjustedBalanceInTrx.multiply(AppConstants.trxToSunRate);
             Long telegramId = userState.getTelegramId();
 
+            Long adjustedBalanceInSunLong = adjustedBalanceInSun.longValue();
+            if (adjustedBalanceInSunLong < 0) {
+                logger.warn("Adjusted balance is negative: {}", adjustedBalanceInSunLong);
+                manageUserActionsView.groupBalanceIsNegative(userState);
+                return;
+            }
+
             UserEdit userEdit = telegramState.getOrCreateUserEdit(telegramId);
             AppUser byId = userService.getById(userEdit.getSelectedUserId());
 
-            balanceService.adjustBalance(byId.getBalance().getId(), adjustedBalanceInSun.longValue(), telegramId);
+            balanceService.adjustBalance(byId.getBalance().getId(), adjustedBalanceInSunLong, telegramId);
 
             manageUserActionsView.userBalanceAdjusted(userState);
         }

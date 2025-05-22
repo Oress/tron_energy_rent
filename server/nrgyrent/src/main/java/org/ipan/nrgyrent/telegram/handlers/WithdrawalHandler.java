@@ -19,6 +19,8 @@ import org.ipan.nrgyrent.telegram.statetransitions.TransitionHandler;
 import org.ipan.nrgyrent.telegram.statetransitions.UpdateType;
 import org.ipan.nrgyrent.telegram.utils.WalletTools;
 import org.ipan.nrgyrent.telegram.views.WithdrawViews;
+import org.ipan.nrgyrent.trongrid.api.AccountApi;
+import org.ipan.nrgyrent.trongrid.model.V1AccountsAddressGet200Response;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.message.Message;
@@ -34,6 +36,7 @@ public class WithdrawalHandler {
     private final UserWalletService userWalletService;
     private final UserService userService;
     private final WithdrawalHandlerHelper withdrawalHandlerHelper;
+    private final AccountApi accountApi;
 
     private final WithdrawViews withdrawViews;
 
@@ -85,10 +88,15 @@ public class WithdrawalHandler {
 
                 if (balance == null) {
                     logger.error("User withdrawing TRX {} has no balance params: {}", userState.getTelegramId(), params);
-                    return;
+                    throw new IllegalStateException("User has no balance");
                 }
                 
                 long sunAmountLong = sunAmount.longValue();
+                if (sunAmountLong < AppConstants.MIN_WITHDRAWAL_AMOUNT) {
+                    // Do nothing, keep the same state
+                    return;
+                }
+
                 if (balance.getSunBalance() < sunAmountLong + AppConstants.WITHDRAWAL_FEE) {
                     logger.warn("User {} has not enough balance for withdrawal, balance: {}, required: {}, fee: {}", userState.getTelegramId(), balance.getSunBalance(), sunAmountLong, AppConstants.WITHDRAWAL_FEE);
                     withdrawViews.promptAmountAgainNotEnoughBalance(userState);
@@ -125,6 +133,14 @@ public class WithdrawalHandler {
 
     private void tryMakeTransaction(UserState userState, String walletAddress, Long sunAmount, Boolean groupBalance) {
         if (WalletTools.isValidTronAddress(walletAddress)) {
+
+            V1AccountsAddressGet200Response accountInfo = accountApi.v1AccountsAddressGet(walletAddress).block();
+            if (accountInfo == null || accountInfo.getData().isEmpty()) {
+                List<UserWallet> wallets = userWalletService.getWallets(userState.getTelegramId());
+                withdrawViews.withdrawTrxInactiveWallet(wallets, userState);
+                return;
+            }
+
             withdrawalHandlerHelper.transferTrxFromCollectionWallets(
                     userState.getTelegramId(),
                     walletAddress,

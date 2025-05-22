@@ -47,8 +47,6 @@ public class WithdrawViews {
     private static final String MSG_WITHDRAW_TRX = """
             💰 Вывод TRX
 
-            ❗️Коммиссия за вывод средств составляет 1 TRX.
-
             Выберите кошелек, на который хотите вывести TRX или введите адрес кошелька, на который хотите вывести средства.
             """;
 
@@ -63,6 +61,20 @@ public class WithdrawViews {
 
     private final TelegramClient tgClient;
     private final CommonViews commonViews;
+
+    @Retryable
+    @SneakyThrows
+    public void withdrawTrxInactiveWallet(List<UserWallet> wallets, UserState userState) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
+                .text("❌ Ошибка вывода средств\n\n" +
+                        "Кошелек неактивен. Пожалуйста, выберите другой кошелек или активируйте текущий.")
+                .replyMarkup(getTransactionsMenuMarkup(wallets))
+                .build();
+        tgClient.execute(message);
+    }
 
     @Retryable
     @SneakyThrows
@@ -248,6 +260,9 @@ public class WithdrawViews {
 
                 ❗️Коммиссия за вывод средств составляет 1 TRX.
 
+                ❗️Минимальная сумма для вывода составляет 10 TRX.
+
+
                 Пожалуйста, введите сумму, которую вы хотите вывести.
                 """;
     }
@@ -255,8 +270,6 @@ public class WithdrawViews {
     private String getPromptAmountForWithdrawalNotEnoughBalance() {
         return """
                 💰 Вывод средств
-
-                ❗️Коммиссия за вывод средств составляет 1 TRX.
 
                 У вас недостаточно средств для вывода такой суммы.
                 Пожалуйста, введите сумму, которую вы хотите вывести.

@@ -49,8 +49,9 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
         Long userId = from.getId();
         UserState userState = telegramState.getOrCreateUserState(userId);
 
+        CallbackQuery callbackQuery = update.getCallbackQuery();
         List<Integer> messagesToDelete = userState.getMessagesToDelete();
-        if (messagesToDelete != null && !messagesToDelete.isEmpty()) {
+        if (callbackQuery != null && messagesToDelete != null && !messagesToDelete.isEmpty() && (InlineMenuCallbacks.GO_BACK.equals(callbackQuery.getData()) || InlineMenuCallbacks.TO_MAIN_MENU.equals(callbackQuery.getData()))) {
             telegramMessages.deleteMessages(userState.getChatId(), messagesToDelete);
             userState = telegramState.updateUserState(userId, userState.withMessagesToDelete(null));
         }
@@ -101,7 +102,6 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
         }
 
         Message message = update.getMessage();
-        CallbackQuery callbackQuery = update.getCallbackQuery();
 
         if (message != null) {
             telegramMessages.deleteMessage(message);

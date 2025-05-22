@@ -210,10 +210,13 @@ public class TransactionsHandler {
                 }
             } catch (Exception e) {
                 logger.error("Error during transaction", e);
-                orderService.refundOrder(
-                        AddOrUpdateOrderCommand.builder()
-                                .correlationId(correlationId.toString())
-                                .build());
+
+                if (pendingOrder != null) {
+                    orderService.refundOrder(
+                            AddOrUpdateOrderCommand.builder()
+                                    .correlationId(correlationId.toString())
+                                    .build());
+                }
                 transactionsViews.somethingWentWrong(userState);
                 telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.TRANSACTION_ERROR));
             }

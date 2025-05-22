@@ -49,6 +49,32 @@ public class ManageGroupNewGroupView {
     private final CommonViews commonViews;
 
     @SneakyThrows
+    public void userIsManagerInAnotherGroup(UserState userState) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
+                .text("❌ Пользователь является менеджером другой группы.")
+                .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
+                .build();
+        tgClient.execute(message);
+    }
+
+    
+    @SneakyThrows
+    public void someUsersAreNotRegistered(UserState userState) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
+                .text("❌ Некоторые пользователи не зарегистрированы. Попробуйте снова.")
+                .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
+                .build();
+        tgClient.execute(message);
+    }
+
+
+    @SneakyThrows
     public void updMenuToManageGroupsMenu(CallbackQuery callbackQuery) {
         EditMessageText message = EditMessageText
                 .builder()

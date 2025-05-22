@@ -42,7 +42,6 @@ public class InlineMenuCallbacks {
     public static final String MANAGE_GROUPS_ACTION_ADD_USERS = "manage_groups_action_add_users";
     public static final String MANAGE_GROUPS_ACTION_REMOVE_USERS = "manage_groups_action_remove_users";
     public static final String MANAGE_GROUPS_ACTION_DEACTIVATE = "manage_groups_action_deactivate";
-    public static final String MANAGE_GROUPS_ACTION_SET_MANAGER = "manage_groups_action_set_manager";
 
     public static final String MANAGE_USER_ACTION_DEACTIVATE = "manage_user_action_deactivate";
     public static final String MANAGE_USER_ACTION_ADJUST_BALANCE_MANUALLY = "manage_user_action_adjust_balance_manually";

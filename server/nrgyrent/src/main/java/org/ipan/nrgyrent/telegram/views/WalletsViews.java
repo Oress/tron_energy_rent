@@ -6,6 +6,8 @@ import org.ipan.nrgyrent.domain.model.UserWallet;
 import org.ipan.nrgyrent.telegram.InlineMenuCallbacks;
 import org.ipan.nrgyrent.telegram.StaticLabels;
 import org.ipan.nrgyrent.telegram.state.UserState;
+import org.ipan.nrgyrent.telegram.utils.FormattingTools;
+import org.ipan.nrgyrent.telegram.utils.WalletTools;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
@@ -118,7 +120,7 @@ public class WalletsViews {
             InlineKeyboardRow row = new InlineKeyboardRow(
                     InlineKeyboardButton
                             .builder()
-                            .text(wallet.getLabel())
+                            .text(getWalletLabel(wallet))
                             .callbackData(OPEN_WALLET + wallet.getId().toString())
                             .build(),
                     InlineKeyboardButton
@@ -150,5 +152,9 @@ public class WalletsViews {
 
         )
                 .build();
+    }
+
+    private String getWalletLabel(UserWallet wallet) {
+        return "%s (%s)".formatted(WalletTools.formatTronAddressSuffixOnly(wallet.getAddress()), wallet.getLabel());
     }
 }

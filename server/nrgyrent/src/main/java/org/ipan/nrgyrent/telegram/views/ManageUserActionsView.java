@@ -63,13 +63,25 @@ public class ManageUserActionsView {
     }
 
     @SneakyThrows
-    public void updMenuToManageUserActionsMenu(CallbackQuery callbackQuery, AppUser appUser) {
+    public void updMenuToManageUserActionsMenu(UserState userState, AppUser appUser) {
         EditMessageText message = EditMessageText
                 .builder()
-                .chatId(callbackQuery.getMessage().getChatId())
-                .messageId(callbackQuery.getMessage().getMessageId())
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
                 .text(getBalanceDescription(appUser))
                 .replyMarkup(getManageUserActionsMarkup())
+                .build();
+        tgClient.execute(message);
+    }
+
+    @SneakyThrows
+    public void groupBalanceIsNegative(UserState userState) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
+                .text("❌ Баланс не может быть отрицательным. Попробуйте снова.")
+                .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
         tgClient.execute(message);
     }
@@ -148,7 +160,6 @@ public class ManageUserActionsView {
                 Логин: %s
                 Имя пользователя: %s
                 Активен: %s
-                Причина деактивации: %s
 
                 Кошелек: %s
                 Баланс: %s TRX
