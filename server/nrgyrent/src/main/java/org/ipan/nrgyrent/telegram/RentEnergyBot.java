@@ -62,10 +62,12 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
         if (user != null && Boolean.TRUE.equals(user.getDisabled())) {
             return;
         } else {
-            if (user.getGroupBalance() != null && user.getTelegramId() == user.getGroupBalance().getManager().getTelegramId()) {
-                userState = userState.withManagingGroupId(user.getGroupBalance().getId());
-            } else {
-                userState = userState.withManagingGroupId(null);
+            if (user != null) {
+                if (user.getGroupBalance() != null && user.getTelegramId() == user.getGroupBalance().getManager().getTelegramId()) {
+                    userState = userState.withManagingGroupId(user.getGroupBalance().getId());
+                } else {
+                    userState = userState.withManagingGroupId(null);
+                }
             }
         }
 
