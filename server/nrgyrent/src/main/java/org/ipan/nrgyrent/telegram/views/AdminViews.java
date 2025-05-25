@@ -37,6 +37,17 @@ public class AdminViews {
 
             Выберите кошелек, на который хотите вывести TRX или введите адрес кошелька, на который хотите вывести средства.
             """;
+    private static final String MSG_WITHDRAW_AMOUNT = """
+            💰 Вывод TRX
+
+            Введите сумму для вывода.
+            """;
+
+    private static final String MSG_WITHDRAW_NOT_ENOUGH_BALANCE = """
+            💰 Вывод TRX
+
+            На sweep кошельках недостаточно средств. Введите другую сумму.
+            """;
 
     private static final String MSG_WITHDRAW_TRX_IN_PROGRESS = """
             💰 Вывод TRX
@@ -68,11 +79,37 @@ public class AdminViews {
 
     @Retryable
     @SneakyThrows
-    public void withdrawTrx(List<UserWallet> wallets, CallbackQuery callbackQuery) {
+    public void promptAmountAgainNotEnoughBalance(UserState userState) {
         EditMessageText message = EditMessageText
                 .builder()
-                .chatId(callbackQuery.getMessage().getChatId())
-                .messageId(callbackQuery.getMessage().getMessageId())
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
+                .text(MSG_WITHDRAW_NOT_ENOUGH_BALANCE)
+                .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
+                .build();
+        tgClient.execute(message);
+    }
+
+    @Retryable
+    @SneakyThrows
+    public void withdrawTrxPromptAmount(UserState userState) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
+                .text(MSG_WITHDRAW_AMOUNT)
+                .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
+                .build();
+        tgClient.execute(message);
+    }
+
+    @Retryable
+    @SneakyThrows
+    public void withdrawTrx(List<UserWallet> wallets, UserState userState) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
                 .text(MSG_WITHDRAW_TRX)
                 .replyMarkup(getTransactionsMenuMarkup(wallets))
                 .build();

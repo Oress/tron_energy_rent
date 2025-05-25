@@ -36,7 +36,7 @@ public class AdminMenuHandlerHelper {
     private final TronTransactionHelper tronTransactionHelper;
 
     @Async
-    public CompletableFuture<Void> transferTrxFromCollectionWallets(Long userId, String toWallet) {
+    public CompletableFuture<Void> transferTrxFromCollectionWallets(Long userId, String toWallet, Long requestedAmount) {
         List<CollectionWallet> collectionWallets = collectionWalletRepo.findAllByIsActive(true);
         List<String> walletAddresses = collectionWallets.stream().map(CollectionWallet::getWalletAddress).toList();
         List<ManagedWallet> managedWallets = managedWalletRepo.findAllById(walletAddresses);
@@ -52,7 +52,7 @@ public class AdminMenuHandlerHelper {
                         .v1AccountsAddressGet(collectionWallet.getWalletAddress()).block();
                 AccountInfo accountData = accountInfo.getData().isEmpty() ? null : accountInfo.getData().get(0);
                 Long sunBalance = accountData != null ? accountData.getBalance() : 0;
-                if (sunBalance > THRESHOLD) {
+                if (sunBalance > THRESHOLD + requestedAmount) {
                     logger.info("Transferring TRX from collection wallet {} to {}", collectionWallet.getWalletAddress(), toWallet);
                     ManagedWallet managedWallet = managedWallets.stream()
                             .filter(w -> w.getBase58Address().equals(collectionWallet.getWalletAddress()))
@@ -61,7 +61,7 @@ public class AdminMenuHandlerHelper {
                     tronTransactionHelper.performTransferTransaction(
                             collectionWallet.getWalletAddress(),
                             toWallet,
-                            sunBalance - THRESHOLD,
+                            requestedAmount,
                             (txId) -> managedWalletService.sign(managedWallet, txId));
                 }
             }

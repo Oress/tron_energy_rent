@@ -1,5 +1,6 @@
 package org.ipan.nrgyrent.telegram.handlers;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -8,13 +9,14 @@ import org.ipan.nrgyrent.domain.model.CollectionWallet;
 import org.ipan.nrgyrent.domain.model.UserWallet;
 import org.ipan.nrgyrent.domain.model.repository.CollectionWalletRepo;
 import org.ipan.nrgyrent.domain.service.UserWalletService;
+import org.ipan.nrgyrent.itrx.AppConstants;
 import org.ipan.nrgyrent.itrx.RestClient;
 import org.ipan.nrgyrent.itrx.dto.ApiUsageResponse;
 import org.ipan.nrgyrent.telegram.InlineMenuCallbacks;
 import org.ipan.nrgyrent.telegram.States;
 import org.ipan.nrgyrent.telegram.state.TelegramState;
-import org.ipan.nrgyrent.telegram.state.TransactionParams;
 import org.ipan.nrgyrent.telegram.state.UserState;
+import org.ipan.nrgyrent.telegram.state.WithdrawParams;
 import org.ipan.nrgyrent.telegram.statetransitions.MatchState;
 import org.ipan.nrgyrent.telegram.statetransitions.MatchStates;
 import org.ipan.nrgyrent.telegram.statetransitions.TransitionHandler;
@@ -67,7 +69,14 @@ public class AdminMenuHandler {
 
     @MatchState(forAdmin = true, state = States.ADMIN_MENU, callbackData = InlineMenuCallbacks.MANAGE_SWEEP_BALANCE)
     public void showSweepBalance(UserState userState, Update update) {
-        List<CollectionWallet> activeSweepWallets = collectionWalletRepo.findAllByIsActive(true);
+        Map<CollectionWallet, Long> sweepWalletsToBalance = getSweepWalletsToBalance();
+        adminViews.sweepWalletsBalance(update.getCallbackQuery(), sweepWalletsToBalance);
+        telegramState.updateUserState(userState.getTelegramId(),
+                userState.withState(States.ADMIN_VIEW_SWEEP_BALANCE));
+    }
+
+    private Map<CollectionWallet, Long> getSweepWalletsToBalance() {
+         List<CollectionWallet> activeSweepWallets = collectionWalletRepo.findAllByIsActive(true);
         Map<CollectionWallet, Long> sweepWalletsToBalance = new HashMap<>();
         for (CollectionWallet sweepWallet : activeSweepWallets) {
             V1AccountsAddressGet200Response accountInfo = accountApi
@@ -76,20 +85,52 @@ public class AdminMenuHandler {
             Long sunBalance = accountData != null ? accountData.getBalance() : 0;
             sweepWalletsToBalance.put(sweepWallet, sunBalance);
         }
-        adminViews.sweepWalletsBalance(update.getCallbackQuery(), sweepWalletsToBalance);
-        telegramState.updateUserState(userState.getTelegramId(),
-                userState.withState(States.ADMIN_VIEW_SWEEP_BALANCE));
+        return sweepWalletsToBalance;
     }
 
     @MatchState(forAdmin = true, state = States.ADMIN_MENU, callbackData = InlineMenuCallbacks.MANAGE_WITHDRAW_TRX)
-    public void showWithdrawTrxMenu(UserState userState, Update update) {
-        TransactionParams transactionParams = telegramState
-                .getOrCreateTransactionParams(userState.getTelegramId());
-        telegramState.updateTransactionParams(userState.getTelegramId(),
-                transactionParams.withGroupBalance(true));
+    public void startAdminWithdraw_promptAmount(UserState userState, Update update) {
+        WithdrawParams withdrawParams = telegramState.getOrCreateWithdrawParams(userState.getTelegramId());
+        telegramState.updateWithdrawParams(userState.getTelegramId(), withdrawParams.withAmount(0L).withGroupBalance(false));
+
+        adminViews.withdrawTrxPromptAmount(userState);
+        telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.ADMIN_VIEW_PROMPT_WITHDRAW_AMOUNT));
+    }
+
+    @MatchState(forAdmin = true, state = States.ADMIN_VIEW_PROMPT_WITHDRAW_AMOUNT, updateTypes = UpdateType.MESSAGE)
+    public void handleAmount_promptWallet(UserState userState, Update update) {
+        Message message = update.getMessage();
+        if (message.hasText()) {
+            String text = message.getText();
+            
+            try {
+                BigDecimal trxAmount = new BigDecimal(text);
+                BigDecimal sunAmount = trxAmount.multiply(AppConstants.trxToSunRate);
+                WithdrawParams params = telegramState.getOrCreateWithdrawParams(userState.getTelegramId());
+
+                long sunAmountLong = sunAmount.longValue();
+                if (sunAmountLong < AppConstants.MIN_WITHDRAWAL_AMOUNT) {
+                    // Do nothing, keep the same state
+                    return;
+                }
+
+                Map<CollectionWallet, Long> sweepWalletsToBalance = getSweepWalletsToBalance();
+                Long availAmount = sweepWalletsToBalance.values().stream().mapToLong(v -> v).sum();
+
+                if (availAmount < sunAmountLong) {
+                    logger.warn("Sweep wallets do not have enough balance to withdraw. UserId: {} Avail {}, Required {}", userState.getTelegramId(), availAmount, sunAmountLong);
+                    adminViews.promptAmountAgainNotEnoughBalance(userState);
+                    return;
+                }
+                telegramState.updateWithdrawParams(userState.getTelegramId(), params.withAmount(sunAmountLong));
+            } catch (NumberFormatException e) {
+                adminViews.withdrawTrxPromptAmount(userState);
+                return;
+            }
+        }
 
         List<UserWallet> wallets = userWalletService.getWallets(userState.getTelegramId());
-        adminViews.withdrawTrx(wallets, update.getCallbackQuery());
+        adminViews.withdrawTrx(wallets, userState);
         telegramState.updateUserState(userState.getTelegramId(),
                 userState.withState(States.ADMIN_VIEW_PROMPT_WITHDRAW_WALLET));
     }
@@ -110,7 +151,8 @@ public class AdminMenuHandler {
 
     private void tryMakeTransaction(UserState userState, String walletAddress) {
         if (WalletTools.isValidTronAddress(walletAddress)) {
-            adminMenuHandlerHelper.transferTrxFromCollectionWallets(userState.getTelegramId(), walletAddress);
+            WithdrawParams params = telegramState.getOrCreateWithdrawParams(userState.getTelegramId());
+            adminMenuHandlerHelper.transferTrxFromCollectionWallets(userState.getTelegramId(), walletAddress, params.getAmount());
             adminViews.withdrawTrxInProgress(userState);
         }
     }
