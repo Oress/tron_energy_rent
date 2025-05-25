@@ -94,8 +94,10 @@ public class ManageGroupSearchHandler {
     public void prevPage(UserState userState, Update update) {
         GroupSearchState searchState = telegramState.getOrCreateGroupSearchState(userState.getTelegramId());
         int pageNumber = searchState.getCurrentPage() - 1;
+        String queryStr = searchState.getQuery();
         telegramState.updateGroupSearchState(userState.getTelegramId(), searchState.withCurrentPage(pageNumber));
-        Page<Balance> prevPage = balanceRepo.findAllByTypeOrderById(BalanceType.GROUP, PageRequest.of(pageNumber, PAGE_SIZE));
+        Page<Balance> prevPage = balanceRepo.findAllByTypeAndLabelContainingIgnoreCaseOrderById(BalanceType.GROUP,
+                    queryStr, PageRequest.of(pageNumber, PAGE_SIZE));
         telegramMessages.manageGroupSearchView().updMenuToManageGroupsSearchResult(prevPage, userState);
         telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.ADMIN_MANAGE_GROUPS_SEARCH));
     }

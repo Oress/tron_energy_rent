@@ -31,4 +31,8 @@ public interface TelegramState {
     GroupSearchState getOrCreateGroupSearchState(Long userId);
     GroupSearchState updateGroupSearchState(Long userId, GroupSearchState groupSearchState);
     GroupSearchState removeGroupSearchState(Long userId); // TODO: cleanup after finishing workflow
+
+    UserSearchState getOrCreateUserSearchState(Long userId);
+    UserSearchState updateUserSearchState(Long userId, UserSearchState groupSearchState);
+    UserSearchState removeUserSearchState(Long userId); // TODO: cleanup after finishing workflow
 }

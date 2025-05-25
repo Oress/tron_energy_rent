@@ -8,6 +8,7 @@ import org.ipan.nrgyrent.telegram.state.GroupSearchState;
 import org.ipan.nrgyrent.telegram.state.TelegramState;
 import org.ipan.nrgyrent.telegram.state.TransactionParams;
 import org.ipan.nrgyrent.telegram.state.UserEdit;
+import org.ipan.nrgyrent.telegram.state.UserSearchState;
 import org.ipan.nrgyrent.telegram.state.UserState;
 import org.ipan.nrgyrent.telegram.state.WithdrawParams;
 import org.mapdb.DB;
@@ -27,6 +28,7 @@ public class TelegramStateInMem implements TelegramState {
     private final HTreeMap<Long, UserEditInMem> userEditMap;
     private final HTreeMap<Long, WithdrawParamsInMem> withdrawParamsMap;
     private final HTreeMap<Long, GroupSearchStateInMem> groupSearchState;
+    private final HTreeMap<Long, UserSearchStateInMem> userSearchState;
 
     public TelegramStateInMem(DB db, ObjectMapper objectMapper) {
         this.userStateMap = db.hashMap("userState")
@@ -67,6 +69,11 @@ public class TelegramStateInMem implements TelegramState {
         this.groupSearchState = db.hashMap("groupSearchState")
                 .keySerializer(Serializer.LONG)
                 .valueSerializer(new GenericSerializer<>(GroupSearchStateInMem.class, objectMapper))
+                .createOrOpen();
+
+        this.userSearchState = db.hashMap("userSearchState")
+                .keySerializer(Serializer.LONG)
+                .valueSerializer(new GenericSerializer<>(UserSearchStateInMem.class, objectMapper))
                 .createOrOpen();
     }
 
@@ -183,5 +190,20 @@ public class TelegramStateInMem implements TelegramState {
     @Override
     public GroupSearchState removeGroupSearchState(Long userId) {
         return this.groupSearchState.remove(userId);
+    }
+
+    @Override
+    public UserSearchState getOrCreateUserSearchState(Long userId) {
+        return this.userSearchState.computeIfAbsent(userId, key -> new UserSearchStateInMem(null,null));
+    }
+
+    @Override
+    public UserSearchState updateUserSearchState(Long userId, UserSearchState groupSearchState) {
+        return this.userSearchState.put(userId, UserSearchStateInMem.of(groupSearchState));
+    }
+
+    @Override
+    public UserSearchState removeUserSearchState(Long userId) {
+        return this.userSearchState.remove(userId);
     }
 }

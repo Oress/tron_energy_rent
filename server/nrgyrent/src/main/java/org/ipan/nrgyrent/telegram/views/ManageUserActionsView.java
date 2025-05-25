@@ -1,5 +1,6 @@
 package org.ipan.nrgyrent.telegram.views;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.ipan.nrgyrent.domain.model.AppUser;
@@ -22,6 +23,8 @@ import lombok.SneakyThrows;
 @Component
 @AllArgsConstructor
 public class ManageUserActionsView {
+    private static final String NEXT_PAGE = "➡️";
+    private static final String PREV_PAGE = "⬅️";
     private static final String MANAGE_USER_ACTION_ADJUST_BALANCE_MANUALLY = "💰 Изменить баланс вручную";
     private static final String MANAGE_USER_ACTION_DEACTIVATE = "❌ Деактивировать пользователя";
 
@@ -168,7 +171,6 @@ public class ManageUserActionsView {
                 user.getTelegramUsername(),
                 user.getTelegramFirstName(),
                 user.getDisabled() ? "❌" : "✅",
-                user.getDisabledReason(),
                 user.getBalance().getDepositAddress(),
                 FormattingTools.formatBalance(user.getBalance().getSunBalance())
                 );
@@ -239,14 +241,38 @@ public class ManageUserActionsView {
                 .builder();
         users.forEach(builder::keyboardRow);
 
-        return builder
+        builder
                 .keyboardRow(
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
                                         .text(MANAGE_USERS_SEARCH_RESET)
-                                        .callbackData(InlineMenuCallbacks.MANAGE_GROUPS_SEARCH_RESET)
-                                        .build()))
+                                        .callbackData(InlineMenuCallbacks.MANAGE_USERS_SEARCH_RESET)
+                                        .build()));
+
+        boolean hasPrev = page.hasPrevious();
+        boolean hasNext = page.hasNext();
+
+        if (hasPrev || hasNext) {
+            List<InlineKeyboardButton> buttons = new ArrayList<>();
+            if (hasPrev) {
+                buttons.add(InlineKeyboardButton
+                                .builder()
+                                .text(PREV_PAGE)
+                                .callbackData(InlineMenuCallbacks.MANAGE_USERS_PREV_PAGE)
+                                .build());
+            }
+            if (hasNext) {
+                buttons.add(InlineKeyboardButton
+                                .builder()
+                                .text(NEXT_PAGE)
+                                .callbackData(InlineMenuCallbacks.MANAGE_USERS_NEXT_PAGE)
+                                .build());
+            }
+            builder.keyboardRow(new InlineKeyboardRow(buttons));
+        }
+
+        return builder
                 .keyboardRow(
                         new InlineKeyboardRow(
                                 InlineKeyboardButton

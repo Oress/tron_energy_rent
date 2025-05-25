@@ -7,6 +7,8 @@ import org.ipan.nrgyrent.domain.model.repository.AppUserRepo;
 import org.ipan.nrgyrent.telegram.InlineMenuCallbacks;
 import org.ipan.nrgyrent.telegram.States;
 import org.ipan.nrgyrent.telegram.TelegramMessages;
+import org.ipan.nrgyrent.telegram.state.UserSearchState;
+import org.ipan.nrgyrent.telegram.state.GroupSearchState;
 import org.ipan.nrgyrent.telegram.state.TelegramState;
 import org.ipan.nrgyrent.telegram.state.UserEdit;
 import org.ipan.nrgyrent.telegram.state.UserState;
@@ -28,6 +30,8 @@ import lombok.extern.slf4j.Slf4j;
 @AllArgsConstructor
 @Slf4j
 public class ManageUsersSearchHandler {
+    private final int PAGE_SIZE = 5;
+
     private final TelegramState telegramState;
     private final TelegramMessages telegramMessages;
     private final AppUserRepo appUserRepo;
@@ -38,13 +42,42 @@ public class ManageUsersSearchHandler {
         @MatchState(forAdmin = true, state = States.ADMIN_MANAGE_USERS, callbackData = InlineMenuCallbacks.MANAGE_USERS_SEARCH_RESET),
         @MatchState(forAdmin = true, state = States.ADMIN_MANAGE_USERS_ACTION_PREVIEW, callbackData = InlineMenuCallbacks.GO_BACK),
     })
-    public void showManageUsersMenu(UserState userState, Update update) {
+    public void resetUserSearch(UserState userState, Update update) {
+        UserSearchState searchState = telegramState.getOrCreateUserSearchState(userState.getTelegramId());
+        telegramState.updateUserSearchState(userState.getTelegramId(), searchState.withCurrentPage(0).withQuery(""));
+
         Page<AppUser> firstPage = appUserRepo.findAllByTelegramUsernameContainingIgnoreCaseOrderByTelegramId("",
-                PageRequest.of(0, 10));
+                PageRequest.of(0, PAGE_SIZE));
         manageUserActionsView.updMenuToManageUsersSearchResult(firstPage, userState);
         telegramState.updateUserState(userState.getTelegramId(),
                 userState.withState(States.ADMIN_MANAGE_USERS));
     }
+
+
+    @MatchStates({
+        @MatchState(state = States.ADMIN_MANAGE_USERS, callbackData = InlineMenuCallbacks.MANAGE_USERS_NEXT_PAGE)
+    })
+    public void nextPage(UserState userState, Update update) {
+        UserSearchState searchState = telegramState.getOrCreateUserSearchState(userState.getTelegramId());
+        int pageNumber = searchState.getCurrentPage() + 1;
+        String queryStr = searchState.getQuery();
+        telegramState.updateUserSearchState(userState.getTelegramId(), searchState.withCurrentPage(pageNumber));
+        Page<AppUser> nextPage = appUserRepo.findAllByTelegramUsernameContainingIgnoreCaseOrderByTelegramId(queryStr, PageRequest.of(pageNumber, PAGE_SIZE));
+        manageUserActionsView.updMenuToManageUsersSearchResult(nextPage, userState);
+    }
+
+    @MatchStates({
+        @MatchState(state = States.ADMIN_MANAGE_USERS, callbackData = InlineMenuCallbacks.MANAGE_USERS_PREV_PAGE)
+    })
+    public void prevPage(UserState userState, Update update) {
+        UserSearchState searchState = telegramState.getOrCreateUserSearchState(userState.getTelegramId());
+        int pageNumber = searchState.getCurrentPage() - 1;
+        String queryStr = searchState.getQuery();
+        telegramState.updateUserSearchState(userState.getTelegramId(), searchState.withCurrentPage(pageNumber));
+        Page<AppUser> prevPage = appUserRepo.findAllByTelegramUsernameContainingIgnoreCaseOrderByTelegramId(queryStr, PageRequest.of(pageNumber, PAGE_SIZE));
+        manageUserActionsView.updMenuToManageUsersSearchResult(prevPage, userState);
+    }
+
 
     @MatchStates({
         @MatchState(forAdmin = true, state = States.ADMIN_MANAGE_USERS, updateTypes = UpdateType.CALLBACK_QUERY),
@@ -81,9 +114,11 @@ public class ManageUsersSearchHandler {
                 return;
             }
 
+            UserSearchState searchState = telegramState.getOrCreateUserSearchState(userState.getTelegramId());
+            telegramState.updateUserSearchState(userState.getTelegramId(), searchState.withQuery(queryStr));
             Page<AppUser> firstPage = appUserRepo.findAllByTelegramUsernameContainingIgnoreCaseOrderByTelegramId(
                     queryStr,
-                    PageRequest.of(0, 10));
+                    PageRequest.of(0, PAGE_SIZE));
             manageUserActionsView.updMenuToManageUsersSearchResult(firstPage, userState);
         }
     }
