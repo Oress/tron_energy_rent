@@ -27,4 +27,8 @@ public interface TelegramState {
     WithdrawParams getOrCreateWithdrawParams(Long userId);
     WithdrawParams updateWithdrawParams(Long userId, WithdrawParams withdrawParams);
     WithdrawParams removeWithdrawParams(Long userId); // TODO: cleanup after finishing workflow
+
+    GroupSearchState getOrCreateGroupSearchState(Long userId);
+    GroupSearchState updateGroupSearchState(Long userId, GroupSearchState groupSearchState);
+    GroupSearchState removeGroupSearchState(Long userId); // TODO: cleanup after finishing workflow
 }

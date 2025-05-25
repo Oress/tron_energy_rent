@@ -28,6 +28,8 @@ public class InlineMenuCallbacks {
     public static final String MANAGE_WITHDRAW_TRX = "manage_withdraw_trx";
 
 
+    public static final String MANAGE_GROUPS_PREV_PAGE = "manage_groups_search_prev_page";
+    public static final String MANAGE_GROUPS_NEXT_PAGE = "manage_groups_search_next_page";
     public static final String MANAGE_GROUPS_SEARCH = "manage_groups_search";
     public static final String MANAGE_GROUPS_SEARCH_RESET = "manage_groups_search_reset";
     public static final String MANAGE_GROUPS_ADD = "manage_groups_add_new";

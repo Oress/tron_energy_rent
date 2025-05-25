@@ -1,5 +1,6 @@
 package org.ipan.nrgyrent.telegram.views;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.ipan.nrgyrent.domain.model.Balance;
@@ -34,6 +35,8 @@ public class ManageGroupSearchView {
             Здесь вы можете управлять группами пользователей, а также просматривать и изменять их баланс
             """;
 
+    private static final String NEXT_PAGE = "➡️";
+    private static final String PREV_PAGE = "⬅️";
     private static final String MANAGE_GROUPS_SEARCH = "🔍 Поиск группы";
     private static final String MANAGE_GROUPS_SEARCH_RESET = "🔄 Сбросить поиск";
     private static final String MANAGE_GROUPS_ADD_NEW = "➕ Добавить группу";
@@ -86,14 +89,37 @@ public class ManageGroupSearchView {
                 .builder();
         groupBalances.forEach(builder::keyboardRow);
 
-        return builder
+        builder
                 .keyboardRow(
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
                                         .text(MANAGE_GROUPS_SEARCH_RESET)
                                         .callbackData(InlineMenuCallbacks.MANAGE_GROUPS_SEARCH_RESET)
-                                        .build()))
+                                        .build()));
+        boolean hasPrev = page.hasPrevious();
+        boolean hasNext = page.hasNext();
+
+        if (hasPrev || hasNext) {
+            List<InlineKeyboardButton> buttons = new ArrayList<>();
+            if (hasPrev) {
+                buttons.add(InlineKeyboardButton
+                                .builder()
+                                .text(PREV_PAGE)
+                                .callbackData(InlineMenuCallbacks.MANAGE_GROUPS_PREV_PAGE)
+                                .build());
+            }
+            if (hasNext) {
+                buttons.add(InlineKeyboardButton
+                                .builder()
+                                .text(NEXT_PAGE)
+                                .callbackData(InlineMenuCallbacks.MANAGE_GROUPS_NEXT_PAGE)
+                                .build());
+            }
+            builder.keyboardRow(new InlineKeyboardRow(buttons));
+        }
+
+        return builder
                 .keyboardRow(
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
