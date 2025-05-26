@@ -6,6 +6,7 @@ import org.ipan.nrgyrent.domain.model.UserWallet;
 import org.ipan.nrgyrent.telegram.InlineMenuCallbacks;
 import org.ipan.nrgyrent.telegram.StaticLabels;
 import org.ipan.nrgyrent.telegram.state.UserState;
+import org.ipan.nrgyrent.telegram.utils.WalletTools;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
@@ -32,7 +33,7 @@ public class TransactionsViews {
             """;
 
     private static final String MSG_TRANSACTION_131K_TEXT = """
-            ⚡ Транзакции (1 тр на кош без USDT или биржу, 8.55 TRX)
+            ⚡ Транзакции (1 тр на кош без USDT или биржу, 8.6 TRX)
 
             👇 Пожалуйста, выберите кошелек, для которого вы желаете перевести энергию 👇
             """;
@@ -192,7 +193,7 @@ public class TransactionsViews {
             InlineKeyboardRow row = new InlineKeyboardRow(
                     InlineKeyboardButton
                             .builder()
-                            .text(wallet.getLabel())
+                            .text(WalletTools.formatTronAddressAndLabel(wallet.getAddress(), wallet.getLabel()))
                             .callbackData(wallet.getAddress())
                             .build());
             return row;

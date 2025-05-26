@@ -6,6 +6,7 @@ import org.ipan.nrgyrent.domain.model.UserWallet;
 import org.ipan.nrgyrent.telegram.InlineMenuCallbacks;
 import org.ipan.nrgyrent.telegram.StaticLabels;
 import org.ipan.nrgyrent.telegram.state.UserState;
+import org.ipan.nrgyrent.telegram.utils.WalletTools;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -233,7 +234,7 @@ public class WithdrawViews {
             InlineKeyboardRow row = new InlineKeyboardRow(
                     InlineKeyboardButton
                             .builder()
-                            .text(wallet.getLabel())
+                            .text(WalletTools.formatTronAddressAndLabel(wallet.getAddress(), wallet.getLabel()))
                             .callbackData(wallet.getAddress())
                             .build());
             return row;

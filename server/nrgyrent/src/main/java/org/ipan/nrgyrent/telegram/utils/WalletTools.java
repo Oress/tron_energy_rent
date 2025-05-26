@@ -21,6 +21,11 @@ public class WalletTools {
         return firstPart + middlePart + lastPart;
     }
 
+    public static String formatTronAddressAndLabel(String address, String label) {
+        String formattedAddress = formatTronAddress(address);
+        return formattedAddress + " (" + label + ")";
+    }
+
     public static String formatTronAddressSuffixOnly(String address) {
         if (address == null || address.length() < 6) {
             return address; // Return the original address if it's null or too short

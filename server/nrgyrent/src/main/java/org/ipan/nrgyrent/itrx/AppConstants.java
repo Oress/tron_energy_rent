@@ -10,7 +10,7 @@ public class AppConstants {
     public static final int ENERGY_131K = 131_000;
 
     public static final Long PRICE_65K = 5_500_000L;
-    public static final Long PRICE_131K = 8_550_000L;
+    public static final Long PRICE_131K = 8_600_000L;
 
     public static final Long WITHDRAWAL_FEE = 1_000_000L;
 

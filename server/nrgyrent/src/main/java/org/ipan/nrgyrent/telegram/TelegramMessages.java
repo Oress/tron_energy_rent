@@ -196,9 +196,8 @@ public class TelegramMessages {
                                         .build(),
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(StaticLabels.MENU_WALLETS)
-                                        .callbackData(
-                                                InlineMenuCallbacks.WALLETS)
+                                        .text(StaticLabels.WITHDRAW_TRX)
+                                        .callbackData(InlineMenuCallbacks.WITHDRAW_TRX)
                                         .build()))
                 .keyboardRow(
                         new InlineKeyboardRow(
@@ -211,8 +210,8 @@ public class TelegramMessages {
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(StaticLabels.WITHDRAW_TRX)
-                                        .callbackData(InlineMenuCallbacks.WITHDRAW_TRX)
+                                        .text(StaticLabels.MENU_WALLETS)
+                                        .callbackData(InlineMenuCallbacks.WALLETS)
                                         .build()));
 
         if (isManager) {

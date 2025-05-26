@@ -66,7 +66,7 @@ public class DepositViews {
 
                 ❗️ Минимальный депозит - 10 TRX❗️
 
-                ⌛️ Среднее время зачисления депозита - 5 минуты."""
+                ⌛️ Среднее время зачисления депозита - 5 минут."""
                 .formatted(
                     personalDepositAddress,FormattingTools.formatBalance(personalSunBalance),
                     groupDepositAddress,FormattingTools.formatBalance(groupSunBalance)
@@ -87,7 +87,7 @@ public class DepositViews {
 
                 ❗️ Минимальный депозит - 10 TRX❗️
 
-                ⌛️ Среднее время зачисления депозита - 5 минуты."""
+                ⌛️ Среднее время зачисления депозита - 5 минут."""
                 .formatted(
                         depositAddress,
                         FormattingTools.formatBalance(sunBalance));
