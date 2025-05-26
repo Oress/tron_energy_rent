@@ -58,6 +58,14 @@
             baseColumnNames="deposit_address"
             referencedTableName="nrg_managed_wallets"
             referencedColumnNames="base58_address" />
+
+        <createIndex indexName="idx_nrg_balances_deposit_address" tableName="nrg_balances">
+            <column name="deposit_address" />
+        </createIndex>
+
+        <createIndex indexName="idx_nrg_balances_manager_id" tableName="nrg_balances">
+            <column name="manager_id" />
+        </createIndex>
     </changeSet>
 
     <!-- This table stores the information about telegram users -->
@@ -98,6 +106,14 @@
             referencedTableName="nrg_balances"
             onDelete="SET NULL"
             referencedColumnNames="id" />
+        
+        <createIndex indexName="idx_nrg_users_balance_id" tableName="nrg_users">
+            <column name="balance_id" />
+        </createIndex>
+
+        <createIndex indexName="idx_nrg_users_group_balance_id" tableName="nrg_users">
+            <column name="group_balance_id" />
+        </createIndex>
     </changeSet>
 
     <changeSet id="add foreign key constraint to nrg_balances" author="oress">
@@ -131,6 +147,10 @@
             baseColumnNames="user_id"
             referencedTableName="nrg_users"
             referencedColumnNames="telegram_id" />
+        
+        <createIndex indexName="idx_nrg_user_wallets_balance_id" tableName="nrg_user_wallets">
+            <column name="user_id" />
+        </createIndex>
     </changeSet>
 
     <!-- This table stores the information about orders and their state -->
@@ -173,6 +193,22 @@
             baseColumnNames="balance_id"
             referencedTableName="nrg_balances"
             referencedColumnNames="id" />
+
+        <createIndex tableName="nrg_orders" indexName="idx_nrg_orders_user_id">
+            <column name="user_id"></column>
+        </createIndex>
+
+        <createIndex tableName="nrg_orders" indexName="idx_nrg_orders_balance_id">
+            <column name="balance_id"></column>
+        </createIndex>
+
+        <createIndex tableName="nrg_orders" indexName="idx_nrg_orders_correlation_id">
+            <column name="correlation_id"></column>
+        </createIndex>
+
+        <createIndex tableName="nrg_orders" indexName="idx_nrg_orders_receive_address">
+            <column name="receive_address"></column>
+        </createIndex>
     </changeSet>
 
     <!-- This table stores the information about user trx withdrawals -->
@@ -210,6 +246,14 @@
             baseColumnNames="balance_id"
             referencedTableName="nrg_balances"
             referencedColumnNames="id" />
+
+        <createIndex tableName="nrg_withdrawal_orders" indexName="idx_nrg_withdrawal_orders_user_id">
+            <column name="user_id"></column>
+        </createIndex>
+
+        <createIndex tableName="nrg_withdrawal_orders" indexName="idx_nrg_withdrawal_orders_balance_id">
+            <column name="balance_id"></column>
+        </createIndex>
     </changeSet>
 
     <!-- This table stores the information about deposits -->
@@ -244,38 +288,9 @@
             baseColumnNames="wallet_to"
             referencedTableName="nrg_managed_wallets"
             referencedColumnNames="base58_address" />
-    </changeSet>
 
-    <changeSet id="create table nrg_itrx_api_summary_stats" author="oress">
-        <createSequence sequenceName="nrg_itrx_api_summary_stats_seq"
-            dataType="bigint"
-            incrementBy="1"
-            startValue="1" />
-
-        <createTable tableName="nrg_itrx_api_summary_stats">
-            <column name="id" type="bigint" autoIncrement="true">
-                <constraints primaryKey="true" nullable="false" unique="true" />
-            </column>
-            <column name="balance_sun" type="bigint">
-                <constraints nullable="false" />
-            </column>
-            <column name="total_orders_count" type="int" defaultValue="0">
-                <constraints nullable="false" />
-            </column>
-            <column name="total_sum_energy" type="bigint" defaultValue="0">
-                <constraints nullable="false" />
-            </column>
-            <column name="total_sum_trx" type="bigint" defaultValue="0">
-                <constraints nullable="false" />
-            </column>
-            <column name="timestamp" type="TIMESTAMP">
-                <constraints nullable="false" />
-            </column>
-        </createTable>
-
-        <createIndex tableName="nrg_itrx_api_summary_stats"
-            indexName="idx_nrg_itrx_api_summary_stats_timestamp">
-            <column name="timestamp" />
+        <createIndex tableName="nrg_deposit_transactions" indexName="idx_nrg_deposit_transactions_wallet_to">
+            <column name="wallet_to"></column>
         </createIndex>
     </changeSet>
 
@@ -317,6 +332,17 @@
             baseColumnNames="changed_by"
             referencedTableName="nrg_users"
             referencedColumnNames="telegram_id" />
+
+
+        <createIndex indexName="idx_nrg_manual_balance_changes_balance_id"
+            tableName="nrg_manual_balance_changes">
+            <column name="balance_id" />
+        </createIndex>
+
+        <createIndex indexName="idx_nrg_manual_balance_changes_changed_by"
+            tableName="nrg_manual_balance_changes">
+            <column name="changed_by" />
+        </createIndex>
     </changeSet>
 
 
@@ -381,5 +407,9 @@
             baseColumnNames="collection_wallet_id"
             referencedTableName="nrg_collection_wallets"
             referencedColumnNames="id" />
+
+        <createIndex indexName="idx_nrg_sweep_actions_collection_wallet_id" tableName="nrg_sweep_actions">
+            <column name="collection_wallet_id" />
+        </createIndex>
     </changeSet>
 </databaseChangeLog>

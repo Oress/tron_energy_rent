@@ -106,6 +106,37 @@ paths:
           description: owner address in base58 or hex
           schema:
             type: string
+        - name: only_confirmed
+          in: query
+          required: false
+          description: Filter by confirmed transactions only
+          schema:
+            type: boolean
+        - name: only_to
+          in: query
+          required: false
+          description: Filter by confirmed transactions only
+          schema:
+            type: boolean
+        - name: only_from
+          in: query
+          required: false
+          description: Filter by confirmed transactions only
+          schema:
+            type: boolean
+        - name: limit
+          in: query
+          required: false
+          description: Filter by confirmed transactions only
+          schema:
+            type: integer
+        - name: min_timestamp
+          in: query
+          required: false
+          description: Filter by confirmed transactions only
+          schema:
+            type: string
+            format: date-time
       responses:
         '200':
           description: success

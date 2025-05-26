@@ -3,7 +3,10 @@ package org.ipan.nrgyrent.telegram.views;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.ipan.nrgyrent.domain.model.Order;
+import org.ipan.nrgyrent.domain.model.BalanceType;
+import org.ipan.nrgyrent.domain.model.OrderStatus;
+import org.ipan.nrgyrent.domain.model.WithdrawalStatus;
+import org.ipan.nrgyrent.domain.model.projections.TransactionHistoryDto;
 import org.ipan.nrgyrent.telegram.utils.FormattingTools;
 import org.ipan.nrgyrent.telegram.utils.WalletTools;
 import org.springframework.retry.annotation.Retryable;
@@ -23,7 +26,7 @@ public class HistoryViews {
 
     @Retryable
     @SneakyThrows
-    public void updMenuToHistoryMenu(List<Order> orders, CallbackQuery callbackQuery) {
+    public void updMenuToHistoryMenu(List<TransactionHistoryDto> orders, CallbackQuery callbackQuery) {
         EditMessageText message = EditMessageText
                 .builder()
                 .chatId(callbackQuery.getMessage().getChatId())
@@ -34,7 +37,7 @@ public class HistoryViews {
         tgClient.execute(message);
     }
 
-    public String getHistoryMessage(List<Order> orders) {
+    public String getHistoryMessage(List<TransactionHistoryDto> orders) {
         String history = orders.stream()
                 .map(ord -> getTransactionDetails(ord))
                 .collect(Collectors.joining("\n\n"));
@@ -46,19 +49,56 @@ public class HistoryViews {
                 """.formatted(history);
     }
 
-    // TODO: receiveAddress use alias if possible.
-    private String getTransactionDetails(Order order) {
-        return """
-                ID: %s
-                Сумма: %s TRX
-                Получатель: %s
-                Статус: %s
-                Дата: %s
-                """.formatted(
-                order.getCorrelationId(),
-                FormattingTools.formatBalance(order.getSunAmount()),
-                WalletTools.formatTronAddress(order.getReceiveAddress()),
-                FormattingTools.orderStatusLabel(order.getOrderStatus()),
-                FormattingTools.formatDateToUtc(order.getCreatedAt()));
+    private String getTransactionDetails(TransactionHistoryDto order) {
+        switch (order.getType()) {
+            case "ORDER" -> {
+                    return """
+                    Операция: Аренда енергии
+                    ID: %s
+                    Сумма: %s TRX
+                    Получатель: %s
+                    Статус: %s
+                    Баланс группы: %s
+                    Дата: %s
+                    """.formatted(
+                    order.getCorrelationId(),
+                    FormattingTools.formatBalance(order.getAmount()),
+                    WalletTools.formatTronAddress(order.getReceiveAddress()),
+                    FormattingTools.orderStatusLabel(OrderStatus.valueOf(order.getOrderStatus())),
+                    BalanceType.GROUP.name().equals(order.getBalanceType()) ? "Да" : "Нет",
+                    FormattingTools.formatDateToUtc(order.getCreatedAt()));
+            }
+            case "WITHDRAWAL" -> {
+                return """
+                    Операция: Вывод TRX
+                    Сумма: %s TRX
+                    Получатель: %s
+                    Статус: %s
+                    Баланс группы: %s
+                    Дата: %s
+                    """.formatted(
+                    FormattingTools.formatBalance(order.getAmount()),
+                    WalletTools.formatTronAddress(order.getReceiveAddress()),
+                    FormattingTools.withdrawalStatusLabel(WithdrawalStatus.valueOf(order.getWithdrawalStatus())),
+                    BalanceType.GROUP.name().equals(order.getBalanceType()) ? "Да" : "Нет",
+                    FormattingTools.formatDateToUtc(order.getCreatedAt()));
+            }
+            case "DEPOSIT" -> {
+                return """
+                    Операция: Пополнение баланса
+                    Сумма: %s TRX
+                    Отправитель: %s
+                    Баланс группы: %s
+                    Дата: %s
+                    """.formatted(
+                    FormattingTools.formatBalance(order.getAmount()),
+                    WalletTools.formatTronAddress(order.getFromAddress()),
+                    BalanceType.GROUP.name().equals(order.getBalanceType()) ? "Да" : "Нет",
+                    FormattingTools.formatDateToUtc(order.getCreatedAt()));
+            }
+            default -> {
+                return "Неизвестный тип транзакции: " + order.getType();
+            }
+        }
     }
 }

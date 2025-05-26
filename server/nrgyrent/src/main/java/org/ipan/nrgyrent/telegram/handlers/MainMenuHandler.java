@@ -1,7 +1,9 @@
 package org.ipan.nrgyrent.telegram.handlers;
 
+import java.util.List;
+
 import org.ipan.nrgyrent.domain.model.AppUser;
-import org.ipan.nrgyrent.domain.model.Order;
+import org.ipan.nrgyrent.domain.model.projections.TransactionHistoryDto;
 import org.ipan.nrgyrent.domain.model.repository.OrderRepo;
 import org.ipan.nrgyrent.domain.service.UserService;
 import org.ipan.nrgyrent.telegram.InlineMenuCallbacks;
@@ -12,8 +14,6 @@ import org.ipan.nrgyrent.telegram.statetransitions.MatchState;
 import org.ipan.nrgyrent.telegram.statetransitions.TransitionHandler;
 import org.ipan.nrgyrent.telegram.views.DepositViews;
 import org.ipan.nrgyrent.telegram.views.HistoryViews;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
 import lombok.AllArgsConstructor;
@@ -37,8 +37,8 @@ public class MainMenuHandler {
 
     @MatchState(state = States.MAIN_MENU, callbackData = InlineMenuCallbacks.HISTORY)
     public void handleTransactionHistory(UserState userState, Update update) {
-        Page<Order> page = orderRepo.findAllByUserTelegramIdOrderByCreatedAtDesc(userState.getTelegramId(), PageRequest.of(0, 5));
-        historyViews.updMenuToHistoryMenu(page.toList().reversed(), update.getCallbackQuery());
+        List<TransactionHistoryDto> page = orderRepo.findAllTransactions(userState.getTelegramId(), 10);
+        historyViews.updMenuToHistoryMenu(page.reversed(), update.getCallbackQuery());
         telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.HISTORY));
     }
 }

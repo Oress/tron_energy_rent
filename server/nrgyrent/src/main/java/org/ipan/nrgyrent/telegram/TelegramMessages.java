@@ -55,7 +55,7 @@ public class TelegramMessages {
                 .builder()
                 .chatId(userState.getChatId())
                 .text(StaticLabels.NTFN_WITHDRWAL_SUCCESS)
-                .replyMarkup(getOrderRefundedNotificationMarkup())
+                .replyMarkup(getOkNotificationMarkup())
                 .build();
         tgClient.execute(message);
     }
@@ -66,7 +66,7 @@ public class TelegramMessages {
                 .builder()
                 .chatId(userState.getChatId())
                 .text(StaticLabels.NTFN_WITHDRWAL_FAIL)
-                .replyMarkup(getOrderRefundedNotificationMarkup())
+                .replyMarkup(getOkNotificationMarkup())
                 .build();
         tgClient.execute(message);
     }
@@ -77,7 +77,18 @@ public class TelegramMessages {
                 .builder()
                 .chatId(userState.getChatId())
                 .text(StaticLabels.NTFN_ORDER_REFUNDED)
-                .replyMarkup(getOrderRefundedNotificationMarkup())
+                .replyMarkup(getOkNotificationMarkup())
+                .build();
+        tgClient.execute(message);
+    }
+
+    @SneakyThrows
+    public void sendTopupNotification(UserState userState) {
+        SendMessage message = SendMessage
+                .builder()
+                .chatId(userState.getChatId())
+                .text(StaticLabels.NTFN_BALANCE_TOPUP)
+                .replyMarkup(getOkNotificationMarkup())
                 .build();
         tgClient.execute(message);
     }
@@ -251,7 +262,7 @@ public class TelegramMessages {
                 .build();
     }
 
-    private InlineKeyboardMarkup getOrderRefundedNotificationMarkup() {
+    private InlineKeyboardMarkup getOkNotificationMarkup() {
         return InlineKeyboardMarkup
                 .builder()
                 .keyboardRow(

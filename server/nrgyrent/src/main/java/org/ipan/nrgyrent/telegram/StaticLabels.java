@@ -32,6 +32,11 @@ public class StaticLabels {
 
 
     // Notifications labels
+    public static final String NTFN_BALANCE_TOPUP = """
+            ✅ Баланс успешно пополнен
+            TRX были добавлены на ваш кошелек
+            """;
+
     public static final String NTFN_ORDER_SUCCESS = """
             ✅ Транзакция успешно завершена
             Энергия была переведена на ваш кошелек

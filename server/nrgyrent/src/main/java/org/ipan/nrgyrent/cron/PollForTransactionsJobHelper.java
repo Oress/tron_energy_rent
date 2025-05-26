@@ -4,12 +4,19 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
+import org.ipan.nrgyrent.domain.model.AppUser;
 import org.ipan.nrgyrent.domain.model.Balance;
+import org.ipan.nrgyrent.domain.model.BalanceType;
 import org.ipan.nrgyrent.domain.model.DepositTransaction;
+import org.ipan.nrgyrent.domain.model.repository.AppUserRepo;
 import org.ipan.nrgyrent.domain.model.repository.DepositTransactionRepo;
 import org.ipan.nrgyrent.itrx.AppConstants;
+import org.ipan.nrgyrent.telegram.TelegramMessages;
+import org.ipan.nrgyrent.telegram.state.TelegramState;
+import org.ipan.nrgyrent.telegram.state.UserState;
 import org.ipan.nrgyrent.tron.utils.ByteArray;
 import org.ipan.nrgyrent.tron.wallet.WalletApi;
 import org.ipan.nrgyrent.trongrid.api.AccountApi;
@@ -38,6 +45,9 @@ public class PollForTransactionsJobHelper {
 
     private final DepositTransactionRepo depositTransactionRepo;
     private final AccountApi accountApi;
+    private final TelegramMessages telegramMessages;
+    private final TelegramState telegramState;
+    private final AppUserRepo appUserRepo;
 
     @Transactional
     @Async(CronJobConfig.TRON_TRANSACTION_EXECUTOR)
@@ -50,9 +60,8 @@ public class PollForTransactionsJobHelper {
             String depositAddress = balance.getDepositAddress();
             String hexDepositAddress = ByteArray.toHexString(depositAddress.getBytes());
             logger.info("Processing balance: id: {} wallet: {}, hex {}", balance.getId(), depositAddress);
-            // TODO: only_confirmed transactions
             V1AccountsAddressTransactionsGet200Response response = accountApi
-                    .v1AccountsAddressTransactionsGet(depositAddress)
+                    .v1AccountsAddressTransactionsGet(depositAddress, true, true, null, 50, null)
                     .block();
 
             if (response != null && response.getData() != null) {
@@ -110,6 +119,22 @@ public class PollForTransactionsJobHelper {
 
                 depositTransactionRepo.saveAll(depositTransactions);
                 em.merge(balance);
+
+                if (BalanceType.INDIVIDUAL.equals(balance.getType())) {
+                    logger.info("Sending top-up notification for individual balance ID: {}", balance.getId());
+                    AppUser user = appUserRepo.findByBalanceId(balance.getId());
+                    UserState userState = telegramState.getOrCreateUserState(user.getTelegramId());
+                    telegramMessages.sendTopupNotification(userState);
+                } else if (BalanceType.GROUP.equals(balance.getType())) {
+                    logger.info("Sending top-up notification for group balance ID: {}", balance.getId());
+                    Set<AppUser> users = appUserRepo.findAllByGroupBalanceId(balance.getId());
+                    for (AppUser user : users) {
+                        UserState userState = telegramState.getOrCreateUserState(user.getTelegramId());
+                        telegramMessages.sendTopupNotification(userState);
+                    }
+                } else {
+                    logger.error("Unknown balance type for balance ID: {}", balance.getId());
+                }
             }
         }
         return CompletableFuture.completedFuture(null);
