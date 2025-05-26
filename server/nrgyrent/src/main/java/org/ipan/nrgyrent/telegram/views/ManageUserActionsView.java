@@ -72,7 +72,7 @@ public class ManageUserActionsView {
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
                 .text(getBalanceDescription(appUser))
-                .replyMarkup(getManageUserActionsMarkup())
+                .replyMarkup(getManageUserActionsMarkup(!appUser.getDisabled()))
                 .build();
         tgClient.execute(message);
     }
@@ -176,8 +176,8 @@ public class ManageUserActionsView {
                 );
     }
 
-    private InlineKeyboardMarkup getManageUserActionsMarkup() {
-        return InlineKeyboardMarkup
+    private InlineKeyboardMarkup getManageUserActionsMarkup(Boolean showDeactivateBtn) {
+        InlineKeyboardMarkup.InlineKeyboardMarkupBuilder builder = InlineKeyboardMarkup
                 .builder()
                 .keyboardRow(
                         new InlineKeyboardRow(
@@ -185,14 +185,18 @@ public class ManageUserActionsView {
                                         .builder()
                                         .text(MANAGE_USER_ACTION_ADJUST_BALANCE_MANUALLY)
                                         .callbackData(InlineMenuCallbacks.MANAGE_USER_ACTION_ADJUST_BALANCE_MANUALLY)
-                                        .build()))
-                .keyboardRow(
+                                        .build()));
+
+        if (showDeactivateBtn) {
+                builder.keyboardRow(
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
                                         .text(MANAGE_USER_ACTION_DEACTIVATE)
                                         .callbackData(InlineMenuCallbacks.MANAGE_USER_ACTION_DEACTIVATE)
-                                        .build()))
+                                        .build()));
+        }
+        return builder
                 .keyboardRow(
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
