@@ -184,7 +184,7 @@ public class ManageGroupActionsView {
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
                 .text(getBalanceDescription(balance))
-                .replyMarkup(getManageGroupActionsMarkup(true))
+                .replyMarkup(getManageGroupActionsMarkup(true, balance.getIsActive()))
                 .build();
         tgClient.execute(message);
     }
@@ -443,7 +443,7 @@ public class ManageGroupActionsView {
                 FormattingTools.formatBalance(balance.getSunBalance()));
     }
 
-    private InlineKeyboardMarkup getManageGroupActionsMarkup(Boolean showBackButton) {
+    private InlineKeyboardMarkup getManageGroupActionsMarkup(Boolean showBackButton, Boolean showDeactivateBtn) {
         InlineKeyboardRow inlineKeyboardRow = new InlineKeyboardRow(
                 InlineKeyboardButton
                         .builder()
@@ -460,7 +460,7 @@ public class ManageGroupActionsView {
                             .build());
         }
 
-        return InlineKeyboardMarkup
+        InlineKeyboardMarkup.InlineKeyboardMarkupBuilder builder = InlineKeyboardMarkup
                 .builder()
                 .keyboardRow(
                         new InlineKeyboardRow(
@@ -503,14 +503,19 @@ public class ManageGroupActionsView {
                                         .builder()
                                         .text(MANAGE_GROUP_ACTION_REMOVE_USERS)
                                         .callbackData(InlineMenuCallbacks.MANAGE_GROUPS_ACTION_REMOVE_USERS)
-                                        .build()))
-                .keyboardRow(
+                                        .build()));
+
+        if (showDeactivateBtn) {
+                builder.keyboardRow(
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
                                         .text(MANAGE_GROUP_ACTION_DEACTIVATE_GROUP)
                                         .callbackData(InlineMenuCallbacks.MANAGE_GROUPS_ACTION_DEACTIVATE)
-                                        .build()))
+                                        .build()));
+        }
+
+        return builder
                 .keyboardRow(
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
