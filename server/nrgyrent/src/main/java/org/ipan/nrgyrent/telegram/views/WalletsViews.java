@@ -6,12 +6,10 @@ import org.ipan.nrgyrent.domain.model.UserWallet;
 import org.ipan.nrgyrent.telegram.InlineMenuCallbacks;
 import org.ipan.nrgyrent.telegram.StaticLabels;
 import org.ipan.nrgyrent.telegram.state.UserState;
-import org.ipan.nrgyrent.telegram.utils.FormattingTools;
 import org.ipan.nrgyrent.telegram.utils.WalletTools;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
-import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
@@ -35,11 +33,11 @@ public class WalletsViews {
 
     @Retryable
     @SneakyThrows
-    public void updMenuToWalletsMenu(List<UserWallet> wallets, CallbackQuery callbackQuery) {
+    public void updMenuToWalletsMenu(List<UserWallet> wallets, UserState userState) {
         EditMessageText message = EditMessageText
                 .builder()
-                .chatId(callbackQuery.getMessage().getChatId())
-                .messageId(callbackQuery.getMessage().getMessageId())
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
                 .text(StaticLabels.MSG_WALLETS)
                 .replyMarkup(getWalletsMenuMarkup(wallets))
                 .build();
@@ -48,11 +46,11 @@ public class WalletsViews {
 
     @Retryable
     @SneakyThrows
-    public void showWalletDetails(UserWallet wallet, CallbackQuery callbackQuery) {
+    public void showWalletDetails(UserWallet wallet, UserState userState) {
         EditMessageText message = EditMessageText
                 .builder()
-                .chatId(callbackQuery.getMessage().getChatId())
-                .messageId(callbackQuery.getMessage().getMessageId())
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
                 .text(getWalletDetails(wallet))
                 .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
@@ -61,11 +59,11 @@ public class WalletsViews {
 
     @Retryable
     @SneakyThrows
-    public void updMenuToDeleteWalletSuccessMenu(CallbackQuery callbackQuery) {
+    public void updMenuToDeleteWalletSuccessMenu(UserState userState) {
         EditMessageText message = EditMessageText
                 .builder()
-                .chatId(callbackQuery.getMessage().getChatId())
-                .messageId(callbackQuery.getMessage().getMessageId())
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
                 .text(MSG_DELETE_WALLET_SUCCESS)
                 .replyMarkup(commonViews.getToMainMenuMarkup())
                 .build();
@@ -87,11 +85,11 @@ public class WalletsViews {
 
     @Retryable
     @SneakyThrows
-    public void updMenuToPromptWalletAddress(CallbackQuery callbackQuery) {
+    public void updMenuToPromptWalletAddress(UserState userState) {
         EditMessageText message = EditMessageText
                 .builder()
-                .chatId(callbackQuery.getMessage().getChatId())
-                .messageId(callbackQuery.getMessage().getMessageId())
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
                 .text(MSG_PROMPT_WALLET_ADDRESS)
                 .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();

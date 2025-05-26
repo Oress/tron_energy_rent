@@ -28,7 +28,7 @@ public class ManageGroupsHandler {
         @MatchState(state = States.ADMIN_MANAGE_GROUPS_ADD_SUCCESS, callbackData = InlineMenuCallbacks.GO_BACK),
     })
     public void showManageGroupsMenu(UserState userState, Update update) {
-        manageGroupNewGroupView.updMenuToManageGroupsMenu(update.getCallbackQuery());
+        manageGroupNewGroupView.updMenuToManageGroupsMenu(userState);
         telegramState.updateUserState(userState.getTelegramId(),
                 userState.withState(States.ADMIN_MANAGE_GROUPS));
     }

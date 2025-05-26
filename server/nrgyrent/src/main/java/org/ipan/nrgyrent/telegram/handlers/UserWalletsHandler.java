@@ -40,13 +40,13 @@ public class UserWalletsHandler {
     })
     public void viewUserWallets(UserState userState, Update update) {
         List<UserWallet> wallets = userWalletService.getWallets(userState.getTelegramId());
-        walletsViews.updMenuToWalletsMenu(wallets, update.getCallbackQuery());
+        walletsViews.updMenuToWalletsMenu(wallets, userState);
         telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.WALLETS));
     }
 
     @MatchState(state = States.WALLETS, callbackData = InlineMenuCallbacks.ADD_WALLETS)
     public void handleAddNewWallet(UserState userState, Update update) {
-        walletsViews.updMenuToPromptWalletAddress(update.getCallbackQuery());
+        walletsViews.updMenuToPromptWalletAddress(userState);
         telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.NEW_WALLET_PROMPT_ADDRESS));
     }
 
@@ -58,7 +58,7 @@ public class UserWalletsHandler {
             String walletId = data.split(" ")[1];
             userWalletService
                     .deleteWallet(DeleteUserWalletCommand.builder().walletId(Long.parseLong(walletId)).build());
-            walletsViews.updMenuToDeleteWalletSuccessMenu(callbackQuery);
+            walletsViews.updMenuToDeleteWalletSuccessMenu(userState);
             telegramState.updateUserState(userState.getTelegramId(),
                     userState.withState(States.DELETE_WALLETS_SUCCESS));
         }
@@ -71,7 +71,7 @@ public class UserWalletsHandler {
         if (data.startsWith(WalletsViews.OPEN_WALLET)) {
             String walletId = data.split(WalletsViews.OPEN_WALLET)[1];
             Optional<UserWallet> byId = userWalletRepo.findById(Long.parseLong(walletId));
-            walletsViews.showWalletDetails(byId.get(), callbackQuery);
+            walletsViews.showWalletDetails(byId.get(), userState);
             telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.USER_WALLET_PREVIEW));
         }
     }

@@ -38,7 +38,7 @@ public class ManageGroupNewGroupHandler {
 
     @MatchState(forAdmin = true, state = States.ADMIN_MANAGE_GROUPS, callbackData = InlineMenuCallbacks.MANAGE_GROUPS_ADD)
     public void start_promptLabel(UserState userState, Update update) {
-        telegramMessages.manageGroupView().updMenuToManageGroupsAddPromptLabel(update.getCallbackQuery());
+        telegramMessages.manageGroupView().updMenuToManageGroupsAddPromptLabel(userState);
         telegramState.updateUserState(userState.getTelegramId(),
                 userState.withState(States.ADMIN_MANAGE_GROUPS_ADD_PROMPT_LABEL));
     }

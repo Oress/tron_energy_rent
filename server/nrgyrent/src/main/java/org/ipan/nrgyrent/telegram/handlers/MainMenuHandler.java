@@ -31,7 +31,7 @@ public class MainMenuHandler {
     @MatchState(state = States.MAIN_MENU, callbackData = InlineMenuCallbacks.DEPOSIT)
     public void handleDeposit(UserState userState, Update update) {
         AppUser user = userService.getById(userState.getTelegramId());
-        depositViews.updMenuToDepositsMenu(update.getCallbackQuery(), user);
+        depositViews.updMenuToDepositsMenu(userState, user);
         telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.DEPOSIT));
     }
 

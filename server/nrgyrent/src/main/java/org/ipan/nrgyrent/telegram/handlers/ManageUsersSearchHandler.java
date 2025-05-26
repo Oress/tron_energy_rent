@@ -8,7 +8,6 @@ import org.ipan.nrgyrent.telegram.InlineMenuCallbacks;
 import org.ipan.nrgyrent.telegram.States;
 import org.ipan.nrgyrent.telegram.TelegramMessages;
 import org.ipan.nrgyrent.telegram.state.UserSearchState;
-import org.ipan.nrgyrent.telegram.state.GroupSearchState;
 import org.ipan.nrgyrent.telegram.state.TelegramState;
 import org.ipan.nrgyrent.telegram.state.UserEdit;
 import org.ipan.nrgyrent.telegram.state.UserState;

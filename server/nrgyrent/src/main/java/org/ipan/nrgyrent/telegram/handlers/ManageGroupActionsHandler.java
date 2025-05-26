@@ -21,7 +21,6 @@ import org.ipan.nrgyrent.telegram.statetransitions.MatchState;
 import org.ipan.nrgyrent.telegram.statetransitions.TransitionHandler;
 import org.ipan.nrgyrent.telegram.statetransitions.UpdateType;
 import org.ipan.nrgyrent.telegram.views.ManageGroupActionsView;
-import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.UsersShared;
 import org.telegram.telegrambots.meta.api.objects.message.Message;
@@ -74,23 +73,22 @@ public class ManageGroupActionsHandler {
 
     @MatchState(forAdmin = true, state = States.ADMIN_MANAGE_GROUPS_ACTION_PREVIEW, callbackData = InlineMenuCallbacks.MANAGE_GROUPS_ACTION_ADJUST_BALANCE_MANUALLY)
     public void startAdjustBalanceManually(UserState userState, Update update) {
-        manageGroupActionsView.promptNewGroupBalance(update.getCallbackQuery());
+        manageGroupActionsView.promptNewGroupBalance(userState);
         telegramState.updateUserState(userState.getTelegramId(),
                 userState.withState(States.ADMIN_MANAGE_GROUPS_ACTION_PROMPT_NEW_BALANCE));
     }
 
     @MatchState(forAdmin = true, state = States.ADMIN_MANAGE_GROUPS_ACTION_PREVIEW, callbackData = InlineMenuCallbacks.MANAGE_GROUPS_ACTION_RENAME)
     public void startRenaming(UserState userState, Update update) {
-        manageGroupActionsView.promptNewGroupLabel(update.getCallbackQuery());
+        manageGroupActionsView.promptNewGroupLabel(userState);
         telegramState.updateUserState(userState.getTelegramId(),
                 userState.withState(States.ADMIN_MANAGE_GROUPS_ACTION_PROMPT_NEW_LABEL));
     }
 
     @MatchState(state = States.ADMIN_MANAGE_GROUPS_ACTION_PREVIEW, callbackData = InlineMenuCallbacks.MANAGE_GROUPS_ACTION_ADD_USERS)
     public void startAddUsers(UserState userState, Update update) {
-        CallbackQuery callbackQuery = update.getCallbackQuery();
-        manageGroupActionsView.updMenuPromptToAddUsersToGroup(callbackQuery);
-        Message msg = manageGroupActionsView.promptToAddUsersToGroup(callbackQuery);
+        manageGroupActionsView.updMenuPromptToAddUsersToGroup(userState);
+        Message msg = manageGroupActionsView.promptToAddUsersToGroup(userState);
         telegramState.updateUserState(userState.getTelegramId(),
                 userState.withState(States.ADMIN_MANAGE_GROUPS_ACTION_ADD_USERS)
                         .withMessagesToDelete(List.of(msg.getMessageId())));
@@ -133,9 +131,8 @@ public class ManageGroupActionsHandler {
 
     @MatchState(state = States.ADMIN_MANAGE_GROUPS_ACTION_PREVIEW, callbackData = InlineMenuCallbacks.MANAGE_GROUPS_ACTION_REMOVE_USERS)
     public void startRemoveUsers(UserState userState, Update update) {
-        CallbackQuery callbackQuery = update.getCallbackQuery();
-        manageGroupActionsView.updMenuPromptToRemoveUsersFromGroup(callbackQuery);
-        Message msg = manageGroupActionsView.promptToRemoveUsersToGroup(callbackQuery);
+        manageGroupActionsView.updMenuPromptToRemoveUsersFromGroup(userState);
+        Message msg = manageGroupActionsView.promptToRemoveUsersToGroup(userState);
         telegramState.updateUserState(userState.getTelegramId(),
                 userState.withState(States.ADMIN_MANAGE_GROUPS_ACTION_REMOVE_USERS)
                         .withMessagesToDelete(List.of(msg.getMessageId())));
@@ -186,7 +183,7 @@ public class ManageGroupActionsHandler {
     public void viewGroupUsers(UserState userState, Update update) {
         BalanceEdit openBalance = telegramState.getOrCreateBalanceEdit(userState.getTelegramId());
         Set<AppUser> users = appUserRepo.findAllByGroupBalanceId(openBalance.getSelectedBalanceId());
-        manageGroupActionsView.reviewGroupUsers(update.getCallbackQuery(), users);
+        manageGroupActionsView.reviewGroupUsers(userState, users);
 
         telegramState.updateUserState(userState.getTelegramId(),
                 userState.withState(States.ADMIN_MANAGE_GROUPS_ACTION_USERS_REVIEW));
@@ -246,17 +243,16 @@ public class ManageGroupActionsHandler {
 
     @MatchState(forAdmin = true, state = States.ADMIN_MANAGE_GROUPS_ACTION_PREVIEW, callbackData = InlineMenuCallbacks.MANAGE_GROUPS_ACTION_DEACTIVATE)
     public void handleDeactivateGroup(UserState userState, Update update) {
-        manageGroupActionsView.confirmDeactivateGroupMsg(update.getCallbackQuery());
+        manageGroupActionsView.confirmDeactivateGroupMsg(userState);
         telegramState.updateUserState(userState.getTelegramId(),
                 userState.withState(States.ADMIN_MANAGE_GROUPS_ACTION_DEACTIVATE_CONFIRM));
     }
 
     @MatchState(forAdmin = true, state = States.ADMIN_MANAGE_GROUPS_ACTION_DEACTIVATE_CONFIRM, callbackData = InlineMenuCallbacks.CONFIRM_YES)
     public void confirmGroupDeactivate(UserState userState, Update update) {
-        CallbackQuery callbackQuery = update.getCallbackQuery();
         BalanceEdit openBalance = telegramState.getOrCreateBalanceEdit(userState.getTelegramId());
         balanceService.deactivateGroupBalance(openBalance.getSelectedBalanceId());
-        manageGroupActionsView.groupDeleted(callbackQuery);
+        manageGroupActionsView.groupDeleted(userState);
         telegramState.updateUserState(userState.getTelegramId(),
                 userState.withState(States.ADMIN_MANAGE_GROUPS_ACTION_DEACTIVATE_SUCCESS));
     }

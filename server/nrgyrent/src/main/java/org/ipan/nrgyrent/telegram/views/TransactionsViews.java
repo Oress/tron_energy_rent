@@ -9,7 +9,6 @@ import org.ipan.nrgyrent.telegram.state.UserState;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
-import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
@@ -61,11 +60,11 @@ public class TransactionsViews {
 
     @Retryable
     @SneakyThrows
-    public void updMenuToPromptBalanceType(CallbackQuery callbackQuery) {
+    public void updMenuToPromptBalanceType(UserState userState) {
         EditMessageText message = EditMessageText
                 .builder()
-                .chatId(callbackQuery.getMessage().getChatId())
-                .messageId(callbackQuery.getMessage().getMessageId())
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
                 .text(MSG_TRANSACTION_PROMPT_BALANCE_TYPE)
                 .replyMarkup(getChooseBalanceTypeMarkup())
                 .build();
@@ -74,11 +73,11 @@ public class TransactionsViews {
 
     @Retryable
     @SneakyThrows
-    public void updMenuToTransaction65kMenu(List<UserWallet> wallets, CallbackQuery callbackQuery) {
+    public void updMenuToTransaction65kMenu(List<UserWallet> wallets, UserState userState) {
         EditMessageText message = EditMessageText
                 .builder()
-                .chatId(callbackQuery.getMessage().getChatId())
-                .messageId(callbackQuery.getMessage().getMessageId())
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
                 .text(MSG_TRANSACTION_65K_TEXT)
                 .replyMarkup(getTransactionsMenuMarkup(wallets))
                 .build();
@@ -87,11 +86,11 @@ public class TransactionsViews {
 
     @Retryable
     @SneakyThrows
-    public void updMenuToTransaction131kMenu(List<UserWallet> wallets, CallbackQuery callbackQuery) {
+    public void updMenuToTransaction131kMenu(List<UserWallet> wallets, UserState userState) {
         EditMessageText message = EditMessageText
                 .builder()
-                .chatId(callbackQuery.getMessage().getChatId())
-                .messageId(callbackQuery.getMessage().getMessageId())
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
                 .text(MSG_TRANSACTION_131K_TEXT)
                 .replyMarkup(getTransactionsMenuMarkup(wallets))
                 .build();

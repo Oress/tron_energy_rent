@@ -14,7 +14,6 @@ import org.ipan.nrgyrent.telegram.utils.FormattingTools;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
-import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
@@ -118,11 +117,11 @@ public class AdminViews {
 
     @Retryable
     @SneakyThrows
-    public void itrxBalance(CallbackQuery callbackQuery, ApiUsageResponse apiUsageResponse) {
+    public void itrxBalance(UserState userState, ApiUsageResponse apiUsageResponse) {
         EditMessageText message = EditMessageText
                 .builder()
-                .chatId(callbackQuery.getMessage().getChatId())
-                .messageId(callbackQuery.getMessage().getMessageId())
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
                 .text(getItrxBalanceMessage(apiUsageResponse))
                 .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
@@ -131,11 +130,11 @@ public class AdminViews {
 
     @Retryable
     @SneakyThrows
-    public void sweepWalletsBalance(CallbackQuery callbackQuery, Map<CollectionWallet, Long> results) {
+    public void sweepWalletsBalance(UserState userState, Map<CollectionWallet, Long> results) {
         EditMessageText message = EditMessageText
                 .builder()
-                .chatId(callbackQuery.getMessage().getChatId())
-                .messageId(callbackQuery.getMessage().getMessageId())
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
                 .text(getSweepBalanceMessage(results))
                 .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
@@ -144,11 +143,11 @@ public class AdminViews {
 
     @Retryable
     @SneakyThrows
-    public void updMenuToAdminMenu(CallbackQuery callbackQuery) {
+    public void updMenuToAdminMenu(UserState userState) {
         EditMessageText message = EditMessageText
                 .builder()
-                .chatId(callbackQuery.getMessage().getChatId())
-                .messageId(callbackQuery.getMessage().getMessageId())
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
                 .text(MSG_ADMIN_MENU)
                 .replyMarkup(getAdminMenuReplyMarkup())
                 .build();

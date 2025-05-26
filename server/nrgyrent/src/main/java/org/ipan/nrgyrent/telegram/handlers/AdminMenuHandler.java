@@ -53,16 +53,17 @@ public class AdminMenuHandler {
         @MatchState(forAdmin = true, state = States.ADMIN_VIEW_PROMPT_WITHDRAW_WALLET, callbackData = InlineMenuCallbacks.GO_BACK),
         @MatchState(forAdmin = true, state = States.ADMIN_MANAGE_GROUPS, callbackData = InlineMenuCallbacks.GO_BACK),
         @MatchState(forAdmin = true, state = States.ADMIN_MANAGE_USERS, callbackData = InlineMenuCallbacks.GO_BACK),
+        @MatchState(forAdmin = true, state = States.ADMIN_VIEW_PROMPT_WITHDRAW_AMOUNT, callbackData = InlineMenuCallbacks.GO_BACK),
     })
     public void handleAdminMenu(UserState userState, Update update) {
-        adminViews.updMenuToAdminMenu(update.getCallbackQuery());
+        adminViews.updMenuToAdminMenu(userState);
         telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.ADMIN_MENU));
     }
 
     @MatchState(forAdmin = true, state = States.ADMIN_MENU, callbackData = InlineMenuCallbacks.MANAGE_ITRX_BALANCE)
     public void showItrxBalance(UserState userState, Update update) {
         ApiUsageResponse apiStats = restClient.getApiStats();
-        adminViews.itrxBalance(update.getCallbackQuery(), apiStats);
+        adminViews.itrxBalance(userState, apiStats);
         telegramState.updateUserState(userState.getTelegramId(),
                 userState.withState(States.ADMIN_VIEW_ITRX_BALANCE));
     }
@@ -70,7 +71,7 @@ public class AdminMenuHandler {
     @MatchState(forAdmin = true, state = States.ADMIN_MENU, callbackData = InlineMenuCallbacks.MANAGE_SWEEP_BALANCE)
     public void showSweepBalance(UserState userState, Update update) {
         Map<CollectionWallet, Long> sweepWalletsToBalance = getSweepWalletsToBalance();
-        adminViews.sweepWalletsBalance(update.getCallbackQuery(), sweepWalletsToBalance);
+        adminViews.sweepWalletsBalance(userState, sweepWalletsToBalance);
         telegramState.updateUserState(userState.getTelegramId(),
                 userState.withState(States.ADMIN_VIEW_SWEEP_BALANCE));
     }

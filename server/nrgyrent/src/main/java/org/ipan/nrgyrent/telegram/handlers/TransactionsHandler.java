@@ -68,15 +68,15 @@ public class TransactionsHandler {
             List<UserWallet> wallets = userWalletService.getWallets(userState.getTelegramId());
 
             if (energyAmount == AppConstants.ENERGY_131K) {
-                transactionsViews.updMenuToTransaction131kMenu(wallets, callbackQuery);
+                transactionsViews.updMenuToTransaction131kMenu(wallets, userState);
             } else {
-                transactionsViews.updMenuToTransaction65kMenu(wallets, callbackQuery);
+                transactionsViews.updMenuToTransaction65kMenu(wallets, userState);
             }
 
             telegramState.updateUserState(userState.getTelegramId(),
                     userState.withState(States.TRANSACTION_PROMPT_WALLET));
         } else {
-            transactionsViews.updMenuToPromptBalanceType(callbackQuery);
+            transactionsViews.updMenuToPromptBalanceType(userState);
             telegramState.updateUserState(userState.getTelegramId(),
                     userState.withState(States.TRANSACTION_PROMPT_BALANCE_TYPE));
         }
@@ -128,7 +128,7 @@ public class TransactionsHandler {
                 userState.withState(States.TRANSACTION_PROMPT_WALLET));
 
         List<UserWallet> wallets = userWalletService.getWallets(userState.getTelegramId());
-        promptWalletDependingOnEnergyAmount(update.getCallbackQuery(), wallets, transactionParams.getEnergyAmount());
+        promptWalletDependingOnEnergyAmount(userState, wallets, transactionParams.getEnergyAmount());
     }
 
     @MatchState(state = States.TRANSACTION_PROMPT_BALANCE_TYPE, callbackData = InlineMenuCallbacks.TRANSACTION_BALANCE_PERSONAL)
@@ -141,7 +141,7 @@ public class TransactionsHandler {
                 userState.withState(States.TRANSACTION_PROMPT_WALLET));
 
         List<UserWallet> wallets = userWalletService.getWallets(userState.getTelegramId());
-        promptWalletDependingOnEnergyAmount(update.getCallbackQuery(), wallets, transactionParams.getEnergyAmount());
+        promptWalletDependingOnEnergyAmount(userState, wallets, transactionParams.getEnergyAmount());
     }
 
     private void tryMakeTransaction(UserState userState, Integer energyAmount, String duration, String walletAddress,
@@ -223,12 +223,12 @@ public class TransactionsHandler {
         }
     }
 
-    private void promptWalletDependingOnEnergyAmount(CallbackQuery callbackQuery, List<UserWallet> wallets,
+    private void promptWalletDependingOnEnergyAmount(UserState userState, List<UserWallet> wallets,
             Integer energyAmount) {
         if (energyAmount == AppConstants.ENERGY_131K) {
-            transactionsViews.updMenuToTransaction131kMenu(wallets, callbackQuery);
+            transactionsViews.updMenuToTransaction131kMenu(wallets, userState);
         } else {
-            transactionsViews.updMenuToTransaction65kMenu(wallets, callbackQuery);
+            transactionsViews.updMenuToTransaction65kMenu(wallets, userState);
         }
 
     }

@@ -10,7 +10,6 @@ import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
-import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
@@ -135,11 +134,11 @@ public class WithdrawViews {
 
     @Retryable
     @SneakyThrows
-    public void promptBalanceType(CallbackQuery callbackQuery) {
+    public void promptBalanceType(UserState userState) {
         EditMessageText message = EditMessageText
                 .builder()
-                .chatId(callbackQuery.getMessage().getChatId())
-                .messageId(callbackQuery.getMessage().getMessageId())
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
                 .text(MSG_WITHDRAW_PROMPT_BALANCE_TYPE)
                 .replyMarkup(getWithdrawBalanceMarkup())
                 .build();
@@ -161,11 +160,11 @@ public class WithdrawViews {
 
     @Retryable
     @SneakyThrows
-    public void promptAmount(CallbackQuery callbackQuery) {
+    public void promptAmount(UserState userState) {
         EditMessageText message = EditMessageText
                 .builder()
-                .chatId(callbackQuery.getMessage().getChatId())
-                .messageId(callbackQuery.getMessage().getMessageId())
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
                 .text(getPromptAmountForWithdrawal())
                 .replyMarkup(commonViews.getToMainMenuMarkup())
                 .build();

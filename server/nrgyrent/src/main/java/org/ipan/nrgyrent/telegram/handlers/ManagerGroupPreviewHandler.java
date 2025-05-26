@@ -19,7 +19,6 @@ import org.ipan.nrgyrent.telegram.statetransitions.MatchState;
 import org.ipan.nrgyrent.telegram.statetransitions.TransitionHandler;
 import org.ipan.nrgyrent.telegram.statetransitions.UpdateType;
 import org.ipan.nrgyrent.telegram.views.ManageGroupActionsView;
-import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.UsersShared;
 import org.telegram.telegrambots.meta.api.objects.message.Message;
@@ -39,9 +38,8 @@ public class ManagerGroupPreviewHandler {
 
     @MatchState(state = States.MANAGER_GROUP_PREVIEW, callbackData = InlineMenuCallbacks.MANAGE_GROUPS_ACTION_ADD_USERS)
     public void startAddUsers_promptUsers(UserState userState, Update update) {
-        CallbackQuery callbackQuery = update.getCallbackQuery();
-        manageGroupActionsView.updMenuPromptToAddUsersToGroup(callbackQuery);
-        Message msg = manageGroupActionsView.promptToAddUsersToGroup(callbackQuery);
+        manageGroupActionsView.updMenuPromptToAddUsersToGroup(userState);
+        Message msg = manageGroupActionsView.promptToAddUsersToGroup(userState);
         telegramState.updateUserState(userState.getTelegramId(),
                 userState.withState(States.MANAGER_GROUPS_ACTION_ADD_USERS)
                         .withMessagesToDelete(List.of(msg.getMessageId())));
@@ -84,9 +82,8 @@ public class ManagerGroupPreviewHandler {
 
     @MatchState(state = States.MANAGER_GROUP_PREVIEW, callbackData = InlineMenuCallbacks.MANAGE_GROUPS_ACTION_REMOVE_USERS)
     public void startRemoveUsers(UserState userState, Update update) {
-        CallbackQuery callbackQuery = update.getCallbackQuery();
-        manageGroupActionsView.updMenuPromptToRemoveUsersFromGroup(callbackQuery);
-        Message msg = manageGroupActionsView.promptToRemoveUsersToGroup(callbackQuery);
+        manageGroupActionsView.updMenuPromptToRemoveUsersFromGroup(userState);
+        Message msg = manageGroupActionsView.promptToRemoveUsersToGroup(userState);
         telegramState.updateUserState(userState.getTelegramId(),
                 userState.withState(States.MANAGER_GROUPS_ACTION_REMOVE_USERS)
                         .withMessagesToDelete(List.of(msg.getMessageId())));
@@ -137,7 +134,7 @@ public class ManagerGroupPreviewHandler {
     public void viewGroupUsers(UserState userState, Update update) {
         BalanceEdit openBalance = telegramState.getOrCreateBalanceEdit(userState.getTelegramId());
         Set<AppUser> users = appUserRepo.findAllByGroupBalanceId(openBalance.getSelectedBalanceId());
-        manageGroupActionsView.reviewGroupUsers(update.getCallbackQuery(), users);
+        manageGroupActionsView.reviewGroupUsers(userState, users);
 
         telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.MANAGER_GROUP_VIEW_USERS));
     }

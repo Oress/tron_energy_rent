@@ -2,6 +2,7 @@ package org.ipan.nrgyrent.telegram.views;
 
 import org.ipan.nrgyrent.domain.model.AppUser;
 import org.ipan.nrgyrent.domain.model.Balance;
+import org.ipan.nrgyrent.telegram.state.UserState;
 import org.ipan.nrgyrent.telegram.utils.FormattingTools;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Component;
@@ -20,7 +21,7 @@ public class DepositViews {
 
     @Retryable
     @SneakyThrows
-    public void updMenuToDepositsMenu(CallbackQuery callbackQuery, AppUser user) {
+    public void updMenuToDepositsMenu(UserState userState, AppUser user) {
         Balance personalBalance = user.getBalance();
         Balance groupBalance = user.getGroupBalance();
 
@@ -30,8 +31,8 @@ public class DepositViews {
 
         EditMessageText message = EditMessageText
                 .builder()
-                .chatId(callbackQuery.getMessage().getChatId())
-                .messageId(callbackQuery.getMessage().getMessageId())
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
                 .text(text)
                 .parseMode("MARKDOWN")
                 .replyMarkup(commonViews.getToMainMenuMarkup())

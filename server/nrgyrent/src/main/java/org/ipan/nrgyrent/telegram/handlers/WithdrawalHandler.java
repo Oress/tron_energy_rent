@@ -47,7 +47,7 @@ public class WithdrawalHandler {
         if (user.getGroupBalance() == null) {
             handleBalanceTypePersonal_promptAmount(userState, update);
         } else {
-            withdrawViews.promptBalanceType(update.getCallbackQuery());
+            withdrawViews.promptBalanceType(userState);
             telegramState.updateUserState(userState.getTelegramId(),
                     userState.withState(States.USER_PROMPT_WITHDRAW_BALANCE_TYPE));
         }
@@ -58,7 +58,7 @@ public class WithdrawalHandler {
         WithdrawParams params = telegramState.getOrCreateWithdrawParams(userState.getTelegramId());
         telegramState.updateWithdrawParams(userState.getTelegramId(), params.withGroupBalance(false));
 
-        withdrawViews.promptAmount(update.getCallbackQuery());
+        withdrawViews.promptAmount(userState);
         telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.USER_PROMPT_WITHDRAW_AMOUNT));
     }
 
@@ -68,7 +68,7 @@ public class WithdrawalHandler {
         telegramState.updateWithdrawParams(userState.getTelegramId(), params.withGroupBalance(true));
 
         // TODO: fetch balance and show the max withdrawal amount
-        withdrawViews.promptAmount(update.getCallbackQuery());
+        withdrawViews.promptAmount(userState);
         telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.USER_PROMPT_WITHDRAW_AMOUNT));
     }
 
@@ -104,7 +104,7 @@ public class WithdrawalHandler {
                 }
                 telegramState.updateWithdrawParams(userState.getTelegramId(), params.withAmount(sunAmountLong));
             } catch (NumberFormatException e) {
-                withdrawViews.promptAmount(update.getCallbackQuery());
+                withdrawViews.promptAmount(userState);
                 return;
             }
         }

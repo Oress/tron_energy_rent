@@ -6,7 +6,6 @@ import org.ipan.nrgyrent.telegram.state.UserState;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
-import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.message.Message;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
@@ -75,11 +74,11 @@ public class ManageGroupNewGroupView {
 
 
     @SneakyThrows
-    public void updMenuToManageGroupsMenu(CallbackQuery callbackQuery) {
+    public void updMenuToManageGroupsMenu(UserState userState) {
         EditMessageText message = EditMessageText
                 .builder()
-                .chatId(callbackQuery.getMessage().getChatId())
-                .messageId(callbackQuery.getMessage().getMessageId())
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
                 .text(MSG_MANAGE_GROUPS_TXT)
                 .replyMarkup(getManageGroupsMarkup())
                 .build();
@@ -99,11 +98,11 @@ public class ManageGroupNewGroupView {
     }
 
     @SneakyThrows
-    public void updMenuToManageGroupsAddPromptLabel(CallbackQuery callbackQuery) {
+    public void updMenuToManageGroupsAddPromptLabel(UserState userState) {
         EditMessageText message = EditMessageText
                 .builder()
-                .chatId(callbackQuery.getMessage().getChatId())
-                .messageId(callbackQuery.getMessage().getMessageId())
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
                 .text(MSG_MANAGE_GROUPS_ADD_PROMPT_LABEL)
                 .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();

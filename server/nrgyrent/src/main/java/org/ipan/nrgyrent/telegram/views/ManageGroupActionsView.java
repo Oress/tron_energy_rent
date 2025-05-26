@@ -12,7 +12,6 @@ import org.ipan.nrgyrent.telegram.utils.FormattingTools;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
-import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.message.Message;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
@@ -202,11 +201,11 @@ public class ManageGroupActionsView {
     }
 
     @SneakyThrows
-    public void groupDeleted(CallbackQuery callbackQuery) {
+    public void groupDeleted(UserState userState) {
         EditMessageText message = EditMessageText
                 .builder()
-                .chatId(callbackQuery.getMessage().getChatId())
-                .messageId(callbackQuery.getMessage().getMessageId())
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
                 .text(MSG_GROUP_DELETED)
                 .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
@@ -274,11 +273,11 @@ public class ManageGroupActionsView {
     }
 
     @SneakyThrows
-    public void updMenuPromptToRemoveUsersFromGroup(CallbackQuery callbackQuery) {
+    public void updMenuPromptToRemoveUsersFromGroup(UserState userState) {
         EditMessageText message = EditMessageText
                 .builder()
-                .chatId(callbackQuery.getMessage().getChatId())
-                .messageId(callbackQuery.getMessage().getMessageId())
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
                 .text(MSG_GROUP_PROMPT_REMOVE_USERS)
                 .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
@@ -286,10 +285,10 @@ public class ManageGroupActionsView {
     }
 
     @SneakyThrows
-    public Message promptToRemoveUsersToGroup(CallbackQuery callbackQuery) {
+    public Message promptToRemoveUsersToGroup(UserState userState) {
         SendMessage message = SendMessage
                 .builder()
-                .chatId(callbackQuery.getMessage().getChatId())
+                .chatId(userState.getChatId())
                 .text(MSG_GROUP_PROMPT_REMOVE_USERS)
                 .replyMarkup(promptRemoveUsersMarkup())
                 .build();
@@ -297,11 +296,11 @@ public class ManageGroupActionsView {
     }
 
     @SneakyThrows
-    public void updMenuPromptToAddUsersToGroup(CallbackQuery callbackQuery) {
+    public void updMenuPromptToAddUsersToGroup(UserState userState) {
         EditMessageText message = EditMessageText
                 .builder()
-                .chatId(callbackQuery.getMessage().getChatId())
-                .messageId(callbackQuery.getMessage().getMessageId())
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
                 .text(MSG_GROUP_PROMPT_NEW_USERS)
                 .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
@@ -309,10 +308,10 @@ public class ManageGroupActionsView {
     }
 
     @SneakyThrows
-    public Message promptToAddUsersToGroup(CallbackQuery callbackQuery) {
+    public Message promptToAddUsersToGroup(UserState userState) {
         SendMessage message = SendMessage
                 .builder()
-                .chatId(callbackQuery.getMessage().getChatId())
+                .chatId(userState.getChatId())
                 .text(MSG_GROUP_PROMPT_NEW_USERS)
                 .replyMarkup(promptAddUsersMarkup())
                 .build();
@@ -320,11 +319,11 @@ public class ManageGroupActionsView {
     }
 
     @SneakyThrows
-    public void promptNewGroupLabel(CallbackQuery callbackQuery) {
+    public void promptNewGroupLabel(UserState userState) {
         EditMessageText message = EditMessageText
                 .builder()
-                .chatId(callbackQuery.getMessage().getChatId())
-                .messageId(callbackQuery.getMessage().getMessageId())
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
                 .text(MSG_GROUP_PROMPT_NEW_LABEL)
                 .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
@@ -332,11 +331,11 @@ public class ManageGroupActionsView {
     }
 
     @SneakyThrows
-    public void promptNewGroupBalance(CallbackQuery callbackQuery) {
+    public void promptNewGroupBalance(UserState userState) {
         EditMessageText message = EditMessageText
                 .builder()
-                .chatId(callbackQuery.getMessage().getChatId())
-                .messageId(callbackQuery.getMessage().getMessageId())
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
                 .text(MSG_GROUP_PROMPT_NEW_BALANCE)
                 .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
@@ -344,11 +343,11 @@ public class ManageGroupActionsView {
     }
 
     @SneakyThrows
-    public void reviewGroupUsers(CallbackQuery callbackQuery, Set<AppUser> users) {
+    public void reviewGroupUsers(UserState userState, Set<AppUser> users) {
         EditMessageText message = EditMessageText
                 .builder()
-                .chatId(callbackQuery.getMessage().getChatId())
-                .messageId(callbackQuery.getMessage().getMessageId())
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
                 .text(getUsersList(users))
                 .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
@@ -356,11 +355,11 @@ public class ManageGroupActionsView {
     }
 
     @SneakyThrows
-    public void confirmDeactivateGroupMsg(CallbackQuery callbackQuery) {
+    public void confirmDeactivateGroupMsg(UserState userState) {
         EditMessageText message = EditMessageText
                 .builder()
-                .chatId(callbackQuery.getMessage().getChatId())
-                .messageId(callbackQuery.getMessage().getMessageId())
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
                 .text(MSG_DELETE_GROUP_WARNING)
                 .replyMarkup(confirmDeleteGroupMarkup())
                 .build();

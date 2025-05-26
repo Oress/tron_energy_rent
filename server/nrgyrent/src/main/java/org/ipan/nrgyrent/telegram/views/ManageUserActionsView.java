@@ -90,11 +90,11 @@ public class ManageUserActionsView {
     }
 
     @SneakyThrows
-    public void userDeleted(CallbackQuery callbackQuery) {
+    public void userDeleted(UserState userState) {
         EditMessageText message = EditMessageText
                 .builder()
-                .chatId(callbackQuery.getMessage().getChatId())
-                .messageId(callbackQuery.getMessage().getMessageId())
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
                 .text(MSG_USER_DEACTIVATED)
                 .replyMarkup(commonViews.getToMainMenuMarkup())
                 .build();
@@ -114,11 +114,11 @@ public class ManageUserActionsView {
     }
 
     @SneakyThrows
-    public void promptNewUserBalance(UserState userState, CallbackQuery callbackQuery) {
+    public void promptNewUserBalance(UserState userState) {
         EditMessageText message = EditMessageText
                 .builder()
-                .chatId(callbackQuery.getMessage().getChatId())
-                .messageId(callbackQuery.getMessage().getMessageId())
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
                 .text(MSG_USER_PROMPT_NEW_BALANCE)
                 .replyMarkup(mainMenuAndBackToUserMarkup(userState))
                 .build();
@@ -126,11 +126,11 @@ public class ManageUserActionsView {
     }
 
     @SneakyThrows
-    public void confirmDeactivateUserMsg(UserState userState, CallbackQuery callbackQuery) {
+    public void confirmDeactivateUserMsg(UserState userState) {
         EditMessageText message = EditMessageText
                 .builder()
-                .chatId(callbackQuery.getMessage().getChatId())
-                .messageId(callbackQuery.getMessage().getMessageId())
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
                 .text(MSG_DEACTIVATE_USER_WARNING)
                 .replyMarkup(confirmDeleteGroupMarkup(userState))
                 .build();

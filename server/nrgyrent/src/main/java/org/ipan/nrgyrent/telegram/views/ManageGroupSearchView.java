@@ -10,7 +10,6 @@ import org.ipan.nrgyrent.telegram.state.UserState;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
-import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
@@ -44,11 +43,11 @@ public class ManageGroupSearchView {
     private final TelegramClient tgClient;
 
     @SneakyThrows
-    public void updMenuToManageGroupsMenu(CallbackQuery callbackQuery) {
+    public void updMenuToManageGroupsMenu(UserState userState) {
         EditMessageText message = EditMessageText
                 .builder()
-                .chatId(callbackQuery.getMessage().getChatId())
-                .messageId(callbackQuery.getMessage().getMessageId())
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
                 .text(MSG_MANAGE_GROUPS_TXT)
                 .replyMarkup(getManageGroupsMarkup())
                 .build();
