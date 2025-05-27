@@ -53,7 +53,7 @@ public class HistoryViews {
         switch (order.getType()) {
             case "ORDER" -> {
                     return """
-                    Операция: Аренда енергии
+                    Операция: Аренда транзакции
                     ID: %s
                     Сумма: %s TRX
                     Получатель: %s

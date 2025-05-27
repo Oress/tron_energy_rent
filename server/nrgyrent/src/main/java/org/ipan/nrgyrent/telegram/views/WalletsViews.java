@@ -23,8 +23,8 @@ import lombok.SneakyThrows;
 public class WalletsViews {
     public static final String OPEN_WALLET = "/wallet/";
 
-    public static final String MSG_PROMPT_WALLET_ADDRESS = "Отправьте адрес кошелька TRC-20, который вы хотите добавить";
-    public static final String MSG_PROMPT_WALLET_LABEL = "Отправьте название кошелька, который вы хотите добавить";
+    public static final String MSG_PROMPT_WALLET_ADDRESS = "Отправьте *адрес кошелька* TRC-20, который вы хотите добавить";
+    public static final String MSG_PROMPT_WALLET_LABEL = "Отправьте *название кошелька*, который вы хотите добавить";
     public static final String MSG_ADD_WALLET_SUCCESS = "✅ Кошелек успешно добавлен";
     public static final String MSG_DELETE_WALLET_SUCCESS = "\uD83D\uDDD1\uFE0F Кошелек успешно удален";
 
@@ -92,6 +92,7 @@ public class WalletsViews {
                 .messageId(userState.getMenuMessageId())
                 .text(MSG_PROMPT_WALLET_ADDRESS)
                 .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
+                .parseMode("MARKDOWN")
                 .build();
         tgClient.execute(message);
     }
@@ -105,6 +106,7 @@ public class WalletsViews {
                 .messageId(userState.getMenuMessageId())
                 .text(MSG_PROMPT_WALLET_LABEL)
                 .replyMarkup(commonViews.getToMainMenuMarkup())
+                .parseMode("MARKDOWN")
                 .build();
         tgClient.execute(message);
     }

@@ -22,6 +22,8 @@ import lombok.extern.slf4j.Slf4j;
 public class Config {
     @Value("${app.trongrid.base-url}")
     String baseUrl = "https://nile.trongrid.io";
+    @Value("${app.trongrid.api-key}")
+    String apiKey = "https://nile.trongrid.io";
 
     @Autowired
     CollectionWalletService collectionWalletService;
@@ -31,7 +33,7 @@ public class Config {
         ApiClient defaultClient = new ApiClient();
         logger.info("Base URL: {}", baseUrl);
         defaultClient.setBasePath(baseUrl);
-        // defaultClient.addDefaultHeader("nrgyrent/0.1");
+        defaultClient.addDefaultHeader("TRON-PRO-API-KEY", apiKey);
         return defaultClient;
     }
 

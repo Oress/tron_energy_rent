@@ -2,7 +2,9 @@ package org.ipan.nrgyrent.telegram;
 
 import java.util.List;
 
+import org.ipan.nrgyrent.domain.model.Balance;
 import org.ipan.nrgyrent.telegram.state.UserState;
+import org.ipan.nrgyrent.telegram.utils.FormattingTools;
 import org.ipan.nrgyrent.telegram.views.ManageGroupNewGroupView;
 import org.ipan.nrgyrent.telegram.views.ManageGroupSearchView;
 import org.springframework.retry.annotation.Retryable;
@@ -39,14 +41,24 @@ public class TelegramMessages {
     }
 
     @SneakyThrows
-    public void sendTransactionSuccessNotification(UserState userState) {
+    public void sendTransactionSuccessNotification(UserState userState, Balance balance) {
         SendMessage message = SendMessage
                 .builder()
                 .chatId(userState.getChatId())
-                .text(StaticLabels.NTFN_ORDER_SUCCESS)
+                .text(getSuccessfulTransactionMessage(balance))
                 .replyMarkup(getOrderSuccessNotificationMarkup())
+                .parseMode("MARKDOWN")
                 .build();
         tgClient.execute(message);
+    }
+
+    private String getSuccessfulTransactionMessage(Balance balance) {
+        return """
+                ✅ Транзакция успешно завершена
+                Энергия была переведена на ваш кошелек
+
+                *Ваш баланс: %s TRX*
+                """.formatted(FormattingTools.formatBalance(balance.getSunBalance()));
     }
 
     @SneakyThrows

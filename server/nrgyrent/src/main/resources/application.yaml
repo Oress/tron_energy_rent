@@ -33,8 +33,6 @@ app:
         enabled: true
   mapdb:
     db-path: ${APP_MAPDB_PATH:cache/nrgyrent.db}
-  tron:
-    base-url: ${APP_TRON_URL:"https://nile.trongrid.io"} # For mainnet, use https://api.trongrid.io
   itrx:
     base-url: ${APP_ITRX_BASE_URL:"https://nile.itrx.io"} # For mainnet, use https://api.itrx.io
     callback-url: ${APP_ITRX_CALLBACK_URL}
@@ -42,6 +40,7 @@ app:
     secret: ${APP_ITRX_API_SECRET}
   trongrid:
     base-url: ${APP_TRONGRID_URL:https://nile.trongrid.io} # For mainnet, use https://api.trongrid.io
+    api-key: ${APP_TRONGRID_API_KEY}
   telegram:
     bot:
       token: ${TELEGRAM_BOT_TOKEN}

@@ -25,12 +25,10 @@ public class TrongridRestClient {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @Value("${app.tron.base-url}")
+    @Value("${app.trongrid.base-url}")
     public String baseUrl = "https://nile.trongrid.io";
-    // @Value("${app.tron.key}")
+    @Value("${app.trongrid.api-key}")
     public String apiKey;
-    // @Value("${app.tron.secret}")
-    public String apiSecret;
 
     public TreeMap<String, Object> createTransaction(String from, String to, long amount) {
         try {
@@ -45,7 +43,7 @@ public class TrongridRestClient {
             Request request = new Request.Builder()
                     .url(baseUrl + "/wallet/createtransaction")
                     .method("POST", body)
-                    // .addHeader("API-KEY", apiKey)
+                    .addHeader("TRON-PRO-API-KEY", apiKey)
                     .addHeader("Content-Type", "application/json")
                     .build();
             Response response = client.newCall(request).execute();

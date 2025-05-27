@@ -34,7 +34,7 @@ public class OrderEventApplicationListener {
         }
 
         UserState userState = telegramState.getOrCreateUserState(order.getUser().getTelegramId());
-        telegramMessages.sendTransactionSuccessNotification(userState);
+        telegramMessages.sendTransactionSuccessNotification(userState, order.getBalance());
     }
 
     @EventListener

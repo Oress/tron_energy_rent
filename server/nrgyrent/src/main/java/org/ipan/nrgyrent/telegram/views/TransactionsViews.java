@@ -29,13 +29,13 @@ public class TransactionsViews {
     private static final String MSG_TRANSACTION_65K_TEXT = """
             ⚡ Транзакции (1 тр на кош с USDT, 5.5 TRX)
 
-            👇 Пожалуйста, выберите кошелек, для которого вы желаете перевести энергию 👇
+            👇 Введите *текстом кошелек*, либо выберете из *списка* 👇
             """;
 
     private static final String MSG_TRANSACTION_131K_TEXT = """
             ⚡ Транзакции (1 тр на кош без USDT или биржу, 8.6 TRX)
 
-            👇 Пожалуйста, выберите кошелек, для которого вы желаете перевести энергию 👇
+            👇 Введите *текстом кошелек*, либо выберете из *списка* 👇
             """;
 
     private static final String MSG_NOT_ENOUGH_TRX = """
@@ -81,6 +81,7 @@ public class TransactionsViews {
                 .messageId(userState.getMenuMessageId())
                 .text(MSG_TRANSACTION_65K_TEXT)
                 .replyMarkup(getTransactionsMenuMarkup(wallets))
+                .parseMode("MARKDOWN")
                 .build();
         tgClient.execute(message);
     }
@@ -94,6 +95,7 @@ public class TransactionsViews {
                 .messageId(userState.getMenuMessageId())
                 .text(MSG_TRANSACTION_131K_TEXT)
                 .replyMarkup(getTransactionsMenuMarkup(wallets))
+                .parseMode("MARKDOWN")
                 .build();
         tgClient.execute(message);
     }
