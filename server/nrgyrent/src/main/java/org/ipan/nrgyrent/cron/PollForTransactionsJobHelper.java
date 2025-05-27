@@ -59,7 +59,7 @@ public class PollForTransactionsJobHelper {
         for (Balance balance : batch) {
             String depositAddress = balance.getDepositAddress();
             String hexDepositAddress = ByteArray.toHexString(depositAddress.getBytes());
-            logger.info("Processing balance: id: {} wallet: {}, hex {}", balance.getId(), depositAddress);
+            logger.info("Processing balance: id: {} wallet: {}", balance.getId(), depositAddress);
             V1AccountsAddressTransactionsGet200Response response = accountApi
                     .v1AccountsAddressTransactionsGet(depositAddress, true, true, null, 50, null)
                     .block();

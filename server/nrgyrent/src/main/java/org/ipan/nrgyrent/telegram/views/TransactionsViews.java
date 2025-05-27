@@ -47,13 +47,11 @@ public class TransactionsViews {
 
     public static final String MSG_TRANSACTION_SUCCESS = """
             ✅ Транзакция успешно завершена
-            Энергия была переведена на ваш кошелек
             """;
 
     private static final String MSG_TRANSACTION_PENDING = """
             ⏳ Транзакция в процессе
-            Пожалуйста, подождите до 5 минут. Если транзакция не завершится, средства будут возвращены на ваш баланс.
-            Бот отправит вам уведомление, когда транзакция завершится.
+            Пожалуйста, подождите до 5 минут. Бот отправит вам уведомление, когда транзакция завершится
             """;
 
     private final TelegramClient tgClient;
@@ -166,26 +164,13 @@ public class TransactionsViews {
 
     @Retryable
     @SneakyThrows
-    public void updMenuToTransactionSuccess(UserState userState) {
-        EditMessageText message = EditMessageText
-                .builder()
-                .chatId(userState.getChatId())
-                .messageId(userState.getMenuMessageId())
-                .text(MSG_TRANSACTION_SUCCESS)
-                .replyMarkup(commonViews.getToMainMenuMarkup())
-                .build();
-        tgClient.execute(message);
-    }
-
-    @Retryable
-    @SneakyThrows
     public void updMenuToTransactionPending(UserState userState) {
         EditMessageText message = EditMessageText
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
                 .text(MSG_TRANSACTION_PENDING)
-                .replyMarkup(commonViews.getToMainMenuMarkup())
+                // .replyMarkup(commonViews.getToMainMenuMarkup())
                 .build();
         tgClient.execute(message);
     }

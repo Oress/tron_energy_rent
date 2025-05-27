@@ -23,6 +23,7 @@ import org.ipan.nrgyrent.trongrid.api.AccountApi;
 import org.ipan.nrgyrent.trongrid.model.AccountInfo;
 import org.ipan.nrgyrent.trongrid.model.V1AccountsAddressGet200Response;
 import org.springframework.scheduling.annotation.Async;
+import org.telegram.telegrambots.meta.api.objects.message.Message;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -80,7 +81,10 @@ public class WithdrawalHandlerHelper {
         if (walletToWithdrawFrom == null) {
             logger.error("Service has not enough balance for withdrawal for {}, amount {}", userId, amountSun);
             UserState userState = telegramState.getOrCreateUserState(userId);
-            withdrawViews.sendWithdrawalFailServiceNotEnoughBalance(userState);
+            Message newMessage = withdrawViews.sendWithdrawalFailServiceNotEnoughBalance(userState);
+
+            telegramState.updateUserState(userState.getTelegramId(),
+            userState.withMenuMessageId(newMessage.getMessageId()).withMessagesToDelete(List.of(userState.getMenuMessageId())));
 
             return CompletableFuture.completedFuture(null);
         }

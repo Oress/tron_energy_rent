@@ -1,16 +1,21 @@
 package org.ipan.nrgyrent.telegram.views;
 
+import java.text.Format;
 import java.util.List;
 
+import org.ipan.nrgyrent.domain.model.Balance;
 import org.ipan.nrgyrent.domain.model.UserWallet;
+import org.ipan.nrgyrent.itrx.AppConstants;
 import org.ipan.nrgyrent.telegram.InlineMenuCallbacks;
 import org.ipan.nrgyrent.telegram.StaticLabels;
 import org.ipan.nrgyrent.telegram.state.UserState;
+import org.ipan.nrgyrent.telegram.utils.FormattingTools;
 import org.ipan.nrgyrent.telegram.utils.WalletTools;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
+import org.telegram.telegrambots.meta.api.objects.message.Message;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
@@ -84,7 +89,7 @@ public class WithdrawViews {
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
                 .text(MSG_WITHDRAW_TRX_IN_PROGRESS)
-                .replyMarkup(commonViews.getToMainMenuMarkup())
+                // .replyMarkup(commonViews.getToMainMenuMarkup())
                 .build();
         tgClient.execute(message);
     }
@@ -112,14 +117,14 @@ public class WithdrawViews {
     }
 
     @SneakyThrows
-    public void sendWithdrawalFailServiceNotEnoughBalance(UserState userState) {
+    public Message sendWithdrawalFailServiceNotEnoughBalance(UserState userState) {
         SendMessage message = SendMessage
                 .builder()
                 .chatId(userState.getChatId())
                 .text(NTFN_WITHDRWAL_FAIL_SERVICE_NOT_ENOUGH_BALANCE)
                 .replyMarkup(getOrderRefundedNotificationMarkup())
                 .build();
-        tgClient.execute(message);
+        return tgClient.execute(message);
     }
 
     @SneakyThrows
@@ -148,12 +153,13 @@ public class WithdrawViews {
 
     @Retryable
     @SneakyThrows
-    public void promptAmountAgainNotEnoughBalance(UserState userState) {
+    public void promptAmountAgainNotEnoughBalance(UserState userState, Balance balance) {
         EditMessageText message = EditMessageText
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
-                .text(getPromptAmountForWithdrawalNotEnoughBalance())
+                .text(getPromptAmountForWithdrawalNotEnoughBalance(balance))
+                .parseMode("MARKDOWN")
                 .replyMarkup(commonViews.getToMainMenuMarkup())
                 .build();
         tgClient.execute(message);
@@ -161,12 +167,13 @@ public class WithdrawViews {
 
     @Retryable
     @SneakyThrows
-    public void promptAmount(UserState userState) {
+    public void promptAmount(UserState userState, Balance balance) {
         EditMessageText message = EditMessageText
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
-                .text(getPromptAmountForWithdrawal())
+                .text(getPromptAmountForWithdrawal(balance))
+                .parseMode("MARKDOWN")
                 .replyMarkup(commonViews.getToMainMenuMarkup())
                 .build();
         tgClient.execute(message);
@@ -192,8 +199,8 @@ public class WithdrawViews {
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(StaticLabels.OK)
-                                        .callbackData(InlineMenuCallbacks.NTFN_OK)
+                                        .text(StaticLabels.TO_MAIN_MENU)
+                                        .callbackData(InlineMenuCallbacks.TO_MAIN_MENU)
                                         .build())
 
                 )
@@ -254,7 +261,7 @@ public class WithdrawViews {
                 .build();
     }
 
-    private String getPromptAmountForWithdrawal() {
+    private String getPromptAmountForWithdrawal(Balance balance) {
         return """
                 💰 Вывод средств
 
@@ -264,15 +271,19 @@ public class WithdrawViews {
 
 
                 Пожалуйста, введите сумму, которую вы хотите вывести.
-                """;
+
+                *Доступно для вывода: %s TRX* (с учетом комиссии 1 TRX)
+                """.formatted(FormattingTools.formatBalance(Long.max(0, balance.getSunBalance() - AppConstants.WITHDRAWAL_FEE)));
     }
 
-    private String getPromptAmountForWithdrawalNotEnoughBalance() {
+    private String getPromptAmountForWithdrawalNotEnoughBalance(Balance balance) {
         return """
                 💰 Вывод средств
 
                 У вас недостаточно средств для вывода такой суммы.
                 Пожалуйста, введите сумму, которую вы хотите вывести.
-                """;
+
+                *Доступно для вывода: %s TRX* (с учетом комиссии 1 TRX)
+                """.formatted(FormattingTools.formatBalance(Long.max(0, balance.getSunBalance() - AppConstants.WITHDRAWAL_FEE)));
     }
 }

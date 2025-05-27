@@ -58,7 +58,10 @@ public class WithdrawalHandler {
         WithdrawParams params = telegramState.getOrCreateWithdrawParams(userState.getTelegramId());
         telegramState.updateWithdrawParams(userState.getTelegramId(), params.withGroupBalance(false));
 
-        withdrawViews.promptAmount(userState);
+        AppUser user = userService.getById(userState.getTelegramId());
+        Balance balance = user.getBalance();
+
+        withdrawViews.promptAmount(userState, balance);
         telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.USER_PROMPT_WITHDRAW_AMOUNT));
     }
 
@@ -67,8 +70,11 @@ public class WithdrawalHandler {
         WithdrawParams params = telegramState.getOrCreateWithdrawParams(userState.getTelegramId());
         telegramState.updateWithdrawParams(userState.getTelegramId(), params.withGroupBalance(true));
 
-        // TODO: fetch balance and show the max withdrawal amount
-        withdrawViews.promptAmount(userState);
+        
+        AppUser user = userService.getById(userState.getTelegramId());
+        Balance balance = user.getGroupBalance();
+
+        withdrawViews.promptAmount(userState, balance);
         telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.USER_PROMPT_WITHDRAW_AMOUNT));
     }
 
@@ -79,6 +85,9 @@ public class WithdrawalHandler {
             String text = message.getText();
             
             try {
+                if (text != null) {
+                    text = text.replace(",", ".");
+                }
                 BigDecimal trxAmount = new BigDecimal(text);
                 BigDecimal sunAmount = trxAmount.multiply(AppConstants.trxToSunRate);
                 WithdrawParams params = telegramState.getOrCreateWithdrawParams(userState.getTelegramId());
@@ -99,12 +108,15 @@ public class WithdrawalHandler {
 
                 if (balance.getSunBalance() < sunAmountLong + AppConstants.WITHDRAWAL_FEE) {
                     logger.warn("User {} has not enough balance for withdrawal, balance: {}, required: {}, fee: {}", userState.getTelegramId(), balance.getSunBalance(), sunAmountLong, AppConstants.WITHDRAWAL_FEE);
-                    withdrawViews.promptAmountAgainNotEnoughBalance(userState);
+                    withdrawViews.promptAmountAgainNotEnoughBalance(userState, balance);
                     return;
                 }
                 telegramState.updateWithdrawParams(userState.getTelegramId(), params.withAmount(sunAmountLong));
             } catch (NumberFormatException e) {
-                withdrawViews.promptAmount(userState);
+                WithdrawParams params = telegramState.getOrCreateWithdrawParams(userState.getTelegramId());
+                AppUser user = userService.getById(userState.getTelegramId());
+                Balance balance = params.getGroupBalance() ? user.getGroupBalance() : user.getBalance();
+                withdrawViews.promptAmount(userState, balance);
                 return;
             }
         }

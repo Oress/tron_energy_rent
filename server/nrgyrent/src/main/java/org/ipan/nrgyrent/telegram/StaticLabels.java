@@ -1,13 +1,6 @@
 package org.ipan.nrgyrent.telegram;
 
 public class StaticLabels {
-    // COMMON
-    public static final String MSG_MAIN_MENU_TEXT = """
-            ⚡ Приветствуем в нашем сервисе ⚡
-
-            Выберите действие, нажав кнопку ниже, время аренды - 1 час
-            """;
-
     // NOTIFICATIONS
     public static final String MSG_WALLETS = """
             \uD83D\uDC5B Кошельки
@@ -34,13 +27,9 @@ public class StaticLabels {
     // Notifications labels
     public static final String NTFN_BALANCE_TOPUP = """
             ✅ Баланс успешно пополнен
-            TRX были добавлены на ваш кошелек
+            TRX были добавлены на ваш депозит
             """;
 
-    public static final String NTFN_ORDER_SUCCESS = """
-            ✅ Транзакция успешно завершена
-            Энергия была переведена на ваш кошелек
-            """;
     public static final String NTFN_ORDER_REFUNDED = """
             ❌ Транзакция была отменена
             Средства были возвращены на ваш баланс

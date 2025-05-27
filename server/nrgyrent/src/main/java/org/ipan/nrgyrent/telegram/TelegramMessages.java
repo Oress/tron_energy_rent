@@ -2,6 +2,7 @@ package org.ipan.nrgyrent.telegram;
 
 import java.util.List;
 
+import org.ipan.nrgyrent.domain.model.AppUser;
 import org.ipan.nrgyrent.domain.model.Balance;
 import org.ipan.nrgyrent.telegram.state.UserState;
 import org.ipan.nrgyrent.telegram.utils.FormattingTools;
@@ -41,7 +42,7 @@ public class TelegramMessages {
     }
 
     @SneakyThrows
-    public void sendTransactionSuccessNotification(UserState userState, Balance balance) {
+    public Message sendTransactionSuccessNotification(UserState userState, Balance balance) {
         SendMessage message = SendMessage
                 .builder()
                 .chatId(userState.getChatId())
@@ -49,13 +50,12 @@ public class TelegramMessages {
                 .replyMarkup(getOrderSuccessNotificationMarkup())
                 .parseMode("MARKDOWN")
                 .build();
-        tgClient.execute(message);
+        return tgClient.execute(message);
     }
 
     private String getSuccessfulTransactionMessage(Balance balance) {
         return """
                 ✅ Транзакция успешно завершена
-                Энергия была переведена на ваш кошелек
 
                 *Ваш баланс: %s TRX*
                 """.formatted(FormattingTools.formatBalance(balance.getSunBalance()));
@@ -147,50 +147,71 @@ public class TelegramMessages {
 
     @Retryable
     @SneakyThrows
-    public Message sendMainMenu(UserState userState, Long chatId) {
+    public Message sendMainMenu(UserState userState, Long chatId, AppUser user) {
         SendMessage message = SendMessage
                 .builder()
                 .chatId(chatId)
-                .text(StaticLabels.MSG_MAIN_MENU_TEXT)
+                .text(getMainMenuMessage(user))
                 .replyMarkup(getMainMenuReplyMarkup(userState.isManager(), false))
+                .parseMode("MARKDOWN")
                 .build();
         return tgClient.execute(message);
     }
 
     @Retryable
     @SneakyThrows
-    public Message sendAdminMainMenu(UserState userState, Long chatId) {
+    public Message sendAdminMainMenu(UserState userState, Long chatId, AppUser user) {
         SendMessage message = SendMessage
                 .builder()
                 .chatId(chatId)
-                .text(StaticLabels.MSG_MAIN_MENU_TEXT)
+                .text(getMainMenuMessage(user))
                 .replyMarkup(getMainMenuReplyMarkup(userState.isManager(), true))
+                .parseMode("MARKDOWN")
                 .build();
         return tgClient.execute(message);
     }
 
     @SneakyThrows
-    public void updateMsgToMainMenu(UserState userState) {
+    public void updateMsgToMainMenu(UserState userState, AppUser user) {
         EditMessageText message = EditMessageText
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
-                .text(StaticLabels.MSG_MAIN_MENU_TEXT)
+                .text(getMainMenuMessage(user))
+                .parseMode("MARKDOWN")
                 .replyMarkup(getMainMenuReplyMarkup(userState.isManager(), false))
                 .build();
         tgClient.execute(message);
     }
 
     @SneakyThrows
-    public void updateMsgToAdminMainMenu(UserState userState, CallbackQuery callbackQuery) {
+    public void updateMsgToAdminMainMenu(UserState userState, CallbackQuery callbackQuery, AppUser user) {
         EditMessageText message = EditMessageText
                 .builder()
                 .chatId(callbackQuery.getMessage().getChatId())
                 .messageId(callbackQuery.getMessage().getMessageId())
-                .text(StaticLabels.MSG_MAIN_MENU_TEXT)
+                .text(getMainMenuMessage(user))
+                .parseMode("MARKDOWN")
                 .replyMarkup(getMainMenuReplyMarkup(userState.isManager(), true))
                 .build();
         tgClient.execute(message);
+    }
+
+    private String getMainMenuMessage(AppUser user) {
+        Balance personalBalance = user.getBalance();
+        Balance groupBalance = user.getGroupBalance();
+
+        return """
+            ⚡ Приветствуем в нашем сервисе ⚡
+
+            Выберите действие, нажав кнопку ниже, время аренды - 1 час
+
+            *Ваш баланс: %s TRX* %s
+            """.formatted(FormattingTools.formatBalance(personalBalance.getSunBalance()),
+                groupBalance != null 
+                    ? "\n*Баланс группы: %s TRX*".formatted(FormattingTools.formatBalance(groupBalance.getSunBalance()))
+                    : ""
+                );
     }
 
     private InlineKeyboardMarkup getMainMenuReplyMarkup(Boolean isManager, Boolean isAdmin) {
@@ -266,8 +287,8 @@ public class TelegramMessages {
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(StaticLabels.OK)
-                                        .callbackData(InlineMenuCallbacks.NTFN_OK)
+                                        .text(StaticLabels.TO_MAIN_MENU)
+                                        .callbackData(InlineMenuCallbacks.TO_MAIN_MENU)
                                         .build())
 
                 )

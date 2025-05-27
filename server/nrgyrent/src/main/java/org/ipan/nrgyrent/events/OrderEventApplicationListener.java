@@ -1,5 +1,7 @@
 package org.ipan.nrgyrent.events;
 
+import java.util.List;
+
 import org.ipan.nrgyrent.domain.events.OrderCompletedEvent;
 import org.ipan.nrgyrent.domain.events.OrderFailedEvent;
 import org.ipan.nrgyrent.domain.model.Order;
@@ -10,6 +12,7 @@ import org.ipan.nrgyrent.telegram.state.UserState;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import org.telegram.telegrambots.meta.api.objects.message.Message;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,7 +37,9 @@ public class OrderEventApplicationListener {
         }
 
         UserState userState = telegramState.getOrCreateUserState(order.getUser().getTelegramId());
-        telegramMessages.sendTransactionSuccessNotification(userState, order.getBalance());
+        Message message = telegramMessages.sendTransactionSuccessNotification(userState, order.getBalance());
+        telegramState.updateUserState(userState.getTelegramId(), 
+            userState.withMenuMessageId(message.getMessageId()).withMessagesToDelete(List.of(userState.getMenuMessageId())));
     }
 
     @EventListener

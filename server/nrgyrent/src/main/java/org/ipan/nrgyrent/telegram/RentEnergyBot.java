@@ -113,10 +113,10 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
             if (InlineMenuCallbacks.TO_MAIN_MENU.equals(data)) {
                 switch (userState.getRole()) {
                     case ADMIN:
-                        telegramMessages.updateMsgToAdminMainMenu(userState, callbackQuery);
+                        telegramMessages.updateMsgToAdminMainMenu(userState, callbackQuery, user);
                         break;
                     default:
-                        telegramMessages.updateMsgToMainMenu(userState);
+                        telegramMessages.updateMsgToMainMenu(userState, user);
                         break;
                 }
                 telegramState.updateUserState(userId, userState.withState(States.MAIN_MENU));
@@ -140,21 +140,8 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
             String text = message.getText();
 
             if (START.equals(text)) {
-                // may be null if user is not registered
-                UserRole role = user != null ? user.getRole() : UserRole.USER;
-
-                Message newMenuMsg = switch (role) {
-                    case ADMIN -> telegramMessages.sendAdminMainMenu(userState, update.getMessage().getChatId());
-                    default -> telegramMessages.sendMainMenu(userState, update.getMessage().getChatId());
-                };
-
-                telegramState.updateUserState(userState.getTelegramId(), userState
-                        .withState(States.MAIN_MENU)
-                        .withChatId(newMenuMsg.getChatId())
-                        .withRole(role)
-                        .withMenuMessageId(newMenuMsg.getMessageId()));
                 if (user == null) {
-                    userService.createUser(
+                    user = userService.createUser(
                             CreateUserCommand.builder()
                                     .telegramId(userState.getTelegramId())
                                     .firstName(message.getFrom().getFirstName())
@@ -162,6 +149,18 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
                                     .build());
                 }
                 telegramMessages.deleteMessage(message);
+                UserRole role = user != null ? user.getRole() : UserRole.USER;
+
+                Message newMenuMsg = switch (role) {
+                    case ADMIN -> telegramMessages.sendAdminMainMenu(userState, update.getMessage().getChatId(), user);
+                    default -> telegramMessages.sendMainMenu(userState, update.getMessage().getChatId(), user);
+                };
+
+                telegramState.updateUserState(userState.getTelegramId(), userState
+                        .withState(States.MAIN_MENU)
+                        .withChatId(newMenuMsg.getChatId())
+                        .withRole(role)
+                        .withMenuMessageId(newMenuMsg.getMessageId()));
 
                 // remove old menu message if exists
                 if (userState.getMenuMessageId() != null) {
