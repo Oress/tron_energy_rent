@@ -8,11 +8,10 @@ services:
       - 8080:8080
 
   postgres:
+    restart: unless-stopped
     extends:
       file: docker-compose-base.yaml
       service: postgresservice
-    ports:
-      - "5432:5432"
 
   db_backup_cron:
     extends:
