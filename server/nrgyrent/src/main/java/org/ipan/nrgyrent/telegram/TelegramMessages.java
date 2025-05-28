@@ -15,6 +15,7 @@ import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessages;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
+import org.telegram.telegrambots.meta.api.objects.LinkPreviewOptions;
 import org.telegram.telegrambots.meta.api.objects.message.Message;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
@@ -153,6 +154,7 @@ public class TelegramMessages {
                 .chatId(chatId)
                 .text(getMainMenuMessage(user))
                 .replyMarkup(getMainMenuReplyMarkup(userState.isManager(), false))
+                .linkPreviewOptions(LinkPreviewOptions.builder().isDisabled(true).build())
                 .parseMode("MARKDOWN")
                 .build();
         return tgClient.execute(message);
@@ -164,6 +166,7 @@ public class TelegramMessages {
         SendMessage message = SendMessage
                 .builder()
                 .chatId(chatId)
+                .linkPreviewOptions(LinkPreviewOptions.builder().isDisabled(true).build())
                 .text(getMainMenuMessage(user))
                 .replyMarkup(getMainMenuReplyMarkup(userState.isManager(), true))
                 .parseMode("MARKDOWN")
@@ -178,6 +181,7 @@ public class TelegramMessages {
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
                 .text(getMainMenuMessage(user))
+                .linkPreviewOptions(LinkPreviewOptions.builder().isDisabled(true).build())
                 .parseMode("MARKDOWN")
                 .replyMarkup(getMainMenuReplyMarkup(userState.isManager(), false))
                 .build();
@@ -192,6 +196,7 @@ public class TelegramMessages {
                 .messageId(callbackQuery.getMessage().getMessageId())
                 .text(getMainMenuMessage(user))
                 .parseMode("MARKDOWN")
+                .linkPreviewOptions(LinkPreviewOptions.builder().isDisabled(true).build())
                 .replyMarkup(getMainMenuReplyMarkup(userState.isManager(), true))
                 .build();
         tgClient.execute(message);
