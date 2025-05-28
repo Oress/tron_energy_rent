@@ -14,17 +14,22 @@ services:
       - POSTGRES_USER
       - POSTGRES_PASSWORD
 
-      - TELEGRAM_BOT_TOKEN
       - APP_MAPDB_PATH=/cache/nrgyrent.db
-      - APP_WALLET_ENCRYPTION_KEY_BASE64
-
-      - APP_TRONGRID_URL
 
       - APP_ITRX_API_KEY
       - APP_ITRX_API_SECRET
       - APP_ITRX_BASE_URL
       - APP_ITRX_CALLBACK_URL
-      - APP_TRON_URL
+
+      - APP_TRONGRID_URL
+      - APP_TRONGRID_API_KEY
+
+      - APP_SWEEP_WALLETS_COUNT
+
+      - APP_WALLET_ENCRYPTION_KEY_BASE64
+
+      - TELEGRAM_BOT_TOKEN
+
 
   postgresservice:
     image: postgres:16.0
