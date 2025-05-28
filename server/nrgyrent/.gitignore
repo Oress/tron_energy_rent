@@ -1,6 +1,6 @@
-.env
 logs/
 cache/
+envs/
 
 HELP.md
 target/

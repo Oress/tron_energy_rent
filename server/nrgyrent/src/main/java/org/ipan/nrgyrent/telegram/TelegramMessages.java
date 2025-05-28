@@ -207,6 +207,8 @@ public class TelegramMessages {
             Выберите действие, нажав кнопку ниже, время аренды - 1 час
 
             *Ваш баланс: %s TRX* %s
+
+            [@FlashTronRent_support](https://t.me/FlashTronRent_support) - поможет и ответит на все вопросы
             """.formatted(FormattingTools.formatBalance(personalBalance.getSunBalance()),
                 groupBalance != null 
                     ? "\n*Баланс группы: %s TRX*".formatted(FormattingTools.formatBalance(groupBalance.getSunBalance()))
