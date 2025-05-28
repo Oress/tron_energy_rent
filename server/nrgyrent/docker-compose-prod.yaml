@@ -13,6 +13,15 @@ services:
       service: postgresservice
     ports:
       - "5432:5432"
-  
+
+  db_backup_cron:
+    extends:
+      file: docker-compose-base.yaml
+      service: db_backup_cron_service
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+        required: true
 volumes:
   energy_rent_postgres: { }
