@@ -7,7 +7,6 @@ import org.ipan.nrgyrent.domain.model.AppUser;
 import org.ipan.nrgyrent.domain.model.Balance;
 import org.ipan.nrgyrent.domain.model.WithdrawalOrder;
 import org.ipan.nrgyrent.domain.model.WithdrawalStatus;
-import org.ipan.nrgyrent.domain.model.repository.OrderRepo;
 import org.ipan.nrgyrent.domain.model.repository.UserRepo;
 import org.ipan.nrgyrent.domain.model.repository.WithdrawalOrderRepo;
 import org.springframework.beans.factory.annotation.Lookup;
@@ -22,7 +21,6 @@ import lombok.extern.slf4j.Slf4j;
 @AllArgsConstructor
 @Slf4j
 public class WithdrawalOrderService {
-    private final OrderRepo orderRepo;
     private final UserRepo userRepo;
     private final WithdrawalOrderRepo withdrawalOrderRepo;
     private final BalanceService balanceService;

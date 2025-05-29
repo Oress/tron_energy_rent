@@ -1,6 +1,5 @@
 package org.ipan.nrgyrent.telegram.views;
 
-import java.text.Format;
 import java.util.List;
 
 import org.ipan.nrgyrent.domain.model.Balance;

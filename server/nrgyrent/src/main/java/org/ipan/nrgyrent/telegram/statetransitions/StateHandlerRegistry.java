@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiPredicate;
-import java.util.function.Predicate;
 
 import org.ipan.nrgyrent.domain.model.UserRole;
 import org.ipan.nrgyrent.telegram.States;
@@ -17,7 +16,6 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 @Component
 public class StateHandlerRegistry {
     private final Map<Tuple<States, Integer>, List<TransitionMatcher>> handlers = new HashMap<>();
-    // private final Map<Tuple<States, Integer>, List<Tuple<Object, Method>>> handlers = new HashMap<>();
 
     public void register(MatchState state, Method method, Object bean) {
         int updateType = state.updateTypes();
