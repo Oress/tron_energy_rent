@@ -60,81 +60,86 @@ public class PollForTransactionsJobHelper {
             String depositAddress = balance.getDepositAddress();
             String hexDepositAddress = ByteArray.toHexString(depositAddress.getBytes());
             logger.info("Processing balance: id: {} wallet: {}", balance.getId(), depositAddress);
-            V1AccountsAddressTransactionsGet200Response response = accountApi
-                    .v1AccountsAddressTransactionsGet(depositAddress, true, true, null, 50, null)
-                    .block();
+            try {
+                V1AccountsAddressTransactionsGet200Response response = accountApi
+                        .v1AccountsAddressTransactionsGet(depositAddress, true, true, null, 50, null)
+                        .block();
 
-            if (response != null && response.getData() != null) {
-                String lastTxId = balance.getLastTxId();
-                Long lastTxTimestamp = balance.getLastTxTimestamp();
-                // Use the last transaction ID and timestamp to filter out old transactions, and consider only new ones
+                if (response != null && response.getData() != null) {
+                    String lastTxId = balance.getLastTxId();
+                    Long lastTxTimestamp = balance.getLastTxTimestamp();
+                    // Use the last transaction ID and timestamp to filter out old transactions, and consider only new ones
 
-                logger.info("Balance Id {} wallet {} Last transaction ID: {}, Last transaction timestamp: {}", balance.getId(), depositAddress, balance.getLastTxId(), balance.getLastTxTimestamp());
+                    logger.info("Balance Id {} wallet {} Last transaction ID: {}, Last transaction timestamp: {}", balance.getId(), depositAddress, balance.getLastTxId(), balance.getLastTxTimestamp());
 
-                List<Transaction> transactions = Collections.emptyList();
+                    List<Transaction> transactions = Collections.emptyList();
 
-                if (lastTxTimestamp != null) {
-                    transactions = response.getData()
-                            .stream()
-                            .filter(tx -> isNewIncommingTransferContractWithMinAmount(tx, lastTxTimestamp, depositAddress))
-                            .sorted(COMPARING_TX_TS)
-                            .toList();
-                } else if (lastTxId != null) {
-                    transactions = response.getData()
-                            .stream()
-                            .sorted(COMPARING_TX_TS)
-                            .dropWhile(tx -> !lastTxId.equals(tx.getTxID()) && isNewIncommingTransferContractWithMinAmount(tx, 0L, depositAddress))
-                            .toList();
-                } else {
-                    // No last transaction ID or timestamp, consider all transactions
-                    transactions = response.getData()
-                            .stream()
-                            .filter(tx -> isNewIncommingTransferContractWithMinAmount(tx, 0L, depositAddress))
-                            .sorted(COMPARING_TX_TS)
-                            .toList();
-                }
+                    if (lastTxTimestamp != null) {
+                        transactions = response.getData()
+                                .stream()
+                                .filter(tx -> isNewIncommingTransferContractWithMinAmount(tx, lastTxTimestamp, depositAddress))
+                                .sorted(COMPARING_TX_TS)
+                                .toList();
+                    } else if (lastTxId != null) {
+                        transactions = response.getData()
+                                .stream()
+                                .sorted(COMPARING_TX_TS)
+                                .dropWhile(tx -> !lastTxId.equals(tx.getTxID()) && isNewIncommingTransferContractWithMinAmount(tx, 0L, depositAddress))
+                                .toList();
+                    } else {
+                        // No last transaction ID or timestamp, consider all transactions
+                        transactions = response.getData()
+                                .stream()
+                                .filter(tx -> isNewIncommingTransferContractWithMinAmount(tx, 0L, depositAddress))
+                                .sorted(COMPARING_TX_TS)
+                                .toList();
+                    }
 
-                if (transactions.isEmpty()) {
-                    logger.info("No new transactions found for address: {}", depositAddress);
-                    continue;
-                }
-                logger.info("Found {} new transactions for address: {}", transactions.size(), balance.getDepositAddress());
+                    if (transactions.isEmpty()) {
+                        logger.info("No new transactions found for address: {}", depositAddress);
+                        continue;
+                    }
+                    logger.info("Found {} new transactions for address: {}", transactions.size(), balance.getDepositAddress());
 
-                // Contract is a list but only 1 element is used https://developers.tron.network/docs/tron-protocol-transaction
-                Long topUp = 0L;
-                List<DepositTransaction> depositTransactions = new ArrayList<>();
+                    // Contract is a list but only 1 element is used https://developers.tron.network/docs/tron-protocol-transaction
+                    Long topUp = 0L;
+                    List<DepositTransaction> depositTransactions = new ArrayList<>();
 
-                for (Transaction tx : transactions) {
-                    logger.info("Balance Id: {} wallet: {} Transaction ID: {}, Amount: {}", balance.getId(), depositAddress, tx.getTxID(), tx.getRawData().getContract().getFirst().getParameter().getValue().getAmount());
-                    topUp += tx.getRawData().getContract().getFirst().getParameter().getValue().getAmount();
-                    DepositTransaction depositTransaction = createDepositTransaction(tx);
-                    depositTransactions.add(depositTransaction);
-                }
+                    for (Transaction tx : transactions) {
+                        logger.info("Balance Id: {} wallet: {} Transaction ID: {}, Amount: {}", balance.getId(), depositAddress, tx.getTxID(), tx.getRawData().getContract().getFirst().getParameter().getValue().getAmount());
+                        topUp += tx.getRawData().getContract().getFirst().getParameter().getValue().getAmount();
+                        DepositTransaction depositTransaction = createDepositTransaction(tx);
+                        depositTransactions.add(depositTransaction);
+                    }
 
-                logger.info("Top up amount for address {} {}", depositAddress, topUp);
-                balance.makeDeposit(topUp);
+                    logger.info("Top up amount for address {} {}", depositAddress, topUp);
+                    balance.makeDeposit(topUp);
 
-                balance.setLastTxId(transactions.get(transactions.size() - 1).getTxID());
-                balance.setLastTxTimestamp(transactions.get(transactions.size() - 1).getRawData().getTimestamp());
+                    balance.setLastTxId(transactions.get(transactions.size() - 1).getTxID());
+                    balance.setLastTxTimestamp(transactions.get(transactions.size() - 1).getRawData().getTimestamp());
 
-                depositTransactionRepo.saveAll(depositTransactions);
-                em.merge(balance);
+                    depositTransactionRepo.saveAll(depositTransactions);
+                    em.merge(balance);
 
-                if (BalanceType.INDIVIDUAL.equals(balance.getType())) {
-                    logger.info("Sending top-up notification for individual balance ID: {}", balance.getId());
-                    AppUser user = appUserRepo.findByBalanceId(balance.getId());
-                    UserState userState = telegramState.getOrCreateUserState(user.getTelegramId());
-                    telegramMessages.sendTopupNotification(userState);
-                } else if (BalanceType.GROUP.equals(balance.getType())) {
-                    logger.info("Sending top-up notification for group balance ID: {}", balance.getId());
-                    Set<AppUser> users = appUserRepo.findAllByGroupBalanceId(balance.getId());
-                    for (AppUser user : users) {
+                    if (BalanceType.INDIVIDUAL.equals(balance.getType())) {
+                        logger.info("Sending top-up notification for individual balance ID: {}", balance.getId());
+                        AppUser user = appUserRepo.findByBalanceId(balance.getId());
                         UserState userState = telegramState.getOrCreateUserState(user.getTelegramId());
                         telegramMessages.sendTopupNotification(userState);
+                    } else if (BalanceType.GROUP.equals(balance.getType())) {
+                        logger.info("Sending top-up notification for group balance ID: {}", balance.getId());
+                        Set<AppUser> users = appUserRepo.findAllByGroupBalanceId(balance.getId());
+                        for (AppUser user : users) {
+                            UserState userState = telegramState.getOrCreateUserState(user.getTelegramId());
+                            telegramMessages.sendTopupNotification(userState);
+                        }
+                    } else {
+                        logger.error("Unknown balance type for balance ID: {}", balance.getId());
                     }
-                } else {
-                    logger.error("Unknown balance type for balance ID: {}", balance.getId());
                 }
+            } catch (Exception e) {
+                logger.error("Error processing balance: id: {} wallet: {}", balance.getId(), depositAddress, e);
+                continue; // Skip this balance if there's an error
             }
         }
         return CompletableFuture.completedFuture(null);
