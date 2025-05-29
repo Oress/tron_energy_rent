@@ -54,6 +54,9 @@ public class OrderEventApplicationListener {
         }
 
         UserState userState = telegramState.getOrCreateUserState(order.getUser().getTelegramId());
-        telegramMessages.sendTransactionRefundNotification(userState);
+        Message message = telegramMessages.sendTransactionRefundNotification(userState);
+        telegramState.updateUserState(userState.getTelegramId(),
+            userState.withMenuMessageId(message.getMessageId()).withMessagesToDelete(List.of(userState.getMenuMessageId())));
+    
     }
 }

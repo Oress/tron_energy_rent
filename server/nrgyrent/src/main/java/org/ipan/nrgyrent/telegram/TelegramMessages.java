@@ -43,12 +43,23 @@ public class TelegramMessages {
     }
 
     @SneakyThrows
+    public Message sendTransactionRefundNotification(UserState userState) {
+        SendMessage message = SendMessage
+                .builder()
+                .chatId(userState.getChatId())
+                .text(StaticLabels.NTFN_ORDER_REFUNDED)
+                .replyMarkup(getToMainMenuNotificationMarkup())
+                .build();
+        return tgClient.execute(message);
+    }
+
+    @SneakyThrows
     public Message sendTransactionSuccessNotification(UserState userState, Balance balance) {
         SendMessage message = SendMessage
                 .builder()
                 .chatId(userState.getChatId())
                 .text(getSuccessfulTransactionMessage(balance))
-                .replyMarkup(getOrderSuccessNotificationMarkup())
+                .replyMarkup(getToMainMenuNotificationMarkup())
                 .parseMode("MARKDOWN")
                 .build();
         return tgClient.execute(message);
@@ -79,17 +90,6 @@ public class TelegramMessages {
                 .builder()
                 .chatId(userState.getChatId())
                 .text(StaticLabels.NTFN_WITHDRWAL_FAIL)
-                .replyMarkup(getOkNotificationMarkup())
-                .build();
-        tgClient.execute(message);
-    }
-
-    @SneakyThrows
-    public void sendTransactionRefundNotification(UserState userState) {
-        SendMessage message = SendMessage
-                .builder()
-                .chatId(userState.getChatId())
-                .text(StaticLabels.NTFN_ORDER_REFUNDED)
                 .replyMarkup(getOkNotificationMarkup())
                 .build();
         tgClient.execute(message);
@@ -287,7 +287,7 @@ public class TelegramMessages {
         return builder.build();
     }
 
-    private InlineKeyboardMarkup getOrderSuccessNotificationMarkup() {
+    private InlineKeyboardMarkup getToMainMenuNotificationMarkup() {
         return InlineKeyboardMarkup
                 .builder()
                 .keyboardRow(
