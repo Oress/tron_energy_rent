@@ -173,9 +173,15 @@ public class PollForTransactionsJobHelper {
             return false;
         }
 
+        // It may be empty mind the 0.000001 transactions
+        Long ts = rawData.getTimestamp();
+        if (ts == null) {
+            logger.error("Timestamp is null for transaction: {} wallet {}", tx.getTxID(), walletAddress);
+        }
+
         Contract contract = rawData.getContract().get(0);
         return TRANSFER_CONTRACT.equals(contract.getType())
-                && rawData.getTimestamp() > lastTxTimestamp
+                && ts != null && ts > lastTxTimestamp
                 && WalletApi.encode58Check(ByteArray.fromHexString(contract.getParameter().getValue().getToAddress())).equals(walletAddress)
                 && contract.getParameter().getValue().getAmount() >= AppConstants.MIN_TRANSFER_AMOUNT_SUN;
     }
