@@ -38,6 +38,10 @@ public class Balance {
     @OneToOne
     private AppUser manager;
 
+    @JoinColumn(name = "tariff_id")
+    @OneToOne
+    private Tariff tariff;
+
     @Enumerated(EnumType.STRING)
     private BalanceType type = BalanceType.INDIVIDUAL;
 

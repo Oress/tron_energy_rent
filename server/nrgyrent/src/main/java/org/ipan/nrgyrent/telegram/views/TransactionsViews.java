@@ -2,10 +2,12 @@ package org.ipan.nrgyrent.telegram.views;
 
 import java.util.List;
 
+import org.ipan.nrgyrent.domain.model.Tariff;
 import org.ipan.nrgyrent.domain.model.UserWallet;
 import org.ipan.nrgyrent.telegram.InlineMenuCallbacks;
 import org.ipan.nrgyrent.telegram.StaticLabels;
 import org.ipan.nrgyrent.telegram.state.UserState;
+import org.ipan.nrgyrent.telegram.utils.FormattingTools;
 import org.ipan.nrgyrent.telegram.utils.WalletTools;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Component;
@@ -17,26 +19,16 @@ import org.telegram.telegrambots.meta.generics.TelegramClient;
 
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
 @AllArgsConstructor
+@Slf4j
 public class TransactionsViews {
     public static final String LBL_TRANSACTION_BALANCE_PERSONAL = "Личный баланс";
     public static final String LBL_TRANSACTION_BALANCE_GROUP = "Групповой баланс";
 
     private static final String MSG_TRANSACTION_PROMPT_BALANCE_TYPE = "Пожалуйста, выберите тип баланса для транзакции:";
-
-    private static final String MSG_TRANSACTION_65K_TEXT = """
-            ⚡ Транзакции (1 тр на кош с USDT, 5.5 TRX)
-
-            👇 Введите *текстом кошелек*, либо выберете из *списка* 👇
-            """;
-
-    private static final String MSG_TRANSACTION_131K_TEXT = """
-            ⚡ Транзакции (1 тр на кош без USDT или биржу, 8.6 TRX)
-
-            👇 Введите *текстом кошелек*, либо выберете из *списка* 👇
-            """;
 
     private static final String MSG_NOT_ENOUGH_TRX = """
             ❌ Недостаточно средств на балансе
@@ -44,10 +36,6 @@ public class TransactionsViews {
             """;
 
     private static final String MSG_TRANSACTION_PROGRESS = "Работаем, пожалуйста, подождите...";
-
-    public static final String MSG_TRANSACTION_SUCCESS = """
-            ✅ Транзакция успешно завершена
-            """;
 
     private static final String MSG_TRANSACTION_PENDING = """
             ⏳ Транзакция в процессе
@@ -72,12 +60,12 @@ public class TransactionsViews {
 
     @Retryable
     @SneakyThrows
-    public void updMenuToTransaction65kMenu(List<UserWallet> wallets, UserState userState) {
+    public void updMenuToTransaction65kMenu(List<UserWallet> wallets, UserState userState, Tariff tariff) {
         EditMessageText message = EditMessageText
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
-                .text(MSG_TRANSACTION_65K_TEXT)
+                .text(getTransaction65kMenuLabel(tariff.getTransactionType1AmountSun()))
                 .replyMarkup(getTransactionsMenuMarkup(wallets))
                 .parseMode("MARKDOWN")
                 .build();
@@ -86,16 +74,32 @@ public class TransactionsViews {
 
     @Retryable
     @SneakyThrows
-    public void updMenuToTransaction131kMenu(List<UserWallet> wallets, UserState userState) {
+    public void updMenuToTransaction131kMenu(List<UserWallet> wallets, UserState userState, Tariff tariff) {
         EditMessageText message = EditMessageText
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
-                .text(MSG_TRANSACTION_131K_TEXT)
+                .text(getTransaction131kMenuLabel(tariff.getTransactionType2AmountSun()))
                 .replyMarkup(getTransactionsMenuMarkup(wallets))
                 .parseMode("MARKDOWN")
                 .build();
         tgClient.execute(message);
+    }
+
+    private String getTransaction65kMenuLabel(Long trxAmount) {
+        return """
+                ⚡ Транзакции (1 тр на кош с USDT, %s TRX)
+
+                👇 Введите *текстом кошелек*, либо выберете из *списка* 👇
+                """.formatted(FormattingTools.formatBalance(trxAmount));
+    }
+
+    private String getTransaction131kMenuLabel(Long trxAmount) {
+        return """
+                ⚡ Транзакции (1 тр на кош без USDT или биржу, %s TRX)
+
+                👇 Введите *текстом кошелек*, либо выберете из *списка* 👇
+                """.formatted(FormattingTools.formatBalance(trxAmount));
     }
 
     @Retryable

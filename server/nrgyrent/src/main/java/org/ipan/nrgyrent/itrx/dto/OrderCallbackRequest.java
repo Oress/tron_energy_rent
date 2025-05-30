@@ -1,8 +1,10 @@
 package org.ipan.nrgyrent.itrx.dto;
 
 import lombok.Getter;
+import lombok.ToString;
 
 @Getter
+@ToString
 public class OrderCallbackRequest {
     public String active_hash; // If activated, activated txid
     public String bandwidth_hash; // If there is bandwidth, the txid of the bandwidth

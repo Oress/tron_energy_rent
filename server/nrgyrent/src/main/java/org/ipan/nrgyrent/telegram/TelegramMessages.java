@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.ipan.nrgyrent.domain.model.AppUser;
 import org.ipan.nrgyrent.domain.model.Balance;
+import org.ipan.nrgyrent.domain.model.Tariff;
 import org.ipan.nrgyrent.telegram.state.UserState;
 import org.ipan.nrgyrent.telegram.utils.FormattingTools;
 import org.ipan.nrgyrent.telegram.views.ManageGroupNewGroupView;
@@ -149,11 +150,17 @@ public class TelegramMessages {
     @Retryable
     @SneakyThrows
     public Message sendMainMenu(UserState userState, Long chatId, AppUser user) {
+        Tariff tariff = user.getBalance().getTariff();
+
+        if (tariff == null) {
+            logger.error("User {} has no tariff set", user.getTelegramUsername());
+        }
+
         SendMessage message = SendMessage
                 .builder()
                 .chatId(chatId)
                 .text(getMainMenuMessage(user))
-                .replyMarkup(getMainMenuReplyMarkup(userState.isManager(), false))
+                .replyMarkup(getMainMenuReplyMarkup(userState.isManager(), false, tariff))
                 .linkPreviewOptions(LinkPreviewOptions.builder().isDisabled(true).build())
                 .parseMode("MARKDOWN")
                 .build();
@@ -163,12 +170,18 @@ public class TelegramMessages {
     @Retryable
     @SneakyThrows
     public Message sendAdminMainMenu(UserState userState, Long chatId, AppUser user) {
+        Tariff tariff = user.getBalance().getTariff();
+
+        if (tariff == null) {
+            logger.error("User {} has no tariff set", user.getTelegramUsername());
+        }
+
         SendMessage message = SendMessage
                 .builder()
                 .chatId(chatId)
                 .linkPreviewOptions(LinkPreviewOptions.builder().isDisabled(true).build())
                 .text(getMainMenuMessage(user))
-                .replyMarkup(getMainMenuReplyMarkup(userState.isManager(), true))
+                .replyMarkup(getMainMenuReplyMarkup(userState.isManager(), true, tariff))
                 .parseMode("MARKDOWN")
                 .build();
         return tgClient.execute(message);
@@ -176,6 +189,12 @@ public class TelegramMessages {
 
     @SneakyThrows
     public void updateMsgToMainMenu(UserState userState, AppUser user) {
+        Tariff tariff = user.getBalance().getTariff();
+
+        if (tariff == null) {
+            logger.error("User {} has no tariff set", user.getTelegramUsername());
+        }
+
         EditMessageText message = EditMessageText
                 .builder()
                 .chatId(userState.getChatId())
@@ -183,13 +202,19 @@ public class TelegramMessages {
                 .text(getMainMenuMessage(user))
                 .linkPreviewOptions(LinkPreviewOptions.builder().isDisabled(true).build())
                 .parseMode("MARKDOWN")
-                .replyMarkup(getMainMenuReplyMarkup(userState.isManager(), false))
+                .replyMarkup(getMainMenuReplyMarkup(userState.isManager(), false, tariff))
                 .build();
         tgClient.execute(message);
     }
 
     @SneakyThrows
     public void updateMsgToAdminMainMenu(UserState userState, CallbackQuery callbackQuery, AppUser user) {
+        Tariff tariff = user.getBalance().getTariff();
+
+        if (tariff == null) {
+            logger.error("User {} has no tariff set", user.getTelegramUsername());
+        }
+
         EditMessageText message = EditMessageText
                 .builder()
                 .chatId(callbackQuery.getMessage().getChatId())
@@ -197,7 +222,7 @@ public class TelegramMessages {
                 .text(getMainMenuMessage(user))
                 .parseMode("MARKDOWN")
                 .linkPreviewOptions(LinkPreviewOptions.builder().isDisabled(true).build())
-                .replyMarkup(getMainMenuReplyMarkup(userState.isManager(), true))
+                .replyMarkup(getMainMenuReplyMarkup(userState.isManager(), true, tariff))
                 .build();
         tgClient.execute(message);
     }
@@ -221,21 +246,21 @@ public class TelegramMessages {
                 );
     }
 
-    private InlineKeyboardMarkup getMainMenuReplyMarkup(Boolean isManager, Boolean isAdmin) {
+    private InlineKeyboardMarkup getMainMenuReplyMarkup(Boolean isManager, Boolean isAdmin, Tariff tariff) {
         var builder = InlineKeyboardMarkup
                 .builder()
                 .keyboardRow(
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(StaticLabels.MENU_TRANSFER_ENERGY_65K)
+                                        .text(getFirstTransactionTypeLabel(tariff.getTransactionType1AmountSun()))
                                         .callbackData(InlineMenuCallbacks.TRANSACTION_65k)
                                         .build()))
                 .keyboardRow(
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(StaticLabels.MENU_TRANSFER_ENERGY_131K)
+                                        .text(getSecondTransactionTypeLabel(tariff.getTransactionType2AmountSun()))
                                         .callbackData(InlineMenuCallbacks.TRANSACTION_131k)
                                         .build()))
                 .keyboardRow(
@@ -285,6 +310,14 @@ public class TelegramMessages {
                                         .build()));
         }
         return builder.build();
+    }
+
+    private String getFirstTransactionTypeLabel(Long trxAmount) {
+        return "⚡ 1 тр на кош с USDT (%s TRX)".formatted(FormattingTools.formatBalance(trxAmount));
+    }
+
+    private String getSecondTransactionTypeLabel(Long trxAmount) {
+        return "⚡ 1 тр на кош без USDT или биржу (%s TRX)".formatted(FormattingTools.formatBalance(trxAmount));
     }
 
     private InlineKeyboardMarkup getToMainMenuNotificationMarkup() {

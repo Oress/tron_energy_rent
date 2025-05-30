@@ -129,6 +129,8 @@ public class ManageGroupSearchHandler {
         @MatchState(state = States.ADMIN_MANAGE_GROUPS_ACTION_MANAGER_CHANGED_SUCCESS, callbackData = InlineMenuCallbacks.GO_BACK),
         @MatchState(state = States.ADMIN_MANAGE_GROUPS_ACTION_ADD_USERS_SUCCESS, callbackData = InlineMenuCallbacks.GO_BACK),
         @MatchState(state = States.ADMIN_MANAGE_GROUPS_ACTION_REMOVE_USERS_SUCCESS, callbackData = InlineMenuCallbacks.GO_BACK),
+        @MatchState(state = States.ADMIN_MANAGE_GROUPS_ACTION_CHANGE_TARIFF_SUCCESS, callbackData = InlineMenuCallbacks.GO_BACK),
+        @MatchState(state = States.ADMIN_MANAGE_GROUPS_ACTION_CHANGE_TARIFF_SEARCHING, callbackData = InlineMenuCallbacks.GO_BACK),
 
     })
     public void openGroupFromBackBtn(UserState userState, Update update) {

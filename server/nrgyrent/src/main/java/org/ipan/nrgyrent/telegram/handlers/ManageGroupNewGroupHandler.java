@@ -4,14 +4,14 @@ import java.util.List;
 
 import org.ipan.nrgyrent.domain.exception.UserIsManagerException;
 import org.ipan.nrgyrent.domain.exception.UserNotRegisteredException;
-import org.ipan.nrgyrent.domain.model.Balance;
 import org.ipan.nrgyrent.domain.service.BalanceService;
+import org.ipan.nrgyrent.itrx.AppConstants;
 import org.ipan.nrgyrent.telegram.InlineMenuCallbacks;
 import org.ipan.nrgyrent.telegram.States;
 import org.ipan.nrgyrent.telegram.TelegramMessages;
-import org.ipan.nrgyrent.telegram.state.AddGroupState;
 import org.ipan.nrgyrent.telegram.state.TelegramState;
 import org.ipan.nrgyrent.telegram.state.UserState;
+import org.ipan.nrgyrent.telegram.state.AddGroupState;
 import org.ipan.nrgyrent.telegram.statetransitions.MatchState;
 import org.ipan.nrgyrent.telegram.statetransitions.TransitionHandler;
 import org.ipan.nrgyrent.telegram.statetransitions.UpdateType;
@@ -80,11 +80,11 @@ public class ManageGroupNewGroupHandler {
             // List<Long> userIds = users.stream().map(user -> user.getUserId()).toList();
             Long managerId = manager.getUserId();
             try {
-                Balance groupBalance = balanceService.createGroupBalance(addGroupState.getLabel(), managerId);
+                balanceService.createGroupBalance(addGroupState.getLabel(), managerId, AppConstants.DEFAULT_TARIFF_ID);
             } catch (UserNotRegisteredException e) {
                 manageGroupNewGroupView.someUsersAreNotRegistered(userState);
                 return;
-            }catch (UserIsManagerException e) {
+            } catch (UserIsManagerException e) {
                 manageGroupNewGroupView.userIsManagerInAnotherGroup(userState);
                 return;
             }

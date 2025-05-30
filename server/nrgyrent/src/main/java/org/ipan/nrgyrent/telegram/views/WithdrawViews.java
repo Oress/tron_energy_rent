@@ -94,14 +94,14 @@ public class WithdrawViews {
     }
 
     @SneakyThrows
-    public void sendWithdrawalSuccessful(UserState userState) {
+    public Message sendWithdrawalSuccessful(UserState userState) {
         SendMessage message = SendMessage
                 .builder()
                 .chatId(userState.getChatId())
                 .text(NTFN_WITHDRWAL_SUCCESS)
                 .replyMarkup(getOrderRefundedNotificationMarkup())
                 .build();
-        tgClient.execute(message);
+        return tgClient.execute(message);
     }
 
     @SneakyThrows

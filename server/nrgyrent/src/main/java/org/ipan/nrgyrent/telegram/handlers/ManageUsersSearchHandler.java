@@ -80,8 +80,10 @@ public class ManageUsersSearchHandler {
 
     @MatchStates({
         @MatchState(forAdmin = true, state = States.ADMIN_MANAGE_USERS, updateTypes = UpdateType.CALLBACK_QUERY),
-        @MatchState(forAdmin = true, state = States.ADMIN_MANAGE_USER_ACTION_DEACTIVATE_CONFIRM, updateTypes = UpdateType.CALLBACK_QUERY),
-        @MatchState(forAdmin = true, state = States.ADMIN_MANAGE_USER_ACTION_PROMPT_NEW_BALANCE, updateTypes = UpdateType.CALLBACK_QUERY),
+        @MatchState(forAdmin = true, state = States.ADMIN_MANAGE_USER_ACTION_DEACTIVATE_CONFIRM, callbackData = InlineMenuCallbacks.CONFIRM_NO),
+        @MatchState(forAdmin = true, state = States.ADMIN_MANAGE_USER_ACTION_PROMPT_NEW_BALANCE, callbackData = InlineMenuCallbacks.GO_BACK),
+        @MatchState(forAdmin = true, state = States.ADMIN_MANAGE_USER_ACTION_CHANGE_TARIFF_SEARCHING, callbackData = InlineMenuCallbacks.GO_BACK),
+        @MatchState(forAdmin = true, state = States.ADMIN_MANAGE_USER_ACTION_CHANGE_TARIFF_SUCCESS, callbackData = InlineMenuCallbacks.GO_BACK),
     })
     public void openUserByCallback(UserState userState, Update update) {
         CallbackQuery callbackQuery = update.getCallbackQuery();

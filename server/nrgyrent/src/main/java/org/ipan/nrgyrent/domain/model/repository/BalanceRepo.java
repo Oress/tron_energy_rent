@@ -15,4 +15,5 @@ public interface BalanceRepo extends JpaRepository<Balance, Long> {
     Page<Balance> findAllByTypeOrderById(BalanceType type, Pageable pageable);
     Page<Balance> findAllByTypeAndLabelContainingIgnoreCaseOrderById(BalanceType group, String label, PageRequest of);
     List<Balance> findAllByIsActive(Boolean isActive);
+    List<Balance> findAllByTariffId(Long tariffId);
 }

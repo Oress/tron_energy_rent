@@ -58,14 +58,14 @@ public class HistoryViews {
                     Сумма: %s TRX
                     Получатель: %s
                     Статус: %s
-                    Баланс группы: %s
+                    Баланс: %s
                     Дата: %s
                     """.formatted(
                     order.getCorrelationId(),
                     FormattingTools.formatBalance(order.getAmount()),
                     WalletTools.formatTronAddress(order.getReceiveAddress()),
                     FormattingTools.orderStatusLabel(OrderStatus.valueOf(order.getOrderStatus())),
-                    BalanceType.GROUP.name().equals(order.getBalanceType()) ? "Да" : "Нет",
+                    BalanceType.GROUP.name().equals(order.getBalanceType()) ? "Групповой" : "Личный",
                     FormattingTools.formatDateToUtc(order.getCreatedAt()));
             }
             case "WITHDRAWAL" -> {
@@ -74,13 +74,13 @@ public class HistoryViews {
                     Сумма: %s TRX
                     Получатель: %s
                     Статус: %s
-                    Баланс группы: %s
+                    Баланс: %s
                     Дата: %s
                     """.formatted(
                     FormattingTools.formatBalance(order.getAmount()),
                     WalletTools.formatTronAddress(order.getReceiveAddress()),
                     FormattingTools.withdrawalStatusLabel(WithdrawalStatus.valueOf(order.getWithdrawalStatus())),
-                    BalanceType.GROUP.name().equals(order.getBalanceType()) ? "Да" : "Нет",
+                    BalanceType.GROUP.name().equals(order.getBalanceType()) ? "Групповой" : "Личный",
                     FormattingTools.formatDateToUtc(order.getCreatedAt()));
             }
             case "DEPOSIT" -> {
@@ -88,12 +88,12 @@ public class HistoryViews {
                     Операция: Пополнение баланса
                     Сумма: %s TRX
                     Отправитель: %s
-                    Баланс группы: %s
+                    Баланс: %s
                     Дата: %s
                     """.formatted(
                     FormattingTools.formatBalance(order.getAmount()),
                     WalletTools.formatTronAddress(order.getFromAddress()),
-                    BalanceType.GROUP.name().equals(order.getBalanceType()) ? "Да" : "Нет",
+                    BalanceType.GROUP.name().equals(order.getBalanceType()) ? "Групповой" : "Личный",
                     FormattingTools.formatDateToUtc(order.getCreatedAt()));
             }
             default -> {

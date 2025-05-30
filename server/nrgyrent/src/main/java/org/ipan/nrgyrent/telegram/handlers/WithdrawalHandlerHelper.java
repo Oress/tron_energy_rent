@@ -104,7 +104,9 @@ public class WithdrawalHandlerHelper {
             withdrawalOrderService.completeOrder(withdrawalOrder.getId(), resultingTxId);
 
             UserState userState = telegramState.getOrCreateUserState(userId);
-            withdrawViews.sendWithdrawalSuccessful(userState);
+            Message message = withdrawViews.sendWithdrawalSuccessful(userState);
+            telegramState.updateUserState(userState.getTelegramId(), 
+                userState.withMenuMessageId(message.getMessageId()).withMessagesToDelete(List.of(userState.getMenuMessageId())));
             logger.info("User {} has successfully withdrawn {} from {} to {}", userId, amountSun, walletToWithdrawFrom, toWallet);
         } catch (Exception e) {
             logger.error("Error while transferring TRX from collection wallets", e);

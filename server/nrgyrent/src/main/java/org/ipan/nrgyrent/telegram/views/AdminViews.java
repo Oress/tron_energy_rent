@@ -60,6 +60,7 @@ public class AdminViews {
     private static final String MENU_ADMIN_ITRX_BALANCE = "💰 Статистика itrx.io";
     private static final String MENU_ADMIN_SWEEP_WALLETS_BALANCE = "💰 Статистика sweep кошельков";
     private static final String MENU_ADMIN_WITHDRAW_TRX = "💰 Вывод TRX со sweep кошельков";
+    private static final String MENU_ADMIN_TARIFFS = "📊 Тарифы";
 
     private final TelegramClient tgClient;
     private final CommonViews commonViews;
@@ -192,6 +193,13 @@ public class AdminViews {
                                         .builder()
                                         .text(MENU_ADMIN_WITHDRAW_TRX)
                                         .callbackData(InlineMenuCallbacks.MANAGE_WITHDRAW_TRX)
+                                        .build()))
+                .keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text(MENU_ADMIN_TARIFFS)
+                                        .callbackData(InlineMenuCallbacks.MANAGE_TARIFFS)
                                         .build()))
                 .keyboardRow(
                         new InlineKeyboardRow(

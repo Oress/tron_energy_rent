@@ -13,9 +13,12 @@ import org.ipan.nrgyrent.domain.model.Balance;
 import org.ipan.nrgyrent.domain.model.BalanceType;
 import org.ipan.nrgyrent.domain.model.ManagedWallet;
 import org.ipan.nrgyrent.domain.model.ManualBalanceAdjustmentAction;
+import org.ipan.nrgyrent.domain.model.Tariff;
 import org.ipan.nrgyrent.domain.model.repository.AppUserRepo;
 import org.ipan.nrgyrent.domain.model.repository.BalanceRepo;
 import org.ipan.nrgyrent.domain.model.repository.ManualBalanceAdjustmentActionRepo;
+import org.ipan.nrgyrent.domain.model.repository.TariffRepo;
+import org.ipan.nrgyrent.domain.service.commands.users.CreateUserCommand;
 import org.springframework.beans.factory.annotation.Lookup;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
@@ -30,6 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 @AllArgsConstructor
 @Slf4j
 public class BalanceService {
+    private final TariffRepo tariffRepo;
     private final AppUserRepo userRepo;
     private final BalanceRepo balanceRepo;
     private final ManualBalanceAdjustmentActionRepo manualBalanceAdjustmentActionRepo;
@@ -53,17 +57,11 @@ public class BalanceService {
         }
 
         // Check that all users belong to the same group balance
-        if (usersToRemove.stream().anyMatch(user -> user.getGroupBalance() == null 
+        if (usersToRemove.stream().anyMatch(user -> user.getGroupBalance() == null
                 || !user.getGroupBalance().getId().equals(balanceId))) {
             logger.info("Some users are not in the group: {}", usersToRemove);
             throw new UsersMustBelongToTheSameGroupException("Some users are not in the group");
         }
-
-/*         if (usersToRemove.stream().anyMatch(
-                user -> user.getGroupBalance() != null && !balanceId.equals(user.getGroupBalance().getId()))) {
-            logger.info("Some users are already in the group: {}", usersToRemove);
-            throw new UserIsManagerException("Some users already have a group balance");
-        } */
 
         for (AppUser userToRemove : usersToRemove) {
             Balance groupBalance = userToRemove.getGroupBalance();
@@ -75,17 +73,7 @@ public class BalanceService {
 
             userToRemove.setGroupBalance(null);
         }
-        /*
-         * if (usersToAdd.isEmpty()) {
-         * logger.info("0 new users to add to group: {}", balanceId);
-         * throw new IllegalArgumentException("0 new users to add to group");
-         * }
-         */
 
-
-        // userRepo.findAllByGroupBalanceId(balanceId).removeIf(user -> usersToRemoveMap.containsKey(user.getTelegramId()));
-        // usersToRemove.forEach(nullableUser -> nullableUser.setGroupBalance(null));
-        // Check if the group is empty after removing users
         return balance;
     }
 
@@ -105,12 +93,6 @@ public class BalanceService {
                     .findFirst().orElse(null);
             throw new UserNotRegisteredException("Some users are not registered: " + notRegisteredUserId);
         }
-
-/*         if (usersToAdd.stream().anyMatch(
-                user -> user.getGroupBalance() != null && !balanceId.equals(user.getGroupBalance().getId()))) {
-            logger.info("Some users are already in the group: {}", usersToAdd);
-            throw new UserAlreadyHasGroupBalanceException("Some users already have a group balance");
-        } */
 
         for (AppUser userToAdd : usersToAdd) {
             Balance groupBalance = userToAdd.getGroupBalance();
@@ -176,7 +158,7 @@ public class BalanceService {
     }
 
     @Transactional
-    public Balance createGroupBalance(String label, Long managerId) {
+    public Balance createGroupBalance(String label, Long managerId, Long tariffId) {
         // 1. Check that users are registered.
         AppUser manager = userRepo.findById(managerId).orElse(null);
 
@@ -201,6 +183,8 @@ public class BalanceService {
         balance.setManager(manager);
         balance.setDepositAddress(depositWallet.getBase58Address());
 
+        balance.setTariff(getTariffOrDefault(tariffId));
+
         balanceRepo.save(balance);
 
         manager.setGroupBalance(balance);
@@ -208,50 +192,16 @@ public class BalanceService {
         return balance;
     }
 
-/*     @Transactional
-    public Balance createGroupBalance(String label, Long managerId) {
-        // 1. Check that users are registered.
-        List<AppUser> registeredUsers = userRepo.findAllById(userIds);
-        List<AppUser> registeredUsers = userRepo.findAllById(userIds);
-
-        if (registeredUsers.isEmpty() || registeredUsers.size() != userIds.size()) {
-            logger.info("Some users are not registered: {}", userIds);
-            throw new UserNotRegisteredException("Some users are not registered");
-        }
-
-        // 2. Check that users are not already in the group balance.
-        List<AppUser> usersInGroup = registeredUsers.stream()
-                .filter(user -> BalanceType.GROUP.equals(user.getBalance().getType())).toList();
-        if (!usersInGroup.isEmpty()) {
-            logger.info("Some users are already in the group: {}", usersInGroup);
-            throw new UserAlreadyHasGroupBalanceException("Some users already have a group balance");
-        }
-
-        // 3. Create group balance and add users to it.
-        ManagedWallet depositWallet = generateDepositWallet();
-
-        Balance balance = new Balance();
-        balance.setLabel(label);
-        balance.setType(BalanceType.GROUP);
-        balance.setDepositAddress(depositWallet.getBase58Address());
-
-        balanceRepo.save(balance);
-
-        List<AppUser> users = userRepo.findAllById(userIds);
-        for (AppUser user : users) {
-            user.setGroupBalance(balance);
-        }
-
-        return balance;
-    } */
-
     @Transactional
-    public Balance createIndividualBalance(AppUser user) {
+    public Balance createIndividualBalance(AppUser user, CreateUserCommand command) {
         ManagedWallet depositWallet = generateDepositWallet();
 
         Balance balance = new Balance();
         balance.setType(BalanceType.INDIVIDUAL);
         balance.setDepositAddress(depositWallet.getBase58Address());
+
+        balance.setTariff(getTariffOrDefault(command.getTariffId()));
+
         balanceRepo.save(balance);
 
         user.setBalance(balance);
@@ -328,5 +278,16 @@ public class BalanceService {
 
         selectedBalance.setManager(newManager);
         newManager.setGroupBalance(selectedBalance);
+    }
+
+    private Tariff getTariffOrDefault(Long tariffId) {
+        Tariff result = null;
+        if (tariffId != null) {
+            result = tariffRepo.findById(tariffId).orElse(null);
+        }
+        if (result == null) {
+            result = tariffRepo.getDefaultTariff();
+        }
+        return result;
     }
 }

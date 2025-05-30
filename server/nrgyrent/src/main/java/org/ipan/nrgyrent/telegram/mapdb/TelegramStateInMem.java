@@ -1,7 +1,8 @@
 package org.ipan.nrgyrent.telegram.mapdb;
 
 import org.ipan.nrgyrent.telegram.States;
-import org.ipan.nrgyrent.telegram.state.AddGroupState;
+import org.ipan.nrgyrent.telegram.mapdb.tariff.TariffEditInMem;
+import org.ipan.nrgyrent.telegram.mapdb.tariff.TariffSearchStateInMem;
 import org.ipan.nrgyrent.telegram.state.AddWalletState;
 import org.ipan.nrgyrent.telegram.state.BalanceEdit;
 import org.ipan.nrgyrent.telegram.state.GroupSearchState;
@@ -11,6 +12,11 @@ import org.ipan.nrgyrent.telegram.state.UserEdit;
 import org.ipan.nrgyrent.telegram.state.UserSearchState;
 import org.ipan.nrgyrent.telegram.state.UserState;
 import org.ipan.nrgyrent.telegram.state.WithdrawParams;
+import org.ipan.nrgyrent.telegram.state.AddGroupState;
+import org.ipan.nrgyrent.telegram.state.tariff.AddTariffState;
+import org.ipan.nrgyrent.telegram.state.tariff.TariffEdit;
+import org.ipan.nrgyrent.telegram.state.tariff.TariffSearchState;
+import org.ipan.nrgyrent.telegram.mapdb.tariff.AddTariffStateInMem;
 import org.mapdb.DB;
 import org.mapdb.HTreeMap;
 import org.mapdb.Serializer;
@@ -29,6 +35,9 @@ public class TelegramStateInMem implements TelegramState {
     private final HTreeMap<Long, WithdrawParamsInMem> withdrawParamsMap;
     private final HTreeMap<Long, GroupSearchStateInMem> groupSearchState;
     private final HTreeMap<Long, UserSearchStateInMem> userSearchState;
+    private final HTreeMap<Long, TariffSearchStateInMem> tariffSearchState;
+    private final HTreeMap<Long, TariffEditInMem> tariffEditState;
+    private final HTreeMap<Long, AddTariffStateInMem> addTariffStateMap;
 
     public TelegramStateInMem(DB db, ObjectMapper objectMapper) {
         this.userStateMap = db.hashMap("userState")
@@ -74,6 +83,19 @@ public class TelegramStateInMem implements TelegramState {
         this.userSearchState = db.hashMap("userSearchState")
                 .keySerializer(Serializer.LONG)
                 .valueSerializer(new GenericSerializer<>(UserSearchStateInMem.class, objectMapper))
+                .createOrOpen();
+
+        this.tariffSearchState = db.hashMap("tariffSearchState")
+                .keySerializer(Serializer.LONG)
+                .valueSerializer(new GenericSerializer<>(TariffSearchStateInMem.class, objectMapper))
+                .createOrOpen();
+        this.tariffEditState = db.hashMap("tariffEditState")
+                .keySerializer(Serializer.LONG)
+                .valueSerializer(new GenericSerializer<>(TariffEditInMem.class, objectMapper))
+                .createOrOpen();
+        this.addTariffStateMap = db.hashMap("addTariffState")
+                .keySerializer(Serializer.LONG)
+                .valueSerializer(new GenericSerializer<>(AddTariffStateInMem.class, objectMapper))
                 .createOrOpen();
     }
 
@@ -205,5 +227,50 @@ public class TelegramStateInMem implements TelegramState {
     @Override
     public UserSearchState removeUserSearchState(Long userId) {
         return this.userSearchState.remove(userId);
+    }
+
+    @Override
+    public TariffSearchState getOrCreateTariffSearchState(Long userId) {
+        return this.tariffSearchState.computeIfAbsent(userId, key -> TariffSearchStateInMem.builder().build());
+    }
+
+    @Override
+    public TariffSearchState updateTariffSearchState(Long userId, TariffSearchState groupSearchState) {
+        return this.tariffSearchState.put(userId, TariffSearchStateInMem.of(groupSearchState));
+    }
+
+    @Override
+    public TariffSearchState removeTariffSearchState(Long userId) {
+        return this.tariffSearchState.remove(userId);
+    }
+
+    @Override
+    public TariffEdit getOrCreateTariffEdit(Long userId) {
+        return this.tariffEditState.computeIfAbsent(userId, key -> TariffEditInMem.builder().build());
+    }
+
+    @Override
+    public TariffEdit updateTariffEdit(Long userId, TariffEdit tariffEdit) {
+        return this.tariffEditState.put(userId, TariffEditInMem.of(tariffEdit));
+    }
+
+    @Override
+    public TariffEdit removeTariffEdit(Long userId) {
+        return this.tariffEditState.remove(userId);
+    }
+
+    @Override
+    public AddTariffState getOrCreateAddTariffState(Long userId) {
+        return this.addTariffStateMap.computeIfAbsent(userId, key -> AddTariffStateInMem.builder().build());
+    }
+
+    @Override
+    public AddTariffState removeAddTariffState(Long userId) {
+    return this.addTariffStateMap.remove(userId);
+    }
+
+    @Override
+    public AddTariffState updateAddTariffState(Long userId, AddTariffState addTariffState) {
+        return this.addTariffStateMap.put(userId, AddTariffStateInMem.of(addTariffState));
     }
 }

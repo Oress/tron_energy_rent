@@ -6,6 +6,11 @@ spring:
     # https://contribute.liquibase.com/extensions-integrations/directory/integration-docs/springboot/configuration/
     change-log: classpath:db/changelog/changelog-root.xml
     drop-first: false
+    parameters:
+      defaultTariffId: 1
+      defaultTariffLabel: Стандартный
+      txType1Amount: 5500000
+      txType2Amount: 8600000
   datasource:
     url: ${POSTGRES_URL:jdbc:postgresql://localhost:5432/postgres}
     username: ${POSTGRES_USER:postgres}
@@ -22,6 +27,15 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         generate_statistics: false
 app:
+  rounding:
+    scale: ${APP_ROUNDING_SCALE:2}
+  pagination:
+      users:
+        page-size: ${APP_USERS_PAGE_SIZE:20}
+      groups:
+        page-size: ${APP_GRP_PAGE_SIZE:20}
+      tariffs:
+        page-size: ${APP_TARIFS_PAGE_SIZE:20}
   wallet:
     sweeping:
       ensure-count: ${APP_SWEEP_WALLETS_COUNT:1}

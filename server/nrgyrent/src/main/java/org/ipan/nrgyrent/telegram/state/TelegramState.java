@@ -1,5 +1,9 @@
 package org.ipan.nrgyrent.telegram.state;
 
+import org.ipan.nrgyrent.telegram.state.tariff.AddTariffState;
+import org.ipan.nrgyrent.telegram.state.tariff.TariffEdit;
+import org.ipan.nrgyrent.telegram.state.tariff.TariffSearchState;
+
 public interface TelegramState {
     UserState getOrCreateUserState(Long userId);
     UserState updateUserState(Long userId, UserState userState);
@@ -35,4 +39,16 @@ public interface TelegramState {
     UserSearchState getOrCreateUserSearchState(Long userId);
     UserSearchState updateUserSearchState(Long userId, UserSearchState groupSearchState);
     UserSearchState removeUserSearchState(Long userId); // TODO: cleanup after finishing workflow
+
+    TariffSearchState getOrCreateTariffSearchState(Long userId);
+    TariffSearchState updateTariffSearchState(Long userId, TariffSearchState groupSearchState);
+    TariffSearchState removeTariffSearchState(Long userId); // TODO: cleanup after finishing workflow
+
+    TariffEdit getOrCreateTariffEdit(Long userId);
+    TariffEdit updateTariffEdit(Long userId, TariffEdit tariffEdit);
+    TariffEdit removeTariffEdit(Long userId); // TODO: cleanup after finishing workflow
+
+    AddTariffState getOrCreateAddTariffState(Long userId);
+    AddTariffState removeAddTariffState(Long userId); // TODO: cleanup after finishing workflow
+    AddTariffState updateAddTariffState(Long userId, AddTariffState addTariffState);
 }

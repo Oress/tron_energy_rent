@@ -6,7 +6,9 @@ import java.util.UUID;
 import org.ipan.nrgyrent.domain.exception.NotEnoughBalanceException;
 import org.ipan.nrgyrent.domain.model.AppUser;
 import org.ipan.nrgyrent.domain.model.Order;
+import org.ipan.nrgyrent.domain.model.Tariff;
 import org.ipan.nrgyrent.domain.model.UserWallet;
+import org.ipan.nrgyrent.domain.model.repository.TariffRepo;
 import org.ipan.nrgyrent.domain.service.OrderService;
 import org.ipan.nrgyrent.domain.service.UserService;
 import org.ipan.nrgyrent.domain.service.UserWalletService;
@@ -41,6 +43,7 @@ import lombok.extern.slf4j.Slf4j;
 public class TransactionsHandler {
     private static final int ITRX_OK_CODE = 0;
 
+    private final TariffRepo tariffRepo;
     private final TelegramState telegramState;
     private final TransactionsViews transactionsViews;
     private final ItrxService itrxService;
@@ -50,31 +53,22 @@ public class TransactionsHandler {
 
     @MatchState(state = States.MAIN_MENU, callbackData = InlineMenuCallbacks.TRANSACTION_65k)
     public void handleTransaction65k(UserState userState, Update update) {
-        proceedToTransactions(userState, update.getCallbackQuery(), AppConstants.ENERGY_65K);
+        proceedToTransactions(userState, update, AppConstants.ENERGY_65K);
     }
 
     @MatchState(state = States.MAIN_MENU, callbackData = InlineMenuCallbacks.TRANSACTION_131k)
     public void handleTransaction131k(UserState userState, Update update) {
-        proceedToTransactions(userState, update.getCallbackQuery(), AppConstants.ENERGY_131K);
+        proceedToTransactions(userState, update, AppConstants.ENERGY_131K);
     }
 
-    private void proceedToTransactions(UserState userState, CallbackQuery callbackQuery, Integer energyAmount) {
+    private void proceedToTransactions(UserState userState, Update update, Integer energyAmount) {
         AppUser byId = userService.getById(userState.getTelegramId());
         // If no group balance, proceed to
         TransactionParams transactionParams = telegramState.getOrCreateTransactionParams(userState.getTelegramId());
         boolean useGroupBalance = true;
         if (byId.getGroupBalance() == null) {
             useGroupBalance = false;
-            List<UserWallet> wallets = userWalletService.getWallets(userState.getTelegramId());
-
-            if (energyAmount == AppConstants.ENERGY_131K) {
-                transactionsViews.updMenuToTransaction131kMenu(wallets, userState);
-            } else {
-                transactionsViews.updMenuToTransaction65kMenu(wallets, userState);
-            }
-
-            telegramState.updateUserState(userState.getTelegramId(),
-                    userState.withState(States.TRANSACTION_PROMPT_WALLET));
+            selectPersonalBalanceTypeForTransaction(userState, update);
         } else {
             transactionsViews.updMenuToPromptBalanceType(userState);
             telegramState.updateUserState(userState.getTelegramId(),
@@ -93,9 +87,20 @@ public class TransactionsHandler {
                 .getOrCreateTransactionParams(userState.getTelegramId());
 
         Integer energyAmount = transactionParams.getEnergyAmount();
+        Tariff tariff = transactionParams.getGroupBalance()
+                ? tariffRepo.findGroupTariffByUserId(userState.getTelegramId())
+                : tariffRepo.findIndividualTariffByUserId(userState.getTelegramId());
+
+        if (tariff == null) {
+            logger.error("No tariff found during transaction for user: {}, tr params: {}", userState.getTelegramId(), transactionParams);
+            transactionsViews.somethingWentWrong(userState);
+            telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.TRANSACTION_ERROR));
+            return;
+        }
+
         Long price = switch (energyAmount) {
-            case AppConstants.ENERGY_131K -> AppConstants.PRICE_131K;
-            case AppConstants.ENERGY_65K -> AppConstants.PRICE_65K;
+            case AppConstants.ENERGY_65K -> tariff.getTransactionType1AmountSun();
+            case AppConstants.ENERGY_131K -> tariff.getTransactionType2AmountSun();
             default -> {
                 throw new IllegalStateException("Unexpected value: " + energyAmount);
             }
@@ -128,7 +133,7 @@ public class TransactionsHandler {
                 userState.withState(States.TRANSACTION_PROMPT_WALLET));
 
         List<UserWallet> wallets = userWalletService.getWallets(userState.getTelegramId());
-        promptWalletDependingOnEnergyAmount(userState, wallets, transactionParams.getEnergyAmount());
+        promptWalletDependingOnEnergyAmount(userState, wallets, transactionParams.getEnergyAmount(), true);
     }
 
     @MatchState(state = States.TRANSACTION_PROMPT_BALANCE_TYPE, callbackData = InlineMenuCallbacks.TRANSACTION_BALANCE_PERSONAL)
@@ -141,7 +146,7 @@ public class TransactionsHandler {
                 userState.withState(States.TRANSACTION_PROMPT_WALLET));
 
         List<UserWallet> wallets = userWalletService.getWallets(userState.getTelegramId());
-        promptWalletDependingOnEnergyAmount(userState, wallets, transactionParams.getEnergyAmount());
+        promptWalletDependingOnEnergyAmount(userState, wallets, transactionParams.getEnergyAmount(), false);
     }
 
     private void tryMakeTransaction(UserState userState, Integer energyAmount, String duration, String walletAddress,
@@ -224,11 +229,25 @@ public class TransactionsHandler {
     }
 
     private void promptWalletDependingOnEnergyAmount(UserState userState, List<UserWallet> wallets,
-            Integer energyAmount) {
+            Integer energyAmount, boolean useGroupWallet) {
+        AppUser byId = userService.getById(userState.getTelegramId());
+
+        // NPE ?
+        Tariff tariff = useGroupWallet ? 
+                byId.getGroupBalance().getTariff() :
+                byId.getBalance().getTariff();
+
+        if (tariff == null) {
+            logger.error("User {} has no tariff set, cannot show transaction menu", byId.getTelegramUsername());
+            transactionsViews.somethingWentWrong(userState);
+            telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.TRANSACTION_ERROR));
+            return;
+        }
+
         if (energyAmount == AppConstants.ENERGY_131K) {
-            transactionsViews.updMenuToTransaction131kMenu(wallets, userState);
+            transactionsViews.updMenuToTransaction131kMenu(wallets, userState, tariff);
         } else {
-            transactionsViews.updMenuToTransaction65kMenu(wallets, userState);
+            transactionsViews.updMenuToTransaction65kMenu(wallets, userState, tariff);
         }
 
     }

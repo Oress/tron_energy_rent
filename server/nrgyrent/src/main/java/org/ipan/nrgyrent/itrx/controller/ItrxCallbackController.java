@@ -46,6 +46,7 @@ public class ItrxCallbackController {
         String expectedSignature = Utils.encodeHmacSHA256(message, apiSecret);
 
         if (!signature.equals(expectedSignature)) {
+            logger.error("Invalid signature: expected {}, got {}", expectedSignature, signature);
             return ResponseEntity.status(401).body("Invalid signature");
         }
 

@@ -55,10 +55,11 @@ public class OrderService {
 
     @Transactional
     public Order completeOrder(AddOrUpdateOrderCommand command) {
-        logger.info("Completing order: {}", command);
+        logger.info("Completing domain order: {}", command);
         Optional<Order> byCorrelationId = orderRepo.findByCorrelationId(command.getCorrelationId());
 
         if (byCorrelationId.isEmpty()) {
+            logger.error("Order not found: {}", command.getCorrelationId());
             throw new IllegalArgumentException("Order not found");
         }
 
@@ -76,6 +77,7 @@ public class OrderService {
         Optional<Order> byCorrelationId = orderRepo.findByCorrelationId(command.getCorrelationId());
 
         if (byCorrelationId.isEmpty()) {
+            logger.error("Order not found: {}", command.getCorrelationId());
             throw new IllegalArgumentException("Order not found");
         }
 

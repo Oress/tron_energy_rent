@@ -8,8 +8,11 @@ import org.ipan.nrgyrent.domain.exception.UserIsManagerException;
 import org.ipan.nrgyrent.domain.exception.UsersMustBelongToTheSameGroupException;
 import org.ipan.nrgyrent.domain.exception.UserNotRegisteredException;
 import org.ipan.nrgyrent.domain.model.AppUser;
+import org.ipan.nrgyrent.domain.model.Tariff;
 import org.ipan.nrgyrent.domain.model.repository.AppUserRepo;
+import org.ipan.nrgyrent.domain.model.repository.TariffRepo;
 import org.ipan.nrgyrent.domain.service.BalanceService;
+import org.ipan.nrgyrent.domain.service.TariffService;
 import org.ipan.nrgyrent.itrx.AppConstants;
 import org.ipan.nrgyrent.telegram.InlineMenuCallbacks;
 import org.ipan.nrgyrent.telegram.States;
@@ -17,27 +20,108 @@ import org.ipan.nrgyrent.telegram.TelegramMessages;
 import org.ipan.nrgyrent.telegram.state.BalanceEdit;
 import org.ipan.nrgyrent.telegram.state.TelegramState;
 import org.ipan.nrgyrent.telegram.state.UserState;
+import org.ipan.nrgyrent.telegram.state.tariff.TariffSearchState;
 import org.ipan.nrgyrent.telegram.statetransitions.MatchState;
+import org.ipan.nrgyrent.telegram.statetransitions.MatchStates;
 import org.ipan.nrgyrent.telegram.statetransitions.TransitionHandler;
 import org.ipan.nrgyrent.telegram.statetransitions.UpdateType;
 import org.ipan.nrgyrent.telegram.views.ManageGroupActionsView;
+import org.ipan.nrgyrent.telegram.views.tariffs.TariffsSearchView;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.UsersShared;
 import org.telegram.telegrambots.meta.api.objects.message.Message;
 
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @TransitionHandler
-@AllArgsConstructor
 @Slf4j
 public class ManageGroupActionsHandler {
+    private final Integer pageSize;
     private final ManageGroupActionsView manageGroupActionsView;
+    private final TariffService tariffService;
+    private final TariffRepo tariffRepo;
+    private final TariffsSearchView tariffsSearchView;
     private final TelegramState telegramState;
     private final TelegramMessages telegramMessages;
     private final AppUserRepo appUserRepo;
     private final BalanceService balanceService;
     private final ManageGroupSearchHandler manageGroupSearchHandler;
+
+    public ManageGroupActionsHandler(@Value("${app.pagination.tariffs.page-size:20}")Integer pageSize,
+     ManageGroupActionsView manageGroupActionsView,
+            TariffService tariffService, TariffRepo tariffRepo, TariffsSearchView tariffsSearchView,
+            TelegramState telegramState, TelegramMessages telegramMessages, AppUserRepo appUserRepo,
+            BalanceService balanceService, ManageGroupSearchHandler manageGroupSearchHandler) {
+        this.pageSize = pageSize;
+        this.manageGroupActionsView = manageGroupActionsView;
+        this.tariffService = tariffService;
+        this.tariffRepo = tariffRepo;
+        this.tariffsSearchView = tariffsSearchView;
+        this.telegramState = telegramState;
+        this.telegramMessages = telegramMessages;
+        this.appUserRepo = appUserRepo;
+        this.balanceService = balanceService;
+        this.manageGroupSearchHandler = manageGroupSearchHandler;
+    }
+
+    // TODO: implement search by label
+    @MatchState(state = States.ADMIN_MANAGE_GROUPS_ACTION_PREVIEW, callbackData = InlineMenuCallbacks.MANAGE_GROUPS_ACTION_CHANGE_TARIFF)
+    public void startChangeTariff(UserState userState, Update update) {
+        TariffSearchState searchState = telegramState.getOrCreateTariffSearchState(userState.getTelegramId());
+        telegramState.updateTariffSearchState(userState.getTelegramId(), searchState.withCurrentPage(0).withQuery(""));
+
+        Page<Tariff> nextPage = tariffRepo.findByActiveAndLabelContainingIgnoreCaseOrderById(true, "", PageRequest.of(0, pageSize));
+        tariffsSearchView.updMenuToTariffSearchResult(nextPage, userState);
+
+        telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.ADMIN_MANAGE_GROUPS_ACTION_CHANGE_TARIFF_SEARCHING));
+    }
+
+    @MatchStates({
+            @MatchState(state = States.ADMIN_MANAGE_GROUPS_ACTION_CHANGE_TARIFF_SEARCHING, callbackData = InlineMenuCallbacks.MANAGE_TARIFFS_NEXT_PAGE)
+    })
+    public void tariffChange_searchingNextPage(UserState userState, Update update) {
+        TariffSearchState searchState = telegramState.getOrCreateTariffSearchState(userState.getTelegramId());
+        int pageNumber = searchState.getCurrentPage() + 1;
+        String queryStr = searchState.getQuery();
+        telegramState.updateTariffSearchState(userState.getTelegramId(), searchState.withCurrentPage(pageNumber));
+        Page<Tariff> nextPage = tariffRepo.findByActiveAndLabelContainingIgnoreCaseOrderById(true, queryStr, PageRequest.of(pageNumber, pageSize));
+        tariffsSearchView.updMenuToTariffSearchResult(nextPage, userState);
+    }
+
+    @MatchStates({
+            @MatchState(state = States.ADMIN_MANAGE_GROUPS_ACTION_CHANGE_TARIFF_SEARCHING, callbackData = InlineMenuCallbacks.MANAGE_TARIFFS_PREV_PAGE)
+    })
+    public void tariffChange_searchingPrevPage(UserState userState, Update update) {
+        TariffSearchState searchState = telegramState.getOrCreateTariffSearchState(userState.getTelegramId());
+        int pageNumber = searchState.getCurrentPage() - 1;
+        String queryStr = searchState.getQuery();
+        telegramState.updateTariffSearchState(userState.getTelegramId(), searchState.withCurrentPage(pageNumber));
+        Page<Tariff> prevPage = tariffRepo.findByActiveAndLabelContainingIgnoreCaseOrderById(true, queryStr, PageRequest.of(pageNumber, pageSize));
+        tariffsSearchView.updMenuToTariffSearchResult(prevPage, userState);
+    }
+
+    @MatchStates({
+            @MatchState(state = States.ADMIN_MANAGE_GROUPS_ACTION_CHANGE_TARIFF_SEARCHING, updateTypes = UpdateType.CALLBACK_QUERY),
+    })
+    public void openTariffFromSearch(UserState userState, Update update) {
+        CallbackQuery callbackQuery = update.getCallbackQuery();
+        String data = callbackQuery.getData();
+
+        if (data.startsWith(TariffsSearchView.OPEN_TARIFF)) {
+            String tariffIdStr = data.split(TariffsSearchView.OPEN_TARIFF)[1];
+            Long tariffId = Long.parseLong(tariffIdStr);
+
+            BalanceEdit openBalance = telegramState.getOrCreateBalanceEdit(userState.getTelegramId());
+            tariffService.changeGroupTariff(openBalance.getSelectedBalanceId(), tariffId);
+            manageGroupActionsView.userTariffChanged(userState);
+            telegramState.updateUserState(userState.getTelegramId(),
+                    userState.withState(States.ADMIN_MANAGE_GROUPS_ACTION_CHANGE_TARIFF_SUCCESS));
+        }
+    }
 
     @MatchState(forAdmin = true, state = States.ADMIN_MANAGE_GROUPS_ACTION_PREVIEW, callbackData = InlineMenuCallbacks.MANAGE_GROUPS_ACTION_CHANGE_MANAGER)
     public void startChangeManager_promptManager(UserState userState, Update update) {

@@ -3,6 +3,8 @@ package org.ipan.nrgyrent.itrx;
 import java.math.BigDecimal;
 
 public class AppConstants {
+    public static final Long DEFAULT_TARIFF_ID = 1L;
+
     public static final String DURATION_1H = "1H";
     public static BigDecimal trxToSunRate = new BigDecimal(1_000_000);
 

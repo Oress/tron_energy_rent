@@ -14,9 +14,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import jakarta.persistence.EntityManager;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @AllArgsConstructor
+@Slf4j
 public class UserService {
     private final UserRepo userRepo;
     private final BalanceService balanceService;
@@ -31,11 +33,10 @@ public class UserService {
         appUser = new AppUser();
         updateModelFromCommand(command, appUser);
 
-        EntityManager em = getEntityManager();
-        Balance individualDepositBalance = balanceService.createIndividualBalance(appUser);
+        Balance individualDepositBalance = balanceService.createIndividualBalance(appUser, command);
 
         appUser.setBalance(individualDepositBalance);
-        em.persist(appUser);
+        userRepo.save(appUser);
 
         return appUser;
     }

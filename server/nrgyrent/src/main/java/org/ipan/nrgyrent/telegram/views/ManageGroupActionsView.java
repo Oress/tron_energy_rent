@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 
 import org.ipan.nrgyrent.domain.model.AppUser;
 import org.ipan.nrgyrent.domain.model.Balance;
+import org.ipan.nrgyrent.domain.model.Tariff;
 import org.ipan.nrgyrent.telegram.InlineMenuCallbacks;
 import org.ipan.nrgyrent.telegram.StaticLabels;
 import org.ipan.nrgyrent.telegram.state.UserState;
@@ -24,8 +25,10 @@ import org.telegram.telegrambots.meta.generics.TelegramClient;
 
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
+@Slf4j
 @AllArgsConstructor
 public class ManageGroupActionsView {
     private static final String MANAGE_GROUP_ACTION_VIEW_USERS = "👥 Просмотреть пользователей";
@@ -34,6 +37,7 @@ public class ManageGroupActionsView {
     private static final String MANAGE_GROUP_ACTION_ADD_USERS = "➕ Добавить пользователей";
     private static final String MANAGE_GROUP_ACTION_REMOVE_USERS = "➖ Удалить пользователей";
     private static final String MANAGE_GROUP_ACTION_RENAME_GROUP = "✏️ Переименовать группу";
+    private static final String MANAGE_GROUP_ACTION_CHANGE_TARIFF = "✏️ Изменить тариф группы";
     private static final String MANAGE_GROUP_ACTION_DEACTIVATE_GROUP = "❌ Деактивировать группу";
 
     private static final String MSG_DELETE_GROUP_WARNING = "⚠️ Вы уверены, что хотите деактивировать группу?";
@@ -43,6 +47,7 @@ public class ManageGroupActionsView {
     private static final String MSG_GROUP_PROMPT_NEW_USERS = "Добавьте пользователей в группу, используя меню";
     private static final String MSG_GROUP_PROMPT_REMOVE_USERS = "Удалите пользователей из группы, используя меню";
     private static final String MSG_GROUP_RENAMED = "✅ Группа успешно переименована.";
+    private static final String MSG_USER_TARIFF_CHANGED = "✅ Тариф пользователя успешно изменен.";
     private static final String MSG_GROUP_TOO_SHORT = "❌ Название группы слишком короткое. Минимум 3 символа. Попробуйте снова.";
     private static final String MSG_GROUP_BALANCE_ADJUSTED = "✅ Баланс группы успешно изменен.";
     private static final String MSG_GROUP_USERS_ADDED = "✅ Пользователи успешно добавлены в группу.";
@@ -86,7 +91,7 @@ public class ManageGroupActionsView {
         tgClient.execute(message);
     }
 
-        @SneakyThrows
+    @SneakyThrows
     public void cannotRemoveManager(UserState userState) {
         EditMessageText message = EditMessageText
                 .builder()
@@ -219,6 +224,18 @@ public class ManageGroupActionsView {
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
                 .text(MSG_GROUP_RENAMED)
+                .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
+                .build();
+        tgClient.execute(message);
+    }
+
+    @SneakyThrows
+    public void userTariffChanged(UserState userState) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
+                .text(MSG_USER_TARIFF_CHANGED)
                 .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
         tgClient.execute(message);
@@ -423,12 +440,24 @@ public class ManageGroupActionsView {
     }
 
     private String getBalanceDescription(Balance balance) {
+        Tariff tariff = balance.getTariff();
+        String tariffLabel = "";
+        if (tariff == null) {
+            logger.error("Tariff is null for balance: {}", balance.getId());
+        } else {
+            tariffLabel = String.format("%s (%s TRX, %s TRX)",
+                    tariff.getLabel(),
+                    FormattingTools.formatBalance(tariff.getTransactionType1AmountSun()),
+                    FormattingTools.formatBalance(tariff.getTransactionType2AmountSun()));
+        }
+
         return String.format("""
                 ⚙️ Действия с группой
 
                 Название: %s
                 Менеджер: %s
                 Создана: %s
+                Тариф: %s
                 Активна: %s
 
                 Кошелек: %s
@@ -437,12 +466,13 @@ public class ManageGroupActionsView {
                 balance.getLabel(),
                 FormattingTools.formatUser(balance.getManager()),
                 FormattingTools.formatDateToUtc(balance.getCreatedAt()),
+                tariffLabel,
                 balance.getIsActive() ? "✅" : "❌",
                 balance.getDepositAddress(),
                 FormattingTools.formatBalance(balance.getSunBalance()));
     }
 
-    private InlineKeyboardMarkup getManageGroupActionsMarkup(Boolean showBackButton, Boolean showDeactivateBtn) {
+    private InlineKeyboardMarkup getManageGroupActionsMarkup(Boolean showBackButton, Boolean canEdit) {
         InlineKeyboardRow inlineKeyboardRow = new InlineKeyboardRow(
                 InlineKeyboardButton
                         .builder()
@@ -460,7 +490,9 @@ public class ManageGroupActionsView {
         }
 
         InlineKeyboardMarkup.InlineKeyboardMarkupBuilder builder = InlineKeyboardMarkup
-                .builder()
+                .builder();
+        if (canEdit) {
+                builder
                 .keyboardRow(
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
@@ -474,6 +506,13 @@ public class ManageGroupActionsView {
                                         .builder()
                                         .text(MANAGE_GROUP_ACTION_ADJUST_BALANCE_MANUALLY)
                                         .callbackData(InlineMenuCallbacks.MANAGE_GROUPS_ACTION_ADJUST_BALANCE_MANUALLY)
+                                        .build()))
+                .keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text(MANAGE_GROUP_ACTION_CHANGE_TARIFF)
+                                        .callbackData(InlineMenuCallbacks.MANAGE_GROUPS_ACTION_CHANGE_TARIFF)
                                         .build()))
                 .keyboardRow(
                         new InlineKeyboardRow(
@@ -502,10 +541,8 @@ public class ManageGroupActionsView {
                                         .builder()
                                         .text(MANAGE_GROUP_ACTION_REMOVE_USERS)
                                         .callbackData(InlineMenuCallbacks.MANAGE_GROUPS_ACTION_REMOVE_USERS)
-                                        .build()));
-
-        if (showDeactivateBtn) {
-                builder.keyboardRow(
+                                        .build()))
+                .keyboardRow(
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()

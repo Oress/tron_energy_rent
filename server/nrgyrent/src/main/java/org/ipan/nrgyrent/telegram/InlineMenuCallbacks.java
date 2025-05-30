@@ -26,6 +26,19 @@ public class InlineMenuCallbacks {
     public static final String MANAGE_ITRX_BALANCE = "manage_itrx_balance";
     public static final String MANAGE_SWEEP_BALANCE = "manage_sweep_balance";
     public static final String MANAGE_WITHDRAW_TRX = "manage_withdraw_trx";
+    public static final String MANAGE_TARIFFS = "manage_tarifs";
+
+    public static final String MANAGE_TARIFFS_PREV_PAGE = "manage_tarifs_search_prev_page";
+    public static final String MANAGE_TARIFFS_NEXT_PAGE = "manage_tarifs_search_next_page";
+    public static final String MANAGE_TARIFFS_SEARCH_RESET = "manage_tarifs_search_reset";
+    public static final String MANAGE_TARIFFS_SEARCH = "manage_tarifs_search";
+    public static final String MANAGE_TARIFFS_ADD = "manage_tarifs_add_new";
+
+    public static final String MANAGE_TARIFFS_ACTION_CHANGE_TX1_AMOUNT = "manage_tarifs_action_change_tx1_amount";
+    public static final String MANAGE_TARIFFS_ACTION_CHANGE_TX2_AMOUNT = "manage_tarifs_action_change_tx2_amount";
+    public static final String MANAGE_TARIFFS_ACTION_RENAME = "manage_tarifs_action_rename";
+    public static final String MANAGE_TARIFFS_ACTION_DEACTIVATE = "manage_tarifs_action_deactivate";
+
 
 
     public static final String MANAGE_GROUPS_PREV_PAGE = "manage_groups_search_prev_page";
@@ -42,6 +55,7 @@ public class InlineMenuCallbacks {
     public static final String MANAGE_GROUPS_ACTION_CHANGE_MANAGER = "manage_groups_action_change_manager";
     public static final String MANAGE_GROUPS_ACTION_ADJUST_BALANCE_MANUALLY = "manage_groups_action_adjust_balance_manually";
     public static final String MANAGE_GROUPS_ACTION_RENAME = "manage_groups_action_rename";
+    public static final String MANAGE_GROUPS_ACTION_CHANGE_TARIFF = "manage_groups_action_change_tariff";
     public static final String MANAGE_GROUPS_ACTION_VIEW_USERS = "manage_groups_action_view_users";
     public static final String MANAGE_GROUPS_ACTION_ADD_USERS = "manage_groups_action_add_users";
     public static final String MANAGE_GROUPS_ACTION_REMOVE_USERS = "manage_groups_action_remove_users";
@@ -49,6 +63,7 @@ public class InlineMenuCallbacks {
 
     public static final String MANAGE_USER_ACTION_DEACTIVATE = "manage_user_action_deactivate";
     public static final String MANAGE_USER_ACTION_ADJUST_BALANCE_MANUALLY = "manage_user_action_adjust_balance_manually";
+    public static final String MANAGE_USER_ACTION_CHANGE_TARIFF = "manage_user_action_change_tariff";
 
 
     public static final String NTFN_OK = "notification_ok";

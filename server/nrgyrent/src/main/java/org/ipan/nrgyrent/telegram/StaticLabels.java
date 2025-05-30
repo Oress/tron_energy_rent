@@ -11,8 +11,6 @@ public class StaticLabels {
     public static final String WITHDRAW_TRX = "💰 Вывод TRX";
     public static final String MENU_HISTORY = "📜 История транзакций";
     public static final String MENU_ADMIN = "👨‍💻 Админка";
-    public static final String MENU_TRANSFER_ENERGY_65K = "⚡ 1 тр на кош с USDT (5.5 TRX)";
-    public static final String MENU_TRANSFER_ENERGY_131K = "⚡ 1 тр на кош без USDT или биржу (8.6 TRX)";
     public static final String MENU_DEPOSIT = "\uD83D\uDCB8 Депозит TRX";
     public static final String MENU_WALLETS = "\uD83D\uDC5B Кошельки";
 

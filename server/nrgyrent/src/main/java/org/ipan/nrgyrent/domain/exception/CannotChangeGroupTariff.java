@@ -1,0 +1,11 @@
+package org.ipan.nrgyrent.domain.exception;
+
+public class CannotChangeGroupTariff extends EnergyRentException {
+    public CannotChangeGroupTariff(String message) {
+        super(message);
+    }
+
+    public CannotChangeGroupTariff(String message, Throwable cause) {
+        super(message, cause);
+    }
+}
