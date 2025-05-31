@@ -163,15 +163,15 @@ public class AdminViews {
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(MENU_ADMIN_MANAGE_GROUPS)
-                                        .callbackData(InlineMenuCallbacks.MANAGE_GROUPS)
+                                        .text(MENU_ADMIN_MANAGE_USERS)
+                                        .callbackData(InlineMenuCallbacks.MANAGE_USERS)
                                         .build()))
                 .keyboardRow(
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(MENU_ADMIN_MANAGE_USERS)
-                                        .callbackData(InlineMenuCallbacks.MANAGE_USERS)
+                                        .text(MENU_ADMIN_MANAGE_GROUPS)
+                                        .callbackData(InlineMenuCallbacks.MANAGE_GROUPS)
                                         .build()))
                 .keyboardRow(
                         new InlineKeyboardRow(
