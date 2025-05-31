@@ -129,14 +129,14 @@ public class WithdrawViews {
     }
 
     @SneakyThrows
-    public void sendWithdrawalFail(UserState userState) {
+    public Message sendWithdrawalFail(UserState userState) {
         SendMessage message = SendMessage
                 .builder()
                 .chatId(userState.getChatId())
                 .text(NTFN_WITHDRWAL_FAIL)
                 .replyMarkup(getOrderRefundedNotificationMarkup())
                 .build();
-        tgClient.execute(message);
+        return tgClient.execute(message);
     }
 
     @Retryable

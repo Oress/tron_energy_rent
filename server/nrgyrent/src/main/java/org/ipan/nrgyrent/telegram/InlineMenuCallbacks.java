@@ -1,7 +1,6 @@
 package org.ipan.nrgyrent.telegram;
 
 public class InlineMenuCallbacks {
-    public static final String MAIN_MENU = "main_menu";
     public static final String TO_MAIN_MENU = "action_main_menu";
     public static final String GO_BACK = "action_go_back";
     public static final String DEPOSIT = "deposit";
@@ -11,6 +10,8 @@ public class InlineMenuCallbacks {
     public static final String DELETE_WALLETS = "delete_wallet";
     public static final String TRANSACTION_65k = "transaction_65k";
     public static final String TRANSACTION_131k = "transaction_131k";
+    public static final String CUSTOM_TRANSACTION_AMOUNT = "custom_transaction_amount";
+
     public static final String HISTORY = "history";
     public static final String MANAGE_GROUP = "manage_group";
     public static final String WITHDRAW_TRX = "withdraw_trx";

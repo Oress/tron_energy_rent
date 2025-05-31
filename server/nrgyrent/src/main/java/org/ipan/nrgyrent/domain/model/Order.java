@@ -46,6 +46,9 @@ public class Order {
     @Column(name = "sun_amount")
     private Long sunAmount;
 
+    @Column(name = "tx_amount")
+    private Integer txAmount;
+
     @Column(name = "energy_amount")
     private Integer energyAmount;
 

@@ -55,14 +55,16 @@ public class HistoryViews {
                     return """
                     Операция: Аренда транзакции
                     ID: %s
-                    Сумма: %s TRX
+                    Кол. тр: %s 
+                    Сумма всего: %s TRX
                     Получатель: %s
                     Статус: %s
                     Баланс: %s
                     Дата: %s
                     """.formatted(
                     order.getCorrelationId(),
-                    FormattingTools.formatBalance(order.getAmount()),
+                    order.getTxAmount(),
+                    FormattingTools.formatBalance(order.getTotalAmountSun()),
                     WalletTools.formatTronAddress(order.getReceiveAddress()),
                     FormattingTools.orderStatusLabel(OrderStatus.valueOf(order.getOrderStatus())),
                     BalanceType.GROUP.name().equals(order.getBalanceType()) ? "Групповой" : "Личный",
@@ -77,7 +79,7 @@ public class HistoryViews {
                     Баланс: %s
                     Дата: %s
                     """.formatted(
-                    FormattingTools.formatBalance(order.getAmount()),
+                    FormattingTools.formatBalance(order.getTotalAmountSun()),
                     WalletTools.formatTronAddress(order.getReceiveAddress()),
                     FormattingTools.withdrawalStatusLabel(WithdrawalStatus.valueOf(order.getWithdrawalStatus())),
                     BalanceType.GROUP.name().equals(order.getBalanceType()) ? "Групповой" : "Личный",
@@ -91,7 +93,7 @@ public class HistoryViews {
                     Баланс: %s
                     Дата: %s
                     """.formatted(
-                    FormattingTools.formatBalance(order.getAmount()),
+                    FormattingTools.formatBalance(order.getTotalAmountSun()),
                     WalletTools.formatTronAddress(order.getFromAddress()),
                     BalanceType.GROUP.name().equals(order.getBalanceType()) ? "Групповой" : "Личный",
                     FormattingTools.formatDateToUtc(order.getCreatedAt()));

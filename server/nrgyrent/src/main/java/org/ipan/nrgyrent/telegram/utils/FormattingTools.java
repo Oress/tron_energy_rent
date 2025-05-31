@@ -26,6 +26,10 @@ public class FormattingTools {
         return df.format(BigDecimal.valueOf(balanceSun).divide(BigDecimal.valueOf(1_000_000D)));
     }
 
+    public static String formatBalanceTrx(BigDecimal balanceTrx) {
+        return df.format(balanceTrx);
+    }
+
     public static String formatDateToUtc(Instant date) {
         return DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss 'UTC'")
             .withZone(java.time.ZoneOffset.UTC)

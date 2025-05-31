@@ -59,6 +59,7 @@ public class WithdrawalHandlerHelper {
         if (withdrawBalance == null) {
             logger.error("User {} has no balance for withdrawal", userId);
             UserState userState = telegramState.getOrCreateUserState(userId);
+            // TODO: send message with update menuId, seems like very unlikely scenario
             withdrawViews.sendWithdrawalFail(userState);
             return CompletableFuture.completedFuture(null);
         }
@@ -66,6 +67,7 @@ public class WithdrawalHandlerHelper {
         if (withdrawBalance.getSunBalance() < totalSubstractSumAmount) {
             logger.error("User {} has not enough balance for withdrawal", userId);
             UserState userState = telegramState.getOrCreateUserState(userId);
+            // TODO: send message with update menuId.
             withdrawViews.sendWithdrawalFailNotEnoughBalance(userState);
             return CompletableFuture.completedFuture(null);
         }
@@ -94,6 +96,7 @@ public class WithdrawalHandlerHelper {
         WithdrawalOrder withdrawalOrder = null;
         try {
             withdrawalOrder = withdrawalOrderService.createPendingOrder(userId, useGroupBalance, amountSun, fee, toWallet);
+            logger.info("Creating withdrawal request id {} user id {} amount {} balance id {} receive wallet {}", withdrawalOrder.getId(), userId, amountSun, withdrawBalance.getId(), toWallet);
 
             String resultingTxId = tronTransactionHelper.performTransferTransaction(
                     walletToWithdrawFrom,
@@ -101,6 +104,7 @@ public class WithdrawalHandlerHelper {
                     amountSun,
                     (txId) -> managedWalletService.sign(managedWallet, txId));
 
+            logger.info("Completing withdrawal request id {} user id {} amount {} balance id {} receive wallet {}", withdrawalOrder.getId(), userId, amountSun, withdrawBalance.getId(), toWallet);
             withdrawalOrderService.completeOrder(withdrawalOrder.getId(), resultingTxId);
 
             UserState userState = telegramState.getOrCreateUserState(userId);
@@ -111,6 +115,7 @@ public class WithdrawalHandlerHelper {
         } catch (Exception e) {
             logger.error("Error while transferring TRX from collection wallets", e);
             UserState userState = telegramState.getOrCreateUserState(userId);
+            // TODO: update main menu
             withdrawViews.sendWithdrawalFail(userState);
             if (withdrawalOrder != null) {
                 withdrawalOrderService.refundOrder(withdrawalOrder.getId());

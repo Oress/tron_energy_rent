@@ -20,16 +20,16 @@ public interface OrderRepo extends JpaRepository<Order, Long> {
     value = """
         SELECT * FROM (
         SELECT 
-            'ORDER' AS type, ord.id, correlation_id as correlationId, order_status as orderStatus, receive_address as receiveAddress, null AS fromAddress, null AS withdrawalStatus, sun_amount AS amount, ord.created_at,  b.type as balanceType 
+            'ORDER' AS type, ord.id, correlation_id as correlationId, order_status as orderStatus, receive_address as receiveAddress, null AS fromAddress, null AS withdrawalStatus, ord.tx_amount as txAmount, sun_amount AS totalAmountSun, ord.created_at,  b.type as balanceType 
             FROM nrg_orders ord join nrg_balances b on b.id = ord.balance_id
             where user_id = :userId 
         UNION
         SELECT 
-            'WITHDRAWAL', wo.id, null as correlationId, null as orderStatus, receive_address as receiveAddress, null AS fromAddress, status as withdrawalStatus, sun_amount AS amount, wo.created_at, b.type as balanceType 
+            'WITHDRAWAL', wo.id, null as correlationId, null as orderStatus, receive_address as receiveAddress, null AS fromAddress, status as withdrawalStatus, null as txAmount, sun_amount AS totalAmountSun, wo.created_at, b.type as balanceType 
             FROM nrg_withdrawal_orders wo join nrg_balances b on b.id = wo.balance_id
             where user_id = :userId 
         UNION
-        SELECT 'DEPOSIT', tr.id, null as correlationId, null as orderStatus, wallet_to as receiveAddress, wallet_from as fromAddress, null AS withdrawalStatus, amount, to_timestamp(tr.timestamp::bigint/1000) AT TIME ZONE 'UTC' as createdAt, b.type as balanceType
+        SELECT 'DEPOSIT', tr.id, null as correlationId, null as orderStatus, wallet_to as receiveAddress, wallet_from as fromAddress, null AS withdrawalStatus, null as txAmount, amount as totalAmountSun, to_timestamp(tr.timestamp::bigint/1000) AT TIME ZONE 'UTC' as createdAt, b.type as balanceType
             FROM
                 nrg_deposit_transactions tr
                 join nrg_balances b on b.deposit_address = tr.wallet_to

@@ -10,8 +10,9 @@ public class AddOrUpdateOrderCommand {
     private Long userId;
     private Boolean useGroupWallet;
     private Long itrxFeeSunAmount;
-    private Long sunAmount;
-    private Integer energyAmount;
+    private Long sunAmountPerTx;
+    private Integer txAmount;
+    private Integer energyAmountPerTx;
     private String receiveAddress;
     private String duration;
     private String correlationId;

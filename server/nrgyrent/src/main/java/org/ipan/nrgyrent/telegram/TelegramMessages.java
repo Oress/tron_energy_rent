@@ -279,6 +279,13 @@ public class TelegramMessages {
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
+                                        .text(getCustomAmountTransactionTypeLabel(tariff.getTransactionType1AmountSun()))
+                                        .callbackData(InlineMenuCallbacks.CUSTOM_TRANSACTION_AMOUNT)
+                                        .build()))
+                .keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
                                         .text(StaticLabels.MENU_DEPOSIT)
                                         .callbackData(InlineMenuCallbacks.DEPOSIT)
                                         .build(),
@@ -324,12 +331,16 @@ public class TelegramMessages {
         return builder.build();
     }
 
-    private String getFirstTransactionTypeLabel(Long trxAmount) {
-        return "⚡ 1 тр на кош с USDT (%s TRX)".formatted(FormattingTools.formatBalance(trxAmount));
+    private String getFirstTransactionTypeLabel(Long sunAmount) {
+        return "⚡ 1 тр на кош с USDT (%s TRX)".formatted(FormattingTools.formatBalance(sunAmount));
     }
 
-    private String getSecondTransactionTypeLabel(Long trxAmount) {
-        return "⚡ 1 тр на кош без USDT или биржу (%s TRX)".formatted(FormattingTools.formatBalance(trxAmount));
+    private String getSecondTransactionTypeLabel(Long sunAmount) {
+        return "⚡ 1 тр на кош без USDT или биржу (%s TRX)".formatted(FormattingTools.formatBalance(sunAmount));
+    }
+
+    private String getCustomAmountTransactionTypeLabel(Long sunAmount) {
+        return "⚡ выбрать кол. тр на кош с USDT (по %s TRX)".formatted(FormattingTools.formatBalance(sunAmount));
     }
 
     private InlineKeyboardMarkup getToMainMenuNotificationMarkup() {

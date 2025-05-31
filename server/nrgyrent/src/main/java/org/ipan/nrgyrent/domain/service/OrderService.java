@@ -31,11 +31,24 @@ public class OrderService {
         AppUser user = em.getReference(AppUser.class, command.getUserId());
 
         if (user == null) {
+            logger.error("User is not found when creating pending order, command {}", command);
             throw new IllegalArgumentException("User not found");
         }
 
+        if (command.getDuration() == null || command.getEnergyAmountPerTx() == null || command.getSunAmountPerTx() == null || command.getTxAmount() == null
+            || command.getCorrelationId() == null || command.getReceiveAddress() == null ||command.getItrxFeeSunAmount() == null) {
+                logger.error("Some of the command properties are not set, command {}", command);
+                throw new IllegalArgumentException("Some of the command properties are not set");
+        }
+
+
+        Long totalSunAmount = command.getTxAmount() * command.getSunAmountPerTx();
+        Integer totalEnergyAmount = command.getTxAmount() * command.getEnergyAmountPerTx();
+
         Balance targetBalance = command.getUseGroupWallet() ? user.getGroupBalance() : user.getBalance();
-        balanceService.subtractSunBalance(targetBalance, command.getSunAmount());
+        balanceService.subtractSunBalance(targetBalance, totalSunAmount);
+
+        logger.info("Creating a pending order for user id {} username: {} balance: {} params: {}", user.getTelegramId(), user.getTelegramUsername(), targetBalance.getId(), command);
 
         Order order = new Order();
         order.setUser(user);
@@ -43,8 +56,9 @@ public class OrderService {
         order.setOrderStatus(OrderStatus.PENDING);
         order.setDuration(command.getDuration());
         order.setCorrelationId(command.getCorrelationId());
-        order.setEnergyAmount(command.getEnergyAmount());
-        order.setSunAmount(command.getSunAmount());
+        order.setTxAmount(command.getTxAmount());
+        order.setSunAmount(totalSunAmount);
+        order.setEnergyAmount(totalEnergyAmount);
         order.setItrxFeeSunAmount(command.getItrxFeeSunAmount());
         order.setReceiveAddress(command.getReceiveAddress());
 

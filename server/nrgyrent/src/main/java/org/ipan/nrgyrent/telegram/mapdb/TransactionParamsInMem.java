@@ -12,6 +12,7 @@ import lombok.extern.jackson.Jacksonized;
 @Builder
 @Jacksonized
 public class TransactionParamsInMem implements TransactionParams {
+    Integer numberOfTransactions;
     Integer energyAmount;
     Boolean groupBalance;
 
@@ -19,6 +20,7 @@ public class TransactionParamsInMem implements TransactionParams {
         return TransactionParamsInMem.builder()
                 .energyAmount(prototype.getEnergyAmount())
                 .groupBalance(prototype.getGroupBalance())
+                .numberOfTransactions(prototype.getNumberOfTransactions())
                 .build();
     }
 }

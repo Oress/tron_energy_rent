@@ -141,7 +141,7 @@ public class TelegramStateInMem implements TelegramState {
 
     @Override
     public AddWalletState getOrCreateAddWalletState(Long userId) {
-        return this.addWalletStateMap.computeIfAbsent(userId, key -> new AddWalletStateInMem(null));
+        return this.addWalletStateMap.computeIfAbsent(userId, key -> AddWalletStateInMem.builder().build());
     }
 
     @Override
@@ -156,7 +156,7 @@ public class TelegramStateInMem implements TelegramState {
 
     @Override
     public TransactionParams getOrCreateTransactionParams(Long userId) {
-        return this.transactionParamsMap.computeIfAbsent(userId, key -> new TransactionParamsInMem(null, null));
+        return this.transactionParamsMap.computeIfAbsent(userId, key -> TransactionParamsInMem.builder().build());
     }
 
     @Override

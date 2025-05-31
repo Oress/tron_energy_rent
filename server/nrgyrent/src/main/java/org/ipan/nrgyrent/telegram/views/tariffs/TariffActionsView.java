@@ -200,7 +200,9 @@ public class TariffActionsView {
                                             .builder()
                                             .text(MANAGE_TARIFF_ACTION_CHANGE_TX1_AMOUNT)
                                             .callbackData(InlineMenuCallbacks.MANAGE_TARIFFS_ACTION_CHANGE_TX1_AMOUNT)
-                                            .build(),
+                                            .build()))
+                    .keyboardRow(
+                            new InlineKeyboardRow(
                                     InlineKeyboardButton
                                             .builder()
                                             .text(MANAGE_TARIFF_ACTION_CHANGE_TX2_AMOUNT)

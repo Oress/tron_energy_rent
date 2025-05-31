@@ -1,9 +1,11 @@
 package org.ipan.nrgyrent.telegram.views;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import org.ipan.nrgyrent.domain.model.Tariff;
 import org.ipan.nrgyrent.domain.model.UserWallet;
+import org.ipan.nrgyrent.itrx.AppConstants;
 import org.ipan.nrgyrent.telegram.InlineMenuCallbacks;
 import org.ipan.nrgyrent.telegram.StaticLabels;
 import org.ipan.nrgyrent.telegram.state.UserState;
@@ -60,6 +62,34 @@ public class TransactionsViews {
 
     @Retryable
     @SneakyThrows
+    public void updMenuToPromptTrxAmount(UserState userState, Tariff tariff) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
+                .text(promptCustomTxAmount(tariff.getTransactionType1AmountSun()))
+                .replyMarkup(commonViews.getToMainMenuMarkup())
+                .parseMode("MARKDOWN")
+                .build();
+        tgClient.execute(message);
+    }
+
+    @Retryable
+    @SneakyThrows
+    public void updMenuToCustomAmounTransaction65kMenu(List<UserWallet> wallets, UserState userState, Integer txAmount, Tariff tariff) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
+                .text(getCustomTransactions65kMenuLabel(txAmount, tariff.getTransactionType1AmountSun()))
+                .replyMarkup(getTransactionsMenuMarkup(wallets))
+                .parseMode("MARKDOWN")
+                .build();
+        tgClient.execute(message);
+    }
+
+    @Retryable
+    @SneakyThrows
     public void updMenuToTransaction65kMenu(List<UserWallet> wallets, UserState userState, Tariff tariff) {
         EditMessageText message = EditMessageText
                 .builder()
@@ -84,6 +114,25 @@ public class TransactionsViews {
                 .parseMode("MARKDOWN")
                 .build();
         tgClient.execute(message);
+    }
+
+    private String promptCustomTxAmount(Long sunAmountPerTx) {
+        return """
+                ⚡ Ручной ввод количества транзакций на кош с USDT (1 тр = %s TRX)⚡️
+
+                👇 Введите *текстом* нужное число транзакций 👇
+                """.formatted(FormattingTools.formatBalance(sunAmountPerTx));
+    }
+
+    private String getCustomTransactions65kMenuLabel(Integer txAmount, Long sunAmountPerTx) {
+        BigDecimal trxTotalSun = new BigDecimal(sunAmountPerTx * txAmount);
+        BigDecimal trxTotal = trxTotalSun.divide(AppConstants.trxToSunRate);;
+        return """
+                ⚡%s транзакций на кош с USDT (1 тр = %s TRX)⚡️
+                Всего: *%s TRX*
+
+                👇 Введите *текстом кошелек*, либо выберете из *списка* 👇
+                """.formatted(txAmount, FormattingTools.formatBalance(sunAmountPerTx), trxTotal);
     }
 
     private String getTransaction65kMenuLabel(Long trxAmount) {

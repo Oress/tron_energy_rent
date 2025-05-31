@@ -510,4 +510,10 @@
         </createIndex>
     </changeSet>
 
+    <changeSet id="extend nrg_orders with tx_amount" author="oress">
+        <addColumn tableName="nrg_orders">
+            <column name="tx_amount" type="int" defaultValue="1" />
+        </addColumn>
+    </changeSet>
+
 </databaseChangeLog>

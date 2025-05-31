@@ -39,7 +39,6 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
     @Override
     public void consume(Update update) {
         User from = getFrom(update);
-        logger.info("Received update from user: {}", from);
         if (from.getIsBot()) {
             logger.info("Ignoring update from bot: {}", from);
             // Ignore bots
@@ -48,10 +47,21 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
 
         Long userId = from.getId();
         UserState userState = telegramState.getOrCreateUserState(userId);
-
+        logger.info("Received update from user: username: {}, userstate: {}", from.getUserName(), userState);
         CallbackQuery callbackQuery = update.getCallbackQuery();
+
+        if (callbackQuery != null) {
+            logger.info("Received update from user (callback): data: {} username: {}, userstate: {}", callbackQuery.getData(), from.getUserName(), userState);
+        } else if (update.hasMessage()) {
+            Message message = update.getMessage();
+            if (message.hasText()) {
+                logger.info("Received update from user (text): data: {}, username: {}, userstate: {}", message.getText(), from.getUserName(), userState);
+            }
+        }
+
         List<Integer> messagesToDelete = userState.getMessagesToDelete();
         if (callbackQuery != null && messagesToDelete != null && !messagesToDelete.isEmpty() && (InlineMenuCallbacks.GO_BACK.equals(callbackQuery.getData()) || InlineMenuCallbacks.TO_MAIN_MENU.equals(callbackQuery.getData()))) {
+            logger.info("deleting messages callback: {}, userstate {}", callbackQuery.getData(), userState );
             telegramMessages.deleteMessages(userState.getChatId(), messagesToDelete);
             userState = telegramState.updateUserState(userId, userState.withMessagesToDelete(null));
         }
@@ -60,6 +70,7 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
 
         AppUser user = userService.getById(userId);
         if (user != null && Boolean.TRUE.equals(user.getDisabled())) {
+            logger.warn("disabled user tries to access the bot  id: {}, username: {}", user.getTelegramId(), user.getTelegramUsername() );
             return;
         } else {
             if (user != null) {
@@ -72,10 +83,12 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
         }
 
         if (handleStartState(user, userState, update)) {
+            logger.warn("User sent /start command username: {}, userstate: ", user.getTelegramUsername(), userState);
             return;
         }
 
         if (tryRemoveNotification(userState, update)) {
+            logger.warn("Removing notification for user {} userState: {}", user.getTelegramUsername(), userState);
             return;
         }
 

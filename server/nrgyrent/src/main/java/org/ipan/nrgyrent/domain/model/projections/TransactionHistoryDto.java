@@ -15,7 +15,8 @@ public class TransactionHistoryDto {
     private String receiveAddress;
     private String fromAddress;
     private String withdrawalStatus;
-    private Long amount;
+    private Integer txAmount;
+    private Long totalAmountSun;
     private Timestamp createdAt;
     private String balanceType;
 }
