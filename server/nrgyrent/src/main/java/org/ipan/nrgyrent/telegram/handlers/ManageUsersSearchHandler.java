@@ -16,25 +16,37 @@ import org.ipan.nrgyrent.telegram.statetransitions.MatchStates;
 import org.ipan.nrgyrent.telegram.statetransitions.TransitionHandler;
 import org.ipan.nrgyrent.telegram.statetransitions.UpdateType;
 import org.ipan.nrgyrent.telegram.views.ManageUserActionsView;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.message.Message;
 
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @TransitionHandler
-@AllArgsConstructor
 @Slf4j
 public class ManageUsersSearchHandler {
-    private final int PAGE_SIZE = 5;
-
+    private final int pageSize;
     private final TelegramState telegramState;
     private final TelegramMessages telegramMessages;
     private final AppUserRepo appUserRepo;
     private final ManageUserActionsView manageUserActionsView;
+
+    public ManageUsersSearchHandler(
+        @Value("${app.pagination.users.page-size:20}") Integer pageSize,
+        TelegramState telegramState,
+        TelegramMessages telegramMessages,
+        AppUserRepo appUserRepo,
+        ManageUserActionsView manageUserActionsView) {
+        this.pageSize = pageSize;
+        this.telegramState = telegramState;
+        this.telegramMessages = telegramMessages;
+        this.appUserRepo = appUserRepo;
+        this.manageUserActionsView = manageUserActionsView;
+    }
+
 
     @MatchStates({
         @MatchState(forAdmin = true, state = States.ADMIN_MENU, callbackData = InlineMenuCallbacks.MANAGE_USERS),
@@ -46,7 +58,7 @@ public class ManageUsersSearchHandler {
         telegramState.updateUserSearchState(userState.getTelegramId(), searchState.withCurrentPage(0).withQuery(""));
 
         Page<AppUser> firstPage = appUserRepo.findAllByTelegramUsernameContainingIgnoreCaseOrderByTelegramId("",
-                PageRequest.of(0, PAGE_SIZE));
+                PageRequest.of(0, pageSize));
         manageUserActionsView.updMenuToManageUsersSearchResult(firstPage, userState);
         telegramState.updateUserState(userState.getTelegramId(),
                 userState.withState(States.ADMIN_MANAGE_USERS));
@@ -61,7 +73,7 @@ public class ManageUsersSearchHandler {
         int pageNumber = searchState.getCurrentPage() + 1;
         String queryStr = searchState.getQuery();
         telegramState.updateUserSearchState(userState.getTelegramId(), searchState.withCurrentPage(pageNumber));
-        Page<AppUser> nextPage = appUserRepo.findAllByTelegramUsernameContainingIgnoreCaseOrderByTelegramId(queryStr, PageRequest.of(pageNumber, PAGE_SIZE));
+        Page<AppUser> nextPage = appUserRepo.findAllByTelegramUsernameContainingIgnoreCaseOrderByTelegramId(queryStr, PageRequest.of(pageNumber, pageSize));
         manageUserActionsView.updMenuToManageUsersSearchResult(nextPage, userState);
     }
 
@@ -73,7 +85,7 @@ public class ManageUsersSearchHandler {
         int pageNumber = searchState.getCurrentPage() - 1;
         String queryStr = searchState.getQuery();
         telegramState.updateUserSearchState(userState.getTelegramId(), searchState.withCurrentPage(pageNumber));
-        Page<AppUser> prevPage = appUserRepo.findAllByTelegramUsernameContainingIgnoreCaseOrderByTelegramId(queryStr, PageRequest.of(pageNumber, PAGE_SIZE));
+        Page<AppUser> prevPage = appUserRepo.findAllByTelegramUsernameContainingIgnoreCaseOrderByTelegramId(queryStr, PageRequest.of(pageNumber, pageSize));
         manageUserActionsView.updMenuToManageUsersSearchResult(prevPage, userState);
     }
 
@@ -119,7 +131,7 @@ public class ManageUsersSearchHandler {
             telegramState.updateUserSearchState(userState.getTelegramId(), searchState.withQuery(queryStr));
             Page<AppUser> firstPage = appUserRepo.findAllByTelegramUsernameContainingIgnoreCaseOrderByTelegramId(
                     queryStr,
-                    PageRequest.of(0, PAGE_SIZE));
+                    PageRequest.of(0, pageSize));
             manageUserActionsView.updMenuToManageUsersSearchResult(firstPage, userState);
         }
     }

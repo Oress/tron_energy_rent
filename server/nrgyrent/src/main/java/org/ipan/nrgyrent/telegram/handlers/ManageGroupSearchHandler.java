@@ -18,25 +18,37 @@ import org.ipan.nrgyrent.telegram.statetransitions.TransitionHandler;
 import org.ipan.nrgyrent.telegram.statetransitions.UpdateType;
 import org.ipan.nrgyrent.telegram.views.ManageGroupActionsView;
 import org.ipan.nrgyrent.telegram.views.ManageGroupSearchView;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.message.Message;
 
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @TransitionHandler
-@AllArgsConstructor
 @Slf4j
 public class ManageGroupSearchHandler {
-    private final int PAGE_SIZE = 5;
-
+    private final int pageSize;
     private final TelegramState telegramState;
     private final TelegramMessages telegramMessages;
     private final BalanceRepo balanceRepo;
     private final ManageGroupActionsView manageGroupActionsView;
+
+    public ManageGroupSearchHandler(
+        @Value("${app.pagination.groups.page-size:20}") Integer pageSize,
+        TelegramState telegramState,
+        TelegramMessages telegramMessages,
+        BalanceRepo balanceRepo,
+        ManageGroupActionsView manageGroupActionsView) {
+        this.pageSize = pageSize;
+        this.telegramState = telegramState;
+        this.telegramMessages = telegramMessages;
+        this.balanceRepo = balanceRepo;
+        this.manageGroupActionsView = manageGroupActionsView;
+    }
+
 
     @MatchStates({
         @MatchState(forAdmin = true, state = States.ADMIN_MANAGE_GROUPS, callbackData = InlineMenuCallbacks.MANAGE_GROUPS_SEARCH),
@@ -46,7 +58,7 @@ public class ManageGroupSearchHandler {
         GroupSearchState searchState = telegramState.getOrCreateGroupSearchState(userState.getTelegramId());
         telegramState.updateGroupSearchState(userState.getTelegramId(), searchState.withCurrentPage(0).withQuery(""));
 
-        Page<Balance> nextPage = balanceRepo.findAllByTypeOrderById(BalanceType.GROUP, PageRequest.of(0, PAGE_SIZE));
+        Page<Balance> nextPage = balanceRepo.findAllByTypeOrderById(BalanceType.GROUP, PageRequest.of(0, pageSize));
         telegramMessages.manageGroupSearchView().updMenuToManageGroupsSearchResult(nextPage, userState);
         telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.ADMIN_MANAGE_GROUPS_SEARCH));
     }
@@ -69,7 +81,7 @@ public class ManageGroupSearchHandler {
             GroupSearchState searchState = telegramState.getOrCreateGroupSearchState(userState.getTelegramId());
             telegramState.updateGroupSearchState(userState.getTelegramId(), searchState.withQuery(queryStr));
             Page<Balance> firstPage = balanceRepo.findAllByTypeAndLabelContainingIgnoreCaseOrderById(BalanceType.GROUP,
-                    queryStr, PageRequest.of(0, PAGE_SIZE));
+                    queryStr, PageRequest.of(0, pageSize));
             telegramMessages.manageGroupSearchView().updMenuToManageGroupsSearchResult(firstPage, userState);
         }
     }
@@ -83,7 +95,7 @@ public class ManageGroupSearchHandler {
         String queryStr = searchState.getQuery();
         telegramState.updateGroupSearchState(userState.getTelegramId(), searchState.withCurrentPage(pageNumber));
         Page<Balance> nextPage = balanceRepo.findAllByTypeAndLabelContainingIgnoreCaseOrderById(BalanceType.GROUP,
-                    queryStr, PageRequest.of(pageNumber, PAGE_SIZE));
+                    queryStr, PageRequest.of(pageNumber, pageSize));
         telegramMessages.manageGroupSearchView().updMenuToManageGroupsSearchResult(nextPage, userState);
         telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.ADMIN_MANAGE_GROUPS_SEARCH));
     }
@@ -97,7 +109,7 @@ public class ManageGroupSearchHandler {
         String queryStr = searchState.getQuery();
         telegramState.updateGroupSearchState(userState.getTelegramId(), searchState.withCurrentPage(pageNumber));
         Page<Balance> prevPage = balanceRepo.findAllByTypeAndLabelContainingIgnoreCaseOrderById(BalanceType.GROUP,
-                    queryStr, PageRequest.of(pageNumber, PAGE_SIZE));
+                    queryStr, PageRequest.of(pageNumber, pageSize));
         telegramMessages.manageGroupSearchView().updMenuToManageGroupsSearchResult(prevPage, userState);
         telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.ADMIN_MANAGE_GROUPS_SEARCH));
     }
