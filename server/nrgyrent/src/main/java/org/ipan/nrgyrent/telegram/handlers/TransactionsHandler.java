@@ -68,6 +68,8 @@ public class TransactionsHandler {
         boolean useGroupBalance = true;
         if (byId.getGroupBalance() == null) {
             useGroupBalance = false;
+            telegramState.updateTransactionParams(userState.getTelegramId(),
+                transactionParams.withGroupBalance(useGroupBalance).withEnergyAmount(energyAmount));
             selectPersonalBalanceTypeForTransaction(userState, update);
         } else {
             transactionsViews.updMenuToPromptBalanceType(userState);

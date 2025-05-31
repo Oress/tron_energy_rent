@@ -1,7 +1,5 @@
 package org.ipan.nrgyrent.telegram.handlers;
 
-import java.math.BigDecimal;
-
 import org.ipan.nrgyrent.domain.model.AppUser;
 import org.ipan.nrgyrent.domain.model.Tariff;
 import org.ipan.nrgyrent.domain.model.repository.TariffRepo;
@@ -110,7 +108,8 @@ public class UsersActionHandler {
             String tariffIdStr = data.split(TariffsSearchView.OPEN_TARIFF)[1];
             Long tariffId = Long.parseLong(tariffIdStr);
 
-            tariffService.changeIndividualTariff(userState.getTelegramId(), tariffId);
+            UserEdit openUser = telegramState.getOrCreateUserEdit(userState.getTelegramId());
+            tariffService.changeIndividualTariff(openUser.getSelectedUserId(), tariffId);
             manageUserActionsView.userTariffChanged(userState);
             telegramState.updateUserState(userState.getTelegramId(),
                     userState.withState(States.ADMIN_MANAGE_USER_ACTION_CHANGE_TARIFF_SUCCESS));
