@@ -93,7 +93,7 @@ public class WithdrawalHandlerHelper {
 
         WithdrawalOrder withdrawalOrder = null;
         try {
-            withdrawalOrder = withdrawalOrderService.createPendingOrder(userId, useGroupBalance, amountSun, fee, walletToWithdrawFrom);
+            withdrawalOrder = withdrawalOrderService.createPendingOrder(userId, useGroupBalance, amountSun, fee, toWallet);
 
             String resultingTxId = tronTransactionHelper.performTransferTransaction(
                     walletToWithdrawFrom,
