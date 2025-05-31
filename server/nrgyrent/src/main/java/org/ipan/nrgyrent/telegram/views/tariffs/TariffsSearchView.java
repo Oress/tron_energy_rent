@@ -16,9 +16,10 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKe
 import org.telegram.telegrambots.meta.generics.TelegramClient;
 
 import lombok.AllArgsConstructor;
-import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
+@Slf4j
 @AllArgsConstructor
 public class TariffsSearchView {
     public static final String OPEN_TARIFF = "/tariff/";
@@ -35,7 +36,6 @@ public class TariffsSearchView {
 
     private final TelegramClient tgClient;
 
-    @SneakyThrows
     public void updMenuToTariffSearchResult(Page<Tariff> page, UserState userState) {
         String text = page.isEmpty() ? MSG_MANAGE_TARIFFS_SEARCH_NO_RESULTS
                 : MSG_MANAGE_TARIFFS_SEARCH_PAGE_RESULTS;
@@ -47,7 +47,11 @@ public class TariffsSearchView {
                 .text(text)
                 .replyMarkup(getTariffSearchPageMarkup(page))
                 .build();
-        tgClient.execute(message);
+        try {
+            tgClient.execute(message);
+        } catch (Exception e) {
+            logger.error("Could not updMenuToTariffSearchResult userstate {}", userState, e);
+        }
     }
 
     public String openTariffRequest(Long tariffId) {

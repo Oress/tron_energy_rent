@@ -22,8 +22,10 @@ import org.telegram.telegrambots.meta.generics.TelegramClient;
 
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
+@Slf4j
 @AllArgsConstructor
 public class WithdrawViews {
     public static final String NTFN_WITHDRWAL_FAIL = "❌ Вывод средств не удался";
@@ -150,8 +152,6 @@ public class WithdrawViews {
         tgClient.execute(message);
     }
 
-    @Retryable
-    @SneakyThrows
     public void promptAmountAgainNotEnoughBalance(UserState userState, Balance balance) {
         EditMessageText message = EditMessageText
                 .builder()
@@ -161,7 +161,11 @@ public class WithdrawViews {
                 .parseMode("MARKDOWN")
                 .replyMarkup(commonViews.getToMainMenuMarkup())
                 .build();
-        tgClient.execute(message);
+        try {
+            tgClient.execute(message);
+        } catch (Exception e) {
+            logger.error("Could not promptAmountAgainNotEnoughBalance", e);
+        }
     }
 
     @Retryable

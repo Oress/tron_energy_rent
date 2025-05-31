@@ -18,8 +18,10 @@ import org.telegram.telegrambots.meta.generics.TelegramClient;
 
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
+@Slf4j
 @AllArgsConstructor
 public class ManageGroupNewGroupView {
     // TODO: move to properties
@@ -47,7 +49,6 @@ public class ManageGroupNewGroupView {
     private final TelegramClient tgClient;
     private final CommonViews commonViews;
 
-    @SneakyThrows
     public void userIsManagerInAnotherGroup(UserState userState) {
         EditMessageText message = EditMessageText
                 .builder()
@@ -56,11 +57,14 @@ public class ManageGroupNewGroupView {
                 .text("❌ Пользователь является менеджером другой группы.")
                 .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
-        tgClient.execute(message);
+        try {
+            tgClient.execute(message);
+        } catch (Exception e) {
+            logger.error("Could not userIsManagerInAnotherGroup userstate {}", userState, e);
+        }
     }
 
     
-    @SneakyThrows
     public void someUsersAreNotRegistered(UserState userState) {
         EditMessageText message = EditMessageText
                 .builder()
@@ -69,7 +73,11 @@ public class ManageGroupNewGroupView {
                 .text("❌ Некоторые пользователи не зарегистрированы. Попробуйте снова.")
                 .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
-        tgClient.execute(message);
+        try {
+            tgClient.execute(message);
+        } catch (Exception e) {
+            logger.error("Could not someUsersAreNotRegistered userstate {}", userState, e);
+        }
     }
 
 

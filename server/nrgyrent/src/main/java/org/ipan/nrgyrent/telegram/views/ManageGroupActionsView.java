@@ -67,7 +67,6 @@ public class ManageGroupActionsView {
     private final TelegramClient tgClient;
     private final CommonViews commonViews;
 
-    @SneakyThrows
     public void somethingWentWrong(UserState userState) {
         EditMessageText message = EditMessageText
                 .builder()
@@ -76,10 +75,13 @@ public class ManageGroupActionsView {
                 .text("❌ Произошла ошибка. Попробуйте снова.")
                 .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
-        tgClient.execute(message);
+        try {
+            tgClient.execute(message);
+        } catch (Exception e) {
+            logger.error("Could not somethingWentWrong userstate {}", userState, e);
+        }
     }
 
-    @SneakyThrows
     public void userAlreadyManagesAnotherGroup(UserState userState) {
         EditMessageText message = EditMessageText
                 .builder()
@@ -88,10 +90,13 @@ public class ManageGroupActionsView {
                 .text("❌ Пользователь уже управляет другой группой.")
                 .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
-        tgClient.execute(message);
+        try {
+            tgClient.execute(message);
+        } catch (Exception e) {
+            logger.error("Could not userAlreadyManagesAnotherGroup userstate {}", userState, e);
+        }
     }
 
-    @SneakyThrows
     public void cannotRemoveManager(UserState userState) {
         EditMessageText message = EditMessageText
                 .builder()
@@ -100,10 +105,13 @@ public class ManageGroupActionsView {
                 .text("❌ Пользователь не может быть удален из группы, так как он является менеджером.")
                 .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
-        tgClient.execute(message);
+        try {
+            tgClient.execute(message);
+        } catch (Exception e) {
+            logger.error("Could not cannotRemoveManager userstate {}", userState, e);
+        }
     }
 
-    @SneakyThrows
     public void someUsersAreNotRegistered(UserState userState) {
         EditMessageText message = EditMessageText
                 .builder()
@@ -112,10 +120,13 @@ public class ManageGroupActionsView {
                 .text("❌ Некоторые пользователи не зарегистрированы. Попробуйте снова.")
                 .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
-        tgClient.execute(message);
+        try {
+            tgClient.execute(message);
+        } catch (Exception e) {
+            logger.error("Could not someUsersAreNotRegistered userstate {}", userState, e);
+        }
     }
 
-    @SneakyThrows
     public void groupBalanceIsNegative(UserState userState) {
         EditMessageText message = EditMessageText
                 .builder()
@@ -124,7 +135,11 @@ public class ManageGroupActionsView {
                 .text("❌ Баланс группы не может быть отрицательным. Попробуйте снова.")
                 .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
-        tgClient.execute(message);
+        try {
+            tgClient.execute(message);
+        } catch (Exception e) {
+            logger.error("Could not groupBalanceIsNegative userstate {}", userState, e);
+        }
     }
 
     @SneakyThrows
@@ -241,7 +256,6 @@ public class ManageGroupActionsView {
         tgClient.execute(message);
     }
 
-    @SneakyThrows
     public void groupNameIsTooShort(UserState userState) {
         EditMessageText message = EditMessageText
                 .builder()
@@ -250,7 +264,11 @@ public class ManageGroupActionsView {
                 .text(MSG_GROUP_TOO_SHORT)
                 .replyMarkup(commonViews.getToMainMenuMarkup())
                 .build();
-        tgClient.execute(message);
+        try {
+            tgClient.execute(message);
+        } catch (Exception e) {
+            logger.error("Could not groupNameIsTooShort userstate {}", userState, e);
+        }
     }
 
     @SneakyThrows

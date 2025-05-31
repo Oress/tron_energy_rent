@@ -102,8 +102,6 @@ public class TransactionsViews {
                 """.formatted(FormattingTools.formatBalance(trxAmount));
     }
 
-    @Retryable
-    @SneakyThrows
     public void notEnoughBalance(UserState userState) {
         EditMessageText message = EditMessageText
                 .builder()
@@ -112,11 +110,13 @@ public class TransactionsViews {
                 .text(MSG_NOT_ENOUGH_TRX)
                 .replyMarkup(commonViews.getToMainMenuMarkup())
                 .build();
-        tgClient.execute(message);
+        try {
+            tgClient.execute(message);
+        } catch (Exception e) {
+            logger.error("Could not notEnoughBalance userstate {}", userState, e);
+        }
     }
 
-    @Retryable
-    @SneakyThrows
     public void somethingWentWrong(UserState userState) {
         EditMessageText message = EditMessageText
                 .builder()
@@ -125,11 +125,13 @@ public class TransactionsViews {
                 .text("❌ Что-то пошло не так. Пожалуйста, попробуйте позже.")
                 .replyMarkup(commonViews.getToMainMenuMarkup())
                 .build();
-        tgClient.execute(message);
+        try {
+            tgClient.execute(message);
+        } catch (Exception e) {
+            logger.error("Could not somethingWentWrong userstate {}", userState, e);
+        }
     }
 
-    @Retryable
-    @SneakyThrows
     public void transactionToInactiveWallet(UserState userState) {
         EditMessageText message = EditMessageText
                 .builder()
@@ -138,11 +140,13 @@ public class TransactionsViews {
                 .text("❌ Кошелек не активен. Пожалуйста, выберите другой кошелек.")
                 .replyMarkup(commonViews.getToMainMenuMarkup())
                 .build();
-        tgClient.execute(message);
+        try {
+            tgClient.execute(message);
+        } catch (Exception e) {
+            logger.error("Could not transactionToInactiveWallet userstate {}", userState, e);
+        }
     }
 
-    @Retryable
-    @SneakyThrows
     public void itrxBalanceNotEnoughFunds(UserState userState) {
         EditMessageText message = EditMessageText
                 .builder()
@@ -151,7 +155,11 @@ public class TransactionsViews {
                 .text("❌ Сервис временно недоступен. Пожалуйста, свяжитесь с администратором.")
                 .replyMarkup(commonViews.getToMainMenuMarkup())
                 .build();
-        tgClient.execute(message);
+        try {
+            tgClient.execute(message);
+        } catch (Exception e) {
+            logger.error("Could not itrxBalanceNotEnoughFunds userstate {}", userState, e);
+        }
     }
 
     @Retryable

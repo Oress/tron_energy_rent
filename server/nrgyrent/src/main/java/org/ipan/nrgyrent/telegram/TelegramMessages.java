@@ -107,44 +107,56 @@ public class TelegramMessages {
         tgClient.execute(message);
     }
 
-    @SneakyThrows
     public void deleteMessage(Long chatId, Integer messageId) {
         DeleteMessage deleteMessage = DeleteMessage
                 .builder()
                 .chatId(chatId)
                 .messageId(messageId)
                 .build();
-        tgClient.execute(deleteMessage);
+        try {
+            tgClient.execute(deleteMessage);
+        } catch (Exception e) {
+            logger.error("Failed to delete message for chat msg: {} chatid: {}", messageId, chatId, e);
+        }
     }
 
-    @SneakyThrows
     public void deleteMessages(Long chatId, List<Integer> messageIds) {
         DeleteMessages deleteMessages = DeleteMessages
                 .builder()
                 .chatId(chatId)
                 .messageIds(messageIds)
                 .build();
-        tgClient.execute(deleteMessages);
+        try {
+            tgClient.execute(deleteMessages);
+        } catch (Exception e) {
+            logger.error("Failed to delete messages for chat msgs: {} chatid: {}", messageIds, chatId, e);
+        }
     }
 
-    @SneakyThrows
     public void deleteMessage(Message message) {
         DeleteMessage deleteMessage = DeleteMessage
                 .builder()
                 .chatId(message.getChatId())
                 .messageId(message.getMessageId())
                 .build();
-        tgClient.execute(deleteMessage);
+        try {
+            tgClient.execute(deleteMessage);
+        } catch (Exception e) {
+            logger.error("Failed to delete message {}", message.getMessageId(), e);
+        }
     }
 
-    @SneakyThrows
     public void deleteMessage(UserState userState, CallbackQuery callbackQuery) {
         DeleteMessage deleteMessage = DeleteMessage
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(callbackQuery.getMessage().getMessageId())
                 .build();
-        tgClient.execute(deleteMessage);
+        try {
+            tgClient.execute(deleteMessage);
+        } catch (Exception e) {
+            logger.error("Failed to delete callback message {}, userstate {}", callbackQuery.getMessage().getMessageId(), userState, e);
+        }
     }
 
     @Retryable

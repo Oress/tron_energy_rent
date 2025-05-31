@@ -15,8 +15,10 @@ import org.telegram.telegrambots.meta.generics.TelegramClient;
 
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
+@Slf4j
 @AllArgsConstructor
 public class TariffActionsView {
     private static final String MANAGE_TARIFF_ACTION_CHANGE_TX1_AMOUNT = "✏️ Изменить сумму за 65к";
@@ -36,18 +38,6 @@ public class TariffActionsView {
 
     private final TelegramClient tgClient;
     private final CommonViews commonViews;
-
-    @SneakyThrows
-    public void somethingWentWrong(UserState userState) {
-        EditMessageText message = EditMessageText
-                .builder()
-                .chatId(userState.getChatId())
-                .messageId(userState.getMenuMessageId())
-                .text("❌ Произошла ошибка. Попробуйте снова.")
-                .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
-                .build();
-        tgClient.execute(message);
-    }
 
     @SneakyThrows
     public void updMenuToManageTariffActionsMenu(UserState userState, Tariff tariff) {
@@ -99,7 +89,6 @@ public class TariffActionsView {
         tgClient.execute(message);
     }
 
-    @SneakyThrows
     public void tariffNameIsTooShort(UserState userState) {
         EditMessageText message = EditMessageText
                 .builder()
@@ -108,7 +97,11 @@ public class TariffActionsView {
                 .text(MSG_TARIFF_TOO_SHORT)
                 .replyMarkup(commonViews.getToMainMenuMarkup())
                 .build();
-        tgClient.execute(message);
+        try {
+            tgClient.execute(message);
+        } catch (Exception e) {
+            logger.error("Could not tariffNameIsTooShort userstate {}", userState, e);
+        }
     }
 
     @SneakyThrows

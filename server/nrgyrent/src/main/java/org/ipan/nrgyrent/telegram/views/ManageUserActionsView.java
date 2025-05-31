@@ -54,7 +54,6 @@ public class ManageUserActionsView {
     private final TelegramClient tgClient;
     private final CommonViews commonViews;
 
-    @SneakyThrows
     public void updMenuToManageUsersSearchResult(Page<AppUser> page, UserState userState) {
         String text = page.isEmpty() ? MSG_MANAGE_USERS_SEARCH_NO_RESULTS
                 : MSG_MANAGE_USERS_SEARCH_PAGE_RESULTS;
@@ -66,7 +65,11 @@ public class ManageUserActionsView {
                 .text(text)
                 .replyMarkup(getUsersSearchPageMarkup(page))
                 .build();
-        tgClient.execute(message);
+        try {
+            tgClient.execute(message);
+        } catch (Exception e) {
+            logger.error("Could not updMenuToManageUsersSearchResult userstate {}", userState, e);
+        }
     }
 
     @SneakyThrows
@@ -81,7 +84,6 @@ public class ManageUserActionsView {
         tgClient.execute(message);
     }
 
-    @SneakyThrows
     public void groupBalanceIsNegative(UserState userState) {
         EditMessageText message = EditMessageText
                 .builder()
@@ -90,7 +92,11 @@ public class ManageUserActionsView {
                 .text("❌ Баланс не может быть отрицательным. Попробуйте снова.")
                 .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
-        tgClient.execute(message);
+        try {
+            tgClient.execute(message);
+        } catch (Exception e) {
+            logger.error("Could not groupBalanceIsNegative userstate {}", userState, e);
+        }
     }
 
     @SneakyThrows

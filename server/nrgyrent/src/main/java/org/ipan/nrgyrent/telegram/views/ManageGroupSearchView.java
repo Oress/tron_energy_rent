@@ -17,8 +17,10 @@ import org.telegram.telegrambots.meta.generics.TelegramClient;
 
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
+@Slf4j
 @AllArgsConstructor
 public class ManageGroupSearchView {
     public static final String OPEN_BALANCE = "/balance/";
@@ -54,7 +56,6 @@ public class ManageGroupSearchView {
         tgClient.execute(message);
     }
 
-    @SneakyThrows
     public void updMenuToManageGroupsSearchResult(Page<Balance> page, UserState userState) {
         String text = page.isEmpty() ? MSG_MANAGE_GROUPS_SEARCH_NO_RESULTS
                 : MSG_MANAGE_GROUPS_SEARCH_PAGE_RESULTS;
@@ -66,7 +67,11 @@ public class ManageGroupSearchView {
                 .text(text)
                 .replyMarkup(getManageGroupsSearchPageMarkup(page))
                 .build();
-        tgClient.execute(message);
+        try {
+            tgClient.execute(message);
+        } catch (Exception e) {
+            logger.error("Could not updMenuToManageGroupsSearchResult userstate {}", userState, e);
+        }
     }
 
     public String openBalanceRequest(Long balanceId) {
