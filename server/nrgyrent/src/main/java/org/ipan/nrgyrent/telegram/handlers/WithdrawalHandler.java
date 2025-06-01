@@ -19,8 +19,8 @@ import org.ipan.nrgyrent.telegram.statetransitions.TransitionHandler;
 import org.ipan.nrgyrent.telegram.statetransitions.UpdateType;
 import org.ipan.nrgyrent.telegram.utils.WalletTools;
 import org.ipan.nrgyrent.telegram.views.WithdrawViews;
-import org.ipan.nrgyrent.trongrid.api.AccountApi;
-import org.ipan.nrgyrent.trongrid.model.V1AccountsAddressGet200Response;
+import org.ipan.nrgyrent.tron.trongrid.TrongridRestClient;
+import org.ipan.nrgyrent.tron.trongrid.model.AccountInfo;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.message.Message;
@@ -36,7 +36,7 @@ public class WithdrawalHandler {
     private final UserWalletService userWalletService;
     private final UserService userService;
     private final WithdrawalHandlerHelper withdrawalHandlerHelper;
-    private final AccountApi accountApi;
+    private final TrongridRestClient trongridRestClient;
 
     private final WithdrawViews withdrawViews;
 
@@ -146,8 +146,8 @@ public class WithdrawalHandler {
     private void tryMakeTransaction(UserState userState, String walletAddress, Long sunAmount, Boolean groupBalance) {
         if (WalletTools.isValidTronAddress(walletAddress)) {
 
-            V1AccountsAddressGet200Response accountInfo = accountApi.v1AccountsAddressGet(walletAddress).block();
-            if (accountInfo == null || accountInfo.getData().isEmpty()) {
+            AccountInfo accountInfo = trongridRestClient.getAccountInfo(walletAddress);
+            if (accountInfo == null) {
                 List<UserWallet> wallets = userWalletService.getWallets(userState.getTelegramId());
                 withdrawViews.withdrawTrxInactiveWallet(wallets, userState);
                 return;

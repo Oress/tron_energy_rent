@@ -12,9 +12,7 @@ import org.ipan.nrgyrent.domain.model.ManagedWallet;
 import org.ipan.nrgyrent.domain.model.repository.ManagedWalletRepo;
 import org.ipan.nrgyrent.domain.service.ManagedWalletService;
 import org.ipan.nrgyrent.tron.trongrid.TrongridRestClient;
-import org.ipan.nrgyrent.trongrid.api.AccountApi;
-import org.ipan.nrgyrent.trongrid.model.AccountInfo;
-import org.ipan.nrgyrent.trongrid.model.V1AccountsAddressGet200Response;
+import org.ipan.nrgyrent.tron.trongrid.model.AccountInfo;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
@@ -31,7 +29,6 @@ public class SweepHelper {
 
     private final ManagedWalletRepo managedWalletRepo;
     private final ManagedWalletService managedWalletService;
-    private final AccountApi accountApi;
     private final TrongridRestClient trongridRestClient;
 
     @Transactional
@@ -45,9 +42,7 @@ public class SweepHelper {
         }
 
         for (Balance balance : batch) {
-           V1AccountsAddressGet200Response accountInfo = accountApi.v1AccountsAddressGet(balance.getDepositAddress()).block();
-
-           AccountInfo data = accountInfo.getData().isEmpty() ? null : accountInfo.getData().get(0);
+            AccountInfo data = trongridRestClient.getAccountInfo(balance.getDepositAddress());
            Long sunBalance = data != null ? data.getBalance() : 0;
            if (sunBalance > SUN_THREADSHOLD) {
                 Long amountToTransfer = sunBalance - SUN_THREADSHOLD;

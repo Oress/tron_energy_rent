@@ -12,9 +12,8 @@ import org.ipan.nrgyrent.telegram.TelegramMessages;
 import org.ipan.nrgyrent.telegram.state.TelegramState;
 import org.ipan.nrgyrent.telegram.state.UserState;
 import org.ipan.nrgyrent.tron.TronTransactionHelper;
-import org.ipan.nrgyrent.trongrid.api.AccountApi;
-import org.ipan.nrgyrent.trongrid.model.AccountInfo;
-import org.ipan.nrgyrent.trongrid.model.V1AccountsAddressGet200Response;
+import org.ipan.nrgyrent.tron.trongrid.TrongridRestClient;
+import org.ipan.nrgyrent.tron.trongrid.model.AccountInfo;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
@@ -29,7 +28,7 @@ public class AdminMenuHandlerHelper {
 
     private final TelegramState telegramState;
     private final TelegramMessages telegramMessages;
-    private final AccountApi accountApi;
+    private final TrongridRestClient trongridRestClient;
     private final CollectionWalletRepo collectionWalletRepo;
     private final ManagedWalletRepo managedWalletRepo;
     private final ManagedWalletService managedWalletService;
@@ -48,9 +47,7 @@ public class AdminMenuHandlerHelper {
 
         try {
             for (CollectionWallet collectionWallet : collectionWallets) {
-                V1AccountsAddressGet200Response accountInfo = accountApi
-                        .v1AccountsAddressGet(collectionWallet.getWalletAddress()).block();
-                AccountInfo accountData = accountInfo.getData().isEmpty() ? null : accountInfo.getData().get(0);
+                AccountInfo accountData = trongridRestClient.getAccountInfo(collectionWallet.getWalletAddress());
                 Long sunBalance = accountData != null ? accountData.getBalance() : 0;
                 if (sunBalance > THRESHOLD + requestedAmount) {
                     logger.info("Transferring TRX from collection wallet {} to {}", collectionWallet.getWalletAddress(), toWallet);

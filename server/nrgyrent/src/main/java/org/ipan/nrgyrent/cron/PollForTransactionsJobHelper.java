@@ -17,14 +17,13 @@ import org.ipan.nrgyrent.itrx.AppConstants;
 import org.ipan.nrgyrent.telegram.TelegramMessages;
 import org.ipan.nrgyrent.telegram.state.TelegramState;
 import org.ipan.nrgyrent.telegram.state.UserState;
+import org.ipan.nrgyrent.tron.trongrid.TrongridRestClient;
+import org.ipan.nrgyrent.tron.trongrid.model.Contract;
+import org.ipan.nrgyrent.tron.trongrid.model.ContractParameterValue;
+import org.ipan.nrgyrent.tron.trongrid.model.RawData;
+import org.ipan.nrgyrent.tron.trongrid.model.Transaction;
 import org.ipan.nrgyrent.tron.utils.ByteArray;
 import org.ipan.nrgyrent.tron.wallet.WalletApi;
-import org.ipan.nrgyrent.trongrid.api.AccountApi;
-import org.ipan.nrgyrent.trongrid.model.Contract;
-import org.ipan.nrgyrent.trongrid.model.ContractParameterValue;
-import org.ipan.nrgyrent.trongrid.model.RawData;
-import org.ipan.nrgyrent.trongrid.model.Transaction;
-import org.ipan.nrgyrent.trongrid.model.V1AccountsAddressTransactionsGet200Response;
 import org.springframework.beans.factory.annotation.Lookup;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.Async;
@@ -40,11 +39,11 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @AllArgsConstructor
 public class PollForTransactionsJobHelper {
-    private static final Comparator<Transaction> COMPARING_TX_TS = Comparator.<Transaction>comparingLong(tx -> tx.getRawData().getTimestamp());
+    private static final Comparator<Transaction> COMPARING_TX_TS = Comparator.<Transaction>comparingLong(tx -> tx.getRaw_data().getTimestamp());
     private static final String TRANSFER_CONTRACT = "TransferContract";
 
     private final DepositTransactionRepo depositTransactionRepo;
-    private final AccountApi accountApi;
+    private final TrongridRestClient trongridRestClient;
     private final TelegramMessages telegramMessages;
     private final TelegramState telegramState;
     private final AppUserRepo appUserRepo;
@@ -58,14 +57,11 @@ public class PollForTransactionsJobHelper {
 
         for (Balance balance : batch) {
             String depositAddress = balance.getDepositAddress();
-            String hexDepositAddress = ByteArray.toHexString(depositAddress.getBytes());
             logger.info("Processing balance: id: {} wallet: {}", balance.getId(), depositAddress);
             try {
-                V1AccountsAddressTransactionsGet200Response response = accountApi
-                        .v1AccountsAddressTransactionsGet(depositAddress, true, true, null, 50, null)
-                        .block();
+                List<Transaction> data = trongridRestClient.getTransactions(depositAddress, true, true, null, 50);
 
-                if (response != null && response.getData() != null) {
+                if (data != null && !data.isEmpty()) {
                     String lastTxId = balance.getLastTxId();
                     Long lastTxTimestamp = balance.getLastTxTimestamp();
                     // Use the last transaction ID and timestamp to filter out old transactions, and consider only new ones
@@ -75,20 +71,20 @@ public class PollForTransactionsJobHelper {
                     List<Transaction> transactions = Collections.emptyList();
 
                     if (lastTxTimestamp != null) {
-                        transactions = response.getData()
+                        transactions = data
                                 .stream()
                                 .filter(tx -> isNewIncommingTransferContractWithMinAmount(tx, lastTxTimestamp, depositAddress))
                                 .sorted(COMPARING_TX_TS)
                                 .toList();
                     } else if (lastTxId != null) {
-                        transactions = response.getData()
+                        transactions = data
                                 .stream()
                                 .sorted(COMPARING_TX_TS)
                                 .dropWhile(tx -> !lastTxId.equals(tx.getTxID()) && isNewIncommingTransferContractWithMinAmount(tx, 0L, depositAddress))
                                 .toList();
                     } else {
                         // No last transaction ID or timestamp, consider all transactions
-                        transactions = response.getData()
+                        transactions = data
                                 .stream()
                                 .filter(tx -> isNewIncommingTransferContractWithMinAmount(tx, 0L, depositAddress))
                                 .sorted(COMPARING_TX_TS)
@@ -106,8 +102,8 @@ public class PollForTransactionsJobHelper {
                     List<DepositTransaction> depositTransactions = new ArrayList<>();
 
                     for (Transaction tx : transactions) {
-                        logger.info("Balance Id: {} wallet: {} Transaction ID: {}, Amount: {}", balance.getId(), depositAddress, tx.getTxID(), tx.getRawData().getContract().getFirst().getParameter().getValue().getAmount());
-                        topUp += tx.getRawData().getContract().getFirst().getParameter().getValue().getAmount();
+                        logger.info("Balance Id: {} wallet: {} Transaction ID: {}, Amount: {}", balance.getId(), depositAddress, tx.getTxID(), tx.getRaw_data().getContract().getFirst().getParameter().getValue().getAmount());
+                        topUp += tx.getRaw_data().getContract().getFirst().getParameter().getValue().getAmount();
                         DepositTransaction depositTransaction = createDepositTransaction(tx);
                         depositTransactions.add(depositTransaction);
                     }
@@ -116,7 +112,7 @@ public class PollForTransactionsJobHelper {
                     balance.makeDeposit(topUp);
 
                     balance.setLastTxId(transactions.get(transactions.size() - 1).getTxID());
-                    balance.setLastTxTimestamp(transactions.get(transactions.size() - 1).getRawData().getTimestamp());
+                    balance.setLastTxTimestamp(transactions.get(transactions.size() - 1).getRaw_data().getTimestamp());
 
                     depositTransactionRepo.saveAll(depositTransactions);
                     em.merge(balance);
@@ -137,7 +133,6 @@ public class PollForTransactionsJobHelper {
                         logger.error("Unknown balance type for balance ID: {}", balance.getId());
                     }
                 }
-                Thread.sleep(1000); // Sleep to avoid hitting API rate limits
             } catch (Exception e) {
                 logger.error("Error processing balance: id: {} wallet: {}", balance.getId(), depositAddress, e);
                 continue; // Skip this balance if there's an error
@@ -148,25 +143,25 @@ public class PollForTransactionsJobHelper {
 
     private DepositTransaction createDepositTransaction(Transaction tx) {
         DepositTransaction depositTransaction = new DepositTransaction();
-        ContractParameterValue value = tx.getRawData().getContract().getFirst().getParameter().getValue();
+        ContractParameterValue value = tx.getRaw_data().getContract().getFirst().getParameter().getValue();
 
-        byte[] fromHexString = ByteArray.fromHexString(value.getToAddress());
+        byte[] fromHexString = ByteArray.fromHexString(value.getTo_address());
         String fromBase58 = WalletApi.encode58Check(fromHexString);
 
-        byte[] toHexString = ByteArray.fromHexString(value.getOwnerAddress());
+        byte[] toHexString = ByteArray.fromHexString(value.getOwner_address());
         String toBase58 = WalletApi.encode58Check(toHexString);
 
         depositTransaction.setWalletTo(fromBase58);
         depositTransaction.setWalletFrom(toBase58);
         depositTransaction.setAmount(value.getAmount());
         depositTransaction.setTxId(tx.getTxID());
-        depositTransaction.setTimestamp(tx.getRawData().getTimestamp());
+        depositTransaction.setTimestamp(tx.getRaw_data().getTimestamp());
 
         return depositTransaction;
     }
 
     private boolean isNewIncommingTransferContractWithMinAmount(Transaction tx, Long lastTxTimestamp, String walletAddress) {
-        RawData rawData = tx.getRawData();
+        RawData rawData = tx.getRaw_data();
 
         // basic null checks
         if (rawData == null || rawData.getContract() == null || rawData.getContract().isEmpty()) {
@@ -183,7 +178,7 @@ public class PollForTransactionsJobHelper {
         Contract contract = rawData.getContract().get(0);
         return TRANSFER_CONTRACT.equals(contract.getType())
                 && ts != null && ts > lastTxTimestamp
-                && WalletApi.encode58Check(ByteArray.fromHexString(contract.getParameter().getValue().getToAddress())).equals(walletAddress)
+                && WalletApi.encode58Check(ByteArray.fromHexString(contract.getParameter().getValue().getTo_address())).equals(walletAddress)
                 && contract.getParameter().getValue().getAmount() >= AppConstants.MIN_TRANSFER_AMOUNT_SUN;
     }
 

@@ -23,9 +23,8 @@ import org.ipan.nrgyrent.telegram.statetransitions.TransitionHandler;
 import org.ipan.nrgyrent.telegram.statetransitions.UpdateType;
 import org.ipan.nrgyrent.telegram.utils.WalletTools;
 import org.ipan.nrgyrent.telegram.views.AdminViews;
-import org.ipan.nrgyrent.trongrid.api.AccountApi;
-import org.ipan.nrgyrent.trongrid.model.AccountInfo;
-import org.ipan.nrgyrent.trongrid.model.V1AccountsAddressGet200Response;
+import org.ipan.nrgyrent.tron.trongrid.TrongridRestClient;
+import org.ipan.nrgyrent.tron.trongrid.model.AccountInfo;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.message.Message;
@@ -39,7 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 public class AdminMenuHandler {
     private final TelegramState telegramState;
     private final RestClient restClient;
-    private final AccountApi accountApi;
+    private final TrongridRestClient trongridRestClient;
     private final CollectionWalletRepo collectionWalletRepo;
     private final UserWalletService userWalletService;
     private final AdminMenuHandlerHelper adminMenuHandlerHelper;
@@ -81,9 +80,7 @@ public class AdminMenuHandler {
          List<CollectionWallet> activeSweepWallets = collectionWalletRepo.findAllByIsActive(true);
         Map<CollectionWallet, Long> sweepWalletsToBalance = new HashMap<>();
         for (CollectionWallet sweepWallet : activeSweepWallets) {
-            V1AccountsAddressGet200Response accountInfo = accountApi
-                    .v1AccountsAddressGet(sweepWallet.getWalletAddress()).block();
-            AccountInfo accountData = accountInfo.getData().isEmpty() ? null : accountInfo.getData().get(0);
+            AccountInfo accountData = trongridRestClient.getAccountInfo(sweepWallet.getWalletAddress());
             Long sunBalance = accountData != null ? accountData.getBalance() : 0;
             sweepWalletsToBalance.put(sweepWallet, sunBalance);
         }

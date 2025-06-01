@@ -19,9 +19,8 @@ import org.ipan.nrgyrent.telegram.state.UserState;
 import org.ipan.nrgyrent.telegram.statetransitions.TransitionHandler;
 import org.ipan.nrgyrent.telegram.views.WithdrawViews;
 import org.ipan.nrgyrent.tron.TronTransactionHelper;
-import org.ipan.nrgyrent.trongrid.api.AccountApi;
-import org.ipan.nrgyrent.trongrid.model.AccountInfo;
-import org.ipan.nrgyrent.trongrid.model.V1AccountsAddressGet200Response;
+import org.ipan.nrgyrent.tron.trongrid.TrongridRestClient;
+import org.ipan.nrgyrent.tron.trongrid.model.AccountInfo;
 import org.springframework.scheduling.annotation.Async;
 import org.telegram.telegrambots.meta.api.objects.message.Message;
 
@@ -34,7 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 public class WithdrawalHandlerHelper {
     private final TelegramState telegramState;
     private final WithdrawViews withdrawViews;
-    private final AccountApi accountApi;
+    private final TrongridRestClient trongridRestClient;
     private final CollectionWalletRepo collectionWalletRepo;
     private final UserRepo userRepo;
     private final ManagedWalletRepo managedWalletRepo;
@@ -126,8 +125,7 @@ public class WithdrawalHandlerHelper {
 
     private String selectBalanceToWithdrawFrom(List<String> wallets, Long amountToWithdraw) {
         for (String wallet : wallets) {
-            V1AccountsAddressGet200Response accountInfo = accountApi.v1AccountsAddressGet(wallet).block();
-            AccountInfo data = accountInfo.getData().isEmpty() ? null : accountInfo.getData().get(0);
+            AccountInfo data = trongridRestClient.getAccountInfo(wallet);
             Long personalSunBalance = data != null ? data.getBalance() : 0;
 
             if (personalSunBalance > amountToWithdraw) {
