@@ -7,6 +7,8 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.ipan.nrgyrent.domain.model.AppUser;
 import org.ipan.nrgyrent.domain.model.OrderStatus;
@@ -15,6 +17,20 @@ import org.ipan.nrgyrent.domain.service.commands.TgUserId;
 
 public class FormattingTools {
     private static DecimalFormat df = new DecimalFormat("# ###.##");
+
+    public static String valOrDash(String val) {
+        return val == null ? "-": val;
+    }
+
+    public static String formatUserForSearch(AppUser user) {
+        if (user == null) {
+            return "-";
+        }
+        String login = user.getTelegramUsername() != null ? "Ник: %s".formatted(user.getTelegramUsername()) : "";
+        String name = user.getTelegramFirstName() != null ? "Имя: %s".formatted(user.getTelegramFirstName()) : "";
+        String id = "ID: %s".formatted(user.getTelegramId());
+        return List.of(id, login, name).stream().filter(s -> !s.isEmpty()).collect(Collectors.joining(", "));
+    }
 
     public static String formatUserLink(TgUserId user) {
         if (user == null) {

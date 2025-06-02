@@ -216,7 +216,7 @@ public class ManageGroupActionsView {
                 .keyboardRow(
                         new KeyboardRow(
                                 KeyboardButton.builder()
-                                        .text("Выбрать пользователя")
+                                        .text("👤 Выбрать менеджера группы")
                                         .requestUsers(
                                                 KeyboardButtonRequestUsers.builder()
                                                         .requestId("1")
@@ -665,7 +665,7 @@ public class ManageGroupActionsView {
     private String getUsersList(Set<AppUser> users) {
         String usersStr = users.isEmpty() ? "Пользователей нет"
                 : users.stream()
-                        .map(user -> String.format("[@%s](https://t.me/%s), %s", user.getTelegramUsername(), user.getTelegramUsername(), user.getTelegramFirstName()))
+                        .map(user -> FormattingTools.formatUserForSearch(user))
                         .collect(Collectors.joining("\n"));
 
         return """

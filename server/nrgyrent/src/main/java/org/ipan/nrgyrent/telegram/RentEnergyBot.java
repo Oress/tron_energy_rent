@@ -2,6 +2,7 @@ package org.ipan.nrgyrent.telegram;
 
 import java.lang.reflect.Method;
 import java.util.List;
+import java.util.Objects;
 
 import org.ipan.nrgyrent.domain.model.AppUser;
 import org.ipan.nrgyrent.domain.model.UserRole;
@@ -12,6 +13,7 @@ import org.ipan.nrgyrent.telegram.state.UserState;
 import org.ipan.nrgyrent.telegram.statetransitions.StateHandlerRegistry;
 import org.ipan.nrgyrent.telegram.statetransitions.TransitionMatcher;
 import org.ipan.nrgyrent.telegram.statetransitions.UpdateType;
+import org.ipan.nrgyrent.telegram.utils.FormattingTools;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.longpolling.util.LongPollingSingleThreadUpdateConsumer;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
@@ -70,7 +72,7 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
 
         AppUser user = userService.getById(userId);
         if (user != null && Boolean.TRUE.equals(user.getDisabled())) {
-            logger.warn("disabled user tries to access the bot  id: {}, username: {}", user.getTelegramId(), user.getTelegramUsername() );
+            logger.warn("disabled user tries to access the bot  user: {}", FormattingTools.formatUserForSearch(user));
             return;
         } else {
             if (user != null) {
@@ -79,12 +81,22 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
                 } else {
                     userState = userState.withManagingGroupId(null);
                 }
+
+                // sync login and first name of the user. both may be null BTW.
+                if (!Objects.equals(from.getUserName(), user.getTelegramUsername()) 
+                    || !Objects.equals(from.getFirstName(), user.getTelegramFirstName())) {
+                    userService.updateUser(CreateUserCommand.builder()
+                    .telegramId(userId)
+                    .username(from.getUserName())
+                    .firstName(from.getFirstName())
+                    .build());
+                }
             }
         }
 
         if (handleStartState(user, userState, update)) {
             if (user != null) {
-                logger.warn("User sent /start command username: {}, userstate: {}", user.getTelegramUsername(), userState);
+                logger.warn("User sent /start command user: {}, userstate: {}", FormattingTools.formatUserForSearch(user), userState);
             } else {
                 logger.info("User registered /start command userstate: {} ", userState);
             }

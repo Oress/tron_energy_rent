@@ -27,6 +27,7 @@ import org.ipan.nrgyrent.telegram.statetransitions.MatchState;
 import org.ipan.nrgyrent.telegram.statetransitions.MatchStates;
 import org.ipan.nrgyrent.telegram.statetransitions.TransitionHandler;
 import org.ipan.nrgyrent.telegram.statetransitions.UpdateType;
+import org.ipan.nrgyrent.telegram.utils.FormattingTools;
 import org.ipan.nrgyrent.telegram.utils.WalletTools;
 import org.ipan.nrgyrent.telegram.views.TransactionsViews;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
@@ -242,7 +243,7 @@ public class TransactionsHandler {
         Tariff tariff = byId.getTariffToUse();
 
         if (tariff == null) {
-            logger.error("User {} has no tariff set, cannot show transaction menu", byId.getTelegramUsername());
+            logger.error("User {} has no tariff set, cannot show transaction menu", FormattingTools.formatUserForSearch(byId));
             transactionsViews.somethingWentWrong(userState);
             telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.TRANSACTION_ERROR));
             return;

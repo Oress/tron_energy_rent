@@ -27,7 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 public class ManageUserActionsView {
     private static final String NEXT_PAGE = "➡️";
     private static final String PREV_PAGE = "⬅️";
-    private static final String MANAGE_USER_ACTION_CHANGE_TARIFF = "🔄 Изменить тариф";
+    private static final String MANAGE_USER_ACTION_CHANGE_TARIFF = "✏️ Изменить тариф";
     private static final String MANAGE_USER_ACTION_ADJUST_BALANCE_MANUALLY = "💰 Изменить баланс вручную";
     private static final String MANAGE_USER_ACTION_DEACTIVATE = "❌ Деактивировать пользователя";
 
@@ -204,8 +204,8 @@ public class ManageUserActionsView {
                 Баланс: %s TRX
                 """, 
                 user.getTelegramId(),
-                user.getTelegramUsername(),
-                user.getTelegramFirstName(),
+                FormattingTools.valOrDash(user.getTelegramUsername()),
+                FormattingTools.valOrDash(user.getTelegramFirstName()),
                 tariffLabel,
                 user.getDisabled() ? "❌" : "✅",
                 user.getBalance().getDepositAddress(),
@@ -261,7 +261,7 @@ public class ManageUserActionsView {
             InlineKeyboardRow row = new InlineKeyboardRow(
                     InlineKeyboardButton
                             .builder()
-                            .text(user.getTelegramUsername())
+                            .text(FormattingTools.formatUserForSearch(user))
                             .callbackData(openBalanceRequest(user.getTelegramId()))
                             .build());
             return row;

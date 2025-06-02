@@ -38,8 +38,9 @@ public class ManageGroupNewGroupView {
     private static final String MSG_MANAGE_GROUPS_ADD_PROMPT_USERS = "Выберете пользователей, которых хотите добавить в группу используя меню";
     private static final String MSG_MANAGE_GROUPS_ADD_PROMPT_MANAGER = """
             Выберете менеджера группы используя меню.
+            Нельзя выбирать участников других груп в качествве менеджера.
 
-            Ему будет доступно управление группой, а также возможность добавлять и удалять пользователей из группы.
+            Ему будет доступна возможность добавлять и удалять пользователей из группы.
             """;
 
     private static final String MANAGE_GROUPS_SEARCH = "🔍 Поиск группы";
@@ -140,7 +141,7 @@ public class ManageGroupNewGroupView {
         SendMessage message = SendMessage
                 .builder()
                 .chatId(userState.getChatId())
-                .text(MSG_MANAGE_GROUPS_ADD_PROMPT_MANAGER)
+                .text("Выберете пользователя")
                 .replyMarkup(getManageGroupsNewGroupPromptManagerMarkup())
                 .build();
         return tgClient.execute(message);

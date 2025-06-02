@@ -67,7 +67,6 @@ public class UserService {
         appUser.setTelegramId(command.getTelegramId());
         appUser.setTelegramUsername(command.getUsername());
         appUser.setTelegramFirstName(command.getFirstName());
-        appUser.setCreatedAt(Instant.now());
     }
 
     public AppUser getById(Long telegramId) {

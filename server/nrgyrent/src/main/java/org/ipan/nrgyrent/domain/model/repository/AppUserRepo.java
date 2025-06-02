@@ -10,7 +10,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface AppUserRepo extends JpaRepository<AppUser, Long> {
-    Page<AppUser> findAllByTelegramUsernameContainingIgnoreCaseOrderByTelegramId(String username, PageRequest of);
+    Page<AppUser> findAllByTelegramUsernameContainingIgnoreCaseOrTelegramFirstNameContainingIgnoreCaseOrderByTelegramId(String username, String firstName, PageRequest of);
     Set<AppUser> findAllByGroupBalanceId(Long balanceId);
     AppUser findByBalanceId(Long balanceId);
 }
