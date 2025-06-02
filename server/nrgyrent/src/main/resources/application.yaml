@@ -27,6 +27,8 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         generate_statistics: false
 app:
+  sweeping:
+    min-amount-sun: 10000
   rounding:
     scale: ${APP_ROUNDING_SCALE:2}
   pagination:
