@@ -28,7 +28,7 @@ public class OrderService {
     public Order createPendingOrder(AddOrUpdateOrderCommand command) {
         EntityManager em = getEntityManager();
 
-        AppUser user = em.getReference(AppUser.class, command.getUserId());
+        AppUser user = em.find(AppUser.class, command.getUserId());
 
         if (user == null) {
             logger.error("User is not found when creating pending order, command {}", command);

@@ -53,6 +53,7 @@ public class WithdrawalHandler {
                 return;
             }
 
+            // This is ok because only manager can withdraw funds from wallet.
             AppUser manager = groupBalance.getManager();
             if (manager == null) {
                 logger.error("Group has no manager group: {} userstate {}", groupBalance.getIdAndLabel(), userState);
@@ -137,7 +138,7 @@ public class WithdrawalHandler {
     public void handleWalletForWithdrawalCallback(UserState userState, Update update) {
         CallbackQuery callbackQuery = update.getCallbackQuery();
         WithdrawParams params = telegramState.getOrCreateWithdrawParams(userState.getTelegramId());
-        tryMakeTransaction(userState, callbackQuery.getData(), params.getAmount(), params.getGroupBalance());
+        tryMakeTransaction(userState, callbackQuery.getData(), params.getAmount());
     }
 
     @MatchState(state = States.USER_PROMPT_WITHDRAW_WALLET, updateTypes = UpdateType.MESSAGE)
@@ -145,11 +146,11 @@ public class WithdrawalHandler {
         Message message = update.getMessage();
         if (message.hasText()) {
             WithdrawParams params = telegramState.getOrCreateWithdrawParams(userState.getTelegramId());
-            tryMakeTransaction(userState, message.getText(), params.getAmount(), params.getGroupBalance());
+            tryMakeTransaction(userState, message.getText(), params.getAmount());
         }
     }
 
-    private void tryMakeTransaction(UserState userState, String walletAddress, Long sunAmount, Boolean groupBalance) {
+    private void tryMakeTransaction(UserState userState, String walletAddress, Long sunAmount) {
         if (WalletTools.isValidTronAddress(walletAddress)) {
 
             AccountInfo accountInfo = trongridRestClient.getAccountInfo(walletAddress);
@@ -163,8 +164,7 @@ public class WithdrawalHandler {
                     userState.getTelegramId(),
                     walletAddress,
                     sunAmount,
-                    AppConstants.WITHDRAWAL_FEE,
-                    groupBalance);
+                    AppConstants.WITHDRAWAL_FEE);
             withdrawViews.withdrawTrxInProgress(userState);
         }
     }

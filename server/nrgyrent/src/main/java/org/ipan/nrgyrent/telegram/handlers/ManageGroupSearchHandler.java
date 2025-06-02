@@ -2,6 +2,7 @@ package org.ipan.nrgyrent.telegram.handlers;
 
 import java.util.Optional;
 
+import org.ipan.nrgyrent.domain.model.AppUser;
 import org.ipan.nrgyrent.domain.model.Balance;
 import org.ipan.nrgyrent.domain.model.BalanceType;
 import org.ipan.nrgyrent.domain.model.repository.BalanceRepo;
@@ -169,6 +170,7 @@ public class ManageGroupSearchHandler {
             openGroupBalanceForManager(userState, managingGroupId);
         } else {
             logger.error("Selected balance ID is null for user: {}", userState.getTelegramId());
+            manageGroupActionsView.userNotManager(userState);
         }
     }
 
@@ -190,6 +192,14 @@ public class ManageGroupSearchHandler {
         Optional<Balance> groupBalance = balanceRepo.findById(balanceId);
         if (groupBalance.isPresent()) {
             Balance balance = groupBalance.get();
+
+            AppUser manager = balance.getManager();
+            if (manager != null && !manager.getTelegramId().equals(userState.getTelegramId())) {
+                logger.error("openGroupBalanceForManager User not manager found for ID: {}, user: {}", balanceId, userState);
+                manageGroupActionsView.userNotManager(userState);
+                return;
+            }
+
             manageGroupActionsView.updMenuToManageGroupActionsMenuForManager(userState, balance);
             telegramState.updateBalanceEdit(userState.getTelegramId(), telegramState
                     .getOrCreateBalanceEdit(userState.getTelegramId()).withSelectedBalanceId(balanceId));

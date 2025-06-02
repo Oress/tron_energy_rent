@@ -19,4 +19,9 @@ public class TransactionHistoryDto {
     private Long totalAmountSun;
     private Timestamp createdAt;
     private String balanceType;
+
+    private Long userId;
+    private String username;
+    private String firstname;
+
 }

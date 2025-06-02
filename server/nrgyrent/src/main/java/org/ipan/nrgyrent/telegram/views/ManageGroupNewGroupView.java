@@ -162,7 +162,8 @@ public class ManageGroupNewGroupView {
     private ReplyKeyboardMarkup getManageGroupsNewGroupPromptUsersMarkup() {
         return ReplyKeyboardMarkup
                 .builder()
-                .isPersistent(false)
+                .oneTimeKeyboard(true)
+                .isPersistent(true)
                 .resizeKeyboard(true)
                 .keyboardRow(
                         new KeyboardRow(
@@ -183,7 +184,8 @@ public class ManageGroupNewGroupView {
     private ReplyKeyboardMarkup getManageGroupsNewGroupPromptManagerMarkup() {
         return ReplyKeyboardMarkup
                 .builder()
-                .isPersistent(false)
+                .isPersistent(true)
+                .oneTimeKeyboard(true)
                 .resizeKeyboard(true)
                 .keyboardRow(
                         new KeyboardRow(

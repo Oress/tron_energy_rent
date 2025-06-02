@@ -37,7 +37,10 @@ public class MainMenuHandler {
 
     @MatchState(state = States.MAIN_MENU, callbackData = InlineMenuCallbacks.HISTORY)
     public void handleTransactionHistory(UserState userState, Update update) {
-        List<TransactionHistoryDto> page = orderRepo.findAllTransactions(userState.getTelegramId(), 10);
+        AppUser user = userService.getById(userState.getTelegramId());
+        List<TransactionHistoryDto> page = user.isGroupManager()
+            ? orderRepo.findAllTransactionsForManager(userState.getTelegramId(), 10)
+            : orderRepo.findAllTransactions(userState.getTelegramId(), 10);
         historyViews.updMenuToHistoryMenu(page.reversed(), update.getCallbackQuery());
         telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.HISTORY));
     }

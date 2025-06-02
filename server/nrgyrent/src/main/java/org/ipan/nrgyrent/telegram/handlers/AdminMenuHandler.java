@@ -90,7 +90,7 @@ public class AdminMenuHandler {
     @MatchState(forAdmin = true, state = States.ADMIN_MENU, callbackData = InlineMenuCallbacks.MANAGE_WITHDRAW_TRX)
     public void startAdminWithdraw_promptAmount(UserState userState, Update update) {
         WithdrawParams withdrawParams = telegramState.getOrCreateWithdrawParams(userState.getTelegramId());
-        telegramState.updateWithdrawParams(userState.getTelegramId(), withdrawParams.withAmount(0L).withGroupBalance(false));
+        telegramState.updateWithdrawParams(userState.getTelegramId(), withdrawParams.withAmount(0L));
 
         adminViews.withdrawTrxPromptAmount(userState);
         telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.ADMIN_VIEW_PROMPT_WITHDRAW_AMOUNT));

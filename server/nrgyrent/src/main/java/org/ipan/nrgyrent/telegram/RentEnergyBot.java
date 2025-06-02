@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Objects;
 
 import org.ipan.nrgyrent.domain.model.AppUser;
+import org.ipan.nrgyrent.domain.model.Balance;
 import org.ipan.nrgyrent.domain.model.UserRole;
 import org.ipan.nrgyrent.domain.service.UserService;
 import org.ipan.nrgyrent.domain.service.commands.users.CreateUserCommand;
@@ -74,23 +75,24 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
         if (user != null && Boolean.TRUE.equals(user.getDisabled())) {
             logger.warn("disabled user tries to access the bot  user: {}", FormattingTools.formatUserForSearch(user));
             return;
-        } else {
-            if (user != null) {
-                if (user.getGroupBalance() != null && user.getTelegramId() == user.getGroupBalance().getManager().getTelegramId()) {
-                    userState = userState.withManagingGroupId(user.getGroupBalance().getId());
-                } else {
-                    userState = userState.withManagingGroupId(null);
-                }
+        }
 
-                // sync login and first name of the user. both may be null BTW.
-                if (!Objects.equals(from.getUserName(), user.getTelegramUsername()) 
-                    || !Objects.equals(from.getFirstName(), user.getTelegramFirstName())) {
-                    userService.updateUser(CreateUserCommand.builder()
-                    .telegramId(userId)
-                    .username(from.getUserName())
-                    .firstName(from.getFirstName())
-                    .build());
-                }
+        if (user != null) {
+            Balance groupBalance = user.getGroupBalance();
+            if (groupBalance != null && groupBalance.getManager() != null && user.getTelegramId() == groupBalance.getManager().getTelegramId()) {
+                userState = userState.withManagingGroupId(user.getGroupBalance().getId());
+            } else {
+                userState = userState.withManagingGroupId(null);
+            }
+
+            // sync login and first name of the user. both may be null BTW.
+            if (!Objects.equals(from.getUserName(), user.getTelegramUsername()) 
+                || !Objects.equals(from.getFirstName(), user.getTelegramFirstName())) {
+                userService.updateUser(CreateUserCommand.builder()
+                .telegramId(userId)
+                .username(from.getUserName())
+                .firstName(from.getFirstName())
+                .build());
             }
         }
 

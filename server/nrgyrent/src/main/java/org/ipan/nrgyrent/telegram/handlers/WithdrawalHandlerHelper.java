@@ -42,15 +42,14 @@ public class WithdrawalHandlerHelper {
     private final TronTransactionHelper tronTransactionHelper;
 
     @Async
-    public CompletableFuture<Void> transferTrxFromCollectionWallets(Long userId, String toWallet, Long amountSun, Long fee, Boolean useGroupBalance) {
+    public CompletableFuture<Void> transferTrxFromCollectionWallets(Long userId, String toWallet, Long amountSun, Long fee) {
         Balance withdrawBalance;
 
         AppUser user = userRepo.findById(userId).get();
-        Balance personalBalance = user.getBalance();
 
         Long totalSubstractSumAmount = amountSun + fee;
 
-        withdrawBalance = useGroupBalance ? user.getGroupBalance() : personalBalance;
+        withdrawBalance = user.getBalanceToUse();
 
         if (withdrawBalance == null) {
             logger.error("User {} has no balance for withdrawal", userId);

@@ -6,6 +6,7 @@ import org.apache.commons.lang3.NotImplementedException;
 import org.ipan.nrgyrent.domain.exception.InvalidAdjustedBalanceException;
 import org.ipan.nrgyrent.domain.exception.NotEnoughBalanceException;
 import org.ipan.nrgyrent.domain.exception.UserAlreadyHasGroupBalanceException;
+import org.ipan.nrgyrent.domain.exception.UserIsDisabledException;
 import org.ipan.nrgyrent.domain.exception.UserIsManagerException;
 import org.ipan.nrgyrent.domain.exception.UserNotRegisteredException;
 import org.ipan.nrgyrent.domain.exception.UsersMustBelongToTheSameGroupException;
@@ -67,13 +68,9 @@ public class BalanceService {
         }
 
         for (AppUser userToRemove : usersToRemove) {
-            Balance groupBalance = userToRemove.getGroupBalance();
-            // Check if the user is a manager of another group balance
-            if (groupBalance != null && groupBalance.getManager().getTelegramId() == userToRemove.getTelegramId()) {
-                throw new UserIsManagerException(
-                        "User is already a manager of another group balance: " + userToRemove.getTelegramId());
+            if (userToRemove.isGroupManager()) {
+                balance.setManager(null);
             }
-
             userToRemove.setGroupBalance(null);
         }
 
@@ -99,7 +96,13 @@ public class BalanceService {
         }
 
         for (AppUser userToAdd : usersToAdd) {
+            if (userToAdd.getDisabled()) {
+                logger.error("User cannot be assigned as manager because they are DISABLED, user: {}", userToAdd.getTelegramId());
+                throw new UserIsDisabledException("member in another group {}");
+            }
+
             if (userToAdd.isInGroup() && !balanceId.equals(userToAdd.getGroupBalance().getId())) {
+                logger.error("User cannot be assigned as manager because they are member in another group, user: {}, group {}", userToAdd.getTelegramId(), userToAdd.getGroupBalance().getIdAndLabel());
                 throw new UserAlreadyHasGroupBalanceException("User is already belongs to another group balance: " + userToAdd.getTelegramId());
             }
 
@@ -167,6 +170,11 @@ public class BalanceService {
         if (manager == null) {
             logger.error("Manager is not registered: {}", managerId);
             throw new UserNotRegisteredException(List.of(tgUserId), "Manager is not registered");
+        }
+
+        if (manager.getDisabled()) {
+            logger.error("Manager is not registered: {}", managerId);
+            throw new UserIsDisabledException("Manager is disabled");
         }
 
         // 2. Check that manager is not already in the group balance.
@@ -276,6 +284,11 @@ public class BalanceService {
         if (newManager == null) {
             logger.error("User not found for changing manager: {}", userId);
             throw new UserNotRegisteredException(List.of(tgUserId), "User not found for changing manager");
+        }
+
+        if (newManager.getDisabled()) {
+            logger.error("User cannot be assigned as manager because they are DISABLED, user: {}", userId);
+            throw new UserIsDisabledException("member in another group {}");
         }
 
         if (newManager.isInGroup() && !selectedBalanceId.equals(newManager.getGroupBalance().getId())) {

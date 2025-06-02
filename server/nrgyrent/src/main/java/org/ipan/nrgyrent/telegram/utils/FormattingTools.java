@@ -22,6 +22,13 @@ public class FormattingTools {
         return val == null ? "-": val;
     }
 
+    public static String formatUserForSearch(Long id, String login, String name) {
+        String loginStr = login != null ? "Ник: %s".formatted(login) : "";
+        String nameStr = name != null ? "Имя: %s".formatted(name) : "";
+        String idStr = "ID: %s".formatted(id);
+        return List.of(idStr, loginStr, nameStr).stream().filter(s -> !s.isEmpty()).collect(Collectors.joining(", "));
+    }
+
     public static String formatUserForSearch(AppUser user) {
         if (user == null) {
             return "-";

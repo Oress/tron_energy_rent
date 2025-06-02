@@ -85,7 +85,7 @@ public class AppUser {
 
         if (groupBalance != null) {
             AppUser manager = groupBalance.getManager();
-            result = telegramId.equals(manager.getTelegramId());
+            result = manager != null ? telegramId.equals(manager.getTelegramId()) : false;
         }
         
         return result;

@@ -158,6 +158,36 @@ public class ManageGroupActionsView {
         }
     }
 
+    public void userDisabled(UserState userState) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
+                .text("❌ Выбраные пользователи заблокированы системой.")
+                .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
+                .build();
+        try {
+            tgClient.execute(message);
+        } catch (Exception e) {
+            logger.error("Could not userDisabled userstate {}", userState, e);
+        }
+    }
+
+    public void userNotManager(UserState userState) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
+                .text("У вас недостаточно прав. Вы не являетесь менеджером группы.")
+                .replyMarkup(commonViews.getToMainMenuMarkup())
+                .build();
+        try {
+            tgClient.execute(message);
+        } catch (Exception e) {
+            logger.error("Could not userDisabled userstate {}", userState, e);
+        }
+    }
+
     public void groupBalanceIsNegative(UserState userState) {
         EditMessageText message = EditMessageText
                 .builder()
@@ -211,7 +241,8 @@ public class ManageGroupActionsView {
     private ReplyKeyboardMarkup getManageGroupsNewGroupPromptManagerMarkup() {
         return ReplyKeyboardMarkup
                 .builder()
-                .isPersistent(false)
+                .isPersistent(true)
+                .oneTimeKeyboard(true)
                 .resizeKeyboard(true)
                 .keyboardRow(
                         new KeyboardRow(
@@ -461,7 +492,8 @@ public class ManageGroupActionsView {
     private ReplyKeyboardMarkup promptRemoveUsersMarkup() {
         return ReplyKeyboardMarkup
                 .builder()
-                .isPersistent(false)
+                .isPersistent(true)
+                .oneTimeKeyboard(true)
                 .resizeKeyboard(true)
                 .keyboardRow(
                         new KeyboardRow(
@@ -482,7 +514,8 @@ public class ManageGroupActionsView {
     private ReplyKeyboardMarkup promptAddUsersMarkup() {
         return ReplyKeyboardMarkup
                 .builder()
-                .isPersistent(false)
+                .isPersistent(true)
+                .oneTimeKeyboard(true)
                 .resizeKeyboard(true)
                 .keyboardRow(
                         new KeyboardRow(
@@ -516,7 +549,9 @@ public class ManageGroupActionsView {
                 ⚙️ Действия с группой
 
                 Название: %s
-                Менеджер: %s
+                Менеджер: 
+                %s
+
                 Создана: %s
                 Тариф: %s
                 Активна: %s
@@ -525,7 +560,7 @@ public class ManageGroupActionsView {
                 Баланс: %s TRX
                 """,
                 balance.getLabel(),
-                FormattingTools.formatUserLink(balance.getManager()),
+                FormattingTools.formatUserForSearch(balance.getManager()),
                 FormattingTools.formatDateToUtc(balance.getCreatedAt()),
                 tariffLabel,
                 balance.getIsActive() ? "✅" : "❌",

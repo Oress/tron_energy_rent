@@ -50,11 +50,12 @@ public class HistoryViews {
     }
 
     private String getTransactionDetails(TransactionHistoryDto order) {
+        String user = order.getUserId() != null ? FormattingTools.formatUserForSearch(order.getUserId(),order.getUsername(), order.getFirstname()) : "";
         switch (order.getType()) {
             case "ORDER" -> {
                     return """
                     Операция: Аренда транзакции
-                    ID: %s
+                    ID: %s %s
                     Кол. тр: %s 
                     Сумма всего: %s TRX
                     Получатель: %s
@@ -63,6 +64,7 @@ public class HistoryViews {
                     Дата: %s
                     """.formatted(
                     order.getCorrelationId(),
+                    user.isEmpty() ? "": "\nПользователь: \n%s".formatted(user),
                     order.getTxAmount(),
                     FormattingTools.formatBalance(order.getTotalAmountSun()),
                     WalletTools.formatTronAddress(order.getReceiveAddress()),

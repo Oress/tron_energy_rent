@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.ipan.nrgyrent.domain.exception.UserAlreadyHasGroupBalanceException;
+import org.ipan.nrgyrent.domain.exception.UserIsDisabledException;
 import org.ipan.nrgyrent.domain.exception.UserIsManagerException;
 import org.ipan.nrgyrent.domain.exception.UsersMustBelongToTheSameGroupException;
 import org.ipan.nrgyrent.domain.exception.UserNotRegisteredException;
@@ -159,6 +160,10 @@ public class ManageGroupActionsHandler {
                 logger.error("Error changing manager of a group: {}", openBalance.getSelectedBalanceId(), e);
                 manageGroupActionsView.userBelongsToAnotherGroup(userState);
                 return;
+            } catch (UserIsDisabledException e) {
+                logger.error("Error changing manager of a group: {}", openBalance.getSelectedBalanceId(), e);
+                manageGroupActionsView.userDisabled(userState);
+                return;
             } catch (Exception e) {
                 logger.error("Error changing manager of a group: {}", openBalance.getSelectedBalanceId(), e);
                 manageGroupActionsView.somethingWentWrong(userState);
@@ -214,7 +219,11 @@ public class ManageGroupActionsHandler {
                 logger.error("Error adding users to group: {}", openBalance.getSelectedBalanceId(), e);
                 manageGroupActionsView.someUsersAreNotRegistered(userState, e.getUserIds());
                 return;
-            } catch (UserAlreadyHasGroupBalanceException e) {
+            } catch (UserIsDisabledException e) {
+                logger.error("Error adding users to group: {}", openBalance.getSelectedBalanceId(), e);
+                manageGroupActionsView.userDisabled(userState);
+                return;
+            }catch ( UserAlreadyHasGroupBalanceException e) {
                 logger.error("Error adding users to group: {}", openBalance.getSelectedBalanceId(), e);
                 manageGroupActionsView.userBelongsToAnotherGroup(userState);
                 return;

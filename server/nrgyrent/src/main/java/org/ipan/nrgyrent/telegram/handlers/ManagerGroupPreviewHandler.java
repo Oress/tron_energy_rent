@@ -10,6 +10,7 @@ import org.ipan.nrgyrent.domain.exception.UsersMustBelongToTheSameGroupException
 import org.ipan.nrgyrent.domain.model.AppUser;
 import org.ipan.nrgyrent.domain.model.repository.AppUserRepo;
 import org.ipan.nrgyrent.domain.service.BalanceService;
+import org.ipan.nrgyrent.domain.service.UserService;
 import org.ipan.nrgyrent.domain.service.commands.TgUserId;
 import org.ipan.nrgyrent.telegram.InlineMenuCallbacks;
 import org.ipan.nrgyrent.telegram.States;
@@ -37,9 +38,25 @@ public class ManagerGroupPreviewHandler {
     private final TelegramMessages telegramMessages;
     private final AppUserRepo appUserRepo;
     private final BalanceService balanceService;
+    private final UserService userService;
 
     @MatchState(state = States.MANAGER_GROUP_PREVIEW, callbackData = InlineMenuCallbacks.MANAGE_GROUPS_ACTION_ADD_USERS)
     public void startAddUsers_promptUsers(UserState userState, Update update) {
+        AppUser user = userService.getById(userState.getTelegramId());
+        BalanceEdit openBalance = telegramState.getOrCreateBalanceEdit(userState.getTelegramId());
+
+        if (!user.isGroupManager()) {
+            logger.error("User not a manager, user {}", userState);
+            manageGroupActionsView.userNotManager(userState);
+            return;
+        }
+
+        if (!user.getGroupBalance().getId().equals(openBalance.getSelectedBalanceId())) {
+            logger.error("User does not manage this group opened balance: {},  user: {}", openBalance, userState);
+            manageGroupActionsView.userNotManager(userState);
+            return;
+        }
+
         manageGroupActionsView.updMenuPromptToAddUsersToGroup(userState);
         Message msg = manageGroupActionsView.promptToAddUsersToGroup(userState);
         telegramState.updateUserState(userState.getTelegramId(),
@@ -84,6 +101,21 @@ public class ManagerGroupPreviewHandler {
 
     @MatchState(state = States.MANAGER_GROUP_PREVIEW, callbackData = InlineMenuCallbacks.MANAGE_GROUPS_ACTION_REMOVE_USERS)
     public void startRemoveUsers(UserState userState, Update update) {
+        AppUser user = userService.getById(userState.getTelegramId());
+        BalanceEdit openBalance = telegramState.getOrCreateBalanceEdit(userState.getTelegramId());
+
+        if (!user.isGroupManager()) {
+            logger.error("User not a manager, user {}", userState);
+            manageGroupActionsView.userNotManager(userState);
+            return;
+        }
+
+        if (!user.getGroupBalance().getId().equals(openBalance.getSelectedBalanceId())) {
+            logger.error("User does not manage this group opened balance: {},  user: {}", openBalance, userState);
+            manageGroupActionsView.userNotManager(userState);
+            return;
+        }
+
         manageGroupActionsView.updMenuPromptToRemoveUsersFromGroup(userState);
         Message msg = manageGroupActionsView.promptToRemoveUsersToGroup(userState);
         telegramState.updateUserState(userState.getTelegramId(),
@@ -104,6 +136,11 @@ public class ManagerGroupPreviewHandler {
 
             List<TgUserId> userIds = usersShared.getUsers().stream().map(user -> new TgUserId(user.getUserId(), user.getUsername(), user.getFirstName())).toList();
             try {
+                if (userIds.stream().anyMatch(u -> u.getId().equals(telegramId))) {
+                    logger.error("manager is trying to delete themself. balanceId: {} user: {}", openBalance.getSelectedBalanceId(),userState);
+                    throw new UserIsManagerException("manager is trying to delete themself.");
+                }
+
                 balanceService.removeUsersFromTheGroupBalance(openBalance.getSelectedBalanceId(), userIds);
             } catch (UserNotRegisteredException e) {
                 logger.error("Error removing users from group: {}", e.getMessage());
@@ -133,7 +170,21 @@ public class ManagerGroupPreviewHandler {
 
     @MatchState(state = States.MANAGER_GROUP_PREVIEW, callbackData = InlineMenuCallbacks.MANAGE_GROUPS_ACTION_VIEW_USERS)
     public void viewGroupUsers(UserState userState, Update update) {
+        AppUser user = userService.getById(userState.getTelegramId());
         BalanceEdit openBalance = telegramState.getOrCreateBalanceEdit(userState.getTelegramId());
+
+        if (!user.isGroupManager()) {
+            logger.error("User not a manager, user {}", userState);
+            manageGroupActionsView.userNotManager(userState);
+            return;
+        }
+
+        if (!user.getGroupBalance().getId().equals(openBalance.getSelectedBalanceId())) {
+            logger.error("User does not manage this group opened balance: {},  user: {}", openBalance, userState);
+            manageGroupActionsView.userNotManager(userState);
+            return;
+        }
+
         Set<AppUser> users = appUserRepo.findAllByGroupBalanceId(openBalance.getSelectedBalanceId());
         manageGroupActionsView.reviewGroupUsers(userState, users);
 
