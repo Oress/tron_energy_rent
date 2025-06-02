@@ -5,6 +5,7 @@ import java.util.List;
 import org.ipan.nrgyrent.domain.exception.UserIsManagerException;
 import org.ipan.nrgyrent.domain.exception.UserNotRegisteredException;
 import org.ipan.nrgyrent.domain.service.BalanceService;
+import org.ipan.nrgyrent.domain.service.commands.TgUserId;
 import org.ipan.nrgyrent.itrx.AppConstants;
 import org.ipan.nrgyrent.telegram.InlineMenuCallbacks;
 import org.ipan.nrgyrent.telegram.States;
@@ -77,12 +78,11 @@ public class ManageGroupNewGroupHandler {
             UserShared manager = usersShared.getUsers().getFirst();
 
             AddGroupState addGroupState = telegramState.getOrCreateAddGroupState(userState.getTelegramId());
-            // List<Long> userIds = users.stream().map(user -> user.getUserId()).toList();
-            Long managerId = manager.getUserId();
+            TgUserId userId = new TgUserId(manager.getUserId(), manager.getUsername(), manager.getFirstName());
             try {
-                balanceService.createGroupBalance(addGroupState.getLabel(), managerId, AppConstants.DEFAULT_TARIFF_ID);
+                balanceService.createGroupBalance(addGroupState.getLabel(), userId, AppConstants.DEFAULT_TARIFF_ID);
             } catch (UserNotRegisteredException e) {
-                manageGroupNewGroupView.someUsersAreNotRegistered(userState);
+                manageGroupActionsView.someUsersAreNotRegistered(userState, e.getUserIds());
                 return;
             } catch (UserIsManagerException e) {
                 manageGroupNewGroupView.userIsManagerInAnotherGroup(userState);

@@ -8,7 +8,6 @@ import org.ipan.nrgyrent.domain.model.AppUser;
 import org.ipan.nrgyrent.domain.model.Order;
 import org.ipan.nrgyrent.domain.model.Tariff;
 import org.ipan.nrgyrent.domain.model.UserWallet;
-import org.ipan.nrgyrent.domain.model.repository.TariffRepo;
 import org.ipan.nrgyrent.domain.service.OrderService;
 import org.ipan.nrgyrent.domain.service.UserService;
 import org.ipan.nrgyrent.domain.service.UserWalletService;
@@ -43,7 +42,6 @@ import lombok.extern.slf4j.Slf4j;
 public class TransactionsHandler {
     private static final int ITRX_OK_CODE = 0;
 
-    private final TariffRepo tariffRepo;
     private final TelegramState telegramState;
     private final TransactionsViews transactionsViews;
     private final ItrxService itrxService;
@@ -51,29 +49,14 @@ public class TransactionsHandler {
     private final OrderService orderService;
     private final UserWalletService userWalletService;
 
-    @MatchState(state = States.MAIN_MENU, callbackData = InlineMenuCallbacks.TRANSACTION_65k)
-    public void handleTransaction65k(UserState userState, Update update) {
-        proceedToTransactions(userState, update, AppConstants.ENERGY_65K);
-    }
-
-    @MatchState(state = States.MAIN_MENU, callbackData = InlineMenuCallbacks.TRANSACTION_131k)
-    public void handleTransaction131k(UserState userState, Update update) {
-        proceedToTransactions(userState, update, AppConstants.ENERGY_131K);
-    }
-
     @MatchState(state = States.MAIN_MENU, callbackData = InlineMenuCallbacks.CUSTOM_TRANSACTION_AMOUNT)
     public void startCustomTransactionAmount65K_promptAmount(UserState userState, Update update) {
         AppUser byId = userService.getById(userState.getTelegramId());
-        boolean useGroupWallet = byId.getGroupBalance() != null;
-
-        Tariff tariff = useGroupWallet ? 
-            byId.getGroupBalance().getTariff() :
-            byId.getBalance().getTariff();
+        Tariff tariff = byId.getTariffToUse();
 
         TransactionParams transactionParams = telegramState.getOrCreateTransactionParams(userState.getTelegramId());
         telegramState.updateTransactionParams(userState.getTelegramId(), 
         transactionParams
-            .withGroupBalance(useGroupWallet)
             .withEnergyAmount(AppConstants.ENERGY_65K));
 
         transactionsViews.updMenuToPromptTrxAmount(userState, tariff);
@@ -100,34 +83,32 @@ public class TransactionsHandler {
             TransactionParams transactionParams = telegramState.getOrCreateTransactionParams(userState.getTelegramId());
             telegramState.updateTransactionParams(userState.getTelegramId(), transactionParams.withNumberOfTransactions(txAmount));
             List<UserWallet> wallets = userWalletService.getWallets(userState.getTelegramId());
-            promptWalletDependingOnEnergyAmount(userState, wallets, txAmount, AppConstants.ENERGY_65K, transactionParams.getGroupBalance());
+            promptWalletDependingOnEnergyAmount(userState, wallets, txAmount, AppConstants.ENERGY_65K);
             telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.TRANSACTION_PROMPT_WALLET));
         }
     }
 
-    private void proceedToTransactions(UserState userState, Update update, Integer energyAmountPerTx) {
-        AppUser byId = userService.getById(userState.getTelegramId());
-        // If no group balance, proceed to
+    @MatchState(state = States.MAIN_MENU, callbackData = InlineMenuCallbacks.TRANSACTION_65k)
+    public void handleTransaction65k(UserState userState, Update update) {
+        proceedToSimpleTransaction(userState, update, AppConstants.ENERGY_65K);
+    }
+
+    @MatchState(state = States.MAIN_MENU, callbackData = InlineMenuCallbacks.TRANSACTION_131k)
+    public void handleTransaction131k(UserState userState, Update update) {
+        proceedToSimpleTransaction(userState, update, AppConstants.ENERGY_131K);
+    }
+
+    private void proceedToSimpleTransaction(UserState userState, Update update, Integer energyAmountPerTx) {
         TransactionParams transactionParams = telegramState.getOrCreateTransactionParams(userState.getTelegramId());
-        boolean useGroupBalance = true;
-        if (byId.getGroupBalance() == null) {
-            useGroupBalance = false;
-            telegramState.updateTransactionParams(userState.getTelegramId(),
-                transactionParams
-                .withNumberOfTransactions(1)
-                .withGroupBalance(useGroupBalance)
-                .withEnergyAmount(energyAmountPerTx));
-            selectPersonalBalanceTypeForTransaction(userState, update);
-        } else {
-            transactionsViews.updMenuToPromptBalanceType(userState);
-            telegramState.updateUserState(userState.getTelegramId(),
-                    userState.withState(States.TRANSACTION_PROMPT_BALANCE_TYPE));
-        }
+
         telegramState.updateTransactionParams(userState.getTelegramId(),
-                transactionParams
-                .withNumberOfTransactions(1)
-                .withGroupBalance(useGroupBalance)
-                .withEnergyAmount(energyAmountPerTx));
+            transactionParams
+            .withNumberOfTransactions(1)
+            .withEnergyAmount(energyAmountPerTx));
+
+        telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.TRANSACTION_PROMPT_WALLET));
+        List<UserWallet> wallets = userWalletService.getWallets(userState.getTelegramId());
+        promptWalletDependingOnEnergyAmount(userState, wallets, 1, energyAmountPerTx);
     }
 
     @MatchStates({
@@ -138,10 +119,9 @@ public class TransactionsHandler {
         TransactionParams transactionParams = telegramState
                 .getOrCreateTransactionParams(userState.getTelegramId());
 
+        AppUser byId = userService.getById(userState.getTelegramId());
         Integer energyAmountPerTx = transactionParams.getEnergyAmount();
-        Tariff tariff = transactionParams.getGroupBalance()
-                ? tariffRepo.findGroupTariffByUserId(userState.getTelegramId())
-                : tariffRepo.findIndividualTariffByUserId(userState.getTelegramId());
+        Tariff tariff = byId.getTariffToUse();
 
         if (tariff == null) {
             logger.error("No tariff found during transaction for user: {}, tr params: {}", userState.getTelegramId(), transactionParams);
@@ -157,66 +137,40 @@ public class TransactionsHandler {
                 throw new IllegalStateException("Unexpected value: " + energyAmountPerTx);
             }
         };
-        handlePromptWallet(userState, update, energyAmountPerTx, transactionParams.getNumberOfTransactions(), pricePerTx, transactionParams.getGroupBalance());
+        Integer txAmount = transactionParams.getNumberOfTransactions();
+        if (txAmount == null) {
+            txAmount = 1;
+        }
+        handlePromptWallet(userState, update, energyAmountPerTx, transactionParams.getNumberOfTransactions(), pricePerTx);
     }
 
-    private void handlePromptWallet(UserState userState, Update update, Integer energyAmountPerTx, Integer txAmount, Long sunAmountPerTx,
-            boolean useGroupWallet) {
+    private void handlePromptWallet(UserState userState, Update update, Integer energyAmountPerTx, Integer txAmount, Long sunAmountPerTx) {
         CallbackQuery callbackQuery = update.getCallbackQuery();
         if (callbackQuery != null) {
-            tryMakeTransaction(userState, energyAmountPerTx, AppConstants.DURATION_1H, callbackQuery.getData(), txAmount, sunAmountPerTx,
-                    useGroupWallet);
+            tryMakeTransaction(userState, energyAmountPerTx, AppConstants.DURATION_1H, callbackQuery.getData(), txAmount, sunAmountPerTx);
         }
 
         Message message = update.getMessage();
         if (message != null && message.hasText()) {
-            tryMakeTransaction(userState, energyAmountPerTx, AppConstants.DURATION_1H, message.getText(), txAmount, sunAmountPerTx,
-                    useGroupWallet);
+            tryMakeTransaction(userState, energyAmountPerTx, AppConstants.DURATION_1H, message.getText(), txAmount, sunAmountPerTx);
         }
     }
 
-    @MatchState(state = States.TRANSACTION_PROMPT_BALANCE_TYPE, callbackData = InlineMenuCallbacks.TRANSACTION_BALANCE_GROUP)
-    public void selectGroupBalanceTypeForTransaction(UserState userState, Update update) {
-        TransactionParams transactionParams = telegramState
-                .getOrCreateTransactionParams(userState.getTelegramId());
-        telegramState.updateTransactionParams(userState.getTelegramId(),
-                transactionParams.withGroupBalance(true));
-        telegramState.updateUserState(userState.getTelegramId(),
-                userState.withState(States.TRANSACTION_PROMPT_WALLET));
-
-        List<UserWallet> wallets = userWalletService.getWallets(userState.getTelegramId());
-        promptWalletDependingOnEnergyAmount(userState, wallets, 1, transactionParams.getEnergyAmount(),  true);
-    }
-
-    @MatchState(state = States.TRANSACTION_PROMPT_BALANCE_TYPE, callbackData = InlineMenuCallbacks.TRANSACTION_BALANCE_PERSONAL)
-    public void selectPersonalBalanceTypeForTransaction(UserState userState, Update update) {
-        TransactionParams transactionParams = telegramState
-                .getOrCreateTransactionParams(userState.getTelegramId());
-        telegramState.updateTransactionParams(userState.getTelegramId(),
-                transactionParams.withGroupBalance(false));
-        telegramState.updateUserState(userState.getTelegramId(),
-                userState.withState(States.TRANSACTION_PROMPT_WALLET));
-
-        List<UserWallet> wallets = userWalletService.getWallets(userState.getTelegramId());
-        promptWalletDependingOnEnergyAmount(userState, wallets, 1, transactionParams.getEnergyAmount(), false);
-    }
-
-    private void tryMakeTransaction(UserState userState, Integer energyAmountPerTx, String duration, String walletAddress, Integer txAmount,
-            Long sunAmountPerTx, boolean useGroupWallet) {
-        if (WalletTools.isValidTronAddress(walletAddress)) {
+    private void tryMakeTransaction(UserState userState, Integer energyAmountPerTx, String duration, String receiveAddress, Integer txAmount,
+            Long sunAmountPerTx) {
+        if (WalletTools.isValidTronAddress(receiveAddress)) {
             transactionsViews.updMenuToTransactionInProgress(userState);
 
             UUID correlationId = UUID.randomUUID();
             Integer totalRentEnergy = energyAmountPerTx * txAmount;
-            EstimateOrderAmountResponse estimateOrderResponse = itrxService.estimateOrderPrice(totalRentEnergy, duration, walletAddress);
+            EstimateOrderAmountResponse estimateOrderResponse = itrxService.estimateOrderPrice(totalRentEnergy, duration, receiveAddress);
 
             Order pendingOrder = null;
             try {
                 pendingOrder = orderService.createPendingOrder(
                         AddOrUpdateOrderCommand.builder()
                                 .userId(userState.getTelegramId())
-                                .useGroupWallet(useGroupWallet)
-                                .receiveAddress(walletAddress)
+                                .receiveAddress(receiveAddress)
                                 .energyAmountPerTx(energyAmountPerTx)
                                 .txAmount(txAmount)
                                 .sunAmountPerTx(sunAmountPerTx)
@@ -226,7 +180,7 @@ public class TransactionsHandler {
                                 // .serial(placeOrderResponse.getSerial())
                                 .build());
 
-                PlaceOrderResponse placeOrderResponse = itrxService.placeOrder(totalRentEnergy, duration, walletAddress,
+                PlaceOrderResponse placeOrderResponse = itrxService.placeOrder(totalRentEnergy, duration, receiveAddress,
                         correlationId);
 
                 if (placeOrderResponse.getErrno() != ITRX_OK_CODE) {
@@ -281,14 +235,11 @@ public class TransactionsHandler {
         }
     }
 
-    private void promptWalletDependingOnEnergyAmount(UserState userState, List<UserWallet> wallets, Integer txAmount,
-            Integer energyAmount, boolean useGroupWallet) {
+    private void promptWalletDependingOnEnergyAmount(UserState userState, List<UserWallet> wallets, Integer txAmount, Integer energyAmount) {
         AppUser byId = userService.getById(userState.getTelegramId());
 
         // NPE ?
-        Tariff tariff = useGroupWallet ? 
-                byId.getGroupBalance().getTariff() :
-                byId.getBalance().getTariff();
+        Tariff tariff = byId.getTariffToUse();
 
         if (tariff == null) {
             logger.error("User {} has no tariff set, cannot show transaction menu", byId.getTelegramUsername());
@@ -306,6 +257,5 @@ public class TransactionsHandler {
         } else {
             logger.error("Unknown transaction request energyAmount: {}, txAmount: {}, userstate: {}", energyAmount, txAmount, userState);
         }
-
     }
 }

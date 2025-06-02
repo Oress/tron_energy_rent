@@ -3,12 +3,14 @@ package org.ipan.nrgyrent.telegram.handlers;
 import java.util.List;
 import java.util.Set;
 
+import org.ipan.nrgyrent.domain.exception.UserAlreadyHasGroupBalanceException;
 import org.ipan.nrgyrent.domain.exception.UserIsManagerException;
 import org.ipan.nrgyrent.domain.exception.UserNotRegisteredException;
 import org.ipan.nrgyrent.domain.exception.UsersMustBelongToTheSameGroupException;
 import org.ipan.nrgyrent.domain.model.AppUser;
 import org.ipan.nrgyrent.domain.model.repository.AppUserRepo;
 import org.ipan.nrgyrent.domain.service.BalanceService;
+import org.ipan.nrgyrent.domain.service.commands.TgUserId;
 import org.ipan.nrgyrent.telegram.InlineMenuCallbacks;
 import org.ipan.nrgyrent.telegram.States;
 import org.ipan.nrgyrent.telegram.TelegramMessages;
@@ -49,24 +51,24 @@ public class ManagerGroupPreviewHandler {
     @MatchState(state = States.MANAGER_GROUPS_ACTION_ADD_USERS, updateTypes = UpdateType.MESSAGE)
     public void handleUsers_end(UserState userState, Update update) {
         Message message = update.getMessage();
-        if (message != null && message.hasUserShared()) {
+        UsersShared usersShared = message.getUsersShared();
+        if (message != null && usersShared.getUsers() != null && !usersShared.getUsers().isEmpty()) {
             telegramMessages.deleteMessage(message);
             logger.info("Adding new users to group: {}", message.getText());
-            UsersShared usersShared = message.getUsersShared();
             Long telegramId = userState.getTelegramId();
 
             BalanceEdit openBalance = telegramState.getOrCreateBalanceEdit(telegramId);
 
-            List<Long> userIds = usersShared.getUsers().stream().map(user -> user.getUserId()).toList();
+            List<TgUserId> userIds = usersShared.getUsers().stream().map(user -> new TgUserId(user.getUserId(), user.getUsername(), user.getFirstName())).toList();
             try {
                 balanceService.addUsersToTheGroupBalance(openBalance.getSelectedBalanceId(), userIds);
             } catch (UserNotRegisteredException e) {
                 logger.error("Error adding users to group: {}", e.getMessage());
-                manageGroupActionsView.someUsersAreNotRegistered(userState);
+                manageGroupActionsView.someUsersAreNotRegistered(userState, e.getUserIds());
                 return;
-            } catch (UserIsManagerException e) {
+            } catch (UserAlreadyHasGroupBalanceException e) {
                 logger.error("Error adding users to group: {}", e.getMessage());
-                manageGroupActionsView.userAlreadyManagesAnotherGroup(userState);
+                manageGroupActionsView.userBelongsToAnotherGroup(userState);
                 return;
             } catch (Exception e) {
                 logger.error("Error adding users to group: {}", e.getMessage());
@@ -92,21 +94,20 @@ public class ManagerGroupPreviewHandler {
     @MatchState(state = States.MANAGER_GROUPS_ACTION_REMOVE_USERS, updateTypes = UpdateType.MESSAGE)
     public void handleRemoveUsers(UserState userState, Update update) {
         Message message = update.getMessage();
-        if (message != null && message.hasUserShared()) {
+        UsersShared usersShared = message.getUsersShared();
+        if (message != null && usersShared.getUsers() != null && !usersShared.getUsers().isEmpty()) {
             telegramMessages.deleteMessage(message);
             logger.info("Removing users from group: {}", message.getText());
-            UsersShared usersShared = message.getUsersShared();
             Long telegramId = userState.getTelegramId();
 
             BalanceEdit openBalance = telegramState.getOrCreateBalanceEdit(telegramId);
 
-           List<Long> userIds = usersShared.getUsers().stream().map(user -> user.getUserId()).toList();
-
+            List<TgUserId> userIds = usersShared.getUsers().stream().map(user -> new TgUserId(user.getUserId(), user.getUsername(), user.getFirstName())).toList();
             try {
                 balanceService.removeUsersFromTheGroupBalance(openBalance.getSelectedBalanceId(), userIds);
             } catch (UserNotRegisteredException e) {
                 logger.error("Error removing users from group: {}", e.getMessage());
-                manageGroupActionsView.someUsersAreNotRegistered(userState);
+                manageGroupActionsView.someUsersAreNotRegistered(userState, e.getUserIds());
                 return;
             } catch (UserIsManagerException e) {
                 logger.error("Error removing users from group: {}", e.getMessage());

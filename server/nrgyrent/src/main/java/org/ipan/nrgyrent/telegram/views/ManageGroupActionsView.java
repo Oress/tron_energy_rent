@@ -1,11 +1,13 @@
 package org.ipan.nrgyrent.telegram.views;
 
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.ipan.nrgyrent.domain.model.AppUser;
 import org.ipan.nrgyrent.domain.model.Balance;
 import org.ipan.nrgyrent.domain.model.Tariff;
+import org.ipan.nrgyrent.domain.service.commands.TgUserId;
 import org.ipan.nrgyrent.telegram.InlineMenuCallbacks;
 import org.ipan.nrgyrent.telegram.StaticLabels;
 import org.ipan.nrgyrent.telegram.state.UserState;
@@ -13,6 +15,7 @@ import org.ipan.nrgyrent.telegram.utils.FormattingTools;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
+import org.telegram.telegrambots.meta.api.objects.LinkPreviewOptions;
 import org.telegram.telegrambots.meta.api.objects.message.Message;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
@@ -44,10 +47,13 @@ public class ManageGroupActionsView {
     private static final String MSG_GROUP_DELETED = "✅ Группа успешно деактивирована.";
     private static final String MSG_GROUP_PROMPT_NEW_LABEL = "Введите новое название группы";
     private static final String MSG_GROUP_PROMPT_NEW_BALANCE = "Введите новый баланс группы (в TRX)";
-    private static final String MSG_GROUP_PROMPT_NEW_USERS = "Добавьте пользователей в группу, используя меню";
+    private static final String MSG_GROUP_PROMPT_NEW_USERS = """
+    Добавьте пользователей в группу, используя меню
+    (Пользователи должны быть зарегестированы в боте)
+    """;
     private static final String MSG_GROUP_PROMPT_REMOVE_USERS = "Удалите пользователей из группы, используя меню";
     private static final String MSG_GROUP_RENAMED = "✅ Группа успешно переименована.";
-    private static final String MSG_USER_TARIFF_CHANGED = "✅ Тариф пользователя успешно изменен.";
+    private static final String MSG_USER_TARIFF_CHANGED = "✅ Тариф группы успешно изменен.";
     private static final String MSG_GROUP_TOO_SHORT = "❌ Название группы слишком короткое. Минимум 3 символа. Попробуйте снова.";
     private static final String MSG_GROUP_BALANCE_ADJUSTED = "✅ Баланс группы успешно изменен.";
     private static final String MSG_GROUP_USERS_ADDED = "✅ Пользователи успешно добавлены в группу.";
@@ -57,8 +63,10 @@ public class ManageGroupActionsView {
 
     private static final String MSG_MANAGE_GROUPS_ADD_PROMPT_MANAGER = """
             Выберете менеджера группы используя меню.
+            Старый менеджер останется учасником группы.
+            Нельзя выбирать участников других груп в качествве менеджера.
 
-            Ему будет доступно управление группой, а также возможность добавлять и удалять пользователей из группы.
+            Ему будет доступна возможность добавлять и удалять пользователей из группы.
             """;
 
     private static final String NO = "❌ Нет";
@@ -87,7 +95,7 @@ public class ManageGroupActionsView {
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
-                .text("❌ Пользователь уже управляет другой группой.")
+                .text("❌ Выбраные пользователи уже управляет другой группой.")
                 .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
         try {
@@ -112,12 +120,35 @@ public class ManageGroupActionsView {
         }
     }
 
-    public void someUsersAreNotRegistered(UserState userState) {
+    public void someUsersAreNotRegistered(UserState userState, List<TgUserId> notRegisteredUsers) {
+        String list = notRegisteredUsers.stream().map(u -> FormattingTools.formatUserLink(u)).collect(Collectors.joining("\n"));
+
         EditMessageText message = EditMessageText
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
-                .text("❌ Некоторые пользователи не зарегистрированы. Попробуйте снова.")
+                .linkPreviewOptions(LinkPreviewOptions.builder().isDisabled(true).build())
+                .parseMode("MARKDOWN")
+                .text("""
+                ❌ Некоторые из выбраных пользователей не зарегистрированы:
+                %s
+                
+                Попробуйте снова.""".formatted(list))
+                .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
+                .build();
+        try {
+            tgClient.execute(message);
+        } catch (Exception e) {
+            logger.error("Could not someUsersAreNotRegistered userstate {}", userState, e);
+        }
+    }
+
+    public void userBelongsToAnotherGroup(UserState userState) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
+                .text("❌ Выбраные пользователи уже пренадлежат другой группе.")
                 .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
         try {
@@ -171,7 +202,7 @@ public class ManageGroupActionsView {
         SendMessage message = SendMessage
                 .builder()
                 .chatId(userState.getChatId())
-                .text(MSG_MANAGE_GROUPS_ADD_PROMPT_MANAGER)
+                .text("Выберете пользователя")
                 .replyMarkup(getManageGroupsNewGroupPromptManagerMarkup())
                 .build();
         return tgClient.execute(message);
@@ -185,12 +216,14 @@ public class ManageGroupActionsView {
                 .keyboardRow(
                         new KeyboardRow(
                                 KeyboardButton.builder()
-                                        .text(MANAGE_GROUPS_CHANGE_MANAGER)
+                                        .text("Выбрать пользователя")
                                         .requestUsers(
                                                 KeyboardButtonRequestUsers.builder()
                                                         .requestId("1")
                                                         .userIsBot(false)
                                                         .maxQuantity(1)
+                                                        .requestName(true)
+                                                        .requestUsername(true)
                                                         .build())
                                         .build()))
                 .build();
@@ -203,6 +236,8 @@ public class ManageGroupActionsView {
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
                 .text(getBalanceDescription(balance))
+                .parseMode("MARKDOWN")
+                .linkPreviewOptions(LinkPreviewOptions.builder().isDisabled(true).build())
                 .replyMarkup(getManageGroupActionsMarkup(true, balance.getIsActive()))
                 .build();
         tgClient.execute(message);
@@ -215,6 +250,8 @@ public class ManageGroupActionsView {
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
                 .text(getBalanceDescription(balance))
+                .parseMode("MARKDOWN")
+                .linkPreviewOptions(LinkPreviewOptions.builder().isDisabled(true).build())
                 .replyMarkup(getManageGroupActionsMarkupForManager())
                 .build();
         tgClient.execute(message);
@@ -262,7 +299,7 @@ public class ManageGroupActionsView {
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
                 .text(MSG_GROUP_TOO_SHORT)
-                .replyMarkup(commonViews.getToMainMenuMarkup())
+                .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
         try {
             tgClient.execute(message);
@@ -324,7 +361,7 @@ public class ManageGroupActionsView {
         SendMessage message = SendMessage
                 .builder()
                 .chatId(userState.getChatId())
-                .text(MSG_GROUP_PROMPT_REMOVE_USERS)
+                .text("Выберете пользователей")
                 .replyMarkup(promptRemoveUsersMarkup())
                 .build();
         return tgClient.execute(message);
@@ -347,7 +384,7 @@ public class ManageGroupActionsView {
         SendMessage message = SendMessage
                 .builder()
                 .chatId(userState.getChatId())
-                .text(MSG_GROUP_PROMPT_NEW_USERS)
+                .text("Выберете пользователей")
                 .replyMarkup(promptAddUsersMarkup())
                 .build();
         return tgClient.execute(message);
@@ -385,6 +422,8 @@ public class ManageGroupActionsView {
                 .messageId(userState.getMenuMessageId())
                 .text(getUsersList(users))
                 .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
+                .parseMode("MARKDOWN")
+                .linkPreviewOptions(LinkPreviewOptions.builder().isDisabled(true).build())
                 .build();
         tgClient.execute(message);
     }
@@ -427,11 +466,13 @@ public class ManageGroupActionsView {
                 .keyboardRow(
                         new KeyboardRow(
                                 KeyboardButton.builder()
-                                        .text(MSG_GROUP_PROMPT_REMOVE_USERS)
+                                        .text("Выбрать пользователей")
                                         .requestUsers(
                                                 KeyboardButtonRequestUsers.builder()
                                                         .requestId("1")
                                                         .userIsBot(false)
+                                                        .requestName(true)
+                                                        .requestUsername(true)
                                                         .maxQuantity(ManageGroupNewGroupView.MAX_USERS_IN_GROUP)
                                                         .build())
                                         .build()))
@@ -446,10 +487,12 @@ public class ManageGroupActionsView {
                 .keyboardRow(
                         new KeyboardRow(
                                 KeyboardButton.builder()
-                                        .text(MSG_GROUP_PROMPT_NEW_USERS)
+                                        .text("Выбрать пользователей")
                                         .requestUsers(
                                                 KeyboardButtonRequestUsers.builder()
                                                         .requestId("1")
+                                                        .requestName(true)
+                                                        .requestUsername(true)
                                                         .userIsBot(false)
                                                         .maxQuantity(ManageGroupNewGroupView.MAX_USERS_IN_GROUP)
                                                         .build())
@@ -478,11 +521,11 @@ public class ManageGroupActionsView {
                 Тариф: %s
                 Активна: %s
 
-                Кошелек: %s
+                Кошелек: `%s`
                 Баланс: %s TRX
                 """,
                 balance.getLabel(),
-                FormattingTools.formatUser(balance.getManager()),
+                FormattingTools.formatUserLink(balance.getManager()),
                 FormattingTools.formatDateToUtc(balance.getCreatedAt()),
                 tariffLabel,
                 balance.getIsActive() ? "✅" : "❌",
@@ -622,8 +665,7 @@ public class ManageGroupActionsView {
     private String getUsersList(Set<AppUser> users) {
         String usersStr = users.isEmpty() ? "Пользователей нет"
                 : users.stream()
-                        .map(user -> String.format("ID: %s, Логин: %s, Имя: %s", user.getTelegramId(),
-                                user.getTelegramUsername(), user.getTelegramFirstName()))
+                        .map(user -> String.format("[@%s](https://t.me/%s), %s", user.getTelegramUsername(), user.getTelegramUsername(), user.getTelegramFirstName()))
                         .collect(Collectors.joining("\n"));
 
         return """

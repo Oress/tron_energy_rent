@@ -70,8 +70,11 @@ public class TelegramMessages {
         return """
                 ✅ Транзакция успешно завершена
 
-                *Ваш баланс: %s TRX*
-                """.formatted(FormattingTools.formatBalance(balance.getSunBalance()));
+                *%s*
+                """.formatted(
+                    balance.isGroup() 
+                        ? "Баланс группы: %s TRX".formatted(FormattingTools.formatBalance(balance.getSunBalance()))
+                        : "Ваш баланс: %s TRX".formatted(FormattingTools.formatBalance(balance.getSunBalance())));
     }
 
     @SneakyThrows
@@ -162,17 +165,14 @@ public class TelegramMessages {
     @Retryable
     @SneakyThrows
     public Message sendMainMenu(UserState userState, Long chatId, AppUser user) {
-        Tariff tariff = user.getBalance().getTariff();
-
-        if (tariff == null) {
-            logger.error("User {} has no tariff set", user.getTelegramUsername());
-        }
+        Tariff tariff = user.getTariffToUse();
+        boolean showWithdrawBtn = !user.isInGroup() || user.isGroupManager();
 
         SendMessage message = SendMessage
                 .builder()
                 .chatId(chatId)
                 .text(getMainMenuMessage(user))
-                .replyMarkup(getMainMenuReplyMarkup(userState.isManager(), false, tariff))
+                .replyMarkup(getMainMenuReplyMarkup(userState.isManager(), false, tariff, showWithdrawBtn))
                 .linkPreviewOptions(LinkPreviewOptions.builder().isDisabled(true).build())
                 .parseMode("MARKDOWN")
                 .build();
@@ -182,18 +182,15 @@ public class TelegramMessages {
     @Retryable
     @SneakyThrows
     public Message sendAdminMainMenu(UserState userState, Long chatId, AppUser user) {
-        Tariff tariff = user.getBalance().getTariff();
-
-        if (tariff == null) {
-            logger.error("User {} has no tariff set", user.getTelegramUsername());
-        }
+        Tariff tariff = user.getTariffToUse();
+        boolean showWithdrawBtn = !user.isInGroup() || user.isGroupManager();
 
         SendMessage message = SendMessage
                 .builder()
                 .chatId(chatId)
                 .linkPreviewOptions(LinkPreviewOptions.builder().isDisabled(true).build())
                 .text(getMainMenuMessage(user))
-                .replyMarkup(getMainMenuReplyMarkup(userState.isManager(), true, tariff))
+                .replyMarkup(getMainMenuReplyMarkup(userState.isManager(), true, tariff, showWithdrawBtn))
                 .parseMode("MARKDOWN")
                 .build();
         return tgClient.execute(message);
@@ -201,11 +198,8 @@ public class TelegramMessages {
 
     @SneakyThrows
     public void updateMsgToMainMenu(UserState userState, AppUser user) {
-        Tariff tariff = user.getBalance().getTariff();
-
-        if (tariff == null) {
-            logger.error("User {} has no tariff set", user.getTelegramUsername());
-        }
+        Tariff tariff = user.getTariffToUse();
+        boolean showWithdrawBtn = !user.isInGroup() || user.isGroupManager();
 
         EditMessageText message = EditMessageText
                 .builder()
@@ -214,18 +208,15 @@ public class TelegramMessages {
                 .text(getMainMenuMessage(user))
                 .linkPreviewOptions(LinkPreviewOptions.builder().isDisabled(true).build())
                 .parseMode("MARKDOWN")
-                .replyMarkup(getMainMenuReplyMarkup(userState.isManager(), false, tariff))
+                .replyMarkup(getMainMenuReplyMarkup(userState.isManager(), false, tariff, showWithdrawBtn))
                 .build();
         tgClient.execute(message);
     }
 
     @SneakyThrows
     public void updateMsgToAdminMainMenu(UserState userState, CallbackQuery callbackQuery, AppUser user) {
-        Tariff tariff = user.getBalance().getTariff();
-
-        if (tariff == null) {
-            logger.error("User {} has no tariff set", user.getTelegramUsername());
-        }
+        Tariff tariff = user.getTariffToUse();
+        boolean showWithdrawBtn = !user.isInGroup() || user.isGroupManager();
 
         EditMessageText message = EditMessageText
                 .builder()
@@ -234,31 +225,30 @@ public class TelegramMessages {
                 .text(getMainMenuMessage(user))
                 .parseMode("MARKDOWN")
                 .linkPreviewOptions(LinkPreviewOptions.builder().isDisabled(true).build())
-                .replyMarkup(getMainMenuReplyMarkup(userState.isManager(), true, tariff))
+                .replyMarkup(getMainMenuReplyMarkup(userState.isManager(), true, tariff, showWithdrawBtn))
                 .build();
         tgClient.execute(message);
     }
 
     private String getMainMenuMessage(AppUser user) {
-        Balance personalBalance = user.getBalance();
-        Balance groupBalance = user.getGroupBalance();
+        Balance balanceToUse = user.getBalanceToUse();
 
         return """
             ⚡ Приветствуем в нашем сервисе ⚡
 
             Выберите действие, нажав кнопку ниже, время аренды - 1 час
 
-            *Ваш баланс: %s TRX* %s
+            *%s*
 
             [@FlashTronRent_support](https://t.me/FlashTronRent_support) - поможет и ответит на все вопросы
-            """.formatted(FormattingTools.formatBalance(personalBalance.getSunBalance()),
-                groupBalance != null 
-                    ? "\n*Баланс группы: %s TRX*".formatted(FormattingTools.formatBalance(groupBalance.getSunBalance()))
-                    : ""
+            """.formatted(
+                user.isInGroup() 
+                    ? "Баланс группы: %s TRX".formatted(FormattingTools.formatBalance(balanceToUse.getSunBalance()))
+                    : "Ваш баланс: %s TRX".formatted(FormattingTools.formatBalance(balanceToUse.getSunBalance()))
                 );
     }
 
-    private InlineKeyboardMarkup getMainMenuReplyMarkup(Boolean isManager, Boolean isAdmin, Tariff tariff) {
+    private InlineKeyboardMarkup getMainMenuReplyMarkup(Boolean isManager, Boolean isAdmin, Tariff tariff, boolean showWithdrawBtn) {
         var builder = InlineKeyboardMarkup
                 .builder()
                 .keyboardRow(
@@ -281,8 +271,10 @@ public class TelegramMessages {
                                         .builder()
                                         .text(getCustomAmountTransactionTypeLabel(tariff.getTransactionType1AmountSun()))
                                         .callbackData(InlineMenuCallbacks.CUSTOM_TRANSACTION_AMOUNT)
-                                        .build()))
-                .keyboardRow(
+                                        .build()));
+
+                if (showWithdrawBtn) {
+                    builder.keyboardRow(
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
@@ -293,8 +285,18 @@ public class TelegramMessages {
                                         .builder()
                                         .text(StaticLabels.WITHDRAW_TRX)
                                         .callbackData(InlineMenuCallbacks.WITHDRAW_TRX)
-                                        .build()))
-                .keyboardRow(
+                                        .build()));
+                } else {
+                    builder.keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text(StaticLabels.MENU_DEPOSIT)
+                                        .callbackData(InlineMenuCallbacks.DEPOSIT)
+                                        .build()));
+                }
+
+                builder.keyboardRow(
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()

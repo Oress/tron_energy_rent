@@ -8,7 +8,6 @@ import lombok.Data;
 public class AddOrUpdateOrderCommand {
     private Long id;
     private Long userId;
-    private Boolean useGroupWallet;
     private Long itrxFeeSunAmount;
     private Long sunAmountPerTx;
     private Integer txAmount;

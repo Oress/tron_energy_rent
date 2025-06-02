@@ -45,7 +45,7 @@ public class OrderService {
         Long totalSunAmount = command.getTxAmount() * command.getSunAmountPerTx();
         Integer totalEnergyAmount = command.getTxAmount() * command.getEnergyAmountPerTx();
 
-        Balance targetBalance = command.getUseGroupWallet() ? user.getGroupBalance() : user.getBalance();
+        Balance targetBalance = user.getBalanceToUse();
         balanceService.subtractSunBalance(targetBalance, totalSunAmount);
 
         logger.info("Creating a pending order for user id {} username: {} balance: {} params: {}", user.getTelegramId(), user.getTelegramUsername(), targetBalance.getId(), command);
@@ -81,6 +81,7 @@ public class OrderService {
         order.setOrderStatus(OrderStatus.COMPLETED);
         order.setItrxStatus(command.getItrxStatus());
         order.setTxId(command.getTxId());
+        order.setSerial(command.getSerial());
 
         return order;
     }
@@ -98,6 +99,7 @@ public class OrderService {
         Order order = byCorrelationId.get();
         order.setOrderStatus(OrderStatus.REFUNDED);
         order.setItrxStatus(command.getItrxStatus());
+        order.setSerial(command.getSerial());
 
         Balance balance = order.getBalance();
         balance.setSunBalance(balance.getSunBalance() + order.getSunAmount());

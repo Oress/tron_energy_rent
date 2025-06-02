@@ -65,11 +65,19 @@ public class Balance {
     @Version
     private Long version;
 
+    public boolean isGroup() {
+        return BalanceType.GROUP.equals(type);
+    }
+
     public Long makeDeposit(Long amount) {
         if (amount < 0) {
             throw new IllegalArgumentException("Amount must be positive");
         }
         sunBalance += amount;
         return sunBalance;
+    }
+
+    public String getIdAndLabel() {
+        return "ID: %s  Label: %s".formatted(id, label);
     }
 }

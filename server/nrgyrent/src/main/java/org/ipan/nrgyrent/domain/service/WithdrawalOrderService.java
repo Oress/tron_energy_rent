@@ -3,6 +3,7 @@ package org.ipan.nrgyrent.domain.service;
 import java.util.Optional;
 
 import org.apache.commons.lang3.NotImplementedException;
+import org.ipan.nrgyrent.domain.exception.NotManagerException;
 import org.ipan.nrgyrent.domain.model.AppUser;
 import org.ipan.nrgyrent.domain.model.Balance;
 import org.ipan.nrgyrent.domain.model.WithdrawalOrder;
@@ -26,14 +27,21 @@ public class WithdrawalOrderService {
     private final BalanceService balanceService;
 
     @Transactional
-    public WithdrawalOrder createPendingOrder(Long userId, Boolean useGroup, Long amountSun, Long feeAmountSun, String receiveAddress) {
+    public WithdrawalOrder createPendingOrder(Long userId, Long amountSun, Long feeAmountSun, String receiveAddress) {
         AppUser user = userRepo.findById(userId).orElse(null);
         if (user == null) {
+            logger.error("User is not found id: {}", userId);
             throw new IllegalArgumentException("User not found");
         }
 
-        Balance targetBalance = useGroup ? user.getGroupBalance() : user.getBalance();
+        if (user.isInGroup() && !user.isGroupManager()) {
+            logger.error("Member of a group tries to withdraw. userId {}, group: {}, amount: {}, receiveAddres {}", userId, user.getGroupBalance().getIdAndLabel(), amountSun, receiveAddress);
+            throw new NotManagerException("User is not manager");
+        }
+
+        Balance targetBalance = user.getBalanceToUse();
         balanceService.subtractSunBalance(targetBalance, amountSun + feeAmountSun);
+        logger.info("User {} withdrawing {} to {}", userId,  amountSun, receiveAddress);
 
         WithdrawalOrder order = new WithdrawalOrder();
         order.setUser(user);
@@ -44,6 +52,7 @@ public class WithdrawalOrderService {
         order.setReceiveAddress(receiveAddress);
 
         withdrawalOrderRepo.save(order);
+        logger.info("Creating withdrawal request id {} user id {} amount {} balance id {} receive wallet {}", order.getId(), userId, amountSun, targetBalance.getId(), receiveAddress);
 
         return order;
     }
@@ -53,12 +62,16 @@ public class WithdrawalOrderService {
         Optional<WithdrawalOrder> order = withdrawalOrderRepo.findById(withdrawalOrderId);
 
         if (order.isEmpty()) {
+            logger.error("Order is not found id: {}", withdrawalOrderId);
             throw new IllegalArgumentException("Order not found");
         }
 
         WithdrawalOrder withdrawalOrder = order.get();
         withdrawalOrder.setStatus(WithdrawalStatus.COMPLETED);
         withdrawalOrder.setTxId(txId);
+
+
+        logger.info("Completing withdrawal order id {} tx id {}", withdrawalOrderId, txId);
 
         return withdrawalOrder;
     }

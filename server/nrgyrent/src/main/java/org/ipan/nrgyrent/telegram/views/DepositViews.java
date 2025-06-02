@@ -25,8 +25,8 @@ public class DepositViews {
         Balance groupBalance = user.getGroupBalance();
 
         String text = groupBalance != null
-            ? getDepositMenuText(personalBalance.getDepositAddress(), personalBalance.getSunBalance(), groupBalance.getDepositAddress(), groupBalance.getSunBalance())
-            : getDepositMenuText(personalBalance.getDepositAddress(), personalBalance.getSunBalance());
+            ? getGroupDepositMenuText(groupBalance.getDepositAddress(), groupBalance.getSunBalance())
+            : getPersonalDepositMenuText(personalBalance.getDepositAddress(), personalBalance.getSunBalance());
 
         EditMessageText message = EditMessageText
                 .builder()
@@ -39,16 +39,8 @@ public class DepositViews {
         tgClient.execute(message);
     }
 
-    public static String getDepositMenuText(String personalDepositAddress, Long personalSunBalance, String groupDepositAddress, Long groupSunBalance) {
+    public static String getGroupDepositMenuText(String groupDepositAddress, Long groupSunBalance) {
         return """
-                👛 Ваш адрес депозита:
-
-                `%s`
-
-                *Ваш баланс: %s TRX*
-
-                =========================
-
                 👛 Адрес депозита группы:
 
                 `%s`
@@ -62,13 +54,10 @@ public class DepositViews {
                 ❗️ Минимальный депозит - 10 TRX❗️
 
                 ⌛️ Среднее время зачисления депозита - 2 минуты, вы получите уведомление при успешном пополнении"""
-                .formatted(
-                    personalDepositAddress,FormattingTools.formatBalance(personalSunBalance),
-                    groupDepositAddress,FormattingTools.formatBalance(groupSunBalance)
-                    );
+                .formatted(groupDepositAddress,FormattingTools.formatBalance(groupSunBalance));
     }
 
-    public static String getDepositMenuText(String depositAddress, Long sunBalance) {
+    public static String getPersonalDepositMenuText(String depositAddress, Long sunBalance) {
         return """
                 💰 Ваш адрес депозита:
 
@@ -81,8 +70,6 @@ public class DepositViews {
                 ❗️ Минимальный депозит - 10 TRX❗️
 
                 ⌛️ Среднее время зачисления депозита - 2 минуты, вы получите уведомление при успешном пополнении"""
-                .formatted(
-                        depositAddress,
-                        FormattingTools.formatBalance(sunBalance));
+                .formatted(depositAddress, FormattingTools.formatBalance(sunBalance));
     }
 }

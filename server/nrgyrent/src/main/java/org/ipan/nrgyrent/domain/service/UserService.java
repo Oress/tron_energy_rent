@@ -7,6 +7,7 @@ import org.apache.commons.lang3.NotImplementedException;
 import org.ipan.nrgyrent.domain.model.AppUser;
 import org.ipan.nrgyrent.domain.model.Balance;
 import org.ipan.nrgyrent.domain.model.repository.UserRepo;
+import org.ipan.nrgyrent.domain.service.commands.TgUserId;
 import org.ipan.nrgyrent.domain.service.commands.users.CreateUserCommand;
 import org.springframework.beans.factory.annotation.Lookup;
 import org.springframework.stereotype.Service;
@@ -54,9 +55,11 @@ public class UserService {
     public void deactivateUser(Long selectedUserId) {
         AppUser appUser = userRepo.findById(selectedUserId).orElse(null);
         if (appUser != null) {
+            if (appUser.isInGroup()) {
+                balanceService.removeUsersFromTheGroupBalance(appUser.getGroupBalance().getId(), List.of(new TgUserId(selectedUserId, null, null)));
+            }
             appUser.setDisabled(true);
             balanceService.deactivateUserBalance(appUser.getBalance().getId());
-            appUser.getBalance();
         }
     }
 

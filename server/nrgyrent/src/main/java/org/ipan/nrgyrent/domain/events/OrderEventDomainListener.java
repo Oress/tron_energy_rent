@@ -20,6 +20,7 @@ public class OrderEventDomainListener {
                 .correlationId(event.getCorrelationId())
                 .itrxStatus(event.getItrxStatus())
                 .txId(event.getTxId())
+                .serial(event.getSerial())
                 .build();
         orderService.completeOrder(command);
     }
@@ -30,6 +31,7 @@ public class OrderEventDomainListener {
         AddOrUpdateOrderCommand command = AddOrUpdateOrderCommand.builder()
                 .correlationId(event.getCorrelationId())
                 .itrxStatus(event.getItrxStatus())
+                .serial(event.getSerial())
                 .build();
         orderService.refundOrder(command);
     }

@@ -44,20 +44,32 @@ public class WithdrawalHandler {
     public void promptBalanceType(UserState userState, Update update) {
         AppUser user = userService.getById(userState.getTelegramId());
 
-        if (user.getGroupBalance() == null) {
+        Balance groupBalance = user.getGroupBalance();
+        if (groupBalance == null) {
             handleBalanceTypePersonal_promptAmount(userState, update);
         } else {
-            withdrawViews.promptBalanceType(userState);
-            telegramState.updateUserState(userState.getTelegramId(),
-                    userState.withState(States.USER_PROMPT_WITHDRAW_BALANCE_TYPE));
-        }
+            if (!groupBalance.getIsActive()) {
+                logger.error("User tries to withdraw from inactive group userstate {} group id: {}, label: {}", userState, groupBalance.getId(), groupBalance.getLabel());
+                return;
+            }
+
+            AppUser manager = groupBalance.getManager();
+            if (manager == null) {
+                logger.error("Group has no manager group: {} userstate {}", groupBalance.getIdAndLabel(), userState);
+                return;
+            }
+
+            if (!user.getTelegramId().equals(manager.getTelegramId())) {
+                logger.error("Member of a group tries to withdraw funds from group. group {} userstate {}", groupBalance.getIdAndLabel(), userState);
+                withdrawViews.updNotEnoughRights(userState);
+                return;
+            }
+
+            handleBalanceTypeGroup_promptAmount(userState, update);
+        } 
     }
 
-    @MatchState(state = States.USER_PROMPT_WITHDRAW_BALANCE_TYPE, callbackData = InlineMenuCallbacks.WITHDRAW_BALANCE_PERSONAL)
     public void handleBalanceTypePersonal_promptAmount(UserState userState, Update update) {
-        WithdrawParams params = telegramState.getOrCreateWithdrawParams(userState.getTelegramId());
-        telegramState.updateWithdrawParams(userState.getTelegramId(), params.withGroupBalance(false));
-
         AppUser user = userService.getById(userState.getTelegramId());
         Balance balance = user.getBalance();
 
@@ -65,12 +77,7 @@ public class WithdrawalHandler {
         telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.USER_PROMPT_WITHDRAW_AMOUNT));
     }
 
-    @MatchState(state = States.USER_PROMPT_WITHDRAW_BALANCE_TYPE, callbackData = InlineMenuCallbacks.WITHDRAW_BALANCE_GROUP)
     public void handleBalanceTypeGroup_promptAmount(UserState userState, Update update) {
-        WithdrawParams params = telegramState.getOrCreateWithdrawParams(userState.getTelegramId());
-        telegramState.updateWithdrawParams(userState.getTelegramId(), params.withGroupBalance(true));
-
-        
         AppUser user = userService.getById(userState.getTelegramId());
         Balance balance = user.getGroupBalance();
 
@@ -93,7 +100,7 @@ public class WithdrawalHandler {
                 WithdrawParams params = telegramState.getOrCreateWithdrawParams(userState.getTelegramId());
 
                 AppUser user = userService.getById(userState.getTelegramId());
-                Balance balance = params.getGroupBalance() ? user.getGroupBalance() : user.getBalance();
+                Balance balance = user.getBalanceToUse();
 
                 if (balance == null) {
                     logger.error("User withdrawing TRX {} has no balance params: {}", userState.getTelegramId(), params);
@@ -113,9 +120,8 @@ public class WithdrawalHandler {
                 }
                 telegramState.updateWithdrawParams(userState.getTelegramId(), params.withAmount(sunAmountLong));
             } catch (NumberFormatException e) {
-                WithdrawParams params = telegramState.getOrCreateWithdrawParams(userState.getTelegramId());
                 AppUser user = userService.getById(userState.getTelegramId());
-                Balance balance = params.getGroupBalance() ? user.getGroupBalance() : user.getBalance();
+                Balance balance = user.getBalanceToUse();
                 withdrawViews.promptAmount(userState, balance);
                 return;
             }

@@ -12,9 +12,7 @@ import org.ipan.nrgyrent.telegram.utils.FormattingTools;
 import org.ipan.nrgyrent.telegram.utils.WalletTools;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Component;
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
-import org.telegram.telegrambots.meta.api.objects.message.Message;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
@@ -28,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @AllArgsConstructor
 public class WithdrawViews {
+    public static final String NTFN_NOT_ENOUGH_RIGHTS = "❌ У вас недостаточно прав для вывода TRX из баланса группы, обратитесь к менеджеру";
     public static final String NTFN_WITHDRWAL_FAIL = "❌ Вывод средств не удался";
     public static final String NTFN_WITHDRWAL_SUCCESS = """
             ✅ Вывод средств успешно завершен
@@ -44,12 +43,6 @@ public class WithdrawViews {
             На сервисе сейчас недостаточно средств для вывода. Пожалуйста, попробуйте позже.
             """;
 
-    private static final String MSG_WITHDRAW_PROMPT_BALANCE_TYPE = """
-            💰 Вывод средств
-
-            Пожалуйста, выберите тип баланса, с которого вы хотите вывести средства.
-            """;
-
     private static final String MSG_WITHDRAW_TRX = """
             💰 Вывод TRX
 
@@ -59,11 +52,9 @@ public class WithdrawViews {
     private static final String MSG_WITHDRAW_TRX_IN_PROGRESS = """
             💰 Вывод TRX
 
-            Вывод средств в процессе. Вам будет отправлено уведомление, когда средства будут выведены.
+            Вывод средств в процессе....
             """;
 
-    private static final String LBL_WITHDRAWAL_PERSONAL_BALANCE = "Личный баланс";
-    private static final String LBL_WITHDRAWAL_GROUP_BALANCE = "Груповой баланс";
 
     private final TelegramClient tgClient;
     private final CommonViews commonViews;
@@ -96,21 +87,23 @@ public class WithdrawViews {
     }
 
     @SneakyThrows
-    public Message sendWithdrawalSuccessful(UserState userState) {
-        SendMessage message = SendMessage
+    public void updWithdrawalSuccessful(UserState userState) {
+        EditMessageText message = EditMessageText
                 .builder()
                 .chatId(userState.getChatId())
                 .text(NTFN_WITHDRWAL_SUCCESS)
+                .messageId(userState.getMenuMessageId())
                 .replyMarkup(getOrderRefundedNotificationMarkup())
                 .build();
-        return tgClient.execute(message);
+        tgClient.execute(message);
     }
 
     @SneakyThrows
-    public void sendWithdrawalFailNotEnoughBalance(UserState userState) {
-        SendMessage message = SendMessage
+    public void updWithdrawalFailNotEnoughBalance(UserState userState) {
+        EditMessageText message = EditMessageText
                 .builder()
                 .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
                 .text(NTFN_WITHDRWAL_FAIL_NOT_ENOUGH_BALANCE)
                 .replyMarkup(getOrderRefundedNotificationMarkup())
                 .build();
@@ -118,36 +111,40 @@ public class WithdrawViews {
     }
 
     @SneakyThrows
-    public Message sendWithdrawalFailServiceNotEnoughBalance(UserState userState) {
-        SendMessage message = SendMessage
-                .builder()
-                .chatId(userState.getChatId())
-                .text(NTFN_WITHDRWAL_FAIL_SERVICE_NOT_ENOUGH_BALANCE)
-                .replyMarkup(getOrderRefundedNotificationMarkup())
-                .build();
-        return tgClient.execute(message);
-    }
-
-    @SneakyThrows
-    public Message sendWithdrawalFail(UserState userState) {
-        SendMessage message = SendMessage
-                .builder()
-                .chatId(userState.getChatId())
-                .text(NTFN_WITHDRWAL_FAIL)
-                .replyMarkup(getOrderRefundedNotificationMarkup())
-                .build();
-        return tgClient.execute(message);
-    }
-
-    @Retryable
-    @SneakyThrows
-    public void promptBalanceType(UserState userState) {
+    public void updWithdrawalFailServiceNotEnoughBalance(UserState userState) {
         EditMessageText message = EditMessageText
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
-                .text(MSG_WITHDRAW_PROMPT_BALANCE_TYPE)
-                .replyMarkup(getWithdrawBalanceMarkup())
+                .text(NTFN_WITHDRWAL_FAIL_SERVICE_NOT_ENOUGH_BALANCE)
+                .replyMarkup(getOrderRefundedNotificationMarkup())
+                .build();
+        tgClient.execute(message);
+    }
+
+    public void updWithdrawalFail(UserState userState) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
+                .text(NTFN_WITHDRWAL_FAIL)
+                .replyMarkup(getOrderRefundedNotificationMarkup())
+                .build();
+        try {
+            tgClient.execute(message);
+        } catch(Exception e) {
+            logger.error("Could not updWithdrawalFail", e);
+        }
+    }
+
+    @SneakyThrows
+    public void updNotEnoughRights(UserState userState) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(userState.getChatId())
+                .text(NTFN_NOT_ENOUGH_RIGHTS)
+                .messageId(userState.getMenuMessageId())
+                .replyMarkup(commonViews.getToMainMenuMarkup())
                 .build();
         tgClient.execute(message);
     }
@@ -198,35 +195,6 @@ public class WithdrawViews {
     private InlineKeyboardMarkup getOrderRefundedNotificationMarkup() {
         return InlineKeyboardMarkup
                 .builder()
-                .keyboardRow(
-                        new InlineKeyboardRow(
-                                InlineKeyboardButton
-                                        .builder()
-                                        .text(StaticLabels.TO_MAIN_MENU)
-                                        .callbackData(InlineMenuCallbacks.TO_MAIN_MENU)
-                                        .build())
-
-                )
-                .build();
-    }
-
-    private InlineKeyboardMarkup getWithdrawBalanceMarkup() {
-        return InlineKeyboardMarkup
-                .builder()
-                .keyboardRow(
-                        new InlineKeyboardRow(
-                                InlineKeyboardButton
-                                        .builder()
-                                        .text(LBL_WITHDRAWAL_PERSONAL_BALANCE)
-                                        .callbackData(InlineMenuCallbacks.WITHDRAW_BALANCE_PERSONAL)
-                                        .build(),
-                                InlineKeyboardButton
-                                        .builder()
-                                        .text(LBL_WITHDRAWAL_GROUP_BALANCE)
-                                        .callbackData(InlineMenuCallbacks.WITHDRAW_BALANCE_GROUP)
-                                        .build())
-
-                )
                 .keyboardRow(
                         new InlineKeyboardRow(
                                 InlineKeyboardButton

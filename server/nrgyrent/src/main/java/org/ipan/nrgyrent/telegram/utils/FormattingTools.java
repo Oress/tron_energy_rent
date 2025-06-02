@@ -11,9 +11,28 @@ import java.time.format.DateTimeFormatter;
 import org.ipan.nrgyrent.domain.model.AppUser;
 import org.ipan.nrgyrent.domain.model.OrderStatus;
 import org.ipan.nrgyrent.domain.model.WithdrawalStatus;
+import org.ipan.nrgyrent.domain.service.commands.TgUserId;
 
 public class FormattingTools {
     private static DecimalFormat df = new DecimalFormat("# ###.##");
+
+    public static String formatUserLink(TgUserId user) {
+        if (user == null) {
+            return "-";
+        }
+        if (user.getUsername() != null) {
+            return String.format("[@%s](https://t.me/%s)", user.getUsername(), user.getUsername());
+        } else {
+            return String.format("%s %s (логин не задан)", user.getId(), user.getFirstName());
+        }
+    }
+
+    public static String formatUserLink(AppUser user) {
+        if (user == null) {
+            return "-";
+        }
+        return String.format("[@%s](https://t.me/%s) %s", user.getTelegramUsername(), user.getTelegramUsername(), user.getTelegramFirstName());
+    }
 
     public static String formatUser(AppUser user) {
         if (user == null) {

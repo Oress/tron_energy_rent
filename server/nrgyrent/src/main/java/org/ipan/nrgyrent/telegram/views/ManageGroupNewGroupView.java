@@ -64,23 +64,6 @@ public class ManageGroupNewGroupView {
         }
     }
 
-    
-    public void someUsersAreNotRegistered(UserState userState) {
-        EditMessageText message = EditMessageText
-                .builder()
-                .chatId(userState.getChatId())
-                .messageId(userState.getMenuMessageId())
-                .text("❌ Некоторые пользователи не зарегистрированы. Попробуйте снова.")
-                .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
-                .build();
-        try {
-            tgClient.execute(message);
-        } catch (Exception e) {
-            logger.error("Could not someUsersAreNotRegistered userstate {}", userState, e);
-        }
-    }
-
-
     @SneakyThrows
     public void updMenuToManageGroupsMenu(UserState userState) {
         EditMessageText message = EditMessageText
@@ -188,6 +171,8 @@ public class ManageGroupNewGroupView {
                                                 KeyboardButtonRequestUsers.builder()
                                                         .requestId("1")
                                                         .userIsBot(false)
+                                                        .requestName(true)
+                                                        .requestUsername(true)
                                                         .maxQuantity(MAX_USERS_IN_GROUP)
                                                         .build())
                                         .build()))
@@ -208,6 +193,8 @@ public class ManageGroupNewGroupView {
                                                         .requestId("1")
                                                         .userIsBot(false)
                                                         .maxQuantity(1)
+                                                        .requestName(true)
+                                                        .requestUsername(true)
                                                         .build())
                                         .build()))
                 .build();

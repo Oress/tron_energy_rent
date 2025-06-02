@@ -72,9 +72,9 @@ public class ItrxService {
 
     private void sendOrderEvent(OrderCallbackRequest orderCallbackRequest) {
         if (orderCallbackRequest.status == ITRX_ORDER_SUCCESS) {
-            eventPublisher.publishOrderCompletedEvent(orderCallbackRequest.out_trade_no, ITRX_ORDER_SUCCESS, orderCallbackRequest.txid);
+            eventPublisher.publishOrderCompletedEvent(orderCallbackRequest.out_trade_no, ITRX_ORDER_SUCCESS, orderCallbackRequest.txid, orderCallbackRequest.serial);
         } else if (orderCallbackRequest.status == ITRX_ORDER_ERROR) {
-            eventPublisher.publishOrderFailedEvent(orderCallbackRequest.out_trade_no, ITRX_ORDER_ERROR);
+            eventPublisher.publishOrderFailedEvent(orderCallbackRequest.out_trade_no, ITRX_ORDER_ERROR, orderCallbackRequest.serial);
         }
     }
 

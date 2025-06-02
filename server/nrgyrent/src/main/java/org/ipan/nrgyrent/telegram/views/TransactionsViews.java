@@ -27,11 +27,6 @@ import lombok.extern.slf4j.Slf4j;
 @AllArgsConstructor
 @Slf4j
 public class TransactionsViews {
-    public static final String LBL_TRANSACTION_BALANCE_PERSONAL = "Личный баланс";
-    public static final String LBL_TRANSACTION_BALANCE_GROUP = "Групповой баланс";
-
-    private static final String MSG_TRANSACTION_PROMPT_BALANCE_TYPE = "Пожалуйста, выберите тип баланса для транзакции:";
-
     private static final String MSG_NOT_ENOUGH_TRX = """
             ❌ Недостаточно средств на балансе
             Пожалуйста, пополните баланс и повторите попытку.
@@ -46,19 +41,6 @@ public class TransactionsViews {
 
     private final TelegramClient tgClient;
     private final CommonViews commonViews;
-
-    @Retryable
-    @SneakyThrows
-    public void updMenuToPromptBalanceType(UserState userState) {
-        EditMessageText message = EditMessageText
-                .builder()
-                .chatId(userState.getChatId())
-                .messageId(userState.getMenuMessageId())
-                .text(MSG_TRANSACTION_PROMPT_BALANCE_TYPE)
-                .replyMarkup(getChooseBalanceTypeMarkup())
-                .build();
-        tgClient.execute(message);
-    }
 
     @Retryable
     @SneakyThrows
@@ -251,33 +233,6 @@ public class TransactionsViews {
         walletRows.forEach(builder::keyboardRow);
 
         return builder
-                .keyboardRow(
-                        new InlineKeyboardRow(
-                                InlineKeyboardButton
-                                        .builder()
-                                        .text(StaticLabels.TO_MAIN_MENU)
-                                        .callbackData(InlineMenuCallbacks.TO_MAIN_MENU)
-                                        .build())
-
-                )
-                .build();
-    }
-
-    public InlineKeyboardMarkup getChooseBalanceTypeMarkup() {
-        return InlineKeyboardMarkup
-                .builder()
-                .keyboardRow(
-                        new InlineKeyboardRow(
-                                InlineKeyboardButton
-                                        .builder()
-                                        .text(LBL_TRANSACTION_BALANCE_PERSONAL)
-                                        .callbackData(InlineMenuCallbacks.TRANSACTION_BALANCE_PERSONAL)
-                                        .build(),
-                                InlineKeyboardButton
-                                        .builder()
-                                        .text(LBL_TRANSACTION_BALANCE_GROUP)
-                                        .callbackData(InlineMenuCallbacks.TRANSACTION_BALANCE_GROUP)
-                                        .build()))
                 .keyboardRow(
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
