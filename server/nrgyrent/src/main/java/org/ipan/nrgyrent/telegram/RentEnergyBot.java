@@ -83,7 +83,11 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
         }
 
         if (handleStartState(user, userState, update)) {
-            logger.warn("User sent /start command username: {}, userstate: ", user.getTelegramUsername(), userState);
+            if (user != null) {
+                logger.warn("User sent /start command username: {}, userstate: {}", user.getTelegramUsername(), userState);
+            } else {
+                logger.info("User registered /start command userstate: {} ", userState);
+            }
             return;
         }
 
