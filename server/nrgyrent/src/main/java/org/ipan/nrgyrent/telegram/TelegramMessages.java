@@ -4,9 +4,12 @@ import java.util.List;
 
 import org.ipan.nrgyrent.domain.model.AppUser;
 import org.ipan.nrgyrent.domain.model.Balance;
+import org.ipan.nrgyrent.domain.model.Order;
 import org.ipan.nrgyrent.domain.model.Tariff;
+import org.ipan.nrgyrent.domain.model.UserRole;
 import org.ipan.nrgyrent.telegram.state.UserState;
 import org.ipan.nrgyrent.telegram.utils.FormattingTools;
+import org.ipan.nrgyrent.telegram.utils.WalletTools;
 import org.ipan.nrgyrent.telegram.views.ManageGroupNewGroupView;
 import org.ipan.nrgyrent.telegram.views.ManageGroupSearchView;
 import org.springframework.retry.annotation.Retryable;
@@ -44,37 +47,67 @@ public class TelegramMessages {
     }
 
     @SneakyThrows
-    public Message sendTransactionRefundNotification(UserState userState) {
-        SendMessage message = SendMessage
+    public void sendTransactionRefundNotification(UserState userState, Order order) {
+        EditMessageText message = EditMessageText
                 .builder()
-                .chatId(userState.getChatId())
-                .text(StaticLabels.NTFN_ORDER_REFUNDED)
-                .replyMarkup(getToMainMenuNotificationMarkup())
+                .chatId(order.getChatId())
+                .messageId(order.getMessageToUpdate())
+                .text(getFailedTransactionMessage(order))
+                // .replyMarkup(getToMainMenuNotificationMarkup())
                 .build();
-        return tgClient.execute(message);
+        try {
+            tgClient.execute(message);
+        } catch (Exception e) {
+            logger.error("Failed to sendTransactionRefundNotification user: {}", userState, e);
+        }
     }
 
-    @SneakyThrows
-    public Message sendTransactionSuccessNotification(UserState userState, Balance balance) {
-        SendMessage message = SendMessage
+    public void sendTransactionSuccessNotification(UserState userState, Order order) {
+        EditMessageText message = EditMessageText
                 .builder()
-                .chatId(userState.getChatId())
-                .text(getSuccessfulTransactionMessage(balance))
-                .replyMarkup(getToMainMenuNotificationMarkup())
-                .parseMode("MARKDOWN")
+                .chatId(order.getChatId())
+                .messageId(order.getMessageToUpdate())
+                .text(getSuccessfulTransactionMessage(order))
+                // .replyMarkup(getToMainMenuNotificationMarkup())
+                // .parseMode("MARKDOWN")
                 .build();
-        return tgClient.execute(message);
+        try {
+            tgClient.execute(message);
+        } catch (Exception e) {
+            logger.error("Failed to sendTransactionSuccessNotification user: {}", userState, e);
+        }
+        return ;
     }
 
-    private String getSuccessfulTransactionMessage(Balance balance) {
+    private String getSuccessfulTransactionMessage(Order order) {
         return """
-                ✅ Транзакция успешно завершена
+                ☑️ Транзакция успешно завершена
 
-                *%s*
+                Количество: %s
+                Сумма: %s TRX
+                Получатель: %s
                 """.formatted(
-                    balance.isGroup() 
-                        ? "Баланс группы: %s TRX".formatted(FormattingTools.formatBalance(balance.getSunBalance()))
-                        : "Ваш баланс: %s TRX".formatted(FormattingTools.formatBalance(balance.getSunBalance())));
+                    order.getTxAmount(),
+                    FormattingTools.formatBalance(order.getSunAmount()),
+                    WalletTools.formatTronAddress(order.getReceiveAddress())
+                    );
+    }
+
+    private String getFailedTransactionMessage(Order order) {
+        return """
+                ❌ Транзакция была отменена
+
+                Количество: %s
+                Сумма: %s TRX
+                Получатель: %s
+
+                Средства были возвращены на ваш баланс
+                """.formatted(
+                    order.getCorrelationId(),
+                    order.getTxAmount(),
+                    FormattingTools.formatBalance(order.getSunAmount()),
+                    WalletTools.formatTronAddress(order.getReceiveAddress())
+                    );
     }
 
     @SneakyThrows
@@ -161,6 +194,18 @@ public class TelegramMessages {
             logger.error("Failed to delete callback message {}, userstate {}", callbackQuery.getMessage().getMessageId(), userState, e);
         }
     }
+
+    @SneakyThrows
+    public Message sendUserMainMenuBasedOnRole(UserState userState, Long chatId, AppUser user) {
+        UserRole role = user != null ? user.getRole() : UserRole.USER;
+
+        Message newMenuMsg = switch (role) {
+            case ADMIN -> sendAdminMainMenu(userState, chatId, user);
+            default -> sendMainMenu(userState, chatId, user);
+        };
+        return newMenuMsg;
+    }
+
 
     @Retryable
     @SneakyThrows

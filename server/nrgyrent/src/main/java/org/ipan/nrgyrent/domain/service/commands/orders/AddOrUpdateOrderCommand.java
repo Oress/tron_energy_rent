@@ -7,6 +7,8 @@ import lombok.Data;
 @Builder
 public class AddOrUpdateOrderCommand {
     private Long id;
+    private Long chatId;
+    private Integer messageIdToUpdate;
     private Long userId;
     private Long itrxFeeSunAmount;
     private Long sunAmountPerTx;

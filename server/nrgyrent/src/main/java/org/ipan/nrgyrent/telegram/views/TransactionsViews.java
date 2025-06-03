@@ -3,6 +3,7 @@ package org.ipan.nrgyrent.telegram.views;
 import java.math.BigDecimal;
 import java.util.List;
 
+import org.ipan.nrgyrent.domain.model.Order;
 import org.ipan.nrgyrent.domain.model.Tariff;
 import org.ipan.nrgyrent.domain.model.UserWallet;
 import org.ipan.nrgyrent.itrx.AppConstants;
@@ -36,7 +37,7 @@ public class TransactionsViews {
 
     private static final String MSG_TRANSACTION_PENDING = """
             ⏳ Транзакция в процессе
-            Пожалуйста, подождите до 5 минут. Бот отправит вам уведомление, когда транзакция завершится
+            Пожалуйста, подождите до 5 минут. Бот обновит это сообщение, когда транзакция завершится
             """;
 
     private final TelegramClient tgClient;
@@ -148,6 +149,24 @@ public class TransactionsViews {
         }
     }
 
+    public void somethingWentWrong(UserState userState, Order order) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(order.getChatId())
+                .messageId(order.getMessageToUpdate())
+                .text("""
+                    Заказ: %s
+                    ❌ Что-то пошло не так. Пожалуйста, попробуйте позже.
+                    """.formatted(order.getCorrelationId()))
+                // .replyMarkup(commonViews.getToMainMenuMarkup())
+                .build();
+        try {
+            tgClient.execute(message);
+        } catch (Exception e) {
+            logger.error("Could not somethingWentWrong userstate {}", userState, e);
+        }
+    }
+
     public void somethingWentWrong(UserState userState) {
         EditMessageText message = EditMessageText
                 .builder()
@@ -163,13 +182,16 @@ public class TransactionsViews {
         }
     }
 
-    public void transactionToInactiveWallet(UserState userState) {
+    public void transactionToInactiveWallet(UserState userState, Order order) {
         EditMessageText message = EditMessageText
                 .builder()
-                .chatId(userState.getChatId())
-                .messageId(userState.getMenuMessageId())
-                .text("❌ Кошелек не активен. Пожалуйста, выберите другой кошелек.")
-                .replyMarkup(commonViews.getToMainMenuMarkup())
+                .chatId(order.getChatId())
+                .messageId(order.getMessageToUpdate())
+                .text("""
+                    Заказ: %s
+                    ❌ Кошелек не активен. Пожалуйста, выберите другой кошелек.
+                    """.formatted(order.getCorrelationId()))
+                // .replyMarkup(commonViews.getToMainMenuMarkup())
                 .build();
         try {
             tgClient.execute(message);
@@ -178,13 +200,16 @@ public class TransactionsViews {
         }
     }
 
-    public void itrxBalanceNotEnoughFunds(UserState userState) {
+    public void itrxBalanceNotEnoughFunds(UserState userState, Order order) {
         EditMessageText message = EditMessageText
                 .builder()
-                .chatId(userState.getChatId())
-                .messageId(userState.getMenuMessageId())
-                .text("❌ Сервис временно недоступен. Пожалуйста, свяжитесь с администратором.")
-                .replyMarkup(commonViews.getToMainMenuMarkup())
+                .chatId(order.getChatId())
+                .messageId(order.getMessageToUpdate())
+                .text("""
+                    Заказ: %s
+                    ❌ Сервис временно недоступен. Пожалуйста, свяжитесь с администратором.
+                    """.formatted(order.getCorrelationId()))
+                // .replyMarkup(commonViews.getToMainMenuMarkup())
                 .build();
         try {
             tgClient.execute(message);
@@ -201,6 +226,7 @@ public class TransactionsViews {
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
                 .text(MSG_TRANSACTION_PROGRESS)
+                .replyMarkup(null)
                 .build();
         tgClient.execute(message);
     }

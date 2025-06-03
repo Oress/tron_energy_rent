@@ -516,4 +516,11 @@
         </addColumn>
     </changeSet>
 
+    <changeSet id="extend nrg_orders with chat_id, message_to_update" author="oress">
+        <addColumn tableName="nrg_orders">
+            <column name="chat_id" type="bigint" defaultValue="1" />
+            <column name="message_to_update" type="bigint" defaultValue="1" />
+        </addColumn>
+    </changeSet>
+
 </databaseChangeLog>

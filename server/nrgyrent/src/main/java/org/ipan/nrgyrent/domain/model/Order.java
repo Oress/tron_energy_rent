@@ -52,6 +52,12 @@ public class Order {
     @Column(name = "energy_amount")
     private Integer energyAmount;
 
+    @Column(name = "chat_id")
+    private Long chatId;
+
+    @Column(name = "message_to_update")
+    private Integer messageToUpdate;
+
     @Column(name = "receive_address")
     private String receiveAddress;
 

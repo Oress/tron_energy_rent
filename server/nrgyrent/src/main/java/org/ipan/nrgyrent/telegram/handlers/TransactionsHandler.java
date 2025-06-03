@@ -20,6 +20,7 @@ import org.ipan.nrgyrent.itrx.dto.EstimateOrderAmountResponse;
 import org.ipan.nrgyrent.itrx.dto.PlaceOrderResponse;
 import org.ipan.nrgyrent.telegram.InlineMenuCallbacks;
 import org.ipan.nrgyrent.telegram.States;
+import org.ipan.nrgyrent.telegram.TelegramMessages;
 import org.ipan.nrgyrent.telegram.state.TelegramState;
 import org.ipan.nrgyrent.telegram.state.TransactionParams;
 import org.ipan.nrgyrent.telegram.state.UserState;
@@ -49,6 +50,7 @@ public class TransactionsHandler {
     private final UserService userService;
     private final OrderService orderService;
     private final UserWalletService userWalletService;
+    private final TelegramMessages telegramMessages;
 
     @MatchState(state = States.MAIN_MENU, callbackData = InlineMenuCallbacks.CUSTOM_TRANSACTION_AMOUNT)
     public void startCustomTransactionAmount65K_promptAmount(UserState userState, Update update) {
@@ -153,6 +155,7 @@ public class TransactionsHandler {
 
         Message message = update.getMessage();
         if (message != null && message.hasText()) {
+            telegramMessages.deleteMessage(message);
             tryMakeTransaction(userState, energyAmountPerTx, AppConstants.DURATION_1H, message.getText(), txAmount, sunAmountPerTx);
         }
     }
@@ -176,10 +179,20 @@ public class TransactionsHandler {
                                 .txAmount(txAmount)
                                 .sunAmountPerTx(sunAmountPerTx)
                                 .duration(duration)
+                                .messageIdToUpdate(userState.getMenuMessageId())
+                                .chatId(userState.getChatId())
                                 .itrxFeeSunAmount(estimateOrderResponse.getTotal_price())
                                 .correlationId(correlationId.toString())
-                                // .serial(placeOrderResponse.getSerial())
                                 .build());
+
+                AppUser user = userService.getById(userState.getTelegramId());
+                transactionsViews.updMenuToTransactionPending(userState);
+
+                Message newMenuMsg = telegramMessages.sendUserMainMenuBasedOnRole(userState, userState.getChatId(), user);
+                telegramState.updateUserState(userState.getTelegramId(), userState
+                        .withState(States.MAIN_MENU)
+                        .withChatId(newMenuMsg.getChatId())
+                        .withMenuMessageId(newMenuMsg.getMessageId()));
 
                 PlaceOrderResponse placeOrderResponse = itrxService.placeOrder(totalRentEnergy, duration, receiveAddress,
                         correlationId);
@@ -189,37 +202,27 @@ public class TransactionsHandler {
                             AddOrUpdateOrderCommand.builder()
                                     .correlationId(correlationId.toString())
                                     .build());
-                    transactionsViews.somethingWentWrong(userState);
-                    telegramState.updateUserState(userState.getTelegramId(),
-                            userState.withState(States.TRANSACTION_ERROR));
+                    transactionsViews.somethingWentWrong(userState, pendingOrder);
                     return;
                 }
 
-                transactionsViews.updMenuToTransactionPending(userState);
-                telegramState.updateUserState(userState.getTelegramId(),
-                        userState.withState(States.TRANSACTION_PENDING));
             } catch (NotEnoughBalanceException e) {
                 transactionsViews.notEnoughBalance(userState);
-                telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.TRANSACTION_ERROR));
             } catch (InactiveAddressException e) {
-                transactionsViews.transactionToInactiveWallet(userState);
-                telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.TRANSACTION_ERROR));
-
                 if (pendingOrder != null) {
                     orderService.refundOrder(
                             AddOrUpdateOrderCommand.builder()
                                     .correlationId(correlationId.toString())
                                     .build());
+                    transactionsViews.transactionToInactiveWallet(userState, pendingOrder);
                 }
             } catch (ItrxInsufficientFundsException e) {
-                transactionsViews.itrxBalanceNotEnoughFunds(userState);
-                telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.TRANSACTION_ERROR));
-
                 if (pendingOrder != null) {
                     orderService.refundOrder(
                             AddOrUpdateOrderCommand.builder()
                                     .correlationId(correlationId.toString())
                                     .build());
+                    transactionsViews.itrxBalanceNotEnoughFunds(userState, pendingOrder);
                 }
             } catch (Exception e) {
                 logger.error("Error during transaction", e);
@@ -229,9 +232,9 @@ public class TransactionsHandler {
                             AddOrUpdateOrderCommand.builder()
                                     .correlationId(correlationId.toString())
                                     .build());
+                    transactionsViews.somethingWentWrong(userState, pendingOrder);
                 }
                 transactionsViews.somethingWentWrong(userState);
-                telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.TRANSACTION_ERROR));
             }
         }
     }

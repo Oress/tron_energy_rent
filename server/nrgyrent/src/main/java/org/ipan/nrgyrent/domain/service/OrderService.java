@@ -61,6 +61,8 @@ public class OrderService {
         order.setEnergyAmount(totalEnergyAmount);
         order.setItrxFeeSunAmount(command.getItrxFeeSunAmount());
         order.setReceiveAddress(command.getReceiveAddress());
+        order.setMessageToUpdate(command.getMessageIdToUpdate());
+        order.setChatId(command.getChatId());
 
         em.persist(order);
 

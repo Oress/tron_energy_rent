@@ -28,10 +28,6 @@ public class StaticLabels {
             TRX были добавлены на ваш депозит
             """;
 
-    public static final String NTFN_ORDER_REFUNDED = """
-            ❌ Транзакция была отменена
-            Средства были возвращены на ваш баланс
-            """;
     public static final String NTFN_WITHDRWAL_SUCCESS = """
             ✅ Вывод средств успешно завершен
             Средства были переведены на ваш кошелек
