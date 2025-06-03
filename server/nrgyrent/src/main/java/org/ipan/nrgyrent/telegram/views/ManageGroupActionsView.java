@@ -451,7 +451,6 @@ public class ManageGroupActionsView {
                 .messageId(userState.getMenuMessageId())
                 .text(getUsersList(users))
                 .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
-                .parseMode("MARKDOWN")
                 .linkPreviewOptions(LinkPreviewOptions.builder().isDisabled(true).build())
                 .build();
         tgClient.execute(message);
