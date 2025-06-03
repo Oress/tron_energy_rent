@@ -267,7 +267,6 @@ public class ManageGroupActionsView {
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
                 .text(getBalanceDescription(balance))
-                .parseMode("MARKDOWN")
                 .linkPreviewOptions(LinkPreviewOptions.builder().isDisabled(true).build())
                 .replyMarkup(getManageGroupActionsMarkup(true, balance.getIsActive()))
                 .build();
@@ -281,7 +280,6 @@ public class ManageGroupActionsView {
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
                 .text(getBalanceDescription(balance))
-                .parseMode("MARKDOWN")
                 .linkPreviewOptions(LinkPreviewOptions.builder().isDisabled(true).build())
                 .replyMarkup(getManageGroupActionsMarkupForManager())
                 .build();
@@ -556,7 +554,7 @@ public class ManageGroupActionsView {
                 Тариф: %s
                 Активна: %s
 
-                Кошелек: `%s`
+                Кошелек: %s
                 Баланс: %s TRX
                 """,
                 balance.getLabel(),
