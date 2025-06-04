@@ -9,7 +9,9 @@ import org.ipan.nrgyrent.domain.model.AppUser;
 import org.ipan.nrgyrent.domain.model.Balance;
 import org.ipan.nrgyrent.domain.model.Order;
 import org.ipan.nrgyrent.domain.model.OrderStatus;
+import org.ipan.nrgyrent.domain.model.Tariff;
 import org.ipan.nrgyrent.domain.model.repository.OrderRepo;
+import org.ipan.nrgyrent.domain.model.repository.TariffRepo;
 import org.ipan.nrgyrent.domain.service.commands.orders.AddOrUpdateOrderCommand;
 import org.springframework.beans.factory.annotation.Lookup;
 import org.springframework.stereotype.Service;
@@ -21,6 +23,7 @@ import java.util.Optional;
 @AllArgsConstructor
 @Slf4j
 public class OrderService {
+    private final TariffRepo tariffRepo;
     private final OrderRepo orderRepo;
     private final BalanceService balanceService;
 
@@ -41,6 +44,11 @@ public class OrderService {
                 throw new IllegalArgumentException("Some of the command properties are not set");
         }
 
+        Tariff tariff = null;
+        // It should not be null but just in case.
+        if (command.getTariffId() != null) {
+            tariff = tariffRepo.getReferenceById(command.getTariffId());
+        }
 
         Long totalSunAmount = command.getTxAmount() * command.getSunAmountPerTx();
         Integer totalEnergyAmount = command.getTxAmount() * command.getEnergyAmountPerTx();
@@ -63,6 +71,7 @@ public class OrderService {
         order.setReceiveAddress(command.getReceiveAddress());
         order.setMessageToUpdate(command.getMessageIdToUpdate());
         order.setChatId(command.getChatId());
+        order.setTariff(tariff);
 
         em.persist(order);
 

@@ -144,24 +144,24 @@ public class TransactionsHandler {
         if (txAmount == null) {
             txAmount = 1;
         }
-        handlePromptWallet(userState, update, energyAmountPerTx, transactionParams.getNumberOfTransactions(), pricePerTx);
+        handlePromptWallet(userState, update, energyAmountPerTx, transactionParams.getNumberOfTransactions(), pricePerTx, tariff.getId());
     }
 
-    private void handlePromptWallet(UserState userState, Update update, Integer energyAmountPerTx, Integer txAmount, Long sunAmountPerTx) {
+    private void handlePromptWallet(UserState userState, Update update, Integer energyAmountPerTx, Integer txAmount, Long sunAmountPerTx, Long tariffId) {
         CallbackQuery callbackQuery = update.getCallbackQuery();
         if (callbackQuery != null) {
-            tryMakeTransaction(userState, energyAmountPerTx, AppConstants.DURATION_1H, callbackQuery.getData(), txAmount, sunAmountPerTx);
+            tryMakeTransaction(userState, energyAmountPerTx, AppConstants.DURATION_1H, callbackQuery.getData(), txAmount, sunAmountPerTx, tariffId);
         }
 
         Message message = update.getMessage();
         if (message != null && message.hasText()) {
             telegramMessages.deleteMessage(message);
-            tryMakeTransaction(userState, energyAmountPerTx, AppConstants.DURATION_1H, message.getText(), txAmount, sunAmountPerTx);
+            tryMakeTransaction(userState, energyAmountPerTx, AppConstants.DURATION_1H, message.getText(), txAmount, sunAmountPerTx, tariffId);
         }
     }
 
     private void tryMakeTransaction(UserState userState, Integer energyAmountPerTx, String duration, String receiveAddress, Integer txAmount,
-            Long sunAmountPerTx) {
+            Long sunAmountPerTx, Long tariffId) {
         if (WalletTools.isValidTronAddress(receiveAddress)) {
             transactionsViews.updMenuToTransactionInProgress(userState);
 
@@ -177,6 +177,7 @@ public class TransactionsHandler {
                                 .receiveAddress(receiveAddress)
                                 .energyAmountPerTx(energyAmountPerTx)
                                 .txAmount(txAmount)
+                                .tariffId(tariffId)
                                 .sunAmountPerTx(sunAmountPerTx)
                                 .duration(duration)
                                 .messageIdToUpdate(userState.getMenuMessageId())

@@ -18,6 +18,7 @@ public class AddOrUpdateOrderCommand {
     private String duration;
     private String correlationId;
     private String serial;
+    private Long tariffId;
 //    private OrderStatus orderStatus;
 
     private Integer itrxStatus;

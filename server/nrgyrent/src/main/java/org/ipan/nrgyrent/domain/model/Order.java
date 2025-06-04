@@ -40,6 +40,10 @@ public class Order {
     @JoinColumn(name = "balance_id", referencedColumnName = "id", foreignKey = @ForeignKey(name = "fk_nrg_orders_balance_id"))
     private Balance balance;
 
+    @ManyToOne
+    @JoinColumn(name = "tariff_id", referencedColumnName = "id", foreignKey = @ForeignKey(name = "fk_nrg_orders_tariff_id"))
+    private Tariff tariff;
+
     @Column(name = "itrx_fee_sun_amount")
     private Long itrxFeeSunAmount;
 
