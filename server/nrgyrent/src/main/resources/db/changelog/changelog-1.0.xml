@@ -523,4 +523,15 @@
         </addColumn>
     </changeSet>
 
+    <changeSet id="add index idx_nrg_orders_serial" author="oress">
+        <createIndex indexName="idx_nrg_orders_serial" tableName="nrg_orders">
+            <column name="serial" />
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="add index idx_nrg_orders_created_at" author="oress">
+        <createIndex indexName="idx_nrg_orders_created_at" tableName="nrg_orders">
+            <column name="created_at" />
+        </createIndex>
+    </changeSet>
 </databaseChangeLog>
