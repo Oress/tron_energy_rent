@@ -6,11 +6,19 @@ import org.ipan.nrgyrent.domain.model.AppUser;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 @Repository
 public interface AppUserRepo extends JpaRepository<AppUser, Long> {
-    Page<AppUser> findAllByTelegramUsernameContainingIgnoreCaseOrTelegramFirstNameContainingIgnoreCaseOrderByTelegramId(String username, String firstName, PageRequest of);
     Set<AppUser> findAllByGroupBalanceId(Long balanceId);
     AppUser findByBalanceId(Long balanceId);
+
+    @Query(value = """
+            SELECT u FROM AppUser u
+                WHERE LOWER(u.telegramUsername) LIKE LOWER(:username) OR LOWER(u.telegramFirstName) LIKE LOWER(:firstName)
+                ORDER BY u.telegramUsername, u.telegramFirstName, u.id
+            """
+            )
+    Page<AppUser> searchByUsernameAndFirstname(String username, String firstName, PageRequest of);
 }

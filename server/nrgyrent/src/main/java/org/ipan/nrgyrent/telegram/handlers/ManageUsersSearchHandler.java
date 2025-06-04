@@ -16,6 +16,7 @@ import org.ipan.nrgyrent.telegram.statetransitions.MatchState;
 import org.ipan.nrgyrent.telegram.statetransitions.MatchStates;
 import org.ipan.nrgyrent.telegram.statetransitions.TransitionHandler;
 import org.ipan.nrgyrent.telegram.statetransitions.UpdateType;
+import org.ipan.nrgyrent.telegram.utils.SearchingUtils;
 import org.ipan.nrgyrent.telegram.views.ManageUserActionsView;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -59,7 +60,7 @@ public class ManageUsersSearchHandler {
         UserSearchState searchState = telegramState.getOrCreateUserSearchState(userState.getTelegramId());
         telegramState.updateUserSearchState(userState.getTelegramId(), searchState.withCurrentPage(0).withQuery(""));
 
-        Page<AppUser> firstPage = appUserRepo.findAll(PageRequest.of(0, pageSize).withSort(Sort.by(AppUser_.TELEGRAM_ID).descending()));
+        Page<AppUser> firstPage = appUserRepo.findAll(PageRequest.of(0, pageSize).withSort(Sort.by(AppUser_.TELEGRAM_USERNAME, AppUser_.TELEGRAM_FIRST_NAME, AppUser_.TELEGRAM_ID)));
         manageUserActionsView.updMenuToManageUsersSearchResult(firstPage, userState);
         telegramState.updateUserState(userState.getTelegramId(),
                 userState.withState(States.ADMIN_MANAGE_USERS));
@@ -74,7 +75,10 @@ public class ManageUsersSearchHandler {
         int pageNumber = searchState.getCurrentPage() + 1;
         String queryStr = searchState.getQuery();
         telegramState.updateUserSearchState(userState.getTelegramId(), searchState.withCurrentPage(pageNumber));
-        Page<AppUser> nextPage = appUserRepo.findAllByTelegramUsernameContainingIgnoreCaseOrTelegramFirstNameContainingIgnoreCaseOrderByTelegramId(queryStr, queryStr, PageRequest.of(pageNumber, pageSize));
+        Page<AppUser> nextPage = appUserRepo.searchByUsernameAndFirstname(
+            SearchingUtils.paramterContains(queryStr),
+            SearchingUtils.paramterContains(queryStr),
+            PageRequest.of(pageNumber, pageSize));
         manageUserActionsView.updMenuToManageUsersSearchResult(nextPage, userState);
     }
 
@@ -86,7 +90,10 @@ public class ManageUsersSearchHandler {
         int pageNumber = searchState.getCurrentPage() - 1;
         String queryStr = searchState.getQuery();
         telegramState.updateUserSearchState(userState.getTelegramId(), searchState.withCurrentPage(pageNumber));
-        Page<AppUser> prevPage = appUserRepo.findAllByTelegramUsernameContainingIgnoreCaseOrTelegramFirstNameContainingIgnoreCaseOrderByTelegramId(queryStr, queryStr, PageRequest.of(pageNumber, pageSize));
+        Page<AppUser> prevPage = appUserRepo.searchByUsernameAndFirstname(
+            SearchingUtils.paramterContains(queryStr),
+            SearchingUtils.paramterContains(queryStr),
+             PageRequest.of(pageNumber, pageSize));
         manageUserActionsView.updMenuToManageUsersSearchResult(prevPage, userState);
     }
 
@@ -123,8 +130,9 @@ public class ManageUsersSearchHandler {
 
             UserSearchState searchState = telegramState.getOrCreateUserSearchState(userState.getTelegramId());
             telegramState.updateUserSearchState(userState.getTelegramId(), searchState.withQuery(queryStr));
-            Page<AppUser> firstPage = appUserRepo.findAllByTelegramUsernameContainingIgnoreCaseOrTelegramFirstNameContainingIgnoreCaseOrderByTelegramId(
-                    queryStr, queryStr,
+            Page<AppUser> firstPage = appUserRepo.searchByUsernameAndFirstname(
+                    SearchingUtils.paramterContains(queryStr),
+                    SearchingUtils.paramterContains(queryStr),
                     PageRequest.of(0, pageSize));
             manageUserActionsView.updMenuToManageUsersSearchResult(firstPage, userState);
         }

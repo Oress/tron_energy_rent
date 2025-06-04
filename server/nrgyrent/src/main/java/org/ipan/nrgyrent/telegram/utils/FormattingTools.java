@@ -36,7 +36,7 @@ public class FormattingTools {
         String login = user.getTelegramUsername() != null ? "Ник: %s".formatted(user.getTelegramUsername()) : "";
         String name = user.getTelegramFirstName() != null ? "Имя: %s".formatted(user.getTelegramFirstName()) : "";
         String id = "ID: %s".formatted(user.getTelegramId());
-        return List.of(id, login, name).stream().filter(s -> !s.isEmpty()).collect(Collectors.joining(", "));
+        return List.of(login, name, id).stream().filter(s -> !s.isEmpty()).collect(Collectors.joining(", "));
     }
 
     public static String formatUserLink(TgUserId user) {
