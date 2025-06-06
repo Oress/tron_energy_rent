@@ -1,6 +1,9 @@
 package org.ipan.nrgyrent.telegram.state;
 
 import org.ipan.nrgyrent.telegram.state.tariff.AddTariffState;
+import org.ipan.nrgyrent.telegram.state.referral.AddRefProgramState;
+import org.ipan.nrgyrent.telegram.state.referral.RefProgramEdit;
+import org.ipan.nrgyrent.telegram.state.referral.RefProgramSearchState;
 import org.ipan.nrgyrent.telegram.state.tariff.TariffEdit;
 import org.ipan.nrgyrent.telegram.state.tariff.TariffSearchState;
 
@@ -51,4 +54,13 @@ public interface TelegramState {
     AddTariffState getOrCreateAddTariffState(Long userId);
     AddTariffState removeAddTariffState(Long userId); // TODO: cleanup after finishing workflow
     AddTariffState updateAddTariffState(Long userId, AddTariffState addTariffState);
+
+    RefProgramSearchState getOrCreateRefProgramSearchState(Long userId);
+    RefProgramSearchState updateRefProgramSearchState(Long userId, RefProgramSearchState groupSearchState);
+
+    RefProgramEdit getOrCreateRefProgramEdit(Long userId);
+    RefProgramEdit updateRefProgramEdit(Long userId, RefProgramEdit tariffEdit);
+
+    AddRefProgramState getOrCreateAddRefProgramState(Long userId);
+    AddRefProgramState updateAddRefProgramState(Long userId, AddRefProgramState addTariffState);
 }

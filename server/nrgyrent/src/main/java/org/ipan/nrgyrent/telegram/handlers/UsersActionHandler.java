@@ -1,7 +1,9 @@
 package org.ipan.nrgyrent.telegram.handlers;
 
 import org.ipan.nrgyrent.domain.model.AppUser;
+import org.ipan.nrgyrent.domain.model.ReferralProgram;
 import org.ipan.nrgyrent.domain.model.Tariff;
+import org.ipan.nrgyrent.domain.model.repository.ReferralProgramRepo;
 import org.ipan.nrgyrent.domain.model.repository.TariffRepo;
 import org.ipan.nrgyrent.domain.service.BalanceService;
 import org.ipan.nrgyrent.domain.service.TariffService;
@@ -11,6 +13,7 @@ import org.ipan.nrgyrent.telegram.States;
 import org.ipan.nrgyrent.telegram.state.TelegramState;
 import org.ipan.nrgyrent.telegram.state.UserEdit;
 import org.ipan.nrgyrent.telegram.state.UserState;
+import org.ipan.nrgyrent.telegram.state.referral.RefProgramSearchState;
 import org.ipan.nrgyrent.telegram.state.tariff.TariffSearchState;
 import org.ipan.nrgyrent.telegram.statetransitions.MatchState;
 import org.ipan.nrgyrent.telegram.statetransitions.MatchStates;
@@ -18,6 +21,7 @@ import org.ipan.nrgyrent.telegram.statetransitions.TransitionHandler;
 import org.ipan.nrgyrent.telegram.statetransitions.UpdateType;
 import org.ipan.nrgyrent.telegram.utils.ParseUtils;
 import org.ipan.nrgyrent.telegram.views.ManageUserActionsView;
+import org.ipan.nrgyrent.telegram.views.referrals.ReferralProgramsSearchView;
 import org.ipan.nrgyrent.telegram.views.tariffs.TariffsSearchView;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -33,33 +37,93 @@ import lombok.extern.slf4j.Slf4j;
 public class UsersActionHandler {
     private final int pageSize;
     private final TariffService tariffService;
+    private final ReferralProgramRepo referralProgramRepo;
     private final TariffRepo tariffRepo;
     private final TelegramState telegramState;
     private final UserService userService;
     private final BalanceService balanceService;
     private final ManageUserActionsView manageUserActionsView;
     private final TariffsSearchView tariffsSearchView;
+    private final ReferralProgramsSearchView referralProgramsSearchView;
     private final ParseUtils parseUtils;
     
     public UsersActionHandler(@Value("${app.pagination.tariffs.page-size:20}") int pageSize,
             TelegramState telegramState,
             TariffRepo tariffRepo,
+            ReferralProgramRepo referralProgramRepo,
             ManageUserActionsView manageUserActionsView,
             BalanceService balanceService,
             UserService userService,
             TariffService tariffService,
             ParseUtils parseUtils,
-            TariffsSearchView tariffsSearchView
+            TariffsSearchView tariffsSearchView,
+            ReferralProgramsSearchView referralProgramsSearchView
             ) {
         this.pageSize = pageSize;
         this.telegramState = telegramState;
         this.tariffRepo = tariffRepo;
+        this.referralProgramRepo = referralProgramRepo;
         this.balanceService = balanceService;
         this.manageUserActionsView = manageUserActionsView;
         this.userService = userService;
         this.tariffService = tariffService;
         this.tariffsSearchView = tariffsSearchView;
+        this.referralProgramsSearchView = referralProgramsSearchView;
         this.parseUtils = parseUtils;
+    }
+
+    @MatchState(state = States.ADMIN_MANAGE_USERS_ACTION_PREVIEW, callbackData = InlineMenuCallbacks.MANAGE_USER_ACTION_CHANGE_REF_PROGRAM)
+    public void startChangeRefProgram(UserState userState, Update update) {
+        RefProgramSearchState searchState = telegramState.getOrCreateRefProgramSearchState(userState.getTelegramId());
+        telegramState.updateRefProgramSearchState(userState.getTelegramId(), searchState.withCurrentPage(0).withQuery(""));
+
+        Page<ReferralProgram> nextPage = referralProgramRepo.findByLabelContainingIgnoreCaseOrderById("", PageRequest.of(0, pageSize));
+        referralProgramsSearchView.updMenuToSearchResult(nextPage, userState);
+
+        telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.ADMIN_MANAGE_USER_ACTION_CHANGE_REF_PROGRAM_SEARCHING));
+    }
+
+    @MatchStates({
+            @MatchState(state = States.ADMIN_MANAGE_USER_ACTION_CHANGE_REF_PROGRAM_SEARCHING, callbackData = InlineMenuCallbacks.MANAGE_TARIFFS_NEXT_PAGE)
+    })
+    public void nextPageRefProgram(UserState userState, Update update) {
+        RefProgramSearchState searchState = telegramState.getOrCreateRefProgramSearchState(userState.getTelegramId());
+        int pageNumber = searchState.getCurrentPage() + 1;
+        String queryStr = searchState.getQuery();
+        telegramState.updateRefProgramSearchState(userState.getTelegramId(), searchState.withCurrentPage(pageNumber));
+        Page<ReferralProgram> nextPage = referralProgramRepo.findByLabelContainingIgnoreCaseOrderById(queryStr, PageRequest.of(pageNumber, pageSize));
+        referralProgramsSearchView.updMenuToSearchResult(nextPage, userState);
+    }
+
+    @MatchStates({
+            @MatchState(state = States.ADMIN_MANAGE_USER_ACTION_CHANGE_REF_PROGRAM_SEARCHING, callbackData = InlineMenuCallbacks.MANAGE_TARIFFS_PREV_PAGE)
+    })
+    public void prevPageRefProgram(UserState userState, Update update) {
+        RefProgramSearchState searchState = telegramState.getOrCreateRefProgramSearchState(userState.getTelegramId());
+        int pageNumber = searchState.getCurrentPage() - 1;
+        String queryStr = searchState.getQuery();
+        telegramState.updateRefProgramSearchState(userState.getTelegramId(), searchState.withCurrentPage(pageNumber));
+        Page<ReferralProgram> prevPage = referralProgramRepo.findByLabelContainingIgnoreCaseOrderById(queryStr, PageRequest.of(pageNumber, pageSize));
+        referralProgramsSearchView.updMenuToSearchResult(prevPage, userState);
+    }
+
+    @MatchStates({
+            @MatchState(state = States.ADMIN_MANAGE_USER_ACTION_CHANGE_REF_PROGRAM_SEARCHING, updateTypes = UpdateType.CALLBACK_QUERY),
+    })
+    public void openRefProgramFromSearch(UserState userState, Update update) {
+        CallbackQuery callbackQuery = update.getCallbackQuery();
+        String data = callbackQuery.getData();
+
+        if (data.startsWith(ReferralProgramsSearchView.OPEN_REF_PROGRAM)) {
+            String refProgramIdStr = data.split(ReferralProgramsSearchView.OPEN_REF_PROGRAM)[1];
+            Long refProgramId = Long.parseLong(refProgramIdStr);
+
+            UserEdit openUser = telegramState.getOrCreateUserEdit(userState.getTelegramId());
+            tariffService.changeIndividualTariff(openUser.getSelectedUserId(), refProgramId);
+            manageUserActionsView.userRefProgramChanged(userState);
+            telegramState.updateUserState(userState.getTelegramId(),
+                    userState.withState(States.ADMIN_MANAGE_USER_ACTION_CHANGE_REF_PROGRAM_SUCCESS));
+        }
     }
 
     @MatchState(state = States.ADMIN_MANAGE_USERS_ACTION_PREVIEW, callbackData = InlineMenuCallbacks.MANAGE_USER_ACTION_CHANGE_TARIFF)

@@ -7,16 +7,23 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 import org.ipan.nrgyrent.domain.model.AppUser;
 import org.ipan.nrgyrent.domain.model.Balance;
+import org.ipan.nrgyrent.domain.model.BalanceReferralProgram;
 import org.ipan.nrgyrent.domain.model.Order;
 import org.ipan.nrgyrent.domain.model.OrderStatus;
+import org.ipan.nrgyrent.domain.model.ReferralCommission;
+import org.ipan.nrgyrent.domain.model.ReferralProgram;
 import org.ipan.nrgyrent.domain.model.Tariff;
 import org.ipan.nrgyrent.domain.model.repository.OrderRepo;
+import org.ipan.nrgyrent.domain.model.repository.ReferralCommissionRepo;
 import org.ipan.nrgyrent.domain.model.repository.TariffRepo;
 import org.ipan.nrgyrent.domain.service.commands.orders.AddOrUpdateOrderCommand;
+import org.ipan.nrgyrent.itrx.AppConstants;
 import org.springframework.beans.factory.annotation.Lookup;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Optional;
 
 @Service
@@ -26,6 +33,7 @@ public class OrderService {
     private final TariffRepo tariffRepo;
     private final OrderRepo orderRepo;
     private final BalanceService balanceService;
+    private final ReferralCommissionRepo referralCommissionRepo;
 
     @Transactional
     public Order createPendingOrder(AddOrUpdateOrderCommand command) {
@@ -93,6 +101,27 @@ public class OrderService {
         order.setItrxStatus(command.getItrxStatus());
         order.setTxId(command.getTxId());
         order.setSerial(command.getSerial());
+
+        // Generate the referral commission record if user was invited
+        AppUser user = order.getUser();
+        BalanceReferralProgram balanceReferralProgram = user.getReferralProgram();
+        if (balanceReferralProgram != null) {
+            logger.info("Generating referral commission record from order {}", order.getId());
+            ReferralProgram referralProgram = balanceReferralProgram.getReferralProgram();
+
+            Long profitLong = order.getSunAmount() - order.getItrxFeeSunAmount();
+            BigDecimal profit = new BigDecimal(profitLong);
+            BigDecimal commission = profit
+                .divide(AppConstants.HUNDRED)
+                .multiply(new BigDecimal(referralProgram.getPercentage()))
+                .setScale(0, RoundingMode.DOWN);
+
+            ReferralCommission referralCommission = new ReferralCommission();
+            referralCommission.setAmountSun(commission.longValue());
+            referralCommission.setOrder(order);
+            referralCommission.setBalanceReferralProgram(balanceReferralProgram);
+            referralCommissionRepo.save(referralCommission);
+        }
 
         return order;
     }

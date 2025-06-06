@@ -11,6 +11,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
@@ -33,8 +34,12 @@ public class AppUser {
     private String telegramFirstName;
 
     @JoinColumn(name = "balance_id")
-    @ManyToOne
+    @OneToOne
     private Balance balance;
+
+    @JoinColumn(name = "bal_ref_prog_id")
+    @ManyToOne
+    private BalanceReferralProgram referralProgram;
 
     @JoinColumn(name = "group_balance_id")
     @ManyToOne

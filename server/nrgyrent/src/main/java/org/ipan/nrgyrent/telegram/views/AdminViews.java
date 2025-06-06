@@ -205,6 +205,13 @@ public class AdminViews {
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
+                                        .text("Реферальные программы")
+                                        .callbackData(InlineMenuCallbacks.MANAGE_REFERRAL_PROGRAMS)
+                                        .build()))
+                .keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
                                         .text(StaticLabels.TO_MAIN_MENU)
                                         .callbackData(InlineMenuCallbacks.TO_MAIN_MENU)
                                         .build()))

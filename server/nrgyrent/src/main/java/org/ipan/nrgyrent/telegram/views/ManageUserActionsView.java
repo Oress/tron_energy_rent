@@ -137,6 +137,18 @@ public class ManageUserActionsView {
     }
 
     @SneakyThrows
+    public void userRefProgramChanged(UserState userState) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
+                .text("✅ Реф. программа пользователя успешно изменена")
+                .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
+                .build();
+        tgClient.execute(message);
+    }
+
+    @SneakyThrows
     public void promptNewUserBalance(UserState userState) {
         EditMessageText message = EditMessageText
                 .builder()
@@ -216,6 +228,13 @@ public class ManageUserActionsView {
     private InlineKeyboardMarkup getManageUserActionsMarkup(Boolean showDeactivateBtn) {
         InlineKeyboardMarkup.InlineKeyboardMarkupBuilder builder = InlineKeyboardMarkup
                 .builder()
+                .keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text("✏️ Изменить реф. программу")
+                                        .callbackData(InlineMenuCallbacks.MANAGE_USER_ACTION_CHANGE_REF_PROGRAM)
+                                        .build()))
                 .keyboardRow(
                         new InlineKeyboardRow(
                                 InlineKeyboardButton

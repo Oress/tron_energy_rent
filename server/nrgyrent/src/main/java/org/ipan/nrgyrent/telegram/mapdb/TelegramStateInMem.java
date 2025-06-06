@@ -12,10 +12,16 @@ import org.ipan.nrgyrent.telegram.state.UserEdit;
 import org.ipan.nrgyrent.telegram.state.UserSearchState;
 import org.ipan.nrgyrent.telegram.state.UserState;
 import org.ipan.nrgyrent.telegram.state.WithdrawParams;
+import org.ipan.nrgyrent.telegram.state.referral.AddRefProgramState;
+import org.ipan.nrgyrent.telegram.state.referral.RefProgramEdit;
+import org.ipan.nrgyrent.telegram.state.referral.RefProgramSearchState;
 import org.ipan.nrgyrent.telegram.state.AddGroupState;
 import org.ipan.nrgyrent.telegram.state.tariff.AddTariffState;
 import org.ipan.nrgyrent.telegram.state.tariff.TariffEdit;
 import org.ipan.nrgyrent.telegram.state.tariff.TariffSearchState;
+import org.ipan.nrgyrent.telegram.mapdb.referral.AddRefProgramStateInMem;
+import org.ipan.nrgyrent.telegram.mapdb.referral.RefProgramEditInMem;
+import org.ipan.nrgyrent.telegram.mapdb.referral.RefProgramSearchStateInMem;
 import org.ipan.nrgyrent.telegram.mapdb.tariff.AddTariffStateInMem;
 import org.mapdb.DB;
 import org.mapdb.HTreeMap;
@@ -35,9 +41,14 @@ public class TelegramStateInMem implements TelegramState {
     private final HTreeMap<Long, WithdrawParamsInMem> withdrawParamsMap;
     private final HTreeMap<Long, GroupSearchStateInMem> groupSearchState;
     private final HTreeMap<Long, UserSearchStateInMem> userSearchState;
+
     private final HTreeMap<Long, TariffSearchStateInMem> tariffSearchState;
     private final HTreeMap<Long, TariffEditInMem> tariffEditState;
     private final HTreeMap<Long, AddTariffStateInMem> addTariffStateMap;
+
+    private final HTreeMap<Long, RefProgramSearchStateInMem> refProgramSearchState;
+    private final HTreeMap<Long, RefProgramEditInMem> refProgramEditStateMap;
+    private final HTreeMap<Long, AddRefProgramStateInMem> addRefProgramStateMap;
 
     public TelegramStateInMem(DB db, ObjectMapper objectMapper) {
         this.userStateMap = db.hashMap("userState")
@@ -96,6 +107,19 @@ public class TelegramStateInMem implements TelegramState {
         this.addTariffStateMap = db.hashMap("addTariffState")
                 .keySerializer(Serializer.LONG)
                 .valueSerializer(new GenericSerializer<>(AddTariffStateInMem.class, objectMapper))
+                .createOrOpen();
+
+        this.refProgramSearchState = db.hashMap("refProgramSearchState")
+                .keySerializer(Serializer.LONG)
+                .valueSerializer(new GenericSerializer<>(RefProgramSearchStateInMem.class, objectMapper))
+                .createOrOpen();
+        this.refProgramEditStateMap = db.hashMap("refProgramEditStateMap")
+                .keySerializer(Serializer.LONG)
+                .valueSerializer(new GenericSerializer<>(RefProgramEditInMem.class, objectMapper))
+                .createOrOpen();
+        this.addRefProgramStateMap = db.hashMap("addRefProgramStateMap")
+                .keySerializer(Serializer.LONG)
+                .valueSerializer(new GenericSerializer<>(AddRefProgramStateInMem.class, objectMapper))
                 .createOrOpen();
     }
 
@@ -272,5 +296,36 @@ public class TelegramStateInMem implements TelegramState {
     @Override
     public AddTariffState updateAddTariffState(Long userId, AddTariffState addTariffState) {
         return this.addTariffStateMap.put(userId, AddTariffStateInMem.of(addTariffState));
+    }
+
+    @Override
+    public RefProgramSearchState getOrCreateRefProgramSearchState(Long userId) {
+        return this.refProgramSearchState.computeIfAbsent(userId, key -> RefProgramSearchStateInMem.builder().build());
+    }
+
+    @Override
+    public RefProgramSearchState updateRefProgramSearchState(Long userId, RefProgramSearchState groupSearchState) {
+        return this.refProgramSearchState.put(userId, RefProgramSearchStateInMem.of(groupSearchState));
+
+    }
+
+    @Override
+    public RefProgramEdit getOrCreateRefProgramEdit(Long userId) {
+        return this.refProgramEditStateMap.computeIfAbsent(userId, key -> RefProgramEditInMem.builder().build());
+    }
+
+    @Override
+    public RefProgramEdit updateRefProgramEdit(Long userId, RefProgramEdit tariffEdit) {
+        return this.refProgramEditStateMap.put(userId, RefProgramEditInMem.of(tariffEdit));
+    }
+
+    @Override
+    public AddRefProgramState getOrCreateAddRefProgramState(Long userId) {
+        return this.addRefProgramStateMap.computeIfAbsent(userId, key -> AddRefProgramStateInMem.builder().build());
+    }
+
+    @Override
+    public AddRefProgramState updateAddRefProgramState(Long userId, AddRefProgramState addTariffState) {
+        return this.addRefProgramStateMap.put(userId, AddRefProgramStateInMem.of(addTariffState));
     }
 }

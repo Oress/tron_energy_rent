@@ -160,6 +160,7 @@ public class TrongridRestClient {
                 ? null
                 : responseTyped.getData().get(0);
         } catch (Exception e) {
+            logger.error("Could not getAccountInfo", e);
             throw new RuntimeException(e);
         }
 

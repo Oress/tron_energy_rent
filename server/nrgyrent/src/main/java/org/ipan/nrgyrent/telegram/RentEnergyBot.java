@@ -7,6 +7,7 @@ import java.util.Objects;
 import org.ipan.nrgyrent.domain.model.AppUser;
 import org.ipan.nrgyrent.domain.model.Balance;
 import org.ipan.nrgyrent.domain.model.UserRole;
+import org.ipan.nrgyrent.domain.model.repository.BalanceReferralProgramRepo;
 import org.ipan.nrgyrent.domain.service.UserService;
 import org.ipan.nrgyrent.domain.service.commands.users.CreateUserCommand;
 import org.ipan.nrgyrent.telegram.state.TelegramState;
@@ -33,9 +34,9 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
     public static final int WAIT_FOR_CALLBACK = 10;
     public static final int ITRX_OK_CODE = 0;
 
-    private TelegramState telegramState;
-    private TelegramMessages telegramMessages;
-    private UserService userService;
+    private final TelegramState telegramState;
+    private final TelegramMessages telegramMessages;
+    private final UserService userService;
 
     private final StateHandlerRegistry stateHandlerRegistry;
 
@@ -172,11 +173,19 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
 
             if (START.equals(text)) {
                 if (user == null) {
+                    String refferalLink = null;
+
+                    String[] split = text.split(START);
+                    if (split.length == 2) {
+                        refferalLink = split[1];
+                    }
+
                     user = userService.createUser(
                             CreateUserCommand.builder()
                                     .telegramId(userState.getTelegramId())
                                     .firstName(message.getFrom().getFirstName())
                                     .username(message.getFrom().getUserName())
+                                    .refferalLink(refferalLink)
                                     .build());
                 }
                 telegramMessages.deleteMessage(message);

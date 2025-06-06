@@ -32,6 +32,8 @@ app:
   rounding:
     scale: ${APP_ROUNDING_SCALE:2}
   pagination:
+      ref-programs:
+        page-size: ${APP_REF_PROGRAMS_PAGE_SIZE:20}
       users:
         page-size: ${APP_USERS_PAGE_SIZE:20}
       groups:

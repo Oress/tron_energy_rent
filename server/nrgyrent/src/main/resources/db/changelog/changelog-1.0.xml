@@ -534,4 +534,170 @@
             <column name="created_at" />
         </createIndex>
     </changeSet>
+
+    <!-- Referal program setups -->
+    <changeSet id="create table nrg_referral_programs" author="oress">
+        <createSequence sequenceName="nrg_referral_programs_seq"
+                    dataType="bigint"
+                    incrementBy="1"
+                    startValue="1" />
+
+        <createTable tableName="nrg_referral_programs">
+            <column name="id" type="bigint">
+                <constraints primaryKey="true" nullable="false" unique="true" />
+            </column>
+            <column name="label" type="text">
+                <constraints nullable="false" />
+            </column>
+            <column name="percentage" type="int">
+                <constraints nullable="false" />
+            </column>
+            <column name="created_at" type="TIMESTAMP">
+                <constraints nullable="false" />
+            </column>
+        </createTable>
+    </changeSet>
+
+    <!-- Instances of referral programs (per balance) -->
+    <changeSet id="create table nrg_balance_referral_programs" author="oress">
+        <createSequence sequenceName="nrg_balance_referral_programs_seq"
+                    dataType="bigint"
+                    incrementBy="1"
+                    startValue="1" />
+
+        <createTable tableName="nrg_balance_referral_programs">
+            <column name="id" type="bigint">
+                <constraints primaryKey="true" nullable="false" unique="true" />
+            </column>
+            <column name="link" type="text">
+                <constraints nullable="false" unique="true" />
+            </column>
+            <column name="balance_id" type="bigint">
+                <constraints nullable="false" />
+            </column>
+            <column name="ref_prog_id" type="bigint">
+                <constraints nullable="false" />
+            </column>
+            <column name="created_at" type="TIMESTAMP">
+                <constraints nullable="false" />
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="create fk_nrg_balance_referral_programs_ref_prog_id" author="oress">
+        <addForeignKeyConstraint constraintName="fk_nrg_balance_referral_programs_ref_prog_id"
+            baseTableName="nrg_balance_referral_programs"
+            baseColumnNames="ref_prog_id"
+            referencedTableName="nrg_referral_programs"
+            referencedColumnNames="id" />
+    </changeSet>
+
+    <changeSet id="create fk_nrg_balance_referral_programs_balance_id" author="oress">
+        <addForeignKeyConstraint constraintName="fk_nrg_balance_referral_programs_balance_id"
+            baseTableName="nrg_balance_referral_programs"
+            baseColumnNames="balance_id"
+            referencedTableName="nrg_balances"
+            referencedColumnNames="id" />
+    </changeSet>
+
+<!--     <changeSet id="add idx_nrg_balance_referral_programs_link" author="oress">
+        <createIndex tableName="nrg_balance_referral_programs" indexName="idx_nrg_balance_referral_programs_link">
+            <column name="link"></column>
+        </createIndex>
+    </changeSet> -->
+
+    <changeSet id="add idx_nrg_balance_referral_programs_ref_prog_id" author="oress">
+        <createIndex tableName="nrg_balance_referral_programs" indexName="idx_nrg_balance_referral_programs_ref_prog_id">
+            <column name="ref_prog_id"></column>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="add idx_nrg_balance_referral_programs_balance_id" author="oress">
+        <createIndex tableName="nrg_balance_referral_programs" indexName="idx_nrg_balance_referral_programs_balance_id">
+            <column name="balance_id"></column>
+        </createIndex>
+    </changeSet>
+
+    <!-- Referral program commissions -->
+    <changeSet id="create table nrg_referral_commissions" author="oress">
+        <createSequence sequenceName="nrg_referral_commissions_seq"
+                    dataType="bigint"
+                    incrementBy="1"
+                    startValue="1" />
+
+        <createTable tableName="nrg_referral_commissions">
+            <column name="id" type="bigint">
+                <constraints primaryKey="true" nullable="false" unique="true" />
+            </column>
+            <column name="order_id" type="bigint">
+                <constraints nullable="false" />
+            </column>
+            <column name="bal_ref_prog_id" type="bigint">
+                <constraints nullable="false" />
+            </column>
+            <column name="amount_sun" type="bigint">
+                <constraints nullable="false" />
+            </column>
+            <column name="status" type="text">
+                <constraints nullable="false" />
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="create fk_nrg_referral_commissions_order_id" author="oress">
+        <addForeignKeyConstraint constraintName="fk_nrg_referral_commissions_order_id"
+            baseTableName="nrg_referral_commissions"
+            baseColumnNames="order_id"
+            referencedTableName="nrg_orders"
+            referencedColumnNames="id" />
+    </changeSet>
+
+    <changeSet id="create fk_nrg_referral_commissions_bal_ref_prog_id" author="oress">
+        <addForeignKeyConstraint constraintName="fk_nrg_referral_commissions_bal_ref_prog_id"
+            baseTableName="nrg_referral_commissions"
+            baseColumnNames="bal_ref_prog_id"
+            referencedTableName="nrg_balance_referral_programs"
+            referencedColumnNames="id" />
+    </changeSet>
+
+    <changeSet id="add idx_nrg_referral_commissions_order_id" author="oress">
+        <createIndex tableName="nrg_referral_commissions" indexName="idx_nrg_referral_commissions_order_id">
+            <column name="order_id" />
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="add idx_nrg_referral_commissions_bal_ref_prog_id" author="oress">
+        <createIndex tableName="nrg_referral_commissions" indexName="idx_nrg_referral_commissions_bal_ref_prog_id">
+            <column name="bal_ref_prog_id" />
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="add idx_nrg_referral_commissions_status" author="oress">
+        <createIndex tableName="nrg_referral_commissions" indexName="idx_nrg_referral_commissions_status">
+            <column name="status" />
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="extend nrg_users with bal_ref_prog_id" author="oress">
+        <addColumn tableName="nrg_users">
+            <column name="bal_ref_prog_id" type="bigint" />
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="create fk_nrg_users" author="oress">
+        <addForeignKeyConstraint constraintName="fk_nrg_users_bal_ref_prog_id"
+            baseTableName="nrg_users"
+            baseColumnNames="bal_ref_prog_id"
+            referencedTableName="nrg_balance_referral_programs"
+            referencedColumnNames="id" 
+            onDelete="SET NULL"
+            />
+    </changeSet>
+
+    <changeSet id="add idx_nrg_users_bal_ref_prog_id" author="oress">
+        <createIndex tableName="nrg_users" indexName="idx_nrg_users_bal_ref_prog_id">
+            <column name="bal_ref_prog_id" />
+        </createIndex>
+    </changeSet>
+
 </databaseChangeLog>

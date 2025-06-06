@@ -3,6 +3,8 @@ package org.ipan.nrgyrent.itrx;
 import java.math.BigDecimal;
 
 public class AppConstants {
+    public static final BigDecimal HUNDRED = new BigDecimal(100);
+
     public static final Long DEFAULT_TARIFF_ID = 1L;
 
     public static final String DURATION_1H = "1H";
