@@ -26,4 +26,35 @@ public class ParseUtils {
             throw new IllegalArgumentException("Invalid TRX amount format: " + trxStr, e);
         }
     }
+
+    public static String escapeMarkdown(String text) {
+        return text
+        .replace("_", "\\_")
+        .replace("*", "\\*")
+        .replace("`", "\\`")
+        .replace("[", "\\[")
+        .replace("]", "\\]");
+    }
+
+    public static String escapeMarkdown2(String text) {
+        return text
+        .replace("_", "\\_")
+        .replace("*", "\\*")
+        .replace("[", "\\[")
+        .replace("]", "\\]")
+        .replace("(", "\\(")
+        .replace(")", "\\)")
+        .replace("~", "\\~")
+        .replace("`", "\\`")
+        .replace(">", "\\>")
+        .replace("#", "\\#")
+        .replace("+", "\\+")
+        .replace("-", "\\-")
+        .replace("=", "\\=")
+        .replace("|", "\\|")
+        .replace("{", "\\{")
+        .replace("}", "\\}")
+        .replace(".", "\\.")
+        .replace("!", "\\!");
+    }
 }

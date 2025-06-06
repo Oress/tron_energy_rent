@@ -140,7 +140,7 @@ public class TrongridRestClient {
                 ? Collections.emptyList()
                 : responseTyped.getData();
         } catch (Exception e) {
-            logger.error("Could not getTransactions response: {}", responseStr);
+            logger.error("Could not getTransactions response: {}", responseStr, e);
             throw new RuntimeException(e);
         }
 
@@ -173,7 +173,7 @@ public class TrongridRestClient {
                 ? null
                 : responseTyped.getData().get(0);
         } catch (Exception e) {
-            logger.error("Could not getAccountInfo response: {}", responseStr);
+            logger.error("Could not getAccountInfo response: {}", responseStr, e);
             throw new RuntimeException(e);
         }
 

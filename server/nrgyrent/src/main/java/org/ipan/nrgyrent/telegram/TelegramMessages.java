@@ -1,10 +1,11 @@
 package org.ipan.nrgyrent.telegram;
 
 import java.util.List;
-import java.util.Locale;
+import java.util.stream.Collectors;
 
 import org.ipan.nrgyrent.domain.model.AppUser;
 import org.ipan.nrgyrent.domain.model.Balance;
+import org.ipan.nrgyrent.domain.model.BalanceReferralProgram;
 import org.ipan.nrgyrent.domain.model.Order;
 import org.ipan.nrgyrent.domain.model.Tariff;
 import org.ipan.nrgyrent.domain.model.UserRole;
@@ -13,6 +14,7 @@ import org.ipan.nrgyrent.telegram.i18n.TransactionLabels;
 import org.ipan.nrgyrent.telegram.state.UserState;
 import org.ipan.nrgyrent.telegram.utils.FormattingTools;
 import org.ipan.nrgyrent.telegram.utils.WalletTools;
+import org.ipan.nrgyrent.telegram.views.CommonViews;
 import org.ipan.nrgyrent.telegram.views.ManageGroupNewGroupView;
 import org.ipan.nrgyrent.telegram.views.ManageGroupSearchView;
 import org.springframework.retry.annotation.Retryable;
@@ -37,11 +39,13 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @AllArgsConstructor
 public class TelegramMessages {
-    private TelegramClient tgClient;
-    private ManageGroupNewGroupView manageGroupView;
-    private ManageGroupSearchView manageGroupSearchView;
-    private CommonLabels commonLabels;
-    private TransactionLabels transactionLabels;
+    private final TelegramClient tgClient;
+    private final ManageGroupNewGroupView manageGroupView;
+    private final ManageGroupSearchView manageGroupSearchView;
+    private final CommonLabels commonLabels;
+    private final TransactionLabels transactionLabels;
+    private final FormattingTools formattingTools;
+    private final CommonViews commonViews;
 
     public ManageGroupNewGroupView manageGroupView() {
         return manageGroupView;
@@ -49,6 +53,28 @@ public class TelegramMessages {
 
     public ManageGroupSearchView manageGroupSearchView() {
         return manageGroupSearchView;
+    }
+
+    @SneakyThrows
+    public void updMenuToReferalSummary(UserState userState, AppUser user, BalanceReferralProgram refProgram, List<AppUser> referals, Long pendingCommissionSun) {
+        String referalsStr = referals.stream().map(u -> formattingTools.formatUserForSearch(u)).collect(Collectors.joining("\n"));
+
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
+                .text(commonLabels.referalsSummary(
+                        FormattingTools.formatBalance(pendingCommissionSun),
+                        formattingTools.formatRefProgmam(refProgram),
+                        referalsStr
+                ))
+                .replyMarkup(commonViews.getToMainMenuMarkup())
+                .build();
+        try {
+            tgClient.execute(message);
+        } catch (Exception e) {
+            logger.error("Failed to updMenuToReferalSummary user: {}", userState, e);
+        }
     }
 
     @SneakyThrows
@@ -169,6 +195,17 @@ public class TelegramMessages {
         tgClient.execute(message);
     }
 
+    @SneakyThrows
+    public void sendReferalPaymentNotification(UserState userState, Long amountSun) {
+        SendMessage message = SendMessage
+                .builder()
+                .chatId(userState.getChatId())
+                .text(commonLabels.referalPayment(userState.getLocaleOrDefault(), FormattingTools.formatBalance(amountSun)))
+                .replyMarkup(getOkNotificationMarkup())
+                .build();
+        tgClient.execute(message);
+    }
+
     public void deleteMessage(Long chatId, Integer messageId) {
         DeleteMessage deleteMessage = DeleteMessage
                 .builder()
@@ -243,7 +280,7 @@ public class TelegramMessages {
                 .builder()
                 .chatId(chatId)
                 .text(getMainMenuMessage(user))
-                .replyMarkup(getMainMenuReplyMarkup(userState.isManager(), false, tariff, showWithdrawBtn))
+                .replyMarkup(getMainMenuReplyMarkup(userState.isManager(), false, tariff, showWithdrawBtn, userState.hasReferals()))
                 .linkPreviewOptions(LinkPreviewOptions.builder().isDisabled(true).build())
                 .parseMode("MARKDOWN")
                 .build();
@@ -261,7 +298,7 @@ public class TelegramMessages {
                 .chatId(chatId)
                 .linkPreviewOptions(LinkPreviewOptions.builder().isDisabled(true).build())
                 .text(getMainMenuMessage(user))
-                .replyMarkup(getMainMenuReplyMarkup(userState.isManager(), true, tariff, showWithdrawBtn))
+                .replyMarkup(getMainMenuReplyMarkup(userState.isManager(), true, tariff, showWithdrawBtn, userState.hasReferals()))
                 .parseMode("MARKDOWN")
                 .build();
         return tgClient.execute(message);
@@ -289,6 +326,16 @@ public class TelegramMessages {
     }
 
     @SneakyThrows
+    public void updateUserMainMenuBasedOnRole(UserState userState, AppUser user) {
+        UserRole role = user != null ? user.getRole() : UserRole.USER;
+
+        switch (role) {
+            case ADMIN -> updateMsgToAdminMainMenu(userState, user);
+            default -> updateMsgToMainMenu(userState, user);
+        };
+    }
+
+    @SneakyThrows
     public void updateMsgToMainMenu(UserState userState, AppUser user) {
         Tariff tariff = user.getTariffToUse();
         boolean showWithdrawBtn = !user.isInGroup() || user.isGroupManager();
@@ -300,24 +347,24 @@ public class TelegramMessages {
                 .text(getMainMenuMessage(user))
                 .linkPreviewOptions(LinkPreviewOptions.builder().isDisabled(true).build())
                 .parseMode("MARKDOWN")
-                .replyMarkup(getMainMenuReplyMarkup(userState.isManager(), false, tariff, showWithdrawBtn))
+                .replyMarkup(getMainMenuReplyMarkup(userState.isManager(), false, tariff, showWithdrawBtn, userState.hasReferals()))
                 .build();
         tgClient.execute(message);
     }
 
     @SneakyThrows
-    public void updateMsgToAdminMainMenu(UserState userState, CallbackQuery callbackQuery, AppUser user) {
+    public void updateMsgToAdminMainMenu(UserState userState, AppUser user) {
         Tariff tariff = user.getTariffToUse();
         boolean showWithdrawBtn = !user.isInGroup() || user.isGroupManager();
 
         EditMessageText message = EditMessageText
                 .builder()
-                .chatId(callbackQuery.getMessage().getChatId())
-                .messageId(callbackQuery.getMessage().getMessageId())
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
                 .text(getMainMenuMessage(user))
                 .parseMode("MARKDOWN")
                 .linkPreviewOptions(LinkPreviewOptions.builder().isDisabled(true).build())
-                .replyMarkup(getMainMenuReplyMarkup(userState.isManager(), true, tariff, showWithdrawBtn))
+                .replyMarkup(getMainMenuReplyMarkup(userState.isManager(), true, tariff, showWithdrawBtn, userState.hasReferals()))
                 .build();
         tgClient.execute(message);
     }
@@ -417,7 +464,7 @@ public class TelegramMessages {
         return builder.build();
     }
 
-    private InlineKeyboardMarkup getMainMenuReplyMarkup(Boolean isManager, Boolean isAdmin, Tariff tariff, boolean showWithdrawBtn) {
+    private InlineKeyboardMarkup getMainMenuReplyMarkup(Boolean isManager, Boolean isAdmin, Tariff tariff, boolean showWithdrawBtn, Boolean hasReferals) {
         var builder = InlineKeyboardMarkup
                 .builder()
                 .keyboardRow(
@@ -487,6 +534,16 @@ public class TelegramMessages {
                                         .builder()
                                         .text(commonLabels.getMenuManageGroup())
                                         .callbackData(InlineMenuCallbacks.MANAGE_GROUP)
+                                        .build()));
+        }
+
+        if (hasReferals) {
+                builder.keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text(commonLabels.getMenuManageReferals())
+                                        .callbackData(InlineMenuCallbacks.MANAGE_REFERALS)
                                         .build()));
         }
 

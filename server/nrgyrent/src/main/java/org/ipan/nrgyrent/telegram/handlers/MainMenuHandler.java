@@ -1,8 +1,13 @@
 package org.ipan.nrgyrent.telegram.handlers;
 
+import java.util.List;
 import java.util.Locale;
 
 import org.ipan.nrgyrent.domain.model.AppUser;
+import org.ipan.nrgyrent.domain.model.BalanceReferralProgram;
+import org.ipan.nrgyrent.domain.model.repository.AppUserRepo;
+import org.ipan.nrgyrent.domain.model.repository.BalanceReferralProgramRepo;
+import org.ipan.nrgyrent.domain.model.repository.ReferralCommissionRepo;
 import org.ipan.nrgyrent.domain.service.UserService;
 import org.ipan.nrgyrent.telegram.InlineMenuCallbacks;
 import org.ipan.nrgyrent.telegram.States;
@@ -24,6 +29,9 @@ public class MainMenuHandler {
     private final TelegramState telegramState;
     private final TelegramMessages telegramMessages;
     private final UserService userService;
+    private final BalanceReferralProgramRepo balanceReferralProgramRepo;
+    private final ReferralCommissionRepo referralCommissionRepo;
+    private final AppUserRepo userRepo;
 
     private final DepositViews depositViews;
 
@@ -36,7 +44,7 @@ public class MainMenuHandler {
             userService.setLanguage(userState.getTelegramId(), data);
 
             TgUserLocaleHolder.setUserLocale(Locale.of(data));
-            telegramMessages.updateMsgToMainMenu(userState, user);
+            telegramMessages.updateUserMainMenuBasedOnRole(userState, user);
             telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.MAIN_MENU));
         }
     }
@@ -46,5 +54,22 @@ public class MainMenuHandler {
         AppUser user = userService.getById(userState.getTelegramId());
         depositViews.updMenuToDepositsMenu(userState, user);
         telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.DEPOSIT));
+    }
+
+    @MatchState(state = States.MAIN_MENU, callbackData = InlineMenuCallbacks.MANAGE_REFERALS)
+    public void showReferals(UserState userState, Update update) {
+        AppUser user = userService.getById(userState.getTelegramId());
+
+        List<BalanceReferralProgram> byBalanceId = balanceReferralProgramRepo.findByBalanceId(user.getBalance().getId());
+
+        if (!byBalanceId.isEmpty()) {
+            BalanceReferralProgram referralProgram = byBalanceId.get(0);
+
+            Long pendingCommissionSun = referralCommissionRepo.findSumOfAllPendingByBalanceId(referralProgram.getId());
+            List<AppUser> referals = userRepo.findAllByBalRefProgId(referralProgram.getId());
+
+            telegramMessages.updMenuToReferalSummary(userState, user, referralProgram, referals, pendingCommissionSun == null ? 0 : pendingCommissionSun);
+            telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.REFERALS));
+        }
     }
 }

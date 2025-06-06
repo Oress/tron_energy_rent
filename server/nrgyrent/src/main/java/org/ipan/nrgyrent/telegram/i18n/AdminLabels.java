@@ -30,6 +30,10 @@ public class AdminLabels {
         return getLocalizedMessage("admin.menu_manage_users");
     }
 
+    public String menuRefPrograms() {
+        return getLocalizedMessage("admin.menu_ref_programs");
+    }
+
     public String menuItrxBalance() {
         return getLocalizedMessage("admin.menu_itrx_balance");
     }

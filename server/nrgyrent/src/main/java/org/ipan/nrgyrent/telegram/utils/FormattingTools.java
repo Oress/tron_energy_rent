@@ -11,20 +11,31 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.ipan.nrgyrent.domain.model.AppUser;
+import org.ipan.nrgyrent.domain.model.BalanceReferralProgram;
 import org.ipan.nrgyrent.domain.model.OrderStatus;
 import org.ipan.nrgyrent.domain.model.WithdrawalStatus;
 import org.ipan.nrgyrent.domain.service.commands.TgUserId;
 import org.ipan.nrgyrent.telegram.i18n.CommonLabels;
+import org.ipan.nrgyrent.telegram.i18n.RefProgramLabels;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import lombok.AllArgsConstructor;
-
-@AllArgsConstructor
 @Component
 public class FormattingTools {
     private static final DecimalFormat df = new DecimalFormat("# ###.##");
 
     private final CommonLabels commonLabels;
+    private final RefProgramLabels refProgramLabels;
+    private final String botLogin;
+
+    public FormattingTools(
+        @Value("${app.bot.username:tron_energy_rent_dev_bot}")String botLogin,
+        RefProgramLabels refProgramLabels,
+        CommonLabels commonLabels) {
+        this.commonLabels = commonLabels;
+        this.refProgramLabels = refProgramLabels;
+        this.botLogin = botLogin;
+    }
 
     public static String valOrDash(String val) {
         return val == null ? "-": val;
@@ -58,6 +69,10 @@ public class FormattingTools {
         }
     }
 
+    public String formatStartLink(String startParam) {
+        return String.format("https://t.me/%s?start=%s", botLogin, startParam);
+    }
+
     public static String formatUserLink(AppUser user) {
         if (user == null) {
             return "-";
@@ -74,6 +89,13 @@ public class FormattingTools {
 
     public static String formatBalance(Long balanceSun) {
         return df.format(BigDecimal.valueOf(balanceSun).divide(BigDecimal.valueOf(1_000_000D)));
+    }
+
+    public String formatRefProgmam(BalanceReferralProgram refProgram) {
+        return refProgramLabels.refProgramDescription(
+                refProgram.getReferralProgram().getLabel(),
+                refProgram.getReferralProgram().getPercentage().toString(),
+                formatStartLink(refProgram.getLink()));
     }
 
     public static String formatBalanceTrx(BigDecimal balanceTrx) {

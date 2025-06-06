@@ -11,4 +11,5 @@ public class CreateUserCommand {
     private String firstName;
     private String languageCode;
     private Long tariffId;
+    private String refferalLink;
 }

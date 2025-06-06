@@ -105,6 +105,10 @@ public class CommonLabels {
         return getLocalizedMessage("menu.manage_group");
     }
 
+    public String getMenuManageReferals() {
+        return getLocalizedMessage("menu.manage_referals");
+    }
+
     public String getMenuWithdraw() {
         return getLocalizedMessage("menu.withdraw_trx");
     }
@@ -178,5 +182,13 @@ public class CommonLabels {
 
     public String historyRefund() {
         return getLocalizedMessage("history.refund");
+    }
+
+    public String referalsSummary(String pendingCommission, String referalProgramDescr, String referals) {
+        return getLocalizedMessage("referals.summary", pendingCommission, referalProgramDescr, referals);
+    }
+
+    public String referalPayment(Locale locale, String amount) {
+        return getLocalizedMessage("referal.payment", locale, amount);
     }
 }

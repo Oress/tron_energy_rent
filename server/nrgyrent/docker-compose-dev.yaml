@@ -5,23 +5,5 @@ services:
       service: postgresservice
     ports:
       - "5432:5432"
-  
-  metabase-db-init:
-    extends:
-      file: docker-compose-base.yaml
-      service: metabase-db-initservice
-    depends_on:
-      postgres:
-        condition: service_healthy
-        required: true
-  
-  metabase:
-    extends:
-      file: docker-compose-base.yaml
-      service: metabaseservice
-    depends_on:
-      metabase-db-init:
-        condition: service_completed_successfully
-        required: true
 volumes:
   energy_rent_postgres: { }

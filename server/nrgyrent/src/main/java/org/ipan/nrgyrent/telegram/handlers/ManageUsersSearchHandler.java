@@ -1,10 +1,13 @@
 package org.ipan.nrgyrent.telegram.handlers;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.ipan.nrgyrent.domain.model.AppUser;
 import org.ipan.nrgyrent.domain.model.AppUser_;
+import org.ipan.nrgyrent.domain.model.BalanceReferralProgram;
 import org.ipan.nrgyrent.domain.model.repository.AppUserRepo;
+import org.ipan.nrgyrent.domain.model.repository.BalanceReferralProgramRepo;
 import org.ipan.nrgyrent.telegram.InlineMenuCallbacks;
 import org.ipan.nrgyrent.telegram.States;
 import org.ipan.nrgyrent.telegram.TelegramMessages;
@@ -35,6 +38,7 @@ public class ManageUsersSearchHandler {
     private final TelegramState telegramState;
     private final TelegramMessages telegramMessages;
     private final AppUserRepo appUserRepo;
+    private final BalanceReferralProgramRepo balanceReferralProgramRepo;
     private final ManageUserActionsView manageUserActionsView;
 
     public ManageUsersSearchHandler(
@@ -42,11 +46,13 @@ public class ManageUsersSearchHandler {
         TelegramState telegramState,
         TelegramMessages telegramMessages,
         AppUserRepo appUserRepo,
+        BalanceReferralProgramRepo balanceReferralProgramRepo,
         ManageUserActionsView manageUserActionsView) {
         this.pageSize = pageSize;
         this.telegramState = telegramState;
         this.telegramMessages = telegramMessages;
         this.appUserRepo = appUserRepo;
+        this.balanceReferralProgramRepo = balanceReferralProgramRepo;
         this.manageUserActionsView = manageUserActionsView;
     }
 
@@ -103,7 +109,9 @@ public class ManageUsersSearchHandler {
         @MatchState(forAdmin = true, state = States.ADMIN_MANAGE_USER_ACTION_DEACTIVATE_CONFIRM, callbackData = InlineMenuCallbacks.CONFIRM_NO),
         @MatchState(forAdmin = true, state = States.ADMIN_MANAGE_USER_ACTION_PROMPT_NEW_BALANCE, callbackData = InlineMenuCallbacks.GO_BACK),
         @MatchState(forAdmin = true, state = States.ADMIN_MANAGE_USER_ACTION_CHANGE_TARIFF_SEARCHING, callbackData = InlineMenuCallbacks.GO_BACK),
+        @MatchState(forAdmin = true, state = States.ADMIN_MANAGE_USER_ACTION_CHANGE_REF_PROGRAM_SEARCHING, callbackData = InlineMenuCallbacks.GO_BACK),
         @MatchState(forAdmin = true, state = States.ADMIN_MANAGE_USER_ACTION_CHANGE_TARIFF_SUCCESS, callbackData = InlineMenuCallbacks.GO_BACK),
+        @MatchState(forAdmin = true, state = States.ADMIN_MANAGE_USER_ACTION_CHANGE_REF_PROGRAM_SUCCESS, callbackData = InlineMenuCallbacks.GO_BACK),
     })
     public void openUserByCallback(UserState userState, Update update) {
         CallbackQuery callbackQuery = update.getCallbackQuery();
@@ -142,7 +150,17 @@ public class ManageUsersSearchHandler {
         Optional<AppUser> appUser = appUserRepo.findById(telegramId);
         if (appUser.isPresent()) {
             AppUser user = appUser.get();
-            manageUserActionsView.updMenuToManageUserActionsMenu(userState, user);
+
+            List<BalanceReferralProgram> referalPrograms = balanceReferralProgramRepo.findByBalanceId(user.getBalance().getId());
+
+            BalanceReferralProgram refProgram = null;
+            if (referalPrograms.size() > 1) {
+                logger.error("Ind user's balance has more than 1 referal program {}", user.getBalance().getId());
+            } else if (referalPrograms.size() == 1) {
+                refProgram = referalPrograms.get(0);
+            }
+
+            manageUserActionsView.updMenuToManageUserActionsMenu(userState, user, refProgram);
             UserEdit userEdit = telegramState.getOrCreateUserEdit(userState.getTelegramId());
             telegramState.updateUserEdit(userState.getTelegramId(), userEdit.withSelectedUserId(telegramId));
             telegramState.updateUserState(userState.getTelegramId(),

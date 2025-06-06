@@ -26,6 +26,7 @@ public class UserStateInMem implements UserState {
     List<Integer> messagesToDelete;
     Long managingGroupId; // The group the user is managing, indicates the user is a manager
     String languageCode;
+    Long balanceReferalProgramId;
 
     public static UserStateInMem of(UserState prototype) {
         return UserStateInMem.builder()

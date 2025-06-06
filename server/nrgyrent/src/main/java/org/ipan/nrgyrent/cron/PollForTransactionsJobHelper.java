@@ -29,7 +29,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.ui.context.Theme;
 
 import jakarta.persistence.EntityManager;
 import lombok.AllArgsConstructor;

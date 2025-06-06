@@ -4,15 +4,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.ipan.nrgyrent.domain.model.AppUser;
+import org.ipan.nrgyrent.domain.model.BalanceReferralProgram;
 import org.ipan.nrgyrent.domain.model.Tariff;
 import org.ipan.nrgyrent.telegram.InlineMenuCallbacks;
 import org.ipan.nrgyrent.telegram.i18n.CommonLabels;
 import org.ipan.nrgyrent.telegram.i18n.ManageUserLabels;
 import org.ipan.nrgyrent.telegram.state.UserState;
 import org.ipan.nrgyrent.telegram.utils.FormattingTools;
+import org.ipan.nrgyrent.telegram.utils.ParseUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
+import org.telegram.telegrambots.meta.api.objects.LinkPreviewOptions;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
@@ -53,12 +56,14 @@ public class ManageUserActionsView {
     }
 
     @SneakyThrows
-    public void updMenuToManageUserActionsMenu(UserState userState, AppUser appUser) {
+    public void updMenuToManageUserActionsMenu(UserState userState, AppUser appUser, BalanceReferralProgram refProgram) {
         EditMessageText message = EditMessageText
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
-                .text(getBalanceDescription(appUser))
+                .text(getBalanceDescription(appUser, refProgram))
+                .parseMode("MARKDOWN")
+                .linkPreviewOptions(LinkPreviewOptions.builder().isDisabled(true).build())
                 .replyMarkup(getManageUserActionsMarkup(!appUser.getDisabled()))
                 .build();
         tgClient.execute(message);
@@ -117,6 +122,18 @@ public class ManageUserActionsView {
     }
 
     @SneakyThrows
+    public void userRefProgramChanged(UserState userState) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
+                .text(manageUserLabels.changeRefProgramSuccess())
+                .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
+                .build();
+        tgClient.execute(message);
+    }
+
+    @SneakyThrows
     public void promptNewUserBalance(UserState userState) {
         EditMessageText message = EditMessageText
                 .builder()
@@ -158,7 +175,7 @@ public class ManageUserActionsView {
                 .build();
     }
 
-    private String getBalanceDescription(AppUser user) {
+    private String getBalanceDescription(AppUser user, BalanceReferralProgram refProgram) {
         Tariff tariff = user.getBalance().getTariff();
         String tariffLabel = "";
         if (tariff == null) {
@@ -171,20 +188,28 @@ public class ManageUserActionsView {
         }
 
         // TODO: view group if present
-        return  manageUserLabels.preview( 
+        return manageUserLabels.preview(
                 user.getTelegramId().toString(),
-                FormattingTools.valOrDash(user.getTelegramUsername()),
-                FormattingTools.valOrDash(user.getTelegramFirstName()),
-                tariffLabel,
+                ParseUtils.escapeMarkdown(FormattingTools.valOrDash(user.getTelegramUsername())),
+                ParseUtils.escapeMarkdown(FormattingTools.valOrDash(user.getTelegramFirstName())),
+                ParseUtils.escapeMarkdown(tariffLabel),
                 user.getDisabled() ? commonLabels.cross() : commonLabels.check(),
                 user.getBalance().getDepositAddress(),
-                FormattingTools.formatBalance(user.getBalance().getSunBalance())
+                FormattingTools.formatBalance(user.getBalance().getSunBalance()),
+                refProgram == null ? "" : ParseUtils.escapeMarkdown(formattingTools.formatRefProgmam(refProgram))
                 );
     }
 
     private InlineKeyboardMarkup getManageUserActionsMarkup(Boolean showDeactivateBtn) {
         InlineKeyboardMarkup.InlineKeyboardMarkupBuilder builder = InlineKeyboardMarkup
                 .builder()
+                .keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text(manageUserLabels.menuChangeRefProgram())
+                                        .callbackData(InlineMenuCallbacks.MANAGE_USER_ACTION_CHANGE_REF_PROGRAM)
+                                        .build()))
                 .keyboardRow(
                         new InlineKeyboardRow(
                                 InlineKeyboardButton

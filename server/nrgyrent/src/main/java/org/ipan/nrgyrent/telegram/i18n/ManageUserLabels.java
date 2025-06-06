@@ -19,12 +19,16 @@ public class ManageUserLabels {
     }
 
     public String preview(String telegramId, String valOrDash, String valOrDash2, String tariffLabel, Object object,
-            String depositAddress, String formatBalance) {
-        return getLocalizedMessage("manage_users.preview", telegramId, valOrDash, valOrDash2, tariffLabel, object, depositAddress, formatBalance);
+            String depositAddress, String formatBalance, String refferalProgram) {
+        return getLocalizedMessage("manage_users.preview", telegramId, valOrDash, valOrDash2, tariffLabel, object, depositAddress, formatBalance, refferalProgram);
     }
 
     public String menuChangeTariff() {
         return getLocalizedMessage("manage_users.menu.change_tariff");
+    }
+
+    public String menuChangeRefProgram() {
+        return getLocalizedMessage("manage_users.menu.change_ref_program");
     }
 
     public String menuChangeBalance() {
@@ -45,6 +49,10 @@ public class ManageUserLabels {
 
     public String changeBalancePromptAmount() {
         return getLocalizedMessage("manage_users.change_balance.prompt_amount");
+    }
+
+    public String changeRefProgramSuccess() {
+        return getLocalizedMessage("manage_users.change_ref_program.success");
     }
 
     public String changeBalanceNegative() {

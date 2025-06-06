@@ -15,6 +15,7 @@ public interface UserState {
     UserRole getRole();
     List<Integer> getMessagesToDelete();
     String getLanguageCode();
+    Long getBalanceReferalProgramId();
 
     UserState withTelegramId(Long value);
     UserState withState(States value);
@@ -24,9 +25,14 @@ public interface UserState {
     UserState withMessagesToDelete(List<Integer> value);
     UserState withManagingGroupId(Long value);
     UserState withLanguageCode(String value);
+    UserState withBalanceReferalProgramId(Long value);
 
     default boolean isManager() {
         return getManagingGroupId() != null;
+    }
+
+    default boolean hasReferals() {
+        return getBalanceReferalProgramId() != null;
     }
 
     default Locale getLocaleOrDefault() {

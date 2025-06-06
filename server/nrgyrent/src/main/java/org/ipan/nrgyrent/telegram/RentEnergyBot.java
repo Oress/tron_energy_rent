@@ -7,7 +7,9 @@ import java.util.Objects;
 
 import org.ipan.nrgyrent.domain.model.AppUser;
 import org.ipan.nrgyrent.domain.model.Balance;
+import org.ipan.nrgyrent.domain.model.BalanceReferralProgram;
 import org.ipan.nrgyrent.domain.model.UserRole;
+import org.ipan.nrgyrent.domain.model.repository.BalanceReferralProgramRepo;
 import org.ipan.nrgyrent.domain.service.UserService;
 import org.ipan.nrgyrent.domain.service.commands.users.CreateUserCommand;
 import org.ipan.nrgyrent.telegram.i18n.TgUserLocaleHolder;
@@ -38,6 +40,7 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
     private TelegramState telegramState;
     private TelegramMessages telegramMessages;
     private UserService userService;
+    private BalanceReferralProgramRepo balanceReferralProgramRepo;
     private FormattingTools formattingTools;
 
     private final StateHandlerRegistry stateHandlerRegistry;
@@ -84,6 +87,14 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
             Balance groupBalance = user.getGroupBalance();
             if (groupBalance != null && groupBalance.getManager() != null && user.getTelegramId() == groupBalance.getManager().getTelegramId()) {
                 userState = userState.withManagingGroupId(user.getGroupBalance().getId());
+            } else {
+                userState = userState.withManagingGroupId(null);
+            }
+
+            List<BalanceReferralProgram> byBalanceId = balanceReferralProgramRepo.findByBalanceId(user.getBalance().getId());
+            if (!byBalanceId.isEmpty()) {
+                BalanceReferralProgram program = byBalanceId.get(0);
+                userState = userState.withBalanceReferalProgramId(program.getId());
             } else {
                 userState = userState.withManagingGroupId(null);
             }
@@ -151,7 +162,7 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
             if (InlineMenuCallbacks.TO_MAIN_MENU.equals(data)) {
                 switch (userState.getRole()) {
                     case ADMIN:
-                        telegramMessages.updateMsgToAdminMainMenu(userState, callbackQuery, user);
+                        telegramMessages.updateMsgToAdminMainMenu(userState, user);
                         break;
                     default:
                         telegramMessages.updateMsgToMainMenu(userState, user);
@@ -176,8 +187,20 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
 
         if (message != null && message.hasText()) {
             String text = message.getText();
+            String part1 = "";
+            String refferalLink = null;
 
             if (START.equals(text)) {
+                part1 = text;
+            } else {
+                String[] split = text.split(START);
+                if (split.length == 2) {
+                    part1 = START;
+                    refferalLink = split[1].trim();
+                }
+            }
+
+            if (START.equals(part1)) {
                 telegramMessages.deleteMessage(message);
 
                 if (user == null) {
@@ -189,6 +212,7 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
                                     .firstName(from.getFirstName())
                                     .username(from.getUserName())
                                     .languageCode(languageCode)
+                                    .refferalLink(refferalLink)
                                     .build());
 
                 } else {

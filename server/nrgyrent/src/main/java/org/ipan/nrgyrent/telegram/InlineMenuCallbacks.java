@@ -16,6 +16,7 @@ public class InlineMenuCallbacks {
     public static final String SETTINGS = "settings";
     public static final String HISTORY = "history";
     public static final String MANAGE_GROUP = "manage_group";
+    public static final String MANAGE_REFERALS = "manage_referals";
     public static final String WITHDRAW_TRX = "withdraw_trx";
 
     public static final String ADMIN_MENU = "admin_menu";
@@ -26,6 +27,7 @@ public class InlineMenuCallbacks {
     public static final String MANAGE_SWEEP_BALANCE = "manage_sweep_balance";
     public static final String MANAGE_WITHDRAW_TRX = "manage_withdraw_trx";
     public static final String MANAGE_TARIFFS = "manage_tarifs";
+    public static final String MANAGE_REFERRAL_PROGRAMS = "manage_ref_programs";
 
     public static final String MANAGE_TARIFFS_PREV_PAGE = "manage_tarifs_search_prev_page";
     public static final String MANAGE_TARIFFS_NEXT_PAGE = "manage_tarifs_search_next_page";
@@ -38,6 +40,16 @@ public class InlineMenuCallbacks {
     public static final String MANAGE_TARIFFS_ACTION_RENAME = "manage_tarifs_action_rename";
     public static final String MANAGE_TARIFFS_ACTION_DEACTIVATE = "manage_tarifs_action_deactivate";
 
+    // ref programs
+    public static final String MANAGE_REF_PROGRAMS_PREV_PAGE = "manage_ref_programs_search_prev_page";
+    public static final String MANAGE_REF_PROGRAMS_NEXT_PAGE = "manage_ref_programs_search_next_page";
+    public static final String MANAGE_REF_PROGRAMS_SEARCH_RESET = "manage_ref_programs_search_reset";
+    public static final String MANAGE_REF_PROGRAMS_SEARCH = "manage_ref_programs_search";
+    public static final String MANAGE_REF_PROGRAMS_ADD = "manage_ref_programs_add_new";
+
+    public static final String MANAGE_REF_PROGRAMS_ACTION_CHANGE_PERCENTAGE = "manage_ref_programs_action_change_percentage";
+    public static final String MANAGE_REF_PROGRAMS_ACTION_RENAME = "manage_ref_programs_action_rename";
+    public static final String MANAGE_REF_PROGRAMS_ACTION_DEACTIVATE = "manage_ref_programs_action_deactivate";
 
 
     public static final String MANAGE_GROUPS_PREV_PAGE = "manage_groups_search_prev_page";
@@ -63,6 +75,7 @@ public class InlineMenuCallbacks {
     public static final String MANAGE_USER_ACTION_DEACTIVATE = "manage_user_action_deactivate";
     public static final String MANAGE_USER_ACTION_ADJUST_BALANCE_MANUALLY = "manage_user_action_adjust_balance_manually";
     public static final String MANAGE_USER_ACTION_CHANGE_TARIFF = "manage_user_action_change_tariff";
+    public static final String MANAGE_USER_ACTION_CHANGE_REF_PROGRAM = "manage_user_action_change_ref_program";
 
 
     public static final String NTFN_OK = "notification_ok";

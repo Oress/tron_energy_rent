@@ -172,6 +172,13 @@ public class AdminViews {
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
+                                        .text(adminLabels.menuRefPrograms())
+                                        .callbackData(InlineMenuCallbacks.MANAGE_REFERRAL_PROGRAMS)
+                                        .build()))
+                .keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
                                         .text(commonLabels.toMainMenu())
                                         .callbackData(InlineMenuCallbacks.TO_MAIN_MENU)
                                         .build()))
