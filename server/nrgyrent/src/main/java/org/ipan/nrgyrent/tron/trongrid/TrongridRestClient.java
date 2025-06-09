@@ -47,6 +47,7 @@ public class TrongridRestClient {
     }
 
     public TreeMap<String, Object> createTransaction(String from, String to, long amount) {
+        String responseStr = "";
         try {
             rateLimiter.acquire();
             TreeMap<String, Object> transactionData = new TreeMap<>();
@@ -65,7 +66,9 @@ public class TrongridRestClient {
                     .build();
             Response response = client.newCall(request).execute();
 
-            TreeMap<String, Object> map = objectMapper.readValue(response.body().byteStream(),
+            responseStr = response.body().string();
+            checkReponseForFrequencyLimit(response, responseStr);
+            TreeMap<String, Object> map = objectMapper.readValue(responseStr,
                     new TypeReference<TreeMap<String, Object>>() {
                     });
             logger.info("Response" + map);
@@ -76,6 +79,7 @@ public class TrongridRestClient {
     }
 
     public TreeMap<String, Object> broadcastTransaction(TreeMap<String, Object> transactionData) {
+        String responseStr = "";
         try {
             rateLimiter.acquire();
             String jsonData = objectMapper.writeValueAsString(transactionData);
@@ -88,7 +92,9 @@ public class TrongridRestClient {
                     .build();
             Response response = client.newCall(request).execute();
 
-            TreeMap<String, Object> map = objectMapper.readValue(response.body().byteStream(),
+            responseStr = response.body().string();
+            checkReponseForFrequencyLimit(response, responseStr);
+            TreeMap<String, Object> map = objectMapper.readValue(responseStr,
                     new TypeReference<TreeMap<String, Object>>() {
                     });
             logger.info("broadcastTransaction " + map);
@@ -128,7 +134,7 @@ public class TrongridRestClient {
             Response response = client.newCall(request).execute();
 
             responseStr = response.body().string();
-            logger.info(responseStr);
+            checkReponseForFrequencyLimit(response, responseStr);
             V1AccountsAddressTransactionsGet200Response responseTyped = objectMapper.readValue(responseStr, V1AccountsAddressTransactionsGet200Response.class);
             result = responseTyped.getData() == null || responseTyped.getData().isEmpty()
                 ? Collections.emptyList()
@@ -161,6 +167,7 @@ public class TrongridRestClient {
             Response response = client.newCall(request).execute();
 
             responseStr = response.body().string();
+            checkReponseForFrequencyLimit(response, responseStr);
             V1AccountsAddressGet200Response responseTyped = objectMapper.readValue(responseStr, V1AccountsAddressGet200Response.class);
             result = responseTyped.getData() == null || responseTyped.getData().isEmpty()
                 ? null
@@ -171,5 +178,11 @@ public class TrongridRestClient {
         }
 
         return result;
+    }
+
+    private void checkReponseForFrequencyLimit(Response response, String body) {
+        if (response.code() != 200) {
+            logger.error("Response is not 200: {}, boyd {}", response.code(), body);
+        }
     }
 }
