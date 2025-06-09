@@ -534,4 +534,10 @@
             <column name="created_at" />
         </createIndex>
     </changeSet>
+
+    <changeSet id="extend nrg_users with language_code" author="oress">
+        <addColumn tableName="nrg_users">
+            <column name="language_code" type="text" defaultValue="ru" />
+        </addColumn>
+    </changeSet>
 </databaseChangeLog>

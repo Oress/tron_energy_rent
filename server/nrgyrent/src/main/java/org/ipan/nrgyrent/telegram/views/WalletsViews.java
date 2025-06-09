@@ -4,7 +4,8 @@ import java.util.List;
 
 import org.ipan.nrgyrent.domain.model.UserWallet;
 import org.ipan.nrgyrent.telegram.InlineMenuCallbacks;
-import org.ipan.nrgyrent.telegram.StaticLabels;
+import org.ipan.nrgyrent.telegram.i18n.CommonLabels;
+import org.ipan.nrgyrent.telegram.i18n.WalletLabels;
 import org.ipan.nrgyrent.telegram.state.UserState;
 import org.ipan.nrgyrent.telegram.utils.WalletTools;
 import org.springframework.retry.annotation.Retryable;
@@ -23,13 +24,10 @@ import lombok.SneakyThrows;
 public class WalletsViews {
     public static final String OPEN_WALLET = "/wallet/";
 
-    public static final String MSG_PROMPT_WALLET_ADDRESS = "Отправьте *адрес кошелька* TRC-20, который вы хотите добавить";
-    public static final String MSG_PROMPT_WALLET_LABEL = "Отправьте *название кошелька*, который вы хотите добавить";
-    public static final String MSG_ADD_WALLET_SUCCESS = "✅ Кошелек успешно добавлен";
-    public static final String MSG_DELETE_WALLET_SUCCESS = "\uD83D\uDDD1\uFE0F Кошелек успешно удален";
-
     private final TelegramClient tgClient;
     private final CommonViews commonViews;
+    private final WalletLabels walletLabels;
+    private final CommonLabels commonLabels;
 
     @Retryable
     @SneakyThrows
@@ -38,7 +36,7 @@ public class WalletsViews {
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
-                .text(StaticLabels.MSG_WALLETS)
+                .text(walletLabels.getWalletsManage())
                 .replyMarkup(getWalletsMenuMarkup(wallets))
                 .build();
         tgClient.execute(message);
@@ -64,7 +62,7 @@ public class WalletsViews {
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
-                .text(MSG_DELETE_WALLET_SUCCESS)
+                .text(walletLabels.deleteWalletSuccess())
                 .replyMarkup(commonViews.getToMainMenuMarkup())
                 .build();
         tgClient.execute(message);
@@ -77,7 +75,7 @@ public class WalletsViews {
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
-                .text(MSG_ADD_WALLET_SUCCESS)
+                .text(walletLabels.addWalletSuccess())
                 .replyMarkup(commonViews.getToMainMenuMarkup())
                 .build();
         tgClient.execute(message);
@@ -90,7 +88,7 @@ public class WalletsViews {
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
-                .text(MSG_PROMPT_WALLET_ADDRESS)
+                .text(walletLabels.promptAddress())
                 .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .parseMode("MARKDOWN")
                 .build();
@@ -104,7 +102,7 @@ public class WalletsViews {
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
-                .text(MSG_PROMPT_WALLET_LABEL)
+                .text(walletLabels.promptLabel())
                 .replyMarkup(commonViews.getToMainMenuMarkup())
                 .parseMode("MARKDOWN")
                 .build();
@@ -112,7 +110,7 @@ public class WalletsViews {
     }
 
     private String getWalletDetails(UserWallet wallet) {
-        return String.format("Кошелек: %s\nАдрес: %s", wallet.getLabel(), wallet.getAddress());
+        return walletLabels.item(wallet.getLabel(), wallet.getAddress());
     }
 
     private InlineKeyboardMarkup getWalletsMenuMarkup(List<UserWallet> wallets) {
@@ -125,7 +123,7 @@ public class WalletsViews {
                             .build(),
                     InlineKeyboardButton
                             .builder()
-                            .text(StaticLabels.WLT_DELETE_WALLET)
+                            .text(walletLabels.deleteWallet())
                             .callbackData("delete_wallet " + wallet.getId().toString())
                             .build());
             return row;
@@ -137,7 +135,7 @@ public class WalletsViews {
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(StaticLabels.WLT_ADD_WALLET)
+                                        .text(walletLabels.addWallet())
                                         .callbackData(InlineMenuCallbacks.ADD_WALLETS)
                                         .build()));
         walletRows.forEach(builder::keyboardRow);
@@ -146,7 +144,7 @@ public class WalletsViews {
                 new InlineKeyboardRow(
                         InlineKeyboardButton
                                 .builder()
-                                .text(StaticLabels.TO_MAIN_MENU)
+                                .text(commonLabels.toMainMenu())
                                 .callbackData(InlineMenuCallbacks.TO_MAIN_MENU)
                                 .build())
 

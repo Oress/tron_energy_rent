@@ -6,7 +6,8 @@ import java.util.List;
 import org.ipan.nrgyrent.domain.model.AppUser;
 import org.ipan.nrgyrent.domain.model.Tariff;
 import org.ipan.nrgyrent.telegram.InlineMenuCallbacks;
-import org.ipan.nrgyrent.telegram.StaticLabels;
+import org.ipan.nrgyrent.telegram.i18n.CommonLabels;
+import org.ipan.nrgyrent.telegram.i18n.ManageUserLabels;
 import org.ipan.nrgyrent.telegram.state.UserState;
 import org.ipan.nrgyrent.telegram.utils.FormattingTools;
 import org.springframework.data.domain.Page;
@@ -25,38 +26,17 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @AllArgsConstructor
 public class ManageUserActionsView {
-    private static final String NEXT_PAGE = "➡️";
-    private static final String PREV_PAGE = "⬅️";
-    private static final String MANAGE_USER_ACTION_CHANGE_TARIFF = "✏️ Изменить тариф";
-    private static final String MANAGE_USER_ACTION_ADJUST_BALANCE_MANUALLY = "💰 Изменить баланс вручную";
-    private static final String MANAGE_USER_ACTION_DEACTIVATE = "❌ Деактивировать пользователя";
-
-    private static final String MSG_DEACTIVATE_USER_WARNING = "⚠️ Вы уверены, что хотите деактивировать пользователя?";
-    private static final String MSG_USER_DEACTIVATED = "✅ Пользователь успешно деактивирован.";
-    private static final String MSG_USER_PROMPT_NEW_BALANCE = "Введите новый баланс пользователя (в TRX)";
-    private static final String MSG_USER_BALANCE_ADJUSTED = "✅ Баланс пользователя успешно изменен.";
-    private static final String MSG_USER_TARIFF_CHANGED = "✅ Тариф пользователя успешно изменен.";
-
-    private static final String MANAGE_USERS_SEARCH_RESET = "🔄 Сбросить поиск";
-
     public static final String OPEN_BALANCE = "/balance/";
-    private static final String MSG_MANAGE_USERS_SEARCH_NO_RESULTS = "❌ Нет результатов";
-    private static final String MSG_MANAGE_USERS_SEARCH_PAGE_RESULTS = """
-            🔍 Результаты поиска
-            Используйте стрелки, чтобы прокручивать результаты, или введите имя/ник пользователя, чтобы найти его.
-
-            Выберите пользователя, с которой хотите работать
-            """;
-
-    private static final String NO = "❌ Нет";
-    private static final String YES = "✅ Да";
 
     private final TelegramClient tgClient;
     private final CommonViews commonViews;
+    private final CommonLabels commonLabels;
+    private final ManageUserLabels manageUserLabels;
+    private final FormattingTools formattingTools;
 
     public void updMenuToManageUsersSearchResult(Page<AppUser> page, UserState userState) {
-        String text = page.isEmpty() ? MSG_MANAGE_USERS_SEARCH_NO_RESULTS
-                : MSG_MANAGE_USERS_SEARCH_PAGE_RESULTS;
+        String text = page.isEmpty() ? commonLabels.searchNoResults()
+                : commonLabels.searchResults();
 
         EditMessageText message = EditMessageText
                 .builder()
@@ -89,7 +69,7 @@ public class ManageUserActionsView {
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
-                .text("❌ Баланс не может быть отрицательным. Попробуйте снова.")
+                .text(manageUserLabels.changeBalanceNegative())
                 .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
         try {
@@ -105,7 +85,7 @@ public class ManageUserActionsView {
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
-                .text(MSG_USER_DEACTIVATED)
+                .text(manageUserLabels.deactivateSuccess())
                 .replyMarkup(commonViews.getToMainMenuMarkup())
                 .build();
         tgClient.execute(message);
@@ -117,7 +97,7 @@ public class ManageUserActionsView {
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
-                .text(MSG_USER_BALANCE_ADJUSTED)
+                .text(manageUserLabels.changeBalanceSuccess())
                 .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
         tgClient.execute(message);
@@ -130,7 +110,7 @@ public class ManageUserActionsView {
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
-                .text(MSG_USER_TARIFF_CHANGED)
+                .text(manageUserLabels.changeTariffSuccess())
                 .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
         tgClient.execute(message);
@@ -142,7 +122,7 @@ public class ManageUserActionsView {
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
-                .text(MSG_USER_PROMPT_NEW_BALANCE)
+                .text(manageUserLabels.changeBalancePromptAmount())
                 .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
         tgClient.execute(message);
@@ -154,7 +134,7 @@ public class ManageUserActionsView {
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
-                .text(MSG_DEACTIVATE_USER_WARNING)
+                .text(manageUserLabels.deactivateConfirm())
                 .replyMarkup(confirmDeleteGroupMarkup(userState))
                 .build();
         tgClient.execute(message);
@@ -167,12 +147,12 @@ public class ManageUserActionsView {
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(NO)
+                                        .text(commonLabels.no())
                                         .callbackData(InlineMenuCallbacks.CONFIRM_NO)
                                         .build(),
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(YES)
+                                        .text(commonLabels.yes())
                                         .callbackData(InlineMenuCallbacks.CONFIRM_YES)
                                         .build()))
                 .build();
@@ -191,23 +171,12 @@ public class ManageUserActionsView {
         }
 
         // TODO: view group if present
-        return String.format("""
-                ⚙️ Действия с пользователем
-
-                ID: %s
-                Логин: %s
-                Имя пользователя: %s
-                Тариф: %s
-                Активен: %s
-
-                Кошелек: %s
-                Баланс: %s TRX
-                """, 
-                user.getTelegramId(),
+        return  manageUserLabels.preview( 
+                user.getTelegramId().toString(),
                 FormattingTools.valOrDash(user.getTelegramUsername()),
                 FormattingTools.valOrDash(user.getTelegramFirstName()),
                 tariffLabel,
-                user.getDisabled() ? "❌" : "✅",
+                user.getDisabled() ? commonLabels.cross() : commonLabels.check(),
                 user.getBalance().getDepositAddress(),
                 FormattingTools.formatBalance(user.getBalance().getSunBalance())
                 );
@@ -220,14 +189,14 @@ public class ManageUserActionsView {
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(MANAGE_USER_ACTION_CHANGE_TARIFF)
+                                        .text(manageUserLabels.menuChangeTariff())
                                         .callbackData(InlineMenuCallbacks.MANAGE_USER_ACTION_CHANGE_TARIFF)
                                         .build()))
                 .keyboardRow(
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(MANAGE_USER_ACTION_ADJUST_BALANCE_MANUALLY)
+                                        .text(manageUserLabels.menuChangeBalance())
                                         .callbackData(InlineMenuCallbacks.MANAGE_USER_ACTION_ADJUST_BALANCE_MANUALLY)
                                         .build()));
 
@@ -236,7 +205,7 @@ public class ManageUserActionsView {
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(MANAGE_USER_ACTION_DEACTIVATE)
+                                        .text(manageUserLabels.menuDeactivate())
                                         .callbackData(InlineMenuCallbacks.MANAGE_USER_ACTION_DEACTIVATE)
                                         .build()));
         }
@@ -245,12 +214,12 @@ public class ManageUserActionsView {
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(StaticLabels.TO_MAIN_MENU)
+                                        .text(commonLabels.toMainMenu())
                                         .callbackData(InlineMenuCallbacks.TO_MAIN_MENU)
                                         .build(),
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(StaticLabels.GO_BACK)
+                                        .text(commonLabels.goBack())
                                         .callbackData(InlineMenuCallbacks.GO_BACK)
                                         .build()))
                 .build();
@@ -261,7 +230,7 @@ public class ManageUserActionsView {
             InlineKeyboardRow row = new InlineKeyboardRow(
                     InlineKeyboardButton
                             .builder()
-                            .text(FormattingTools.formatUserForSearch(user))
+                            .text(formattingTools.formatUserForSearch(user))
                             .callbackData(openBalanceRequest(user.getTelegramId()))
                             .build());
             return row;
@@ -276,7 +245,7 @@ public class ManageUserActionsView {
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(MANAGE_USERS_SEARCH_RESET)
+                                        .text(commonLabels.searchReset())
                                         .callbackData(InlineMenuCallbacks.MANAGE_USERS_SEARCH_RESET)
                                         .build()));
 
@@ -288,14 +257,14 @@ public class ManageUserActionsView {
             if (hasPrev) {
                 buttons.add(InlineKeyboardButton
                                 .builder()
-                                .text(PREV_PAGE)
+                                .text(commonLabels.searchPrevPage())
                                 .callbackData(InlineMenuCallbacks.MANAGE_USERS_PREV_PAGE)
                                 .build());
             }
             if (hasNext) {
                 buttons.add(InlineKeyboardButton
                                 .builder()
-                                .text(NEXT_PAGE)
+                                .text(commonLabels.searchNextPage())
                                 .callbackData(InlineMenuCallbacks.MANAGE_USERS_NEXT_PAGE)
                                 .build());
             }
@@ -307,12 +276,12 @@ public class ManageUserActionsView {
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(StaticLabels.TO_MAIN_MENU)
+                                        .text(commonLabels.toMainMenu())
                                         .callbackData(InlineMenuCallbacks.TO_MAIN_MENU)
                                         .build(),
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(StaticLabels.GO_BACK)
+                                        .text(commonLabels.goBack())
                                         .callbackData(InlineMenuCallbacks.GO_BACK)
                                         .build()))
                 .build();

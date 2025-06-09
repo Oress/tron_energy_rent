@@ -1,19 +1,19 @@
 package org.ipan.nrgyrent.telegram.handlers;
 
-import java.util.List;
+import java.util.Locale;
 
 import org.ipan.nrgyrent.domain.model.AppUser;
-import org.ipan.nrgyrent.domain.model.projections.TransactionHistoryDto;
-import org.ipan.nrgyrent.domain.model.repository.OrderRepo;
 import org.ipan.nrgyrent.domain.service.UserService;
 import org.ipan.nrgyrent.telegram.InlineMenuCallbacks;
 import org.ipan.nrgyrent.telegram.States;
+import org.ipan.nrgyrent.telegram.TelegramMessages;
+import org.ipan.nrgyrent.telegram.i18n.TgUserLocaleHolder;
 import org.ipan.nrgyrent.telegram.state.TelegramState;
 import org.ipan.nrgyrent.telegram.state.UserState;
 import org.ipan.nrgyrent.telegram.statetransitions.MatchState;
 import org.ipan.nrgyrent.telegram.statetransitions.TransitionHandler;
+import org.ipan.nrgyrent.telegram.statetransitions.UpdateType;
 import org.ipan.nrgyrent.telegram.views.DepositViews;
-import org.ipan.nrgyrent.telegram.views.HistoryViews;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
 import lombok.AllArgsConstructor;
@@ -22,26 +22,29 @@ import lombok.AllArgsConstructor;
 @TransitionHandler
 public class MainMenuHandler {
     private final TelegramState telegramState;
+    private final TelegramMessages telegramMessages;
     private final UserService userService;
-    private final OrderRepo orderRepo;
 
     private final DepositViews depositViews;
-    private final HistoryViews historyViews;
+
+    @MatchState(state = States.CHOOSE_LANGUAGE, updateTypes = UpdateType.CALLBACK_QUERY)
+    public void changeLanguage(UserState userState, Update update) {
+        AppUser user = userService.getById(userState.getTelegramId());
+        String data = update.getCallbackQuery().getData();
+        
+        if ("en".equals(data) || "ru".equals(data)) {
+            userService.setLanguage(userState.getTelegramId(), data);
+
+            TgUserLocaleHolder.setUserLocale(Locale.of(data));
+            telegramMessages.updateMsgToMainMenu(userState, user);
+            telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.MAIN_MENU));
+        }
+    }
 
     @MatchState(state = States.MAIN_MENU, callbackData = InlineMenuCallbacks.DEPOSIT)
     public void handleDeposit(UserState userState, Update update) {
         AppUser user = userService.getById(userState.getTelegramId());
         depositViews.updMenuToDepositsMenu(userState, user);
         telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.DEPOSIT));
-    }
-
-    @MatchState(state = States.MAIN_MENU, callbackData = InlineMenuCallbacks.HISTORY)
-    public void handleTransactionHistory(UserState userState, Update update) {
-        AppUser user = userService.getById(userState.getTelegramId());
-        List<TransactionHistoryDto> page = user.isGroupManager()
-            ? orderRepo.findAllTransactionsForManager(userState.getTelegramId(), 10)
-            : orderRepo.findAllTransactions(userState.getTelegramId(), 10);
-        historyViews.updMenuToHistoryMenu(page.reversed(), update.getCallbackQuery());
-        telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.HISTORY));
     }
 }

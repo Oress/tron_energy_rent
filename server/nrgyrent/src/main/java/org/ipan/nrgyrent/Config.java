@@ -1,10 +1,14 @@
 package org.ipan.nrgyrent;
 
 import org.ipan.nrgyrent.domain.service.CollectionWalletService;
+import org.ipan.nrgyrent.telegram.TelegramMsgScopeBpp;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.MessageSource;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
+import org.springframework.context.support.ResourceBundleMessageSource;
 import org.springframework.retry.annotation.EnableRetry;
 import org.springframework.scheduling.annotation.EnableAsync;
 
@@ -29,5 +33,18 @@ public class Config {
     @PostConstruct
     public void initializeApplication() {
         collectionWalletService.ensureWalletsAreCreated();
+    }
+
+    @Bean
+    public static TelegramMsgScopeBpp beanFactoryPostProcessor() {
+        return new TelegramMsgScopeBpp();
+    }
+
+    @Bean
+    public MessageSource messageSource() {
+        ResourceBundleMessageSource source = new ResourceBundleMessageSource();
+        source.setBasename("messages");
+        source.setDefaultEncoding("UTF-8");
+        return source;
     }
 }

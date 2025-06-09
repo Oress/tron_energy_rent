@@ -160,12 +160,12 @@ public class WithdrawalHandler {
                 return;
             }
 
+            withdrawViews.withdrawTrxInProgress(userState);
             withdrawalHandlerHelper.transferTrxFromCollectionWallets(
                     userState.getTelegramId(),
                     walletAddress,
                     sunAmount,
                     AppConstants.WITHDRAWAL_FEE);
-            withdrawViews.withdrawTrxInProgress(userState);
         }
     }
 }

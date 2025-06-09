@@ -1,5 +1,6 @@
 package org.ipan.nrgyrent.telegram.views.tariffs;
 
+import org.ipan.nrgyrent.telegram.i18n.TariffLabels;
 import org.ipan.nrgyrent.telegram.state.UserState;
 import org.ipan.nrgyrent.telegram.views.CommonViews;
 import org.springframework.stereotype.Component;
@@ -12,14 +13,9 @@ import lombok.SneakyThrows;
 @Component
 @AllArgsConstructor
 public class TariffNewView {
-    private static final String MSG_MANAGE_TARIFF_ADD_SUCCESS = "✅ Тариф успешно добавлен";
-
-    private static final String MSG_MANAGE_TARIFF_ADD_PROMPT_LABEL = "Введите название тарифа (минимум 3 символа):";
-    private static final String MSG_MANAGE_TARIFF_ADD_PROMPT_TX1_AMOUNT = "Введите сумму TRX за 65 000 энергии:";
-    private static final String MSG_MANAGE_TARIFF_ADD_PROMPT_TX2_AMOUNT = "Введите сумму TRX за 131 000 энергии:";
-
     private final TelegramClient tgClient;
     private final CommonViews commonViews;
+    private final TariffLabels tariffLabels;
 
     @SneakyThrows
     public void updMenuToManageGroupsAddPromptLabel(UserState userState) {
@@ -27,7 +23,7 @@ public class TariffNewView {
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
-                .text(MSG_MANAGE_TARIFF_ADD_PROMPT_LABEL)
+                .text(tariffLabels.promptLabel())
                 .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
         tgClient.execute(message);
@@ -39,7 +35,7 @@ public class TariffNewView {
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
-                .text(MSG_MANAGE_TARIFF_ADD_PROMPT_TX1_AMOUNT)
+                .text(tariffLabels.promptTx1Amount())
                 .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
         tgClient.execute(message);
@@ -51,7 +47,7 @@ public class TariffNewView {
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
-                .text(MSG_MANAGE_TARIFF_ADD_PROMPT_TX2_AMOUNT)
+                .text(tariffLabels.promptTx2Amount())
                 .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
         tgClient.execute(message);
@@ -63,7 +59,7 @@ public class TariffNewView {
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
-                .text(MSG_MANAGE_TARIFF_ADD_SUCCESS)
+                .text(tariffLabels.addSuccess())
                 .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
         tgClient.execute(message);

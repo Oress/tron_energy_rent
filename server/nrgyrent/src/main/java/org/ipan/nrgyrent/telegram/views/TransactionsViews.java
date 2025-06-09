@@ -8,7 +8,8 @@ import org.ipan.nrgyrent.domain.model.Tariff;
 import org.ipan.nrgyrent.domain.model.UserWallet;
 import org.ipan.nrgyrent.itrx.AppConstants;
 import org.ipan.nrgyrent.telegram.InlineMenuCallbacks;
-import org.ipan.nrgyrent.telegram.StaticLabels;
+import org.ipan.nrgyrent.telegram.i18n.CommonLabels;
+import org.ipan.nrgyrent.telegram.i18n.TransactionLabels;
 import org.ipan.nrgyrent.telegram.state.UserState;
 import org.ipan.nrgyrent.telegram.utils.FormattingTools;
 import org.ipan.nrgyrent.telegram.utils.WalletTools;
@@ -28,20 +29,10 @@ import lombok.extern.slf4j.Slf4j;
 @AllArgsConstructor
 @Slf4j
 public class TransactionsViews {
-    private static final String MSG_NOT_ENOUGH_TRX = """
-            ❌ Недостаточно средств на балансе
-            Пожалуйста, пополните баланс и повторите попытку.
-            """;
-
-    private static final String MSG_TRANSACTION_PROGRESS = "Работаем, пожалуйста, подождите...";
-
-    private static final String MSG_TRANSACTION_PENDING = """
-            ⏳ Транзакция в процессе
-            Пожалуйста, подождите до 5 минут. Бот обновит это сообщение, когда транзакция завершится
-            """;
-
     private final TelegramClient tgClient;
     private final CommonViews commonViews;
+    private final CommonLabels commonLabels;
+    private final TransactionLabels transactionLabels;
 
     @Retryable
     @SneakyThrows
@@ -100,38 +91,21 @@ public class TransactionsViews {
     }
 
     private String promptCustomTxAmount(Long sunAmountPerTx) {
-        return """
-                ⚡ Ручной ввод количества транзакций на кош с USDT (1 тр = %s TRX)⚡️
-
-                👇 Введите *текстом* нужное число транзакций 👇
-                """.formatted(FormattingTools.formatBalance(sunAmountPerTx));
+        return transactionLabels.customAmountPromptAmount(FormattingTools.formatBalance(sunAmountPerTx));
     }
 
     private String getCustomTransactions65kMenuLabel(Integer txAmount, Long sunAmountPerTx) {
         BigDecimal trxTotalSun = new BigDecimal(sunAmountPerTx * txAmount);
         BigDecimal trxTotal = trxTotalSun.divide(AppConstants.trxToSunRate);;
-        return """
-                ⚡%s транзакций на кош с USDT (1 тр = %s TRX)⚡️
-                Всего: *%s TRX*
-
-                👇 Введите *текстом кошелек*, либо выберете из *списка* 👇
-                """.formatted(txAmount, FormattingTools.formatBalance(sunAmountPerTx), trxTotal);
+        return transactionLabels.customAmountPromptAddress(txAmount, FormattingTools.formatBalance(sunAmountPerTx), trxTotal);
     }
 
     private String getTransaction65kMenuLabel(Long trxAmount) {
-        return """
-                ⚡ Транзакции (1 тр на кош с USDT, %s TRX)
-
-                👇 Введите *текстом кошелек*, либо выберете из *списка* 👇
-                """.formatted(FormattingTools.formatBalance(trxAmount));
+        return transactionLabels.tx1PromptAddress(FormattingTools.formatBalance(trxAmount));
     }
 
     private String getTransaction131kMenuLabel(Long trxAmount) {
-        return """
-                ⚡ Транзакции (1 тр на кош без USDT или биржу, %s TRX)
-
-                👇 Введите *текстом кошелек*, либо выберете из *списка* 👇
-                """.formatted(FormattingTools.formatBalance(trxAmount));
+        return transactionLabels.tx2PromptAddress(FormattingTools.formatBalance(trxAmount));
     }
 
     public void notEnoughBalance(UserState userState) {
@@ -139,7 +113,7 @@ public class TransactionsViews {
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
-                .text(MSG_NOT_ENOUGH_TRX)
+                .text(transactionLabels.notEnoughtBalance())
                 .replyMarkup(commonViews.getToMainMenuMarkup())
                 .build();
         try {
@@ -154,10 +128,7 @@ public class TransactionsViews {
                 .builder()
                 .chatId(order.getChatId())
                 .messageId(order.getMessageToUpdate())
-                .text("""
-                    Заказ: %s
-                    ❌ Что-то пошло не так. Пожалуйста, попробуйте позже.
-                    """.formatted(order.getCorrelationId()))
+                .text(transactionLabels.somethingWrong(order.getCorrelationId()))
                 // .replyMarkup(commonViews.getToMainMenuMarkup())
                 .build();
         try {
@@ -172,7 +143,7 @@ public class TransactionsViews {
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
-                .text("❌ Что-то пошло не так. Пожалуйста, попробуйте позже.")
+                .text(commonLabels.somethingWentWrong())
                 .replyMarkup(commonViews.getToMainMenuMarkup())
                 .build();
         try {
@@ -187,10 +158,7 @@ public class TransactionsViews {
                 .builder()
                 .chatId(order.getChatId())
                 .messageId(order.getMessageToUpdate())
-                .text("""
-                    Заказ: %s
-                    ❌ Кошелек не активен. Пожалуйста, выберите другой кошелек.
-                    """.formatted(order.getCorrelationId()))
+                .text(transactionLabels.walletNotActive(order.getCorrelationId()))
                 // .replyMarkup(commonViews.getToMainMenuMarkup())
                 .build();
         try {
@@ -205,10 +173,7 @@ public class TransactionsViews {
                 .builder()
                 .chatId(order.getChatId())
                 .messageId(order.getMessageToUpdate())
-                .text("""
-                    Заказ: %s
-                    ❌ Сервис временно недоступен. Пожалуйста, свяжитесь с администратором.
-                    """.formatted(order.getCorrelationId()))
+                .text(transactionLabels.itrxOutOfTrx(order.getCorrelationId()))
                 // .replyMarkup(commonViews.getToMainMenuMarkup())
                 .build();
         try {
@@ -225,7 +190,7 @@ public class TransactionsViews {
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
-                .text(MSG_TRANSACTION_PROGRESS)
+                .text(transactionLabels.inProgress())
                 .replyMarkup(null)
                 .build();
         tgClient.execute(message);
@@ -238,7 +203,7 @@ public class TransactionsViews {
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
-                .text(MSG_TRANSACTION_PENDING)
+                .text(transactionLabels.pending())
                 // .replyMarkup(commonViews.getToMainMenuMarkup())
                 .build();
         tgClient.execute(message);
@@ -263,7 +228,7 @@ public class TransactionsViews {
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(StaticLabels.TO_MAIN_MENU)
+                                        .text(commonLabels.toMainMenu())
                                         .callbackData(InlineMenuCallbacks.TO_MAIN_MENU)
                                         .build())
 

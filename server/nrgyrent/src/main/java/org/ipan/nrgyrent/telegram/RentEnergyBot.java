@@ -2,6 +2,7 @@ package org.ipan.nrgyrent.telegram;
 
 import java.lang.reflect.Method;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 
 import org.ipan.nrgyrent.domain.model.AppUser;
@@ -9,6 +10,7 @@ import org.ipan.nrgyrent.domain.model.Balance;
 import org.ipan.nrgyrent.domain.model.UserRole;
 import org.ipan.nrgyrent.domain.service.UserService;
 import org.ipan.nrgyrent.domain.service.commands.users.CreateUserCommand;
+import org.ipan.nrgyrent.telegram.i18n.TgUserLocaleHolder;
 import org.ipan.nrgyrent.telegram.state.TelegramState;
 import org.ipan.nrgyrent.telegram.state.UserState;
 import org.ipan.nrgyrent.telegram.statetransitions.StateHandlerRegistry;
@@ -36,6 +38,7 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
     private TelegramState telegramState;
     private TelegramMessages telegramMessages;
     private UserService userService;
+    private FormattingTools formattingTools;
 
     private final StateHandlerRegistry stateHandlerRegistry;
 
@@ -73,7 +76,7 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
 
         AppUser user = userService.getById(userId);
         if (user != null && Boolean.TRUE.equals(user.getDisabled())) {
-            logger.warn("disabled user tries to access the bot  user: {}", FormattingTools.formatUserForSearch(user));
+            logger.warn("disabled user tries to access the bot  user: {}", formattingTools.formatUserForSearch(user));
             return;
         }
 
@@ -84,6 +87,10 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
             } else {
                 userState = userState.withManagingGroupId(null);
             }
+
+            String languageCode = user.getLanguageCode();
+            userState = userState.withLanguageCode(languageCode);
+            TgUserLocaleHolder.setUserLocale(Locale.of(user.getLanguageCode()));
 
             // sync login and first name of the user. both may be null BTW.
             if (!Objects.equals(from.getUserName(), user.getTelegramUsername()) 
@@ -98,7 +105,7 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
 
         if (handleStartState(user, userState, update)) {
             if (user != null) {
-                logger.warn("User sent /start command user: {}, userstate: {}", FormattingTools.formatUserForSearch(user), userState);
+                logger.warn("User sent /start command user: {}, userstate: {}", formattingTools.formatUserForSearch(user), userState);
             } else {
                 logger.info("User registered /start command userstate: {} ", userState);
             }
@@ -171,24 +178,38 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
             String text = message.getText();
 
             if (START.equals(text)) {
+                telegramMessages.deleteMessage(message);
+
+                Message newMenuMsg = null;
+                UserRole role = UserRole.USER;
+                States targetState;
                 if (user == null) {
+                    User from = message.getFrom();
+                    String languageCode = extractLangFromUser(from);
                     user = userService.createUser(
                             CreateUserCommand.builder()
                                     .telegramId(userState.getTelegramId())
-                                    .firstName(message.getFrom().getFirstName())
-                                    .username(message.getFrom().getUserName())
+                                    .firstName(from.getFirstName())
+                                    .username(from.getUserName())
+                                    .languageCode(languageCode)
                                     .build());
-                }
-                telegramMessages.deleteMessage(message);
-                UserRole role = user != null ? user.getRole() : UserRole.USER;
+                    newMenuMsg = telegramMessages.sendPromptLanguage(userState, update.getMessage().getChatId());
 
-                Message newMenuMsg = switch (role) {
-                    case ADMIN -> telegramMessages.sendAdminMainMenu(userState, update.getMessage().getChatId(), user);
-                    default -> telegramMessages.sendMainMenu(userState, update.getMessage().getChatId(), user);
-                };
+                    targetState = States.CHOOSE_LANGUAGE;
+                    role = user != null ? user.getRole() : UserRole.USER;
+                } else {
+                    telegramMessages.deleteMessage(message);
+                    targetState = States.MAIN_MENU;
+                    role = user != null ? user.getRole() : UserRole.USER;
+
+                    newMenuMsg = switch (role) {
+                        case ADMIN -> telegramMessages.sendAdminMainMenu(userState, update.getMessage().getChatId(), user);
+                        default -> telegramMessages.sendMainMenu(userState, update.getMessage().getChatId(), user);
+                    };
+                }
 
                 telegramState.updateUserState(userState.getTelegramId(), userState
-                        .withState(States.MAIN_MENU)
+                        .withState(targetState)
                         .withChatId(newMenuMsg.getChatId())
                         .withRole(role)
                         .withMenuMessageId(newMenuMsg.getMessageId()));
@@ -202,6 +223,13 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
             }
         }
         return false;
+    }
+
+    private String extractLangFromUser(User from) {
+        return switch(from.getLanguageCode()) {
+            case "ru" -> "ru";
+            default -> "en";
+        };
     }
 
     private User getFrom(Update update) {

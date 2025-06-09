@@ -105,6 +105,7 @@ public class TrongridRestClient {
             Integer limit) {
         List<Transaction> result = new ArrayList<>();
 
+        String responseStr = "";
         try {
             rateLimiter.acquire();
 
@@ -126,11 +127,13 @@ public class TrongridRestClient {
                     .build();
             Response response = client.newCall(request).execute();
 
-            V1AccountsAddressTransactionsGet200Response responseTyped = objectMapper.readValue(response.body().byteStream(), V1AccountsAddressTransactionsGet200Response.class);
+            responseStr = response.body().string();
+            V1AccountsAddressTransactionsGet200Response responseTyped = objectMapper.readValue(responseStr, V1AccountsAddressTransactionsGet200Response.class);
             result = responseTyped.getData() == null || responseTyped.getData().isEmpty()
                 ? Collections.emptyList()
                 : responseTyped.getData();
         } catch (Exception e) {
+            logger.error("Could not getTransactions response: {}", responseStr);
             throw new RuntimeException(e);
         }
 
@@ -140,6 +143,7 @@ public class TrongridRestClient {
     public AccountInfo getAccountInfo(String depositAddress) {
         AccountInfo result = null;
 
+        String responseStr = "";
         try {
             rateLimiter.acquire();
 
@@ -155,11 +159,13 @@ public class TrongridRestClient {
                     .build();
             Response response = client.newCall(request).execute();
 
-            V1AccountsAddressGet200Response responseTyped = objectMapper.readValue(response.body().byteStream(), V1AccountsAddressGet200Response.class);
+            responseStr = response.body().string();
+            V1AccountsAddressGet200Response responseTyped = objectMapper.readValue(responseStr, V1AccountsAddressGet200Response.class);
             result = responseTyped.getData() == null || responseTyped.getData().isEmpty()
                 ? null
                 : responseTyped.getData().get(0);
         } catch (Exception e) {
+            logger.error("Could not getAccountInfo response: {}", responseStr);
             throw new RuntimeException(e);
         }
 

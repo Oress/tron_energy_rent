@@ -5,7 +5,7 @@ import java.util.List;
 
 import org.ipan.nrgyrent.domain.model.Tariff;
 import org.ipan.nrgyrent.telegram.InlineMenuCallbacks;
-import org.ipan.nrgyrent.telegram.StaticLabels;
+import org.ipan.nrgyrent.telegram.i18n.CommonLabels;
 import org.ipan.nrgyrent.telegram.state.UserState;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
@@ -24,21 +24,12 @@ import lombok.extern.slf4j.Slf4j;
 public class TariffsSearchView {
     public static final String OPEN_TARIFF = "/tariff/";
 
-    private static final String MSG_MANAGE_TARIFFS_SEARCH_NO_RESULTS = "❌ Нет результатов";
-    private static final String MSG_MANAGE_TARIFFS_SEARCH_PAGE_RESULTS = """
-            🔍 Результаты поиска
-            Используйте стрелки, чтобы прокручивать результаты, или введите имя тарифа, чтобы найти его.
-            """;
-
-    private static final String NEXT_PAGE = "➡️";
-    private static final String PREV_PAGE = "⬅️";
-    private static final String MANAGE_TARIFFS_SEARCH_RESET = "🔄 Сбросить поиск";
-
     private final TelegramClient tgClient;
+    private final CommonLabels commonLabels;
 
     public void updMenuToTariffSearchResult(Page<Tariff> page, UserState userState) {
-        String text = page.isEmpty() ? MSG_MANAGE_TARIFFS_SEARCH_NO_RESULTS
-                : MSG_MANAGE_TARIFFS_SEARCH_PAGE_RESULTS;
+        String text = page.isEmpty() ? commonLabels.searchNoResults()
+                : commonLabels.searchResults();
 
         EditMessageText message = EditMessageText
                 .builder()
@@ -78,7 +69,7 @@ public class TariffsSearchView {
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(MANAGE_TARIFFS_SEARCH_RESET)
+                                        .text(commonLabels.searchReset())
                                         .callbackData(InlineMenuCallbacks.MANAGE_TARIFFS_SEARCH_RESET)
                                         .build()));
         boolean hasPrev = page.hasPrevious();
@@ -89,14 +80,14 @@ public class TariffsSearchView {
             if (hasPrev) {
                 buttons.add(InlineKeyboardButton
                                 .builder()
-                                .text(PREV_PAGE)
+                                .text(commonLabels.searchPrevPage())
                                 .callbackData(InlineMenuCallbacks.MANAGE_TARIFFS_PREV_PAGE)
                                 .build());
             }
             if (hasNext) {
                 buttons.add(InlineKeyboardButton
                                 .builder()
-                                .text(NEXT_PAGE)
+                                .text(commonLabels.searchNextPage())
                                 .callbackData(InlineMenuCallbacks.MANAGE_TARIFFS_NEXT_PAGE)
                                 .build());
             }
@@ -108,12 +99,12 @@ public class TariffsSearchView {
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(StaticLabels.TO_MAIN_MENU)
+                                        .text(commonLabels.toMainMenu())
                                         .callbackData(InlineMenuCallbacks.TO_MAIN_MENU)
                                         .build(),
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(StaticLabels.GO_BACK)
+                                        .text(commonLabels.goBack())
                                         .callbackData(InlineMenuCallbacks.GO_BACK)
                                         .build()))
                 .build();

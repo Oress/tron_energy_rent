@@ -9,7 +9,8 @@ import org.ipan.nrgyrent.domain.model.Balance;
 import org.ipan.nrgyrent.domain.model.Tariff;
 import org.ipan.nrgyrent.domain.service.commands.TgUserId;
 import org.ipan.nrgyrent.telegram.InlineMenuCallbacks;
-import org.ipan.nrgyrent.telegram.StaticLabels;
+import org.ipan.nrgyrent.telegram.i18n.CommonLabels;
+import org.ipan.nrgyrent.telegram.i18n.ManageGroupsLabels;
 import org.ipan.nrgyrent.telegram.state.UserState;
 import org.ipan.nrgyrent.telegram.utils.FormattingTools;
 import org.springframework.stereotype.Component;
@@ -34,53 +35,18 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @AllArgsConstructor
 public class ManageGroupActionsView {
-    private static final String MANAGE_GROUP_ACTION_VIEW_USERS = "👥 Просмотреть пользователей";
-    private static final String MANAGE_GROUP_ACTION_SET_MANAGER = "👤 Установить менеджера группы";
-    private static final String MANAGE_GROUP_ACTION_ADJUST_BALANCE_MANUALLY = "💰 Изменить баланс вручную";
-    private static final String MANAGE_GROUP_ACTION_ADD_USERS = "➕ Добавить пользователей";
-    private static final String MANAGE_GROUP_ACTION_REMOVE_USERS = "➖ Удалить пользователей";
-    private static final String MANAGE_GROUP_ACTION_RENAME_GROUP = "✏️ Переименовать группу";
-    private static final String MANAGE_GROUP_ACTION_CHANGE_TARIFF = "✏️ Изменить тариф группы";
-    private static final String MANAGE_GROUP_ACTION_DEACTIVATE_GROUP = "❌ Деактивировать группу";
-
-    private static final String MSG_DELETE_GROUP_WARNING = "⚠️ Вы уверены, что хотите деактивировать группу?";
-    private static final String MSG_GROUP_DELETED = "✅ Группа успешно деактивирована.";
-    private static final String MSG_GROUP_PROMPT_NEW_LABEL = "Введите новое название группы";
-    private static final String MSG_GROUP_PROMPT_NEW_BALANCE = "Введите новый баланс группы (в TRX)";
-    private static final String MSG_GROUP_PROMPT_NEW_USERS = """
-    Добавьте пользователей в группу, используя меню
-    (Пользователи должны быть зарегестированы в боте)
-    """;
-    private static final String MSG_GROUP_PROMPT_REMOVE_USERS = "Удалите пользователей из группы, используя меню";
-    private static final String MSG_GROUP_RENAMED = "✅ Группа успешно переименована.";
-    private static final String MSG_USER_TARIFF_CHANGED = "✅ Тариф группы успешно изменен.";
-    private static final String MSG_GROUP_TOO_SHORT = "❌ Название группы слишком короткое. Минимум 3 символа. Попробуйте снова.";
-    private static final String MSG_GROUP_BALANCE_ADJUSTED = "✅ Баланс группы успешно изменен.";
-    private static final String MSG_GROUP_USERS_ADDED = "✅ Пользователи успешно добавлены в группу.";
-    private static final String MSG_GROUP_USERS_REMOVED = "✅ Пользователи успешно удалены из группы.";
-    private static final String MANAGE_GROUPS_CHANGE_MANAGER = "👤 Выбрать менеджера группы";
-    private static final String MANAGE_GROUPS_MANAGER_CHANGED = "✅ Менеджер группы успешно изменен.";
-
-    private static final String MSG_MANAGE_GROUPS_ADD_PROMPT_MANAGER = """
-            Выберете менеджера группы используя меню.
-            Старый менеджер останется учасником группы.
-            Нельзя выбирать участников других груп в качествве менеджера.
-
-            Ему будет доступна возможность добавлять и удалять пользователей из группы.
-            """;
-
-    private static final String NO = "❌ Нет";
-    private static final String YES = "✅ Да";
-
     private final TelegramClient tgClient;
     private final CommonViews commonViews;
+    private final CommonLabels commonLabels;
+    private final ManageGroupsLabels manageGrouopsLabels;
+    private final FormattingTools formattingTools;
 
     public void somethingWentWrong(UserState userState) {
         EditMessageText message = EditMessageText
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
-                .text("❌ Произошла ошибка. Попробуйте снова.")
+                .text(commonLabels.somethingWentWrong())
                 .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
         try {
@@ -90,27 +56,12 @@ public class ManageGroupActionsView {
         }
     }
 
-    public void userAlreadyManagesAnotherGroup(UserState userState) {
-        EditMessageText message = EditMessageText
-                .builder()
-                .chatId(userState.getChatId())
-                .messageId(userState.getMenuMessageId())
-                .text("❌ Выбраные пользователи уже управляет другой группой.")
-                .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
-                .build();
-        try {
-            tgClient.execute(message);
-        } catch (Exception e) {
-            logger.error("Could not userAlreadyManagesAnotherGroup userstate {}", userState, e);
-        }
-    }
-
     public void cannotRemoveManager(UserState userState) {
         EditMessageText message = EditMessageText
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
-                .text("❌ Пользователь не может быть удален из группы, так как он является менеджером.")
+                .text(manageGrouopsLabels.removeUsersCantRemoveMngr())
                 .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
         try {
@@ -129,11 +80,7 @@ public class ManageGroupActionsView {
                 .messageId(userState.getMenuMessageId())
                 .linkPreviewOptions(LinkPreviewOptions.builder().isDisabled(true).build())
                 .parseMode("MARKDOWN")
-                .text("""
-                ❌ Некоторые из выбраных пользователей не зарегистрированы:
-                %s
-                
-                Попробуйте снова.""".formatted(list))
+                .text(manageGrouopsLabels.usersNotRegistered(list))
                 .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
         try {
@@ -148,7 +95,7 @@ public class ManageGroupActionsView {
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
-                .text("❌ Выбраные пользователи уже пренадлежат другой группе.")
+                .text(manageGrouopsLabels.usersBelongToAnotherGroup())
                 .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
         try {
@@ -163,7 +110,7 @@ public class ManageGroupActionsView {
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
-                .text("❌ Выбраные пользователи заблокированы системой.")
+                .text(manageGrouopsLabels.usersDisabled())
                 .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
         try {
@@ -178,7 +125,7 @@ public class ManageGroupActionsView {
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
-                .text("У вас недостаточно прав. Вы не являетесь менеджером группы.")
+                .text(manageGrouopsLabels.notManager())
                 .replyMarkup(commonViews.getToMainMenuMarkup())
                 .build();
         try {
@@ -193,7 +140,7 @@ public class ManageGroupActionsView {
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
-                .text("❌ Баланс группы не может быть отрицательным. Попробуйте снова.")
+                .text(manageGrouopsLabels.changeBalanceNotNegative())
                 .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
         try {
@@ -209,7 +156,7 @@ public class ManageGroupActionsView {
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
-                .text(MANAGE_GROUPS_MANAGER_CHANGED)
+                .text(manageGrouopsLabels.assignManagerSuccess())
                 .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
         tgClient.execute(message);
@@ -221,7 +168,7 @@ public class ManageGroupActionsView {
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
-                .text(MSG_MANAGE_GROUPS_ADD_PROMPT_MANAGER)
+                .text(manageGrouopsLabels.assignManagerPrompt())
                 .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
         tgClient.execute(message);
@@ -232,7 +179,7 @@ public class ManageGroupActionsView {
         SendMessage message = SendMessage
                 .builder()
                 .chatId(userState.getChatId())
-                .text("Выберете пользователя")
+                .text(manageGrouopsLabels.assignManagerPromptChooseUser())
                 .replyMarkup(getManageGroupsNewGroupPromptManagerMarkup())
                 .build();
         return tgClient.execute(message);
@@ -247,7 +194,7 @@ public class ManageGroupActionsView {
                 .keyboardRow(
                         new KeyboardRow(
                                 KeyboardButton.builder()
-                                        .text("👤 Выбрать менеджера группы")
+                                        .text(manageGrouopsLabels.assignManagerPromptChooseManager())
                                         .requestUsers(
                                                 KeyboardButtonRequestUsers.builder()
                                                         .requestId("1")
@@ -292,7 +239,7 @@ public class ManageGroupActionsView {
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
-                .text(MSG_GROUP_DELETED)
+                .text(manageGrouopsLabels.deactivateSuccess())
                 .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
         tgClient.execute(message);
@@ -304,7 +251,7 @@ public class ManageGroupActionsView {
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
-                .text(MSG_GROUP_RENAMED)
+                .text(manageGrouopsLabels.renameSuccess())
                 .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
         tgClient.execute(message);
@@ -316,7 +263,7 @@ public class ManageGroupActionsView {
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
-                .text(MSG_USER_TARIFF_CHANGED)
+                .text(manageGrouopsLabels.changeTariffSuccess())
                 .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
         tgClient.execute(message);
@@ -327,7 +274,7 @@ public class ManageGroupActionsView {
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
-                .text(MSG_GROUP_TOO_SHORT)
+                .text(manageGrouopsLabels.renameLabelShort())
                 .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
         try {
@@ -343,7 +290,7 @@ public class ManageGroupActionsView {
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
-                .text(MSG_GROUP_BALANCE_ADJUSTED)
+                .text(manageGrouopsLabels.changeBalanceSuccess())
                 .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
         tgClient.execute(message);
@@ -355,7 +302,7 @@ public class ManageGroupActionsView {
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
-                .text(MSG_GROUP_USERS_ADDED)
+                .text(manageGrouopsLabels.addUsersSuccess())
                 .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
         tgClient.execute(message);
@@ -367,7 +314,7 @@ public class ManageGroupActionsView {
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
-                .text(MSG_GROUP_USERS_REMOVED)
+                .text(manageGrouopsLabels.removeUsersSuccess())
                 .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
         tgClient.execute(message);
@@ -379,7 +326,7 @@ public class ManageGroupActionsView {
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
-                .text(MSG_GROUP_PROMPT_REMOVE_USERS)
+                .text(manageGrouopsLabels.removeUsersPromptUsers())
                 .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
         tgClient.execute(message);
@@ -390,7 +337,7 @@ public class ManageGroupActionsView {
         SendMessage message = SendMessage
                 .builder()
                 .chatId(userState.getChatId())
-                .text("Выберете пользователей")
+                .text(manageGrouopsLabels.chooseUsers())
                 .replyMarkup(promptRemoveUsersMarkup())
                 .build();
         return tgClient.execute(message);
@@ -402,7 +349,7 @@ public class ManageGroupActionsView {
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
-                .text(MSG_GROUP_PROMPT_NEW_USERS)
+                .text(manageGrouopsLabels.addUsersPromptUsers())
                 .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
         tgClient.execute(message);
@@ -413,7 +360,7 @@ public class ManageGroupActionsView {
         SendMessage message = SendMessage
                 .builder()
                 .chatId(userState.getChatId())
-                .text("Выберете пользователей")
+                .text(manageGrouopsLabels.chooseUsers())
                 .replyMarkup(promptAddUsersMarkup())
                 .build();
         return tgClient.execute(message);
@@ -425,7 +372,7 @@ public class ManageGroupActionsView {
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
-                .text(MSG_GROUP_PROMPT_NEW_LABEL)
+                .text(manageGrouopsLabels.renamePromptLabel())
                 .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
         tgClient.execute(message);
@@ -437,7 +384,7 @@ public class ManageGroupActionsView {
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
-                .text(MSG_GROUP_PROMPT_NEW_BALANCE)
+                .text(manageGrouopsLabels.changeBalancePromptBalance())
                 .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
         tgClient.execute(message);
@@ -462,7 +409,7 @@ public class ManageGroupActionsView {
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
-                .text(MSG_DELETE_GROUP_WARNING)
+                .text(manageGrouopsLabels.deactivateConfirm())
                 .replyMarkup(confirmDeleteGroupMarkup())
                 .build();
         tgClient.execute(message);
@@ -475,12 +422,12 @@ public class ManageGroupActionsView {
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(NO)
+                                        .text(commonLabels.no())
                                         .callbackData(InlineMenuCallbacks.CONFIRM_NO)
                                         .build(),
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(YES)
+                                        .text(commonLabels.yes())
                                         .callbackData(InlineMenuCallbacks.CONFIRM_YES)
                                         .build()))
                 .build();
@@ -495,7 +442,7 @@ public class ManageGroupActionsView {
                 .keyboardRow(
                         new KeyboardRow(
                                 KeyboardButton.builder()
-                                        .text("Выбрать пользователей")
+                                        .text(manageGrouopsLabels.chooseUsers())
                                         .requestUsers(
                                                 KeyboardButtonRequestUsers.builder()
                                                         .requestId("1")
@@ -517,7 +464,7 @@ public class ManageGroupActionsView {
                 .keyboardRow(
                         new KeyboardRow(
                                 KeyboardButton.builder()
-                                        .text("Выбрать пользователей")
+                                        .text(manageGrouopsLabels.chooseUsers())
                                         .requestUsers(
                                                 KeyboardButtonRequestUsers.builder()
                                                         .requestId("1")
@@ -542,25 +489,12 @@ public class ManageGroupActionsView {
                     FormattingTools.formatBalance(tariff.getTransactionType2AmountSun()));
         }
 
-        return String.format("""
-                ⚙️ Действия с группой
-
-                Название: %s
-                Менеджер: 
-                %s
-
-                Создана: %s
-                Тариф: %s
-                Активна: %s
-
-                Кошелек: %s
-                Баланс: %s TRX
-                """,
+        return manageGrouopsLabels.preview(
                 balance.getLabel(),
-                FormattingTools.formatUserForSearch(balance.getManager()),
+                formattingTools.formatUserForSearch(balance.getManager()),
                 FormattingTools.formatDateToUtc(balance.getCreatedAt()),
                 tariffLabel,
-                balance.getIsActive() ? "✅" : "❌",
+                balance.getIsActive() ? commonLabels.check() : commonLabels.cross(),
                 balance.getDepositAddress(),
                 FormattingTools.formatBalance(balance.getSunBalance()));
     }
@@ -569,7 +503,7 @@ public class ManageGroupActionsView {
         InlineKeyboardRow inlineKeyboardRow = new InlineKeyboardRow(
                 InlineKeyboardButton
                         .builder()
-                        .text(StaticLabels.TO_MAIN_MENU)
+                        .text(commonLabels.toMainMenu())
                         .callbackData(InlineMenuCallbacks.TO_MAIN_MENU)
                         .build());
 
@@ -577,7 +511,7 @@ public class ManageGroupActionsView {
             inlineKeyboardRow.add(
                     InlineKeyboardButton
                             .builder()
-                            .text(StaticLabels.GO_BACK)
+                            .text(commonLabels.goBack())
                             .callbackData(InlineMenuCallbacks.GO_BACK)
                             .build());
         }
@@ -590,56 +524,56 @@ public class ManageGroupActionsView {
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(MANAGE_GROUP_ACTION_SET_MANAGER)
+                                        .text(manageGrouopsLabels.menuAssignManager())
                                         .callbackData(InlineMenuCallbacks.MANAGE_GROUPS_ACTION_CHANGE_MANAGER)
                                         .build()))
                 .keyboardRow(
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(MANAGE_GROUP_ACTION_ADJUST_BALANCE_MANUALLY)
+                                        .text(manageGrouopsLabels.menuChangeBalance())
                                         .callbackData(InlineMenuCallbacks.MANAGE_GROUPS_ACTION_ADJUST_BALANCE_MANUALLY)
                                         .build()))
                 .keyboardRow(
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(MANAGE_GROUP_ACTION_CHANGE_TARIFF)
+                                        .text(manageGrouopsLabels.menuChangeTariff())
                                         .callbackData(InlineMenuCallbacks.MANAGE_GROUPS_ACTION_CHANGE_TARIFF)
                                         .build()))
                 .keyboardRow(
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(MANAGE_GROUP_ACTION_RENAME_GROUP)
+                                        .text(manageGrouopsLabels.menuRename())
                                         .callbackData(InlineMenuCallbacks.MANAGE_GROUPS_ACTION_RENAME)
                                         .build()))
                 .keyboardRow(
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(MANAGE_GROUP_ACTION_VIEW_USERS)
+                                        .text(manageGrouopsLabels.menuReviewUsers())
                                         .callbackData(InlineMenuCallbacks.MANAGE_GROUPS_ACTION_VIEW_USERS)
                                         .build()))
                 .keyboardRow(
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(MANAGE_GROUP_ACTION_ADD_USERS)
+                                        .text(manageGrouopsLabels.menuAddUsers())
                                         .callbackData(InlineMenuCallbacks.MANAGE_GROUPS_ACTION_ADD_USERS)
                                         .build()))
                 .keyboardRow(
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(MANAGE_GROUP_ACTION_REMOVE_USERS)
+                                        .text(manageGrouopsLabels.menuRemoveUsers())
                                         .callbackData(InlineMenuCallbacks.MANAGE_GROUPS_ACTION_REMOVE_USERS)
                                         .build()))
                 .keyboardRow(
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(MANAGE_GROUP_ACTION_DEACTIVATE_GROUP)
+                                        .text(manageGrouopsLabels.menuDeactivate())
                                         .callbackData(InlineMenuCallbacks.MANAGE_GROUPS_ACTION_DEACTIVATE)
                                         .build()));
         }
@@ -649,12 +583,12 @@ public class ManageGroupActionsView {
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(StaticLabels.TO_MAIN_MENU)
+                                        .text(commonLabels.toMainMenu())
                                         .callbackData(InlineMenuCallbacks.TO_MAIN_MENU)
                                         .build(),
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(StaticLabels.GO_BACK)
+                                        .text(commonLabels.goBack())
                                         .callbackData(InlineMenuCallbacks.GO_BACK)
                                         .build()))
                 .build();
@@ -667,44 +601,39 @@ public class ManageGroupActionsView {
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(MANAGE_GROUP_ACTION_VIEW_USERS)
+                                        .text(manageGrouopsLabels.menuReviewUsers())
                                         .callbackData(InlineMenuCallbacks.MANAGE_GROUPS_ACTION_VIEW_USERS)
                                         .build()))
                 .keyboardRow(
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(MANAGE_GROUP_ACTION_ADD_USERS)
+                                        .text(manageGrouopsLabels.menuAddUsers())
                                         .callbackData(InlineMenuCallbacks.MANAGE_GROUPS_ACTION_ADD_USERS)
                                         .build()))
                 .keyboardRow(
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(MANAGE_GROUP_ACTION_REMOVE_USERS)
+                                        .text(manageGrouopsLabels.menuRemoveUsers())
                                         .callbackData(InlineMenuCallbacks.MANAGE_GROUPS_ACTION_REMOVE_USERS)
                                         .build()))
                 .keyboardRow(
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(StaticLabels.TO_MAIN_MENU)
+                                        .text(commonLabels.toMainMenu())
                                         .callbackData(InlineMenuCallbacks.TO_MAIN_MENU)
                                         .build()))
                 .build();
     }
 
     private String getUsersList(Set<AppUser> users) {
-        String usersStr = users.isEmpty() ? "Пользователей нет"
+        String usersStr = users.isEmpty() ? manageGrouopsLabels.usersListEmpty()
                 : users.stream()
-                        .map(user -> FormattingTools.formatUserForSearch(user))
+                        .map(user -> formattingTools.formatUserForSearch(user))
                         .collect(Collectors.joining("\n"));
 
-        return """
-                👥 Список пользователей группы
-
-                %s
-                """
-                .formatted(usersStr);
+        return manageGrouopsLabels.usersList(usersStr);
     }
 }

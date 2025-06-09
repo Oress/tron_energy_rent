@@ -2,7 +2,10 @@ package org.ipan.nrgyrent.telegram;
 
 public enum States {
     START,
+    CHOOSE_LANGUAGE,
     MAIN_MENU,
+    SETTINGS,
+    SETTINGS_CHANGE_LANGUAGE,
     DEPOSIT,
     WALLETS,
     HISTORY,

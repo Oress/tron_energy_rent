@@ -1,7 +1,8 @@
 package org.ipan.nrgyrent.telegram.views.tariffs;
 
 import org.ipan.nrgyrent.telegram.InlineMenuCallbacks;
-import org.ipan.nrgyrent.telegram.StaticLabels;
+import org.ipan.nrgyrent.telegram.i18n.CommonLabels;
+import org.ipan.nrgyrent.telegram.i18n.TariffLabels;
 import org.ipan.nrgyrent.telegram.state.UserState;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
@@ -16,15 +17,9 @@ import lombok.SneakyThrows;
 @Component
 @AllArgsConstructor
 public class TariffsManageView {
-    private static final String MSG_MANAGE_TARIFS_TXT = """
-            📊 Управление тарифами
-            Здесь вы можете управлять тарифами пользователей.
-            """;
-
-    private static final String MANAGE_TARIFS_SEARCH = "🔍 Поиск тарифов";
-    private static final String MANAGE_TARIFS_ADD_NEW = "➕ Добавить тариф";
-
     private final TelegramClient tgClient;
+    private final CommonLabels commonLabels;
+    private final TariffLabels tariffLabels;
 
     @SneakyThrows
     public void updMenuToTariffsManageMenu(UserState userState) {
@@ -32,7 +27,7 @@ public class TariffsManageView {
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
-                .text(MSG_MANAGE_TARIFS_TXT)
+                .text(tariffLabels.manage())
                 .replyMarkup(getManageTariffsMarkup())
                 .build();
         tgClient.execute(message);
@@ -45,26 +40,26 @@ public class TariffsManageView {
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(MANAGE_TARIFS_SEARCH)
+                                        .text(commonLabels.manageSearch())
                                         .callbackData(InlineMenuCallbacks.MANAGE_TARIFFS_SEARCH)
                                         .build()))
                 .keyboardRow(
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(MANAGE_TARIFS_ADD_NEW)
+                                        .text(commonLabels.manageAdd())
                                         .callbackData(InlineMenuCallbacks.MANAGE_TARIFFS_ADD)
                                         .build()))
                 .keyboardRow(
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(StaticLabels.TO_MAIN_MENU)
+                                        .text(commonLabels.toMainMenu())
                                         .callbackData(InlineMenuCallbacks.TO_MAIN_MENU)
                                         .build(),
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(StaticLabels.GO_BACK)
+                                        .text(commonLabels.goBack())
                                         .callbackData(InlineMenuCallbacks.GO_BACK)
                                         .build()))
                 .build();

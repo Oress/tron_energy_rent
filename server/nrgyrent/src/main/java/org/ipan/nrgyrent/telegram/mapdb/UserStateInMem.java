@@ -25,6 +25,7 @@ public class UserStateInMem implements UserState {
     UserRole role;
     List<Integer> messagesToDelete;
     Long managingGroupId; // The group the user is managing, indicates the user is a manager
+    String languageCode;
 
     public static UserStateInMem of(UserState prototype) {
         return UserStateInMem.builder()
@@ -35,6 +36,7 @@ public class UserStateInMem implements UserState {
                 .role(prototype.getRole())
                 .messagesToDelete(prototype.getMessagesToDelete() == null ? Collections.emptyList() : new ArrayList<>(prototype.getMessagesToDelete()))
                 .managingGroupId(prototype.getManagingGroupId())
+                .languageCode(prototype.getLanguageCode())
                 .build();
     }
 }

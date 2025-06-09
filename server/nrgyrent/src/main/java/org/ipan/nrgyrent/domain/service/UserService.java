@@ -52,6 +52,19 @@ public class UserService {
     }
 
     @Transactional
+    public AppUser setLanguage(Long userId, String language) {
+        AppUser appUser = userRepo.findById(userId).orElse(null);
+
+        if (!"en".equals(language) && !"ru".equals(language)) {
+            throw new IllegalArgumentException("language is neither en nor ru");
+        }
+
+        appUser.setLanguageCode(language);
+
+        return appUser;
+    }
+
+    @Transactional
     public void deactivateUser(Long selectedUserId) {
         AppUser appUser = userRepo.findById(selectedUserId).orElse(null);
         if (appUser != null) {
@@ -67,6 +80,10 @@ public class UserService {
         appUser.setTelegramId(command.getTelegramId());
         appUser.setTelegramUsername(command.getUsername());
         appUser.setTelegramFirstName(command.getFirstName());
+        if (command.getLanguageCode() != null) {
+            appUser.setLanguageCode(command.getLanguageCode());
+        }
+
     }
 
     public AppUser getById(Long telegramId) {

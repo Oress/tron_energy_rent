@@ -5,7 +5,8 @@ import java.util.List;
 
 import org.ipan.nrgyrent.domain.model.Balance;
 import org.ipan.nrgyrent.telegram.InlineMenuCallbacks;
-import org.ipan.nrgyrent.telegram.StaticLabels;
+import org.ipan.nrgyrent.telegram.i18n.CommonLabels;
+import org.ipan.nrgyrent.telegram.i18n.ManageGroupsLabels;
 import org.ipan.nrgyrent.telegram.state.UserState;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
@@ -24,25 +25,10 @@ import lombok.extern.slf4j.Slf4j;
 @AllArgsConstructor
 public class ManageGroupSearchView {
     public static final String OPEN_BALANCE = "/balance/";
-    private static final String MSG_MANAGE_GROUPS_SEARCH_NO_RESULTS = "❌ Нет результатов";
-    private static final String MSG_MANAGE_GROUPS_SEARCH_PAGE_RESULTS = """
-            🔍 Результаты поиска
-            Используйте стрелки, чтобы прокручивать результаты, или введите имя группы, чтобы найти ее.
-
-            Выберите группу, с которой хотите работать
-            """;
-    private static final String MSG_MANAGE_GROUPS_TXT = """
-            👥 Управление группами
-            Здесь вы можете управлять группами пользователей, а также просматривать и изменять их баланс
-            """;
-
-    private static final String NEXT_PAGE = "➡️";
-    private static final String PREV_PAGE = "⬅️";
-    private static final String MANAGE_GROUPS_SEARCH = "🔍 Поиск группы";
-    private static final String MANAGE_GROUPS_SEARCH_RESET = "🔄 Сбросить поиск";
-    private static final String MANAGE_GROUPS_ADD_NEW = "➕ Добавить группу";
 
     private final TelegramClient tgClient;
+    private final CommonLabels commonLabels;
+    private final ManageGroupsLabels manageGroupsLabels;
 
     @SneakyThrows
     public void updMenuToManageGroupsMenu(UserState userState) {
@@ -50,15 +36,15 @@ public class ManageGroupSearchView {
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
-                .text(MSG_MANAGE_GROUPS_TXT)
+                .text(manageGroupsLabels.msg())
                 .replyMarkup(getManageGroupsMarkup())
                 .build();
         tgClient.execute(message);
     }
 
     public void updMenuToManageGroupsSearchResult(Page<Balance> page, UserState userState) {
-        String text = page.isEmpty() ? MSG_MANAGE_GROUPS_SEARCH_NO_RESULTS
-                : MSG_MANAGE_GROUPS_SEARCH_PAGE_RESULTS;
+        String text = page.isEmpty() ? commonLabels.searchNoResults()
+                : commonLabels.searchResults();
 
         EditMessageText message = EditMessageText
                 .builder()
@@ -98,7 +84,7 @@ public class ManageGroupSearchView {
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(MANAGE_GROUPS_SEARCH_RESET)
+                                        .text(commonLabels.searchReset())
                                         .callbackData(InlineMenuCallbacks.MANAGE_GROUPS_SEARCH_RESET)
                                         .build()));
         boolean hasPrev = page.hasPrevious();
@@ -109,14 +95,14 @@ public class ManageGroupSearchView {
             if (hasPrev) {
                 buttons.add(InlineKeyboardButton
                                 .builder()
-                                .text(PREV_PAGE)
+                                .text(commonLabels.searchPrevPage())
                                 .callbackData(InlineMenuCallbacks.MANAGE_GROUPS_PREV_PAGE)
                                 .build());
             }
             if (hasNext) {
                 buttons.add(InlineKeyboardButton
                                 .builder()
-                                .text(NEXT_PAGE)
+                                .text(commonLabels.searchNextPage())
                                 .callbackData(InlineMenuCallbacks.MANAGE_GROUPS_NEXT_PAGE)
                                 .build());
             }
@@ -128,12 +114,12 @@ public class ManageGroupSearchView {
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(StaticLabels.TO_MAIN_MENU)
+                                        .text(commonLabels.toMainMenu())
                                         .callbackData(InlineMenuCallbacks.TO_MAIN_MENU)
                                         .build(),
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(StaticLabels.GO_BACK)
+                                        .text(commonLabels.goBack())
                                         .callbackData(InlineMenuCallbacks.GO_BACK)
                                         .build()))
                 .build();
@@ -146,26 +132,26 @@ public class ManageGroupSearchView {
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(MANAGE_GROUPS_SEARCH)
+                                        .text(commonLabels.manageSearch())
                                         .callbackData(InlineMenuCallbacks.MANAGE_GROUPS_SEARCH)
                                         .build()))
                 .keyboardRow(
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(MANAGE_GROUPS_ADD_NEW)
+                                        .text(commonLabels.manageAdd())
                                         .callbackData(InlineMenuCallbacks.MANAGE_GROUPS_ADD)
                                         .build()))
                 .keyboardRow(
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(StaticLabels.TO_MAIN_MENU)
+                                        .text(commonLabels.toMainMenu())
                                         .callbackData(InlineMenuCallbacks.TO_MAIN_MENU)
                                         .build(),
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(StaticLabels.GO_BACK)
+                                        .text(commonLabels.goBack())
                                         .callbackData(InlineMenuCallbacks.GO_BACK)
                                         .build()))
                 .build();

@@ -1,7 +1,8 @@
 package org.ipan.nrgyrent.telegram.views;
 
 import org.ipan.nrgyrent.telegram.InlineMenuCallbacks;
-import org.ipan.nrgyrent.telegram.StaticLabels;
+import org.ipan.nrgyrent.telegram.i18n.CommonLabels;
+import org.ipan.nrgyrent.telegram.i18n.ManageGroupsLabels;
 import org.ipan.nrgyrent.telegram.state.UserState;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -24,38 +25,19 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @AllArgsConstructor
 public class ManageGroupNewGroupView {
-    // TODO: move to properties
     public static final Integer MAX_USERS_IN_GROUP = 10;
-
-    private static final String MSG_MANAGE_GROUPS_ADD_SUCCESS = "✅ Группа успешно добавлена";
-
-    private static final String MSG_MANAGE_GROUPS_ADD_PROMPT_LABEL = "Введите название группы";
-    private static final String MSG_MANAGE_GROUPS_TXT = """
-            👥 Управление группами
-            Здесь вы можете управлять группами пользователей, а также просматривать и изменять их баланс
-            """;
-
-    private static final String MSG_MANAGE_GROUPS_ADD_PROMPT_USERS = "Выберете пользователей, которых хотите добавить в группу используя меню";
-    private static final String MSG_MANAGE_GROUPS_ADD_PROMPT_MANAGER = """
-            Выберете менеджера группы используя меню.
-            Нельзя выбирать участников других груп в качествве менеджера.
-
-            Ему будет доступна возможность добавлять и удалять пользователей из группы.
-            """;
-
-    private static final String MANAGE_GROUPS_SEARCH = "🔍 Поиск группы";
-    private static final String MANAGE_GROUPS_ADD_NEW = "➕ Добавить группу";
-    private static final String MANAGE_GROUPS_ADD_MANAGER = "👤 Выбрать менеджера группы";
 
     private final TelegramClient tgClient;
     private final CommonViews commonViews;
+    private final CommonLabels commonLabels;
+    private final ManageGroupsLabels manageGroupsLabels;
 
     public void userIsManagerInAnotherGroup(UserState userState) {
         EditMessageText message = EditMessageText
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
-                .text("❌ Пользователь является менеджером другой группы.")
+                .text(manageGroupsLabels.userManagesOtherGroup())
                 .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
         try {
@@ -71,19 +53,7 @@ public class ManageGroupNewGroupView {
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
-                .text(MSG_MANAGE_GROUPS_TXT)
-                .replyMarkup(getManageGroupsMarkup())
-                .build();
-        tgClient.execute(message);
-    }
-    
-    @SneakyThrows
-    public void updMenuToManageGroupsMenuForManager(UserState userState) {
-        EditMessageText message = EditMessageText
-                .builder()
-                .chatId(userState.getChatId())
-                .messageId(userState.getMenuMessageId())
-                .text(MSG_MANAGE_GROUPS_TXT)
+                .text(manageGroupsLabels.msg())
                 .replyMarkup(getManageGroupsMarkup())
                 .build();
         tgClient.execute(message);
@@ -95,19 +65,7 @@ public class ManageGroupNewGroupView {
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
-                .text(MSG_MANAGE_GROUPS_ADD_PROMPT_LABEL)
-                .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
-                .build();
-        tgClient.execute(message);
-    }
-
-    @SneakyThrows
-    public void updMenuToManageGroupsAddPromptUsers(UserState userState) {
-        EditMessageText message = EditMessageText
-                .builder()
-                .chatId(userState.getChatId())
-                .messageId(userState.getMenuMessageId())
-                .text(MSG_MANAGE_GROUPS_ADD_PROMPT_USERS)
+                .text(manageGroupsLabels.createPromptLabel())
                 .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
         tgClient.execute(message);
@@ -119,21 +77,10 @@ public class ManageGroupNewGroupView {
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
-                .text(MSG_MANAGE_GROUPS_ADD_PROMPT_MANAGER)
+                .text(manageGroupsLabels.createPromptManager())
                 .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
         tgClient.execute(message);
-    }
-
-    @SneakyThrows
-    public Message sendAddPromptUsers(UserState userState) {
-        SendMessage message = SendMessage
-                .builder()
-                .chatId(userState.getChatId())
-                .text(MSG_MANAGE_GROUPS_ADD_PROMPT_USERS)
-                .replyMarkup(getManageGroupsNewGroupPromptUsersMarkup())
-                .build();
-        return tgClient.execute(message);
     }
 
     @SneakyThrows
@@ -141,7 +88,7 @@ public class ManageGroupNewGroupView {
         SendMessage message = SendMessage
                 .builder()
                 .chatId(userState.getChatId())
-                .text("Выберете пользователя")
+                .text(manageGroupsLabels.assignManagerPromptChooseUser())
                 .replyMarkup(getManageGroupsNewGroupPromptManagerMarkup())
                 .build();
         return tgClient.execute(message);
@@ -153,33 +100,12 @@ public class ManageGroupNewGroupView {
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
-                .text(MSG_MANAGE_GROUPS_ADD_SUCCESS)
+                .text(manageGroupsLabels.createSuccess())
                 .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
         tgClient.execute(message);
     }
 
-    private ReplyKeyboardMarkup getManageGroupsNewGroupPromptUsersMarkup() {
-        return ReplyKeyboardMarkup
-                .builder()
-                .oneTimeKeyboard(true)
-                .isPersistent(true)
-                .resizeKeyboard(true)
-                .keyboardRow(
-                        new KeyboardRow(
-                                KeyboardButton.builder()
-                                        .text(MANAGE_GROUPS_ADD_NEW)
-                                        .requestUsers(
-                                                KeyboardButtonRequestUsers.builder()
-                                                        .requestId("1")
-                                                        .userIsBot(false)
-                                                        .requestName(true)
-                                                        .requestUsername(true)
-                                                        .maxQuantity(MAX_USERS_IN_GROUP)
-                                                        .build())
-                                        .build()))
-                .build();
-    }
 
     private ReplyKeyboardMarkup getManageGroupsNewGroupPromptManagerMarkup() {
         return ReplyKeyboardMarkup
@@ -190,7 +116,7 @@ public class ManageGroupNewGroupView {
                 .keyboardRow(
                         new KeyboardRow(
                                 KeyboardButton.builder()
-                                        .text(MANAGE_GROUPS_ADD_MANAGER)
+                                        .text(manageGroupsLabels.assignManagerPromptChooseManager())
                                         .requestUsers(
                                                 KeyboardButtonRequestUsers.builder()
                                                         .requestId("1")
@@ -210,26 +136,26 @@ public class ManageGroupNewGroupView {
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(MANAGE_GROUPS_SEARCH)
+                                        .text(commonLabels.manageSearch())
                                         .callbackData(InlineMenuCallbacks.MANAGE_GROUPS_SEARCH)
                                         .build()))
                 .keyboardRow(
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(MANAGE_GROUPS_ADD_NEW)
+                                        .text(commonLabels.manageAdd())
                                         .callbackData(InlineMenuCallbacks.MANAGE_GROUPS_ADD)
                                         .build()))
                 .keyboardRow(
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(StaticLabels.TO_MAIN_MENU)
+                                        .text(commonLabels.toMainMenu())
                                         .callbackData(InlineMenuCallbacks.TO_MAIN_MENU)
                                         .build(),
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(StaticLabels.GO_BACK)
+                                        .text(commonLabels.goBack())
                                         .callbackData(InlineMenuCallbacks.GO_BACK)
                                         .build()))
                 .build();

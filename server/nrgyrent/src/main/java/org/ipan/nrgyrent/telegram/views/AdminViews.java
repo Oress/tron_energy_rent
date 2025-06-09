@@ -8,7 +8,8 @@ import org.ipan.nrgyrent.domain.model.CollectionWallet;
 import org.ipan.nrgyrent.domain.model.UserWallet;
 import org.ipan.nrgyrent.itrx.dto.ApiUsageResponse;
 import org.ipan.nrgyrent.telegram.InlineMenuCallbacks;
-import org.ipan.nrgyrent.telegram.StaticLabels;
+import org.ipan.nrgyrent.telegram.i18n.AdminLabels;
+import org.ipan.nrgyrent.telegram.i18n.CommonLabels;
 import org.ipan.nrgyrent.telegram.state.UserState;
 import org.ipan.nrgyrent.telegram.utils.FormattingTools;
 import org.ipan.nrgyrent.telegram.utils.WalletTools;
@@ -26,44 +27,10 @@ import lombok.SneakyThrows;
 @Component
 @AllArgsConstructor
 public class AdminViews {
-
-    private static final String MSG_ADMIN_MENU = """
-            👨‍💻 Админка
-
-            Здесь вы можете управлять группами, пользователями, а также просматривать и изменять их баланс
-            """;
-    private static final String MSG_WITHDRAW_TRX = """
-            💰 Вывод TRX
-
-            Выберите кошелек, на который хотите вывести TRX или введите адрес кошелька, на который хотите вывести средства.
-            """;
-    private static final String MSG_WITHDRAW_AMOUNT = """
-            💰 Вывод TRX
-
-            Введите сумму для вывода.
-            """;
-
-    private static final String MSG_WITHDRAW_NOT_ENOUGH_BALANCE = """
-            💰 Вывод TRX
-
-            На sweep кошельках недостаточно средств. Введите другую сумму.
-            """;
-
-    private static final String MSG_WITHDRAW_TRX_IN_PROGRESS = """
-            💰 Вывод TRX
-
-            Вывод средств в процессе. Вам будет отправлено уведомление, когда средства будут выведены.
-            """;
-
-    private static final String MENU_ADMIN_MANAGE_GROUPS = "👥 Управление группами";
-    private static final String MENU_ADMIN_MANAGE_USERS = "👤 Управление пользователями";
-    private static final String MENU_ADMIN_ITRX_BALANCE = "💰 Статистика itrx.io";
-    private static final String MENU_ADMIN_SWEEP_WALLETS_BALANCE = "💰 Статистика sweep кошельков";
-    private static final String MENU_ADMIN_WITHDRAW_TRX = "💰 Вывод TRX со sweep кошельков";
-    private static final String MENU_ADMIN_TARIFFS = "📊 Тарифы";
-
     private final TelegramClient tgClient;
     private final CommonViews commonViews;
+    private final CommonLabels commonLabels;
+    private final AdminLabels adminLabels;
 
     @Retryable
     @SneakyThrows
@@ -72,7 +39,7 @@ public class AdminViews {
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
-                .text(MSG_WITHDRAW_TRX_IN_PROGRESS)
+                .text(adminLabels.withdrawInProgress())
                 .replyMarkup(commonViews.getToMainMenuMarkup())
                 .build();
         tgClient.execute(message);
@@ -85,7 +52,7 @@ public class AdminViews {
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
-                .text(MSG_WITHDRAW_NOT_ENOUGH_BALANCE)
+                .text(adminLabels.withdrawNotEnough())
                 .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
         tgClient.execute(message);
@@ -98,7 +65,7 @@ public class AdminViews {
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
-                .text(MSG_WITHDRAW_AMOUNT)
+                .text(adminLabels.withdrawPromptAmount())
                 .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
         tgClient.execute(message);
@@ -111,7 +78,7 @@ public class AdminViews {
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
-                .text(MSG_WITHDRAW_TRX)
+                .text(adminLabels.withdrawPromptWallet())
                 .replyMarkup(getTransactionsMenuMarkup(wallets))
                 .build();
         tgClient.execute(message);
@@ -150,7 +117,7 @@ public class AdminViews {
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
-                .text(MSG_ADMIN_MENU)
+                .text(adminLabels.manage())
                 .replyMarkup(getAdminMenuReplyMarkup())
                 .build();
         tgClient.execute(message);
@@ -163,63 +130,56 @@ public class AdminViews {
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(MENU_ADMIN_MANAGE_USERS)
+                                        .text(adminLabels.menuManageUsers())
                                         .callbackData(InlineMenuCallbacks.MANAGE_USERS)
                                         .build()))
                 .keyboardRow(
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(MENU_ADMIN_MANAGE_GROUPS)
+                                        .text(adminLabels.menuManageGroups())
                                         .callbackData(InlineMenuCallbacks.MANAGE_GROUPS)
                                         .build()))
                 .keyboardRow(
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(MENU_ADMIN_ITRX_BALANCE)
+                                        .text(adminLabels.menuItrxBalance())
                                         .callbackData(InlineMenuCallbacks.MANAGE_ITRX_BALANCE)
                                         .build()))
                 .keyboardRow(
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(MENU_ADMIN_SWEEP_WALLETS_BALANCE)
+                                        .text(adminLabels.menuSweepStats())
                                         .callbackData(InlineMenuCallbacks.MANAGE_SWEEP_BALANCE)
                                         .build()))
                 .keyboardRow(
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(MENU_ADMIN_WITHDRAW_TRX)
+                                        .text(adminLabels.menuWithdrawSweep())
                                         .callbackData(InlineMenuCallbacks.MANAGE_WITHDRAW_TRX)
                                         .build()))
                 .keyboardRow(
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(MENU_ADMIN_TARIFFS)
+                                        .text(adminLabels.menuTariffs())
                                         .callbackData(InlineMenuCallbacks.MANAGE_TARIFFS)
                                         .build()))
                 .keyboardRow(
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(StaticLabels.TO_MAIN_MENU)
+                                        .text(commonLabels.toMainMenu())
                                         .callbackData(InlineMenuCallbacks.TO_MAIN_MENU)
                                         .build()))
                 .build();
     }
 
     private String getItrxBalanceMessage(ApiUsageResponse apiUsageResponse) {
-        return """
-                💰 Статистика itrx.io
-
-                Баланс: %s TRX
-                Всего выполненых заказов: %s
-                Всего энергии делегировано: %s
-                Комиссия сервиса за все время: %s TRX
-                """.formatted(
+        return adminLabels.itrxStats(
                 FormattingTools.formatBalance(apiUsageResponse.getBalance()),
                 FormattingTools.formatNumber(apiUsageResponse.getTotal_count()),
                 FormattingTools.formatNumber(apiUsageResponse.getTotal_sum_energy()),
@@ -227,14 +187,9 @@ public class AdminViews {
     }
 
     private String getSweepBalanceMessage(Map<CollectionWallet, Long> results) {
-        return """
-                💰 Статистика sweep кошельков
-
-                %s
-                """.formatted(
+        return adminLabels.sweepStats(
                 results.entrySet().stream()
-                        .map(kv -> String.format("Адрес: %s\nБаланс: %s TRX", kv.getKey().getWalletAddress(),
-                                FormattingTools.formatBalance(kv.getValue())))
+                        .map(kv -> adminLabels.sweepStatsItem(kv.getKey().getWalletAddress(), FormattingTools.formatBalance(kv.getValue())))
                         .collect(Collectors.joining("\n\n")));
     }
 
@@ -257,12 +212,12 @@ public class AdminViews {
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(StaticLabels.TO_MAIN_MENU)
+                                        .text(commonLabels.toMainMenu())
                                         .callbackData(InlineMenuCallbacks.TO_MAIN_MENU)
                                         .build(),
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(StaticLabels.GO_BACK)
+                                        .text(commonLabels.goBack())
                                         .callbackData(InlineMenuCallbacks.GO_BACK)
                                         .build()))
                 .build();

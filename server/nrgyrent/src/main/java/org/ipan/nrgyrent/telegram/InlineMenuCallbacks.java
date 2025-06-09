@@ -4,6 +4,7 @@ public class InlineMenuCallbacks {
     public static final String TO_MAIN_MENU = "action_main_menu";
     public static final String GO_BACK = "action_go_back";
     public static final String DEPOSIT = "deposit";
+    public static final String CHANGE_LANGUAGE = "change_language";
 
     public static final String WALLETS = "wallets";
     public static final String ADD_WALLETS = "add_wallet";
@@ -12,6 +13,7 @@ public class InlineMenuCallbacks {
     public static final String TRANSACTION_131k = "transaction_131k";
     public static final String CUSTOM_TRANSACTION_AMOUNT = "custom_transaction_amount";
 
+    public static final String SETTINGS = "settings";
     public static final String HISTORY = "history";
     public static final String MANAGE_GROUP = "manage_group";
     public static final String WITHDRAW_TRX = "withdraw_trx";

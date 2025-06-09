@@ -2,7 +2,6 @@ package org.ipan.nrgyrent.telegram.handlers;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 
 import org.ipan.nrgyrent.domain.exception.NotManagerException;
 import org.ipan.nrgyrent.domain.model.AppUser;
@@ -22,7 +21,6 @@ import org.ipan.nrgyrent.telegram.views.WithdrawViews;
 import org.ipan.nrgyrent.tron.TronTransactionHelper;
 import org.ipan.nrgyrent.tron.trongrid.TrongridRestClient;
 import org.ipan.nrgyrent.tron.trongrid.model.AccountInfo;
-import org.springframework.scheduling.annotation.Async;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -41,8 +39,8 @@ public class WithdrawalHandlerHelper {
     private final WithdrawalOrderService withdrawalOrderService;
     private final TronTransactionHelper tronTransactionHelper;
 
-    @Async
-    public CompletableFuture<Void> transferTrxFromCollectionWallets(Long userId, String toWallet, Long amountSun, Long fee) {
+    // @Async
+    public void transferTrxFromCollectionWallets(Long userId, String toWallet, Long amountSun, Long fee) {
         Balance withdrawBalance;
 
         AppUser user = userRepo.findById(userId).get();
@@ -56,7 +54,7 @@ public class WithdrawalHandlerHelper {
             UserState userState = telegramState.getOrCreateUserState(userId);
             // TODO: send message with update menuId, seems like very unlikely scenario
             withdrawViews.updWithdrawalFail(userState);
-            return CompletableFuture.completedFuture(null);
+            return;
         }
 
         if (withdrawBalance.getSunBalance() < totalSubstractSumAmount) {
@@ -64,7 +62,7 @@ public class WithdrawalHandlerHelper {
             UserState userState = telegramState.getOrCreateUserState(userId);
             // TODO: send message with update menuId.
             withdrawViews.updWithdrawalFailNotEnoughBalance(userState);
-            return CompletableFuture.completedFuture(null);
+            return;
         }
 
         String depositAddress = withdrawBalance.getDepositAddress();
@@ -81,7 +79,7 @@ public class WithdrawalHandlerHelper {
 
             withdrawViews.updWithdrawalFailServiceNotEnoughBalance(userState);
 
-            return CompletableFuture.completedFuture(null);
+            return;
         }
 
         ManagedWallet managedWallet = managedWalletRepo.findById(walletToWithdrawFrom).get();
@@ -113,7 +111,8 @@ public class WithdrawalHandlerHelper {
                 withdrawalOrderService.refundOrder(withdrawalOrder.getId());
             }
         }
-        return CompletableFuture.completedFuture(null);
+
+        return;
     }
 
     private String selectBalanceToWithdrawFrom(List<String> wallets, Long amountToWithdraw) {

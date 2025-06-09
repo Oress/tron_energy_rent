@@ -9,5 +9,6 @@ public class CreateUserCommand {
     private Long telegramId;
     private String username;
     private String firstName;
+    private String languageCode;
     private Long tariffId;
 }

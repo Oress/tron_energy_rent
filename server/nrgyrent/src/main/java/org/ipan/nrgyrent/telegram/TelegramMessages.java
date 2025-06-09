@@ -1,12 +1,15 @@
 package org.ipan.nrgyrent.telegram;
 
 import java.util.List;
+import java.util.Locale;
 
 import org.ipan.nrgyrent.domain.model.AppUser;
 import org.ipan.nrgyrent.domain.model.Balance;
 import org.ipan.nrgyrent.domain.model.Order;
 import org.ipan.nrgyrent.domain.model.Tariff;
 import org.ipan.nrgyrent.domain.model.UserRole;
+import org.ipan.nrgyrent.telegram.i18n.CommonLabels;
+import org.ipan.nrgyrent.telegram.i18n.TransactionLabels;
 import org.ipan.nrgyrent.telegram.state.UserState;
 import org.ipan.nrgyrent.telegram.utils.FormattingTools;
 import org.ipan.nrgyrent.telegram.utils.WalletTools;
@@ -37,6 +40,8 @@ public class TelegramMessages {
     private TelegramClient tgClient;
     private ManageGroupNewGroupView manageGroupView;
     private ManageGroupSearchView manageGroupSearchView;
+    private CommonLabels commonLabels;
+    private TransactionLabels transactionLabels;
 
     public ManageGroupNewGroupView manageGroupView() {
         return manageGroupView;
@@ -47,12 +52,46 @@ public class TelegramMessages {
     }
 
     @SneakyThrows
+    public void updateMsgToSettings(UserState userState) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
+                .text(commonLabels.menuSettings())
+                .replyMarkup(settingsMenuMarkup())
+                .build();
+        try {
+            tgClient.execute(message);
+        } catch (Exception e) {
+            logger.error("Failed to updateMsgToSettings user: {}", userState, e);
+        }
+    }
+
+
+    @SneakyThrows
+    public void updateMsgToChangeLanguage(UserState userState) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
+                .text(commonLabels.settingsChangeLanguage())
+                .replyMarkup(changeLanguageNotficationMarkup())
+                .build();
+        try {
+            tgClient.execute(message);
+        } catch (Exception e) {
+            logger.error("Failed to updateMsgToChangeLanguage user: {}", userState, e);
+        }
+    }
+
+
+    @SneakyThrows
     public void sendTransactionRefundNotification(UserState userState, Order order) {
         EditMessageText message = EditMessageText
                 .builder()
                 .chatId(order.getChatId())
                 .messageId(order.getMessageToUpdate())
-                .text(getFailedTransactionMessage(order))
+                .text(getFailedTransactionMessage(userState, order))
                 // .replyMarkup(getToMainMenuNotificationMarkup())
                 .build();
         try {
@@ -67,7 +106,7 @@ public class TelegramMessages {
                 .builder()
                 .chatId(order.getChatId())
                 .messageId(order.getMessageToUpdate())
-                .text(getSuccessfulTransactionMessage(order))
+                .text(getSuccessfulTransactionMessage(userState, order))
                 // .replyMarkup(getToMainMenuNotificationMarkup())
                 // .parseMode("MARKDOWN")
                 .build();
@@ -79,31 +118,18 @@ public class TelegramMessages {
         return ;
     }
 
-    private String getSuccessfulTransactionMessage(Order order) {
-        return """
-                ☑️ Транзакция успешно завершена
-
-                Количество: %s
-                Сумма: %s TRX
-                Получатель: %s
-                """.formatted(
+    private String getSuccessfulTransactionMessage(UserState userState, Order order) {
+        return transactionLabels.success(
+                    userState.getLocaleOrDefault(),
                     order.getTxAmount(),
                     FormattingTools.formatBalance(order.getSunAmount()),
                     WalletTools.formatTronAddress(order.getReceiveAddress())
                     );
     }
 
-    private String getFailedTransactionMessage(Order order) {
-        return """
-                ❌ Транзакция была отменена
-
-                Количество: %s
-                Сумма: %s TRX
-                Получатель: %s
-
-                Средства были возвращены на ваш баланс
-                """.formatted(
-                    order.getCorrelationId(),
+    private String getFailedTransactionMessage(UserState userState,Order order) {
+        return transactionLabels.refunded(
+                    userState.getLocaleOrDefault(),
                     order.getTxAmount(),
                     FormattingTools.formatBalance(order.getSunAmount()),
                     WalletTools.formatTronAddress(order.getReceiveAddress())
@@ -115,7 +141,7 @@ public class TelegramMessages {
         SendMessage message = SendMessage
                 .builder()
                 .chatId(userState.getChatId())
-                .text(StaticLabels.NTFN_WITHDRWAL_SUCCESS)
+                .text(commonLabels.withdrawSuccess(userState.getLocaleOrDefault()))
                 .replyMarkup(getOkNotificationMarkup())
                 .build();
         tgClient.execute(message);
@@ -126,7 +152,7 @@ public class TelegramMessages {
         SendMessage message = SendMessage
                 .builder()
                 .chatId(userState.getChatId())
-                .text(StaticLabels.NTFN_WITHDRWAL_FAIL)
+                .text(commonLabels.withdrawFail(userState.getLocaleOrDefault()))
                 .replyMarkup(getOkNotificationMarkup())
                 .build();
         tgClient.execute(message);
@@ -137,7 +163,7 @@ public class TelegramMessages {
         SendMessage message = SendMessage
                 .builder()
                 .chatId(userState.getChatId())
-                .text(StaticLabels.NTFN_BALANCE_TOPUP)
+                .text(commonLabels.topup(userState.getLocaleOrDefault()))
                 .replyMarkup(getOkNotificationMarkup())
                 .build();
         tgClient.execute(message);
@@ -241,6 +267,23 @@ public class TelegramMessages {
         return tgClient.execute(message);
     }
 
+    @Retryable
+    @SneakyThrows
+    public Message sendPromptLanguage(UserState userState, Long chatId) {
+        SendMessage message = SendMessage
+                .builder()
+                .chatId(chatId)
+                .text("""
+                👋 Welcome!
+                Please select your preferred language to continue.
+                You can always change the preferred language in settings menu later.
+                """)
+                .replyMarkup(getLanguageNotficationMarkup())
+                .parseMode("MARKDOWN")
+                .build();
+        return tgClient.execute(message);
+    }
+
     @SneakyThrows
     public void updateMsgToMainMenu(UserState userState, AppUser user) {
         Tariff tariff = user.getTariffToUse();
@@ -278,19 +321,90 @@ public class TelegramMessages {
     private String getMainMenuMessage(AppUser user) {
         Balance balanceToUse = user.getBalanceToUse();
 
-        return """
-            ⚡ Приветствуем в нашем сервисе ⚡
+        String balanceLabel = user.isInGroup() 
+            ? commonLabels.getCommonGroupBalance(FormattingTools.formatBalance(balanceToUse.getSunBalance()))
+            : commonLabels.getCommonPersonalBalance(FormattingTools.formatBalance(balanceToUse.getSunBalance()));
 
-            Выберите действие, нажав кнопку ниже, время аренды - 1 час
+        String mainWelcome = commonLabels.getMainWelcome(balanceLabel);
 
-            *%s*
+        return mainWelcome.formatted(balanceLabel);
+    }
 
-            [@FlashTronRent_support](https://t.me/FlashTronRent_support) - поможет и ответит на все вопросы
-            """.formatted(
-                user.isInGroup() 
-                    ? "Баланс группы: %s TRX".formatted(FormattingTools.formatBalance(balanceToUse.getSunBalance()))
-                    : "Ваш баланс: %s TRX".formatted(FormattingTools.formatBalance(balanceToUse.getSunBalance()))
-                );
+    private InlineKeyboardMarkup getLanguageNotficationMarkup() {
+        return InlineKeyboardMarkup
+                .builder()
+                .keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text("EN")
+                                        .callbackData("en")
+                                        .build(),
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text("RU")
+                                        .callbackData("ru")
+                                        .build())
+                                )
+                .build();
+    }
+
+    private InlineKeyboardMarkup changeLanguageNotficationMarkup() {
+        return InlineKeyboardMarkup
+                .builder()
+                .keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text("EN")
+                                        .callbackData("en")
+                                        .build(),
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text("RU")
+                                        .callbackData("ru")
+                                        .build())
+                                )
+                .keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text(commonLabels.toMainMenu())
+                                        .callbackData(InlineMenuCallbacks.TO_MAIN_MENU)
+                                        .build(),
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text(commonLabels.goBack())
+                                        .callbackData(InlineMenuCallbacks.GO_BACK)
+                                        .build()))
+                .build();
+    }
+
+    private InlineKeyboardMarkup settingsMenuMarkup() {
+        var builder = InlineKeyboardMarkup
+                .builder()
+                .keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text(commonLabels.settingsTxHistory())
+                                        .callbackData(InlineMenuCallbacks.HISTORY)
+                                        .build()))
+                .keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text(commonLabels.settingsChangeLanguage())
+                                        .callbackData(InlineMenuCallbacks.CHANGE_LANGUAGE)
+                                        .build()))
+                .keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text(commonLabels.toMainMenu())
+                                        .callbackData(InlineMenuCallbacks.TO_MAIN_MENU)
+                                        .build()));
+        return builder.build();
     }
 
     private InlineKeyboardMarkup getMainMenuReplyMarkup(Boolean isManager, Boolean isAdmin, Tariff tariff, boolean showWithdrawBtn) {
@@ -300,21 +414,21 @@ public class TelegramMessages {
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(getFirstTransactionTypeLabel(tariff.getTransactionType1AmountSun()))
+                                        .text(commonLabels.getTxType1(FormattingTools.formatBalance(tariff.getTransactionType1AmountSun())))
                                         .callbackData(InlineMenuCallbacks.TRANSACTION_65k)
                                         .build()))
                 .keyboardRow(
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(getSecondTransactionTypeLabel(tariff.getTransactionType2AmountSun()))
+                                        .text(commonLabels.getTxType2(FormattingTools.formatBalance(tariff.getTransactionType2AmountSun())))
                                         .callbackData(InlineMenuCallbacks.TRANSACTION_131k)
                                         .build()))
                 .keyboardRow(
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(getCustomAmountTransactionTypeLabel(tariff.getTransactionType1AmountSun()))
+                                        .text(commonLabels.getTxCustomAmnt(FormattingTools.formatBalance(tariff.getTransactionType1AmountSun())))
                                         .callbackData(InlineMenuCallbacks.CUSTOM_TRANSACTION_AMOUNT)
                                         .build()));
 
@@ -323,12 +437,12 @@ public class TelegramMessages {
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(StaticLabels.MENU_DEPOSIT)
+                                        .text(commonLabels.getMenuDeposit())
                                         .callbackData(InlineMenuCallbacks.DEPOSIT)
                                         .build(),
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(StaticLabels.WITHDRAW_TRX)
+                                        .text(commonLabels.getMenuWithdraw())
                                         .callbackData(InlineMenuCallbacks.WITHDRAW_TRX)
                                         .build()));
                 } else {
@@ -336,7 +450,7 @@ public class TelegramMessages {
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(StaticLabels.MENU_DEPOSIT)
+                                        .text(commonLabels.getMenuDeposit())
                                         .callbackData(InlineMenuCallbacks.DEPOSIT)
                                         .build()));
                 }
@@ -345,14 +459,14 @@ public class TelegramMessages {
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(StaticLabels.MENU_HISTORY)
-                                        .callbackData(InlineMenuCallbacks.HISTORY)
+                                        .text(commonLabels.menuSettings())
+                                        .callbackData(InlineMenuCallbacks.SETTINGS)
                                         .build()))
                 .keyboardRow(
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(StaticLabels.MENU_WALLETS)
+                                        .text(commonLabels.getMenuWallets())
                                         .callbackData(InlineMenuCallbacks.WALLETS)
                                         .build()));
 
@@ -361,7 +475,7 @@ public class TelegramMessages {
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(StaticLabels.MENU_MANAGE_GROUP)
+                                        .text(commonLabels.getMenuManageGroup())
                                         .callbackData(InlineMenuCallbacks.MANAGE_GROUP)
                                         .build()));
         }
@@ -371,38 +485,11 @@ public class TelegramMessages {
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(StaticLabels.MENU_ADMIN)
+                                        .text(commonLabels.getMenuAdminMenu())
                                         .callbackData(InlineMenuCallbacks.ADMIN_MENU)
                                         .build()));
         }
         return builder.build();
-    }
-
-    private String getFirstTransactionTypeLabel(Long sunAmount) {
-        return "⚡ 1 тр на кош с USDT (%s TRX)".formatted(FormattingTools.formatBalance(sunAmount));
-    }
-
-    private String getSecondTransactionTypeLabel(Long sunAmount) {
-        return "⚡ 1 тр на кош без USDT или биржу (%s TRX)".formatted(FormattingTools.formatBalance(sunAmount));
-    }
-
-    private String getCustomAmountTransactionTypeLabel(Long sunAmount) {
-        return "⚡ выбрать кол. тр на кош с USDT (по %s TRX)".formatted(FormattingTools.formatBalance(sunAmount));
-    }
-
-    private InlineKeyboardMarkup getToMainMenuNotificationMarkup() {
-        return InlineKeyboardMarkup
-                .builder()
-                .keyboardRow(
-                        new InlineKeyboardRow(
-                                InlineKeyboardButton
-                                        .builder()
-                                        .text(StaticLabels.TO_MAIN_MENU)
-                                        .callbackData(InlineMenuCallbacks.TO_MAIN_MENU)
-                                        .build())
-
-                )
-                .build();
     }
 
     private InlineKeyboardMarkup getOkNotificationMarkup() {
@@ -412,7 +499,7 @@ public class TelegramMessages {
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(StaticLabels.OK)
+                                        .text("OK")
                                         .callbackData(InlineMenuCallbacks.NTFN_OK)
                                         .build())
 

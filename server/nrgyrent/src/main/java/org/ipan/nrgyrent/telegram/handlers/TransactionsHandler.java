@@ -51,6 +51,7 @@ public class TransactionsHandler {
     private final OrderService orderService;
     private final UserWalletService userWalletService;
     private final TelegramMessages telegramMessages;
+    private final FormattingTools formattingTools;
 
     @MatchState(state = States.MAIN_MENU, callbackData = InlineMenuCallbacks.CUSTOM_TRANSACTION_AMOUNT)
     public void startCustomTransactionAmount65K_promptAmount(UserState userState, Update update) {
@@ -247,7 +248,7 @@ public class TransactionsHandler {
         Tariff tariff = byId.getTariffToUse();
 
         if (tariff == null) {
-            logger.error("User {} has no tariff set, cannot show transaction menu", FormattingTools.formatUserForSearch(byId));
+            logger.error("User {} has no tariff set, cannot show transaction menu", formattingTools.formatUserForSearch(byId));
             transactionsViews.somethingWentWrong(userState);
             telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.TRANSACTION_ERROR));
             return;

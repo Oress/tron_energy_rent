@@ -2,6 +2,7 @@ package org.ipan.nrgyrent.telegram.views;
 
 import org.ipan.nrgyrent.domain.model.AppUser;
 import org.ipan.nrgyrent.domain.model.Balance;
+import org.ipan.nrgyrent.telegram.i18n.DepositLabels;
 import org.ipan.nrgyrent.telegram.state.UserState;
 import org.ipan.nrgyrent.telegram.utils.FormattingTools;
 import org.springframework.retry.annotation.Retryable;
@@ -17,6 +18,7 @@ import lombok.SneakyThrows;
 public class DepositViews {
     private final CommonViews commonViews;
     private final TelegramClient tgClient;
+    private final DepositLabels depositLabels;
 
     @Retryable
     @SneakyThrows
@@ -39,37 +41,11 @@ public class DepositViews {
         tgClient.execute(message);
     }
 
-    public static String getGroupDepositMenuText(String groupDepositAddress, Long groupSunBalance) {
-        return """
-                👛 Адрес депозита группы:
-
-                `%s`
-
-                *Баланс группы: %s TRX*
- 
-                =========================
-
-                ❗️Вы можете отправить TRX только в сети TRC-20❗️
-
-                ❗️ Минимальный депозит - 10 TRX❗️
-
-                ⌛️ Среднее время зачисления депозита - 2 минуты, вы получите уведомление при успешном пополнении"""
-                .formatted(groupDepositAddress,FormattingTools.formatBalance(groupSunBalance));
+    public String getGroupDepositMenuText(String groupDepositAddress, Long groupSunBalance) {
+        return depositLabels.depositGroup(groupDepositAddress, FormattingTools.formatBalance(groupSunBalance));
     }
 
-    public static String getPersonalDepositMenuText(String depositAddress, Long sunBalance) {
-        return """
-                💰 Ваш адрес депозита:
-
-                `%s`
-
-                *Ваш баланс: %s TRX*
-
-                ❗️Вы можете отправить TRX только в сети TRC-20❗️
-
-                ❗️ Минимальный депозит - 10 TRX❗️
-
-                ⌛️ Среднее время зачисления депозита - 2 минуты, вы получите уведомление при успешном пополнении"""
-                .formatted(depositAddress, FormattingTools.formatBalance(sunBalance));
+    public String getPersonalDepositMenuText(String depositAddress, Long sunBalance) {
+        return depositLabels.depositPersonal(depositAddress, FormattingTools.formatBalance(sunBalance));
     }
 }

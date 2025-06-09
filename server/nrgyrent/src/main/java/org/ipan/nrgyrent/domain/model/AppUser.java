@@ -45,6 +45,9 @@ public class AppUser {
 
     private Boolean disabled = Boolean.FALSE;
 
+    @Column(name = "language_code")
+    private String languageCode;
+
     @Column(name = "disabled_reason")
     private String disabledReason;
 

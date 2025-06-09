@@ -14,27 +14,35 @@ import org.ipan.nrgyrent.domain.model.AppUser;
 import org.ipan.nrgyrent.domain.model.OrderStatus;
 import org.ipan.nrgyrent.domain.model.WithdrawalStatus;
 import org.ipan.nrgyrent.domain.service.commands.TgUserId;
+import org.ipan.nrgyrent.telegram.i18n.CommonLabels;
+import org.springframework.stereotype.Component;
 
+import lombok.AllArgsConstructor;
+
+@AllArgsConstructor
+@Component
 public class FormattingTools {
-    private static DecimalFormat df = new DecimalFormat("# ###.##");
+    private static final DecimalFormat df = new DecimalFormat("# ###.##");
+
+    private final CommonLabels commonLabels;
 
     public static String valOrDash(String val) {
         return val == null ? "-": val;
     }
 
-    public static String formatUserForSearch(Long id, String login, String name) {
-        String loginStr = login != null ? "Ник: %s".formatted(login) : "";
-        String nameStr = name != null ? "Имя: %s".formatted(name) : "";
+    public String formatUserForSearch(Long id, String login, String name) {
+        String loginStr = login != null ? commonLabels.userLogin(login) : "";
+        String nameStr = name != null ? commonLabels.userLogin(name) : "";
         String idStr = "ID: %s".formatted(id);
         return List.of(idStr, loginStr, nameStr).stream().filter(s -> !s.isEmpty()).collect(Collectors.joining(", "));
     }
 
-    public static String formatUserForSearch(AppUser user) {
+    public String formatUserForSearch(AppUser user) {
         if (user == null) {
             return "-";
         }
-        String login = user.getTelegramUsername() != null ? "Ник: %s".formatted(user.getTelegramUsername()) : "";
-        String name = user.getTelegramFirstName() != null ? "Имя: %s".formatted(user.getTelegramFirstName()) : "";
+        String login = user.getTelegramUsername() != null ? commonLabels.userLogin(user.getTelegramUsername()) : "";
+        String name = user.getTelegramFirstName() != null ? commonLabels.userName(user.getTelegramFirstName()) : "";
         String id = "ID: %s".formatted(user.getTelegramId());
         return List.of(login, name, id).stream().filter(s -> !s.isEmpty()).collect(Collectors.joining(", "));
     }
@@ -46,7 +54,7 @@ public class FormattingTools {
         if (user.getUsername() != null) {
             return String.format("[@%s](https://t.me/%s)", user.getUsername(), user.getUsername());
         } else {
-            return String.format("%s %s (логин не задан)", user.getId(), user.getFirstName());
+            return String.format("%s %s", user.getId(), user.getFirstName());
         }
     }
 
@@ -85,19 +93,19 @@ public class FormattingTools {
             .format(LocalDateTime.ofInstant(date.toInstant(), ZoneOffset.systemDefault()));
     }
 
-    public static String orderStatusLabel(OrderStatus orderStatus) {
+    public String orderStatusLabel(OrderStatus orderStatus) {
         return switch (orderStatus) {
-            case PENDING -> "⏳ Ожидание";
-            case COMPLETED -> "✅ Завершено";
-            case REFUNDED -> "❌ Возврат";
+            case PENDING -> commonLabels.historyWaiting();
+            case COMPLETED -> commonLabels.historyComplete();
+            case REFUNDED -> commonLabels.historyRefund();
         };
     }
 
-    public static String withdrawalStatusLabel(WithdrawalStatus withdrawalStatus) {
+    public String withdrawalStatusLabel(WithdrawalStatus withdrawalStatus) {
         return switch (withdrawalStatus) {
-            case PENDING -> "⏳ Ожидание";
-            case COMPLETED -> "✅ Завершено";
-            case FAILED -> "❌ Возврат";
+            case PENDING -> commonLabels.historyWaiting();
+            case COMPLETED -> commonLabels.historyComplete();
+            case FAILED -> commonLabels.historyRefund();
         };
     }
 

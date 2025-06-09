@@ -6,7 +6,8 @@ import org.ipan.nrgyrent.domain.model.Balance;
 import org.ipan.nrgyrent.domain.model.UserWallet;
 import org.ipan.nrgyrent.itrx.AppConstants;
 import org.ipan.nrgyrent.telegram.InlineMenuCallbacks;
-import org.ipan.nrgyrent.telegram.StaticLabels;
+import org.ipan.nrgyrent.telegram.i18n.CommonLabels;
+import org.ipan.nrgyrent.telegram.i18n.WithdrawLabels;
 import org.ipan.nrgyrent.telegram.state.UserState;
 import org.ipan.nrgyrent.telegram.utils.FormattingTools;
 import org.ipan.nrgyrent.telegram.utils.WalletTools;
@@ -26,38 +27,10 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @AllArgsConstructor
 public class WithdrawViews {
-    public static final String NTFN_NOT_ENOUGH_RIGHTS = "❌ У вас недостаточно прав для вывода TRX из баланса группы, обратитесь к менеджеру";
-    public static final String NTFN_WITHDRWAL_FAIL = "❌ Вывод средств не удался";
-    public static final String NTFN_WITHDRWAL_SUCCESS = """
-            ✅ Вывод средств успешно завершен
-            Средства были переведены на ваш кошелек
-            """;
-    private static final String NTFN_WITHDRWAL_FAIL_NOT_ENOUGH_BALANCE = """
-            ❌ Ошибка вывода средств
-
-            У вас недостаточно средств для вывода. Пожалуйста, проверьте баланс и попробуйте снова.
-            """;
-    private static final String NTFN_WITHDRWAL_FAIL_SERVICE_NOT_ENOUGH_BALANCE = """
-            ❌ Ошибка вывода средств
-
-            На сервисе сейчас недостаточно средств для вывода. Пожалуйста, попробуйте позже.
-            """;
-
-    private static final String MSG_WITHDRAW_TRX = """
-            💰 Вывод TRX
-
-            Выберите кошелек, на который хотите вывести TRX или введите адрес кошелька, на который хотите вывести средства.
-            """;
-
-    private static final String MSG_WITHDRAW_TRX_IN_PROGRESS = """
-            💰 Вывод TRX
-
-            Вывод средств в процессе....
-            """;
-
-
     private final TelegramClient tgClient;
     private final CommonViews commonViews;
+    private final CommonLabels commonLabels;
+    private final WithdrawLabels withdrawLabels;
 
     @Retryable
     @SneakyThrows
@@ -66,8 +39,7 @@ public class WithdrawViews {
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
-                .text("❌ Ошибка вывода средств\n\n" +
-                        "Кошелек неактивен. Пожалуйста, выберите другой кошелек или активируйте текущий.")
+                .text(withdrawLabels.transactionToInactiveWallet())
                 .replyMarkup(getTransactionsMenuMarkup(wallets))
                 .build();
         tgClient.execute(message);
@@ -80,7 +52,7 @@ public class WithdrawViews {
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
-                .text(MSG_WITHDRAW_TRX_IN_PROGRESS)
+                .text(withdrawLabels.inProgress())
                 // .replyMarkup(commonViews.getToMainMenuMarkup())
                 .build();
         tgClient.execute(message);
@@ -91,7 +63,7 @@ public class WithdrawViews {
         EditMessageText message = EditMessageText
                 .builder()
                 .chatId(userState.getChatId())
-                .text(NTFN_WITHDRWAL_SUCCESS)
+                .text(withdrawLabels.success())
                 .messageId(userState.getMenuMessageId())
                 .replyMarkup(getOrderRefundedNotificationMarkup())
                 .build();
@@ -104,7 +76,7 @@ public class WithdrawViews {
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
-                .text(NTFN_WITHDRWAL_FAIL_NOT_ENOUGH_BALANCE)
+                .text(withdrawLabels.notEnoughtBalance())
                 .replyMarkup(getOrderRefundedNotificationMarkup())
                 .build();
         tgClient.execute(message);
@@ -116,7 +88,7 @@ public class WithdrawViews {
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
-                .text(NTFN_WITHDRWAL_FAIL_SERVICE_NOT_ENOUGH_BALANCE)
+                .text(withdrawLabels.serviceNotEnoughtBalance())
                 .replyMarkup(getOrderRefundedNotificationMarkup())
                 .build();
         tgClient.execute(message);
@@ -127,7 +99,7 @@ public class WithdrawViews {
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
-                .text(NTFN_WITHDRWAL_FAIL)
+                .text(withdrawLabels.fail())
                 .replyMarkup(getOrderRefundedNotificationMarkup())
                 .build();
         try {
@@ -142,7 +114,7 @@ public class WithdrawViews {
         EditMessageText message = EditMessageText
                 .builder()
                 .chatId(userState.getChatId())
-                .text(NTFN_NOT_ENOUGH_RIGHTS)
+                .text(withdrawLabels.notEnoughRights())
                 .messageId(userState.getMenuMessageId())
                 .replyMarkup(commonViews.getToMainMenuMarkup())
                 .build();
@@ -186,7 +158,7 @@ public class WithdrawViews {
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
-                .text(MSG_WITHDRAW_TRX)
+                .text(withdrawLabels.promptWallet())
                 .replyMarkup(getTransactionsMenuMarkup(wallets))
                 .build();
         tgClient.execute(message);
@@ -199,7 +171,7 @@ public class WithdrawViews {
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(StaticLabels.TO_MAIN_MENU)
+                                        .text(commonLabels.toMainMenu())
                                         .callbackData(InlineMenuCallbacks.TO_MAIN_MENU)
                                         .build())
 
@@ -226,35 +198,17 @@ public class WithdrawViews {
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(StaticLabels.TO_MAIN_MENU)
+                                        .text(commonLabels.toMainMenu())
                                         .callbackData(InlineMenuCallbacks.TO_MAIN_MENU)
                                         .build()))
                 .build();
     }
 
     private String getPromptAmountForWithdrawal(Balance balance) {
-        return """
-                💰 Вывод средств
-
-                ❗️Коммиссия за вывод средств составляет 1 TRX.
-
-                ❗️Минимальная сумма для вывода составляет 10 TRX.
-
-
-                Пожалуйста, введите сумму, которую вы хотите вывести.
-
-                *Доступно для вывода: %s TRX* (с учетом комиссии 1 TRX)
-                """.formatted(FormattingTools.formatBalance(Long.max(0, balance.getSunBalance() - AppConstants.WITHDRAWAL_FEE)));
+        return withdrawLabels.promptAllowedToWithdraw(FormattingTools.formatBalance(Long.max(0, balance.getSunBalance() - AppConstants.WITHDRAWAL_FEE)));
     }
 
     private String getPromptAmountForWithdrawalNotEnoughBalance(Balance balance) {
-        return """
-                💰 Вывод средств
-
-                У вас недостаточно средств для вывода такой суммы.
-                Пожалуйста, введите сумму, которую вы хотите вывести.
-
-                *Доступно для вывода: %s TRX* (с учетом комиссии 1 TRX)
-                """.formatted(FormattingTools.formatBalance(Long.max(0, balance.getSunBalance() - AppConstants.WITHDRAWAL_FEE)));
+        return withdrawLabels.promptNotEnoughtBalance(FormattingTools.formatBalance(Long.max(0, balance.getSunBalance() - AppConstants.WITHDRAWAL_FEE)));
     }
 }

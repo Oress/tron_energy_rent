@@ -7,6 +7,7 @@ import org.ipan.nrgyrent.domain.model.BalanceType;
 import org.ipan.nrgyrent.domain.model.OrderStatus;
 import org.ipan.nrgyrent.domain.model.WithdrawalStatus;
 import org.ipan.nrgyrent.domain.model.projections.TransactionHistoryDto;
+import org.ipan.nrgyrent.telegram.i18n.HistoryLabels;
 import org.ipan.nrgyrent.telegram.utils.FormattingTools;
 import org.ipan.nrgyrent.telegram.utils.WalletTools;
 import org.springframework.retry.annotation.Retryable;
@@ -23,6 +24,8 @@ import lombok.SneakyThrows;
 public class HistoryViews {
     private final TelegramClient tgClient;
     private final CommonViews commonViews;
+    private final HistoryLabels historyLabels;
+    private final FormattingTools formattingTools;
 
     @Retryable
     @SneakyThrows
@@ -32,7 +35,7 @@ public class HistoryViews {
                 .chatId(callbackQuery.getMessage().getChatId())
                 .messageId(callbackQuery.getMessage().getMessageId())
                 .text(getHistoryMessage(orders))
-                .replyMarkup(commonViews.getToMainMenuMarkup())
+                .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
         tgClient.execute(message);
     }
@@ -42,62 +45,36 @@ public class HistoryViews {
                 .map(ord -> getTransactionDetails(ord))
                 .collect(Collectors.joining("\n\n"));
 
-        return """
-                📜 История последних транзакций
-
-                %s
-                """.formatted(history);
+        return historyLabels.historyMsg(history);
     }
 
     private String getTransactionDetails(TransactionHistoryDto order) {
-        String user = order.getUserId() != null ? FormattingTools.formatUserForSearch(order.getUserId(),order.getUsername(), order.getFirstname()) : "";
+        String user = order.getUserId() != null ? formattingTools.formatUserForSearch(order.getUserId(),order.getUsername(), order.getFirstname()) : "";
         switch (order.getType()) {
             case "ORDER" -> {
-                    return """
-                    Операция: Аренда транзакции
-                    ID: %s %s
-                    Кол. тр: %s 
-                    Сумма всего: %s TRX
-                    Получатель: %s
-                    Статус: %s
-                    Баланс: %s
-                    Дата: %s
-                    """.formatted(
+                return historyLabels.itemTx(
                     order.getCorrelationId(),
-                    user.isEmpty() ? "": "\nПользователь: \n%s".formatted(user),
+                    user.isEmpty() ? "": historyLabels.itemTxMember(user),
                     order.getTxAmount(),
                     FormattingTools.formatBalance(order.getTotalAmountSun()),
                     WalletTools.formatTronAddress(order.getReceiveAddress()),
-                    FormattingTools.orderStatusLabel(OrderStatus.valueOf(order.getOrderStatus())),
-                    BalanceType.GROUP.name().equals(order.getBalanceType()) ? "Групповой" : "Личный",
+                    formattingTools.orderStatusLabel(OrderStatus.valueOf(order.getOrderStatus())),
+                    BalanceType.GROUP.name().equals(order.getBalanceType()) ? historyLabels.balanceGroup() : historyLabels.balancePersonal(),
                     FormattingTools.formatDateToUtc(order.getCreatedAt()));
             }
             case "WITHDRAWAL" -> {
-                return """
-                    Операция: Вывод TRX
-                    Сумма: %s TRX
-                    Получатель: %s
-                    Статус: %s
-                    Баланс: %s
-                    Дата: %s
-                    """.formatted(
+                return historyLabels.itemWithdraw(
                     FormattingTools.formatBalance(order.getTotalAmountSun()),
                     WalletTools.formatTronAddress(order.getReceiveAddress()),
-                    FormattingTools.withdrawalStatusLabel(WithdrawalStatus.valueOf(order.getWithdrawalStatus())),
-                    BalanceType.GROUP.name().equals(order.getBalanceType()) ? "Групповой" : "Личный",
+                    formattingTools.withdrawalStatusLabel(WithdrawalStatus.valueOf(order.getWithdrawalStatus())),
+                    BalanceType.GROUP.name().equals(order.getBalanceType()) ? historyLabels.balanceGroup() : historyLabels.balancePersonal(),
                     FormattingTools.formatDateToUtc(order.getCreatedAt()));
             }
             case "DEPOSIT" -> {
-                return """
-                    Операция: Пополнение баланса
-                    Сумма: %s TRX
-                    Отправитель: %s
-                    Баланс: %s
-                    Дата: %s
-                    """.formatted(
+                return historyLabels.itemDeposit(
                     FormattingTools.formatBalance(order.getTotalAmountSun()),
                     WalletTools.formatTronAddress(order.getFromAddress()),
-                    BalanceType.GROUP.name().equals(order.getBalanceType()) ? "Групповой" : "Личный",
+                    BalanceType.GROUP.name().equals(order.getBalanceType()) ? historyLabels.balanceGroup() : historyLabels.balancePersonal(),
                     FormattingTools.formatDateToUtc(order.getCreatedAt()));
             }
             default -> {
