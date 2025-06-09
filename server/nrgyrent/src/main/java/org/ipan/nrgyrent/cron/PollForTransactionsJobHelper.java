@@ -29,6 +29,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.ui.context.Theme;
 
 import jakarta.persistence.EntityManager;
 import lombok.AllArgsConstructor;
@@ -132,6 +133,7 @@ public class PollForTransactionsJobHelper {
                     } else {
                         logger.error("Unknown balance type for balance ID: {}", balance.getId());
                     }
+                    Thread.sleep(500);
                 }
             } catch (Exception e) {
                 logger.error("Error processing balance: id: {} wallet: {}", balance.getId(), depositAddress, e);
