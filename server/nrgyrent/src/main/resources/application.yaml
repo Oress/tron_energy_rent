@@ -59,7 +59,7 @@ app:
     key: ${APP_ITRX_API_KEY}
     secret: ${APP_ITRX_API_SECRET}
   trongrid:
-    qps: 13
+    qps: 10
     base-url: ${APP_TRONGRID_URL:https://nile.trongrid.io} # For mainnet, use https://api.trongrid.io
     api-key: ${APP_TRONGRID_API_KEY}
   telegram:
