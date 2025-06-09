@@ -128,6 +128,7 @@ public class TrongridRestClient {
             Response response = client.newCall(request).execute();
 
             responseStr = response.body().string();
+            logger.info(responseStr);
             V1AccountsAddressTransactionsGet200Response responseTyped = objectMapper.readValue(responseStr, V1AccountsAddressTransactionsGet200Response.class);
             result = responseTyped.getData() == null || responseTyped.getData().isEmpty()
                 ? Collections.emptyList()
