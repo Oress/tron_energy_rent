@@ -337,15 +337,18 @@ public class TelegramMessages {
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text("EN")
-                                        .callbackData("en")
-                                        .build(),
-                                InlineKeyboardButton
-                                        .builder()
-                                        .text("RU")
+                                        .text("🇷🇺 Русский")
                                         .callbackData("ru")
                                         .build())
                                 )
+                .keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text("🇬🇧 English")
+                                        .callbackData("en")
+                                        .build()
+                                ))
                 .build();
     }
 
@@ -356,15 +359,18 @@ public class TelegramMessages {
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text("EN")
-                                        .callbackData("en")
-                                        .build(),
-                                InlineKeyboardButton
-                                        .builder()
-                                        .text("RU")
+                                        .text("🇷🇺 Русский")
                                         .callbackData("ru")
                                         .build())
                                 )
+                .keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text("🇬🇧 English")
+                                        .callbackData("en")
+                                        .build()
+                                ))
                 .keyboardRow(
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
