@@ -174,7 +174,7 @@ public class PollForTransactionsJobHelper {
         // It may be empty mind the 0.000001 transactions
         Long ts = rawData.getTimestamp();
         if (ts == null) {
-            logger.error("Timestamp is null for transaction: {} wallet {}", tx.getTxID(), walletAddress);
+            logger.warn("Timestamp is null for transaction: {} wallet {}", tx.getTxID(), walletAddress);
         }
 
         Contract contract = rawData.getContract().get(0);

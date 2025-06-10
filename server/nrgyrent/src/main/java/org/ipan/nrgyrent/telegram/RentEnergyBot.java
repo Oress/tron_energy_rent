@@ -180,9 +180,6 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
             if (START.equals(text)) {
                 telegramMessages.deleteMessage(message);
 
-                Message newMenuMsg = null;
-                UserRole role = UserRole.USER;
-                States targetState;
                 if (user == null) {
                     User from = message.getFrom();
                     String languageCode = extractLangFromUser(from);
@@ -193,23 +190,22 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
                                     .username(from.getUserName())
                                     .languageCode(languageCode)
                                     .build());
-                    newMenuMsg = telegramMessages.sendPromptLanguage(userState, update.getMessage().getChatId());
 
-                    targetState = States.CHOOSE_LANGUAGE;
-                    role = user != null ? user.getRole() : UserRole.USER;
                 } else {
-                    telegramMessages.deleteMessage(message);
-                    targetState = States.MAIN_MENU;
-                    role = user != null ? user.getRole() : UserRole.USER;
+                    // telegramMessages.deleteMessage(message);
+/*                     role = user != null ? user.getRole() : UserRole.USER;
 
                     newMenuMsg = switch (role) {
                         case ADMIN -> telegramMessages.sendAdminMainMenu(userState, update.getMessage().getChatId(), user);
                         default -> telegramMessages.sendMainMenu(userState, update.getMessage().getChatId(), user);
-                    };
+                    }; */
                 }
+                Message newMenuMsg = telegramMessages.sendPromptLanguage(userState, update.getMessage().getChatId());
+                UserRole role = user != null ? user.getRole() : UserRole.USER;
+
 
                 telegramState.updateUserState(userState.getTelegramId(), userState
-                        .withState(targetState)
+                        .withState(States.CHOOSE_LANGUAGE)
                         .withChatId(newMenuMsg.getChatId())
                         .withRole(role)
                         .withMenuMessageId(newMenuMsg.getMessageId()));
