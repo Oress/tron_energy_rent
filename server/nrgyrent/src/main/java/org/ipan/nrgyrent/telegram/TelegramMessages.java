@@ -337,7 +337,7 @@ public class TelegramMessages {
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text("🇷🇺 Русский")
+                                        .text("Русский")
                                         .callbackData("ru")
                                         .build())
                                 )
@@ -345,7 +345,7 @@ public class TelegramMessages {
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text("🇬🇧 English")
+                                        .text("English")
                                         .callbackData("en")
                                         .build()
                                 ))
@@ -359,7 +359,7 @@ public class TelegramMessages {
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text("🇷🇺 Русский")
+                                        .text("Русский")
                                         .callbackData("ru")
                                         .build())
                                 )
@@ -367,7 +367,7 @@ public class TelegramMessages {
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text("🇬🇧 English")
+                                        .text("English")
                                         .callbackData("en")
                                         .build()
                                 ))
