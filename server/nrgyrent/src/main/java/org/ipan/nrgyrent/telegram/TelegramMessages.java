@@ -274,7 +274,11 @@ public class TelegramMessages {
                 .builder()
                 .chatId(chatId)
                 .text("""
-                👋 Welcome!
+                👋 Добро пожаловать в Flash Tron Rent!
+                Пожалуйста, выберите предпочитаемый язык, чтобы продолжить.
+                Вы всегда можете изменить язык в меню настроек позже.
+                ────────
+                👋 Welcome to the Flash Tron Rent!
                 Please select your preferred language to continue.
                 You can always change the preferred language in settings menu later.
                 """)
