@@ -23,7 +23,7 @@ public class SweepDepositToCollectionWalletJob {
     private final BalanceRepo balanceRepo;
     private final SweepHelper sweepHelper;
 
-    @Scheduled(fixedRate = 60, timeUnit = TimeUnit.MINUTES)
+    @Scheduled(fixedRate = 90, timeUnit = TimeUnit.MINUTES)
     public void scheduleTasks() {
         // Get all balances from the db.
         // Split balances into batches (determined by the amount of active wallets)

@@ -24,7 +24,7 @@ public class PollForTransactionsJob {
     private final BalanceRepo balanceRepo;
     private final PollForTransactionsJobHelper helper;
 
-    @Scheduled(initialDelay = 1, fixedRate = 2, timeUnit = TimeUnit.MINUTES)
+    @Scheduled(initialDelay = 1, fixedRate = 3, timeUnit = TimeUnit.MINUTES)
     public void scheduleTasks() {
         List<Balance> activeBalances = balanceRepo.findAllByIsActive(Boolean.TRUE);
 
