@@ -76,7 +76,7 @@ public class ReferalProgramService {
             throw new IllegalArgumentException("Label is blank when creating ref. program {}");
         }
 
-        if (label.length() <= 3) {
+        if (label.length() < 3) {
             logger.info("Label is less than 3 symbols long when creating ref. program {}", label);
             throw new IllegalArgumentException("Label is less than 3 symbols long when creating ref. program {}");
         }

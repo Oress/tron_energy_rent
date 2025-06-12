@@ -16,6 +16,8 @@ services:
 
       - APP_MAPDB_PATH=/cache/nrgyrent.db
 
+      - APP_BOT_USERNAME
+
       - APP_ITRX_API_KEY
       - APP_ITRX_API_SECRET
       - APP_ITRX_BASE_URL
