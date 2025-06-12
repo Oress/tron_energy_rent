@@ -55,7 +55,7 @@ public class ReferalProgramService {
 
             brp = new BalanceReferralProgram();
             brp.setBalance(targetUser.getBalance());
-            brp.setLink(UUID.randomUUID().toString());
+            brp.setLink("ref%s".formatted(userId));
             brp.setReferralProgram(referralProgram);
 
             balanceReferralProgramRepo.save(brp);
