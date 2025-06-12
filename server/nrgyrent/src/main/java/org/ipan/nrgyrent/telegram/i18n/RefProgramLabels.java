@@ -57,7 +57,7 @@ public class RefProgramLabels {
     }
 
     public @NonNull String actionsRenamePromptLabel() {
-        return getLocalizedMessage("admin.referal.actions.rename.prompt_label");
+        return getLocalizedMessage("admin.referal.actions.rename.prompt");
     }
 
     public @NonNull String actionsRenameLabelTooShort() {
