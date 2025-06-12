@@ -200,6 +200,7 @@ public class TelegramMessages {
         SendMessage message = SendMessage
                 .builder()
                 .chatId(userState.getChatId())
+                .disableNotification(true)
                 .text(commonLabels.referalPayment(userState.getLocaleOrDefault(), FormattingTools.formatBalance(amountSun)))
                 .replyMarkup(getOkNotificationMarkup())
                 .build();

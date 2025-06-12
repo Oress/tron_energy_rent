@@ -777,5 +777,12 @@
             <column name="bal_ref_prog_id" />
         </createIndex>
     </changeSet>
+    
+    <changeSet id="extend nrg_collection_wallets with balance_on_chain, balance_last_checked" author="oress">
+        <addColumn tableName="nrg_collection_wallets">
+            <column name="balance_on_chain" type="bigint" />
+            <column name="balance_last_checked" type="timestamp" />
+        </addColumn>
+    </changeSet>
 
 </databaseChangeLog>

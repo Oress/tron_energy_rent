@@ -1,12 +1,15 @@
 package org.ipan.nrgyrent.cron;
 
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import org.ipan.nrgyrent.domain.model.Balance;
+import org.ipan.nrgyrent.domain.model.CollectionWallet;
 import org.ipan.nrgyrent.domain.model.repository.BalanceRepo;
+import org.ipan.nrgyrent.domain.model.repository.CollectionWalletRepo;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,6 +24,8 @@ public class CronJobConfig {
 
     private final ReferralCommissionHelper referralCommissionHelper;
     private final BalanceRepo balanceRepo;
+    private final CollectionWalletRepo collectionWalletRepo;
+    private final CollectionWalletBalanceMonitorJob collectionWalletBalanceMonitorJob;
 
     @Bean(name = TRON_TRANSACTION_EXECUTOR)
     @ConditionalOnProperty(name = "app.cron.tron.transaction.enabled")
@@ -40,6 +45,15 @@ public class CronJobConfig {
 
         for (Balance balance : pendingBalances) {
             referralCommissionHelper.processBalanceWithPendingCommissions(balance.getId());
+        }
+    }
+
+    @Scheduled(initialDelay = 1, fixedRate = 3, timeUnit = TimeUnit.MINUTES)
+    public void monitorCollectionWalletBalances() {
+        List<CollectionWallet> all = collectionWalletRepo.findAll();
+
+        for (CollectionWallet collectionWallet : all) {
+            collectionWalletBalanceMonitorJob.processWallet(collectionWallet.getId());
         }
     }
 }

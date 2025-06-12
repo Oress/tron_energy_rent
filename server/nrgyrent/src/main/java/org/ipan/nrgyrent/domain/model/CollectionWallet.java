@@ -27,6 +27,12 @@ public class CollectionWallet {
     @Column(name = "wallet_address")
     private String walletAddress;
 
+    @Column(name = "balance_on_chain")
+    private Long balanceOnChain;
+
+    @Column(name = "balance_last_checked")
+    private Instant balanceLastChecked;
+
     @Column(name = "is_active")
     private Boolean isActive = Boolean.TRUE;
 
