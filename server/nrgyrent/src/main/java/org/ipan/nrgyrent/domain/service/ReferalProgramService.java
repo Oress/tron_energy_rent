@@ -1,7 +1,6 @@
 package org.ipan.nrgyrent.domain.service;
 
 import java.util.List;
-import java.util.UUID;
 
 import org.ipan.nrgyrent.domain.model.AppUser;
 import org.ipan.nrgyrent.domain.model.BalanceReferralProgram;
@@ -76,9 +75,9 @@ public class ReferalProgramService {
             throw new IllegalArgumentException("Label is blank when creating ref. program {}");
         }
 
-        if (label.length() < 3) {
-            logger.info("Label is less than 3 symbols long when creating ref. program {}", label);
-            throw new IllegalArgumentException("Label is less than 3 symbols long when creating ref. program {}");
+        if (label.length() < 2) {
+            logger.info("Label is less than 2 symbols long when creating ref. program {}", label);
+            throw new IllegalArgumentException("Label is less than 2 symbols long when creating ref. program {}");
         }
 
         if (percentage <= 0 || percentage >= 100) {
@@ -105,7 +104,7 @@ public class ReferalProgramService {
             throw new IllegalArgumentException("ReferralProgram not found for renaming");
         }
         // label should be > 3 characters
-        if (newLabel.length() < 3) {
+        if (newLabel.length() < 2) {
             logger.info("New label is too short: {}", newLabel);
             throw new IllegalArgumentException("New label is too short");
         }

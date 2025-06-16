@@ -785,4 +785,31 @@
         </addColumn>
     </changeSet>
 
+    <changeSet id="extend nrg_referral_programs with predefined" author="oress">
+        <addColumn tableName="nrg_referral_programs">
+            <column name="is_predefined" type="boolean" defaultValue="false">
+                <constraints nullable="false" />
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="create default ref. program" author="oress">
+        <insert tableName="nrg_referral_programs">
+            <column name="id" valueNumeric="${defaultRefProgramId}" />
+            <column name="label" value="${defaultRefProgramLabel}" />
+            <column name="percentage" valueNumeric="${defaultRefProgramPercentage}" />
+            <column name="is_predefined" valueBoolean="true" />
+            <column name="created_at" valueDate="now()" />
+        </insert>
+    </changeSet>
+
+    <changeSet id="create ref. programs for users w/o one" author="oress">
+        <sql>
+            INSERT INTO nrg_balance_referral_programs (id, link, balance_id, ref_prog_id, created_at)
+            SELECT nextval('nrg_balance_referral_programs_seq'), u.telegram_id::text, u.balance_id, ${defaultRefProgramId}, now()
+            FROM nrg_users u
+            WHERE u.bal_ref_prog_id is NULL;
+        </sql>
+    </changeSet>
+
 </databaseChangeLog>

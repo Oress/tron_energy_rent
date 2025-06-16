@@ -191,4 +191,8 @@ public class CommonLabels {
     public String referalPayment(Locale locale, String amount) {
         return getLocalizedMessage("referal.payment", locale, amount);
     }
+
+    public String noReferrals() {
+        return getLocalizedMessage("referal.no_referrals");
+    }
 }

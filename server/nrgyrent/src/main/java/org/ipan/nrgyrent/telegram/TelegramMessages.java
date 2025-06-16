@@ -56,19 +56,22 @@ public class TelegramMessages {
     }
 
     @SneakyThrows
-    public void updMenuToReferalSummary(UserState userState, AppUser user, BalanceReferralProgram refProgram, List<AppUser> referals, Long pendingCommissionSun) {
-        String referalsStr = referals.stream().map(u -> formattingTools.formatUserForSearch(u)).collect(Collectors.joining("\n"));
-
+    public void updMenuToReferalSummary(UserState userState, AppUser user, BalanceReferralProgram refProgram,
+            List<AppUser> referals, Long pendingCommissionSun) {
+        String referalsStr = referals.stream().map(u -> formattingTools.formatUserForSearch(u))
+                .collect(Collectors.joining("\n"));
+        if (referalsStr.isBlank()) {
+            referalsStr = commonLabels.noReferrals();
+        }
         EditMessageText message = EditMessageText
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
                 .text(commonLabels.referalsSummary(
                         FormattingTools.formatBalance(pendingCommissionSun),
-                        formattingTools.formatRefProgmam(refProgram),
-                        referalsStr
-                ))
-                .replyMarkup(commonViews.getToMainMenuMarkup())
+                        formattingTools.formatRefProgmamWoDescription(refProgram),
+                        referalsStr))
+                .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
         try {
             tgClient.execute(message);
@@ -93,7 +96,6 @@ public class TelegramMessages {
         }
     }
 
-
     @SneakyThrows
     public void updateMsgToChangeLanguage(UserState userState) {
         EditMessageText message = EditMessageText
@@ -109,7 +111,6 @@ public class TelegramMessages {
             logger.error("Failed to updateMsgToChangeLanguage user: {}", userState, e);
         }
     }
-
 
     @SneakyThrows
     public void sendTransactionRefundNotification(UserState userState, Order order) {
@@ -141,25 +142,23 @@ public class TelegramMessages {
         } catch (Exception e) {
             logger.error("Failed to sendTransactionSuccessNotification user: {}", userState, e);
         }
-        return ;
+        return;
     }
 
     private String getSuccessfulTransactionMessage(UserState userState, Order order) {
         return transactionLabels.success(
-                    userState.getLocaleOrDefault(),
-                    order.getTxAmount(),
-                    FormattingTools.formatBalance(order.getSunAmount()),
-                    WalletTools.formatTronAddress(order.getReceiveAddress())
-                    );
+                userState.getLocaleOrDefault(),
+                order.getTxAmount(),
+                FormattingTools.formatBalance(order.getSunAmount()),
+                WalletTools.formatTronAddress(order.getReceiveAddress()));
     }
 
-    private String getFailedTransactionMessage(UserState userState,Order order) {
+    private String getFailedTransactionMessage(UserState userState, Order order) {
         return transactionLabels.refunded(
-                    userState.getLocaleOrDefault(),
-                    order.getTxAmount(),
-                    FormattingTools.formatBalance(order.getSunAmount()),
-                    WalletTools.formatTronAddress(order.getReceiveAddress())
-                    );
+                userState.getLocaleOrDefault(),
+                order.getTxAmount(),
+                FormattingTools.formatBalance(order.getSunAmount()),
+                WalletTools.formatTronAddress(order.getReceiveAddress()));
     }
 
     @SneakyThrows
@@ -201,7 +200,8 @@ public class TelegramMessages {
                 .builder()
                 .chatId(userState.getChatId())
                 .disableNotification(true)
-                .text(commonLabels.referalPayment(userState.getLocaleOrDefault(), FormattingTools.formatBalance(amountSun)))
+                .text(commonLabels.referalPayment(userState.getLocaleOrDefault(),
+                        FormattingTools.formatBalance(amountSun)))
                 .replyMarkup(getOkNotificationMarkup())
                 .build();
         tgClient.execute(message);
@@ -255,7 +255,8 @@ public class TelegramMessages {
         try {
             tgClient.execute(deleteMessage);
         } catch (Exception e) {
-            logger.error("Failed to delete callback message {}, userstate {}", callbackQuery.getMessage().getMessageId(), userState, e);
+            logger.error("Failed to delete callback message {}, userstate {}",
+                    callbackQuery.getMessage().getMessageId(), userState, e);
         }
     }
 
@@ -270,7 +271,6 @@ public class TelegramMessages {
         return newMenuMsg;
     }
 
-
     @Retryable
     @SneakyThrows
     public Message sendMainMenu(UserState userState, Long chatId, AppUser user) {
@@ -281,7 +281,7 @@ public class TelegramMessages {
                 .builder()
                 .chatId(chatId)
                 .text(getMainMenuMessage(user))
-                .replyMarkup(getMainMenuReplyMarkup(userState.isManager(), false, tariff, showWithdrawBtn, userState.hasReferals()))
+                .replyMarkup(getMainMenuReplyMarkup(userState.isManager(), false, tariff, showWithdrawBtn))
                 .linkPreviewOptions(LinkPreviewOptions.builder().isDisabled(true).build())
                 .parseMode("MARKDOWN")
                 .build();
@@ -299,7 +299,7 @@ public class TelegramMessages {
                 .chatId(chatId)
                 .linkPreviewOptions(LinkPreviewOptions.builder().isDisabled(true).build())
                 .text(getMainMenuMessage(user))
-                .replyMarkup(getMainMenuReplyMarkup(userState.isManager(), true, tariff, showWithdrawBtn, userState.hasReferals()))
+                .replyMarkup(getMainMenuReplyMarkup(userState.isManager(), true, tariff, showWithdrawBtn))
                 .parseMode("MARKDOWN")
                 .build();
         return tgClient.execute(message);
@@ -312,14 +312,14 @@ public class TelegramMessages {
                 .builder()
                 .chatId(chatId)
                 .text("""
-                👋 Добро пожаловать в Flash Tron Rent!
-                Пожалуйста, выберите предпочитаемый язык, чтобы продолжить.
-                Вы всегда можете изменить язык в меню настроек позже.
-                ────────
-                👋 Welcome to the Flash Tron Rent!
-                Please select your preferred language to continue.
-                You can always change the preferred language in settings menu later.
-                """)
+                        👋 Добро пожаловать в Flash Tron Rent!
+                        Пожалуйста, выберите предпочитаемый язык, чтобы продолжить.
+                        Вы всегда можете изменить язык в меню настроек позже.
+                        ────────
+                        👋 Welcome to the Flash Tron Rent!
+                        Please select your preferred language to continue.
+                        You can always change the preferred language in settings menu later.
+                        """)
                 .replyMarkup(getLanguageNotficationMarkup())
                 .parseMode("MARKDOWN")
                 .build();
@@ -333,7 +333,8 @@ public class TelegramMessages {
         switch (role) {
             case ADMIN -> updateMsgToAdminMainMenu(userState, user);
             default -> updateMsgToMainMenu(userState, user);
-        };
+        }
+        ;
     }
 
     @SneakyThrows
@@ -348,7 +349,7 @@ public class TelegramMessages {
                 .text(getMainMenuMessage(user))
                 .linkPreviewOptions(LinkPreviewOptions.builder().isDisabled(true).build())
                 .parseMode("MARKDOWN")
-                .replyMarkup(getMainMenuReplyMarkup(userState.isManager(), false, tariff, showWithdrawBtn, userState.hasReferals()))
+                .replyMarkup(getMainMenuReplyMarkup(userState.isManager(), false, tariff, showWithdrawBtn))
                 .build();
         tgClient.execute(message);
     }
@@ -365,7 +366,7 @@ public class TelegramMessages {
                 .text(getMainMenuMessage(user))
                 .parseMode("MARKDOWN")
                 .linkPreviewOptions(LinkPreviewOptions.builder().isDisabled(true).build())
-                .replyMarkup(getMainMenuReplyMarkup(userState.isManager(), true, tariff, showWithdrawBtn, userState.hasReferals()))
+                .replyMarkup(getMainMenuReplyMarkup(userState.isManager(), true, tariff, showWithdrawBtn))
                 .build();
         tgClient.execute(message);
     }
@@ -373,9 +374,9 @@ public class TelegramMessages {
     private String getMainMenuMessage(AppUser user) {
         Balance balanceToUse = user.getBalanceToUse();
 
-        String balanceLabel = user.isInGroup() 
-            ? commonLabels.getCommonGroupBalance(FormattingTools.formatBalance(balanceToUse.getSunBalance()))
-            : commonLabels.getCommonPersonalBalance(FormattingTools.formatBalance(balanceToUse.getSunBalance()));
+        String balanceLabel = user.isInGroup()
+                ? commonLabels.getCommonGroupBalance(FormattingTools.formatBalance(balanceToUse.getSunBalance()))
+                : commonLabels.getCommonPersonalBalance(FormattingTools.formatBalance(balanceToUse.getSunBalance()));
 
         String mainWelcome = commonLabels.getMainWelcome(balanceLabel);
 
@@ -391,16 +392,14 @@ public class TelegramMessages {
                                         .builder()
                                         .text("Русский")
                                         .callbackData("ru")
-                                        .build())
-                                )
+                                        .build()))
                 .keyboardRow(
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
                                         .text("English")
                                         .callbackData("en")
-                                        .build()
-                                ))
+                                        .build()))
                 .build();
     }
 
@@ -413,16 +412,14 @@ public class TelegramMessages {
                                         .builder()
                                         .text("Русский")
                                         .callbackData("ru")
-                                        .build())
-                                )
+                                        .build()))
                 .keyboardRow(
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
                                         .text("English")
                                         .callbackData("en")
-                                        .build()
-                                ))
+                                        .build()))
                 .keyboardRow(
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
@@ -452,6 +449,13 @@ public class TelegramMessages {
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
+                                        .text(commonLabels.getMenuManageReferals())
+                                        .callbackData(InlineMenuCallbacks.MANAGE_REFERALS)
+                                        .build()))
+                .keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
                                         .text(commonLabels.settingsChangeLanguage())
                                         .callbackData(InlineMenuCallbacks.CHANGE_LANGUAGE)
                                         .build()))
@@ -465,61 +469,65 @@ public class TelegramMessages {
         return builder.build();
     }
 
-    private InlineKeyboardMarkup getMainMenuReplyMarkup(Boolean isManager, Boolean isAdmin, Tariff tariff, boolean showWithdrawBtn, Boolean hasReferals) {
+    private InlineKeyboardMarkup getMainMenuReplyMarkup(Boolean isManager, Boolean isAdmin, Tariff tariff,
+            boolean showWithdrawBtn) {
         var builder = InlineKeyboardMarkup
                 .builder()
                 .keyboardRow(
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(commonLabels.getTxType1(FormattingTools.formatBalance(tariff.getTransactionType1AmountSun())))
+                                        .text(commonLabels.getTxType1(
+                                                FormattingTools.formatBalance(tariff.getTransactionType1AmountSun())))
                                         .callbackData(InlineMenuCallbacks.TRANSACTION_65k)
                                         .build()))
                 .keyboardRow(
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(commonLabels.getTxType2(FormattingTools.formatBalance(tariff.getTransactionType2AmountSun())))
+                                        .text(commonLabels.getTxType2(
+                                                FormattingTools.formatBalance(tariff.getTransactionType2AmountSun())))
                                         .callbackData(InlineMenuCallbacks.TRANSACTION_131k)
                                         .build()))
                 .keyboardRow(
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(commonLabels.getTxCustomAmnt(FormattingTools.formatBalance(tariff.getTransactionType1AmountSun())))
+                                        .text(commonLabels.getTxCustomAmnt(
+                                                FormattingTools.formatBalance(tariff.getTransactionType1AmountSun())))
                                         .callbackData(InlineMenuCallbacks.CUSTOM_TRANSACTION_AMOUNT)
                                         .build()));
 
-                if (showWithdrawBtn) {
-                    builder.keyboardRow(
-                        new InlineKeyboardRow(
-                                InlineKeyboardButton
-                                        .builder()
-                                        .text(commonLabels.getMenuDeposit())
-                                        .callbackData(InlineMenuCallbacks.DEPOSIT)
-                                        .build(),
-                                InlineKeyboardButton
-                                        .builder()
-                                        .text(commonLabels.getMenuWithdraw())
-                                        .callbackData(InlineMenuCallbacks.WITHDRAW_TRX)
-                                        .build()));
-                } else {
-                    builder.keyboardRow(
-                        new InlineKeyboardRow(
-                                InlineKeyboardButton
-                                        .builder()
-                                        .text(commonLabels.getMenuDeposit())
-                                        .callbackData(InlineMenuCallbacks.DEPOSIT)
-                                        .build()));
-                }
+        if (showWithdrawBtn) {
+            builder.keyboardRow(
+                    new InlineKeyboardRow(
+                            InlineKeyboardButton
+                                    .builder()
+                                    .text(commonLabels.getMenuDeposit())
+                                    .callbackData(InlineMenuCallbacks.DEPOSIT)
+                                    .build(),
+                            InlineKeyboardButton
+                                    .builder()
+                                    .text(commonLabels.getMenuWithdraw())
+                                    .callbackData(InlineMenuCallbacks.WITHDRAW_TRX)
+                                    .build()));
+        } else {
+            builder.keyboardRow(
+                    new InlineKeyboardRow(
+                            InlineKeyboardButton
+                                    .builder()
+                                    .text(commonLabels.getMenuDeposit())
+                                    .callbackData(InlineMenuCallbacks.DEPOSIT)
+                                    .build()));
+        }
 
-                builder.keyboardRow(
-                        new InlineKeyboardRow(
-                                InlineKeyboardButton
-                                        .builder()
-                                        .text(commonLabels.menuSettings())
-                                        .callbackData(InlineMenuCallbacks.SETTINGS)
-                                        .build()))
+        builder.keyboardRow(
+                new InlineKeyboardRow(
+                        InlineKeyboardButton
+                                .builder()
+                                .text(commonLabels.menuSettings())
+                                .callbackData(InlineMenuCallbacks.SETTINGS)
+                                .build()))
                 .keyboardRow(
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
@@ -529,33 +537,23 @@ public class TelegramMessages {
                                         .build()));
 
         if (isManager) {
-                builder.keyboardRow(
-                        new InlineKeyboardRow(
-                                InlineKeyboardButton
-                                        .builder()
-                                        .text(commonLabels.getMenuManageGroup())
-                                        .callbackData(InlineMenuCallbacks.MANAGE_GROUP)
-                                        .build()));
-        }
-
-        if (hasReferals) {
-                builder.keyboardRow(
-                        new InlineKeyboardRow(
-                                InlineKeyboardButton
-                                        .builder()
-                                        .text(commonLabels.getMenuManageReferals())
-                                        .callbackData(InlineMenuCallbacks.MANAGE_REFERALS)
-                                        .build()));
+            builder.keyboardRow(
+                    new InlineKeyboardRow(
+                            InlineKeyboardButton
+                                    .builder()
+                                    .text(commonLabels.getMenuManageGroup())
+                                    .callbackData(InlineMenuCallbacks.MANAGE_GROUP)
+                                    .build()));
         }
 
         if (isAdmin) {
-                builder.keyboardRow(
-                        new InlineKeyboardRow(
-                                InlineKeyboardButton
-                                        .builder()
-                                        .text(commonLabels.getMenuAdminMenu())
-                                        .callbackData(InlineMenuCallbacks.ADMIN_MENU)
-                                        .build()));
+            builder.keyboardRow(
+                    new InlineKeyboardRow(
+                            InlineKeyboardButton
+                                    .builder()
+                                    .text(commonLabels.getMenuAdminMenu())
+                                    .callbackData(InlineMenuCallbacks.ADMIN_MENU)
+                                    .build()));
         }
         return builder.build();
     }

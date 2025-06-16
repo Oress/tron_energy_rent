@@ -28,14 +28,13 @@ public class ReferralProgramsActionsView {
     private final RefProgramLabels refProgramLabels;
 
     @SneakyThrows
-    public void updMenuToManageRefProgramActionsMenu(UserState userState, ReferralProgram tariff) {
-        boolean canChange = true;
+    public void updMenuToManageRefProgramActionsMenu(UserState userState, ReferralProgram refProgram) {
         EditMessageText message = EditMessageText
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
-                .text(getBalanceDescription(tariff))
-                .replyMarkup(getManageTariffActionsMarkup(true, canChange))
+                .text(getBalanceDescription(refProgram))
+                .replyMarkup(getManageRefProgramActionsMarkup(true, !refProgram.getPredefined()))
                 .build();
         tgClient.execute(message);
     }
@@ -111,31 +110,16 @@ public class ReferralProgramsActionsView {
                 .build();
     }
 
-    private String getBalanceDescription(ReferralProgram tariff) {
+    private String getBalanceDescription(ReferralProgram refProgram) {
         return refProgramLabels.actionsPreview(
-                tariff.getLabel(),
-                tariff.getPercentage(),
-                FormattingTools.formatDateToUtc(tariff.getCreatedAt())
+                refProgram.getLabel(),
+                refProgram.getPercentage(),
+                refProgram.getPredefined() ? commonLabels.yes() : commonLabels.no(),
+                FormattingTools.formatDateToUtc(refProgram.getCreatedAt())
         );
     }
 
-    private InlineKeyboardMarkup getManageTariffActionsMarkup(Boolean showBackButton, Boolean canChange) {
-        InlineKeyboardRow inlineKeyboardRow = new InlineKeyboardRow(
-                InlineKeyboardButton
-                        .builder()
-                        .text(commonLabels.toMainMenu())
-                        .callbackData(InlineMenuCallbacks.TO_MAIN_MENU)
-                        .build());
-
-        if (showBackButton) {
-            inlineKeyboardRow.add(
-                    InlineKeyboardButton
-                            .builder()
-                            .text(commonLabels.goBack())
-                            .callbackData(InlineMenuCallbacks.GO_BACK)
-                            .build());
-        }
-
+    private InlineKeyboardMarkup getManageRefProgramActionsMarkup(Boolean showBackButton, Boolean canChange) {
         InlineKeyboardMarkup.InlineKeyboardMarkupBuilder builder = InlineKeyboardMarkup.builder();
         if (canChange) {
             builder.keyboardRow(
@@ -152,13 +136,6 @@ public class ReferralProgramsActionsView {
                                             .text(refProgramLabels.actionsChangePercentage())
                                             .callbackData(InlineMenuCallbacks.MANAGE_REF_PROGRAMS_ACTION_CHANGE_PERCENTAGE)
                                             .build()))
-/*                 .keyboardRow(
-                        new InlineKeyboardRow(
-                                InlineKeyboardButton
-                                        .builder()
-                                        .text("❌ Деактивировать тариф")
-                                        .callbackData(InlineMenuCallbacks.MANAGE_TARIFFS_ACTION_DEACTIVATE)
-                                        .build())) */
                                         ;
         }
 

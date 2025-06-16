@@ -91,14 +91,6 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
                 userState = userState.withManagingGroupId(null);
             }
 
-            List<BalanceReferralProgram> byBalanceId = balanceReferralProgramRepo.findByBalanceId(user.getBalance().getId());
-            if (!byBalanceId.isEmpty()) {
-                BalanceReferralProgram program = byBalanceId.get(0);
-                userState = userState.withBalanceReferalProgramId(program.getId());
-            } else {
-                userState = userState.withManagingGroupId(null);
-            }
-
             String languageCode = user.getLanguageCode();
             userState = userState.withLanguageCode(languageCode);
             TgUserLocaleHolder.setUserLocale(Locale.of(user.getLanguageCode()));

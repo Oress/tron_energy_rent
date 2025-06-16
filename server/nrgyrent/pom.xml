@@ -151,6 +151,13 @@
             <artifactId>h2</artifactId>
         </dependency>
 
+        <!-- For java 17+ -->
+        <dependency>
+            <groupId>com.bucket4j</groupId>
+            <artifactId>bucket4j_jdk17-core</artifactId>
+            <version>8.14.0</version>
+        </dependency>
+
     </dependencies>
 
 

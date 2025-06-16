@@ -3,6 +3,7 @@ package org.ipan.nrgyrent.domain.service;
 import java.util.List;
 
 import org.apache.commons.lang3.NotImplementedException;
+import org.ipan.nrgyrent.LiquibaseParameters;
 import org.ipan.nrgyrent.domain.model.AppUser;
 import org.ipan.nrgyrent.domain.model.Balance;
 import org.ipan.nrgyrent.domain.model.BalanceReferralProgram;
@@ -25,6 +26,8 @@ public class UserService {
     private final UserRepo userRepo;
     private final BalanceService balanceService;
     private final BalanceReferralProgramRepo balanceReferralProgramRepo;
+    private final ReferalProgramService referalProgramService;
+    private final LiquibaseParameters liquibaseParameters;
 
     @Transactional
     public AppUser createUser(CreateUserCommand command) {
@@ -40,6 +43,9 @@ public class UserService {
 
         appUser.setBalance(individualDepositBalance);
         userRepo.save(appUser);
+
+        // create default ref. program
+        referalProgramService.createReferalProgramForUser(appUser.getTelegramId(), liquibaseParameters.getDefaultRefProgramId());
 
         return appUser;
     }

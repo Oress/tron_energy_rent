@@ -76,7 +76,7 @@ public class ReferralProgramsSearchHandler {
             String queryStr = message.getText();
             telegramMessages.deleteMessage(message);
 
-            if (queryStr.length() < 3) {
+            if (queryStr.length() < 2) {
                 logger.info("Query string is too short: {}", queryStr);
                 return;
             }

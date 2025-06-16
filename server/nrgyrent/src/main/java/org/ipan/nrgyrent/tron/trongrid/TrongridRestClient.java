@@ -1,5 +1,6 @@
 package org.ipan.nrgyrent.tron.trongrid;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -14,8 +15,8 @@ import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.util.concurrent.RateLimiter;
 
+import io.github.bucket4j.Bucket;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.HttpUrl;
 import okhttp3.MediaType;
@@ -33,7 +34,7 @@ public class TrongridRestClient {
     private final ObjectMapper objectMapper;
     private final String baseUrl;
     private final String apiKey;
-    private final RateLimiter rateLimiter;
+    private final Bucket bucket;
 
     public TrongridRestClient(
             ObjectMapper objectMapper,
@@ -43,65 +44,74 @@ public class TrongridRestClient {
         this.objectMapper = objectMapper;
         this.baseUrl = baseUrl;
         this.apiKey = apiKey;
-        this.rateLimiter = RateLimiter.create(qps);
+
+        this.bucket = Bucket.builder().addLimit(limit -> limit.capacity(1).refillGreedy(qps, Duration.ofSeconds(1))).build();
     }
 
     public TreeMap<String, Object> createTransaction(String from, String to, long amount) {
         String responseStr = "";
         try {
-            rateLimiter.acquire();
-            TreeMap<String, Object> transactionData = new TreeMap<>();
-            transactionData.put("owner_address", from);
-            transactionData.put("to_address", to);
-            transactionData.put("amount", amount);
-            transactionData.put("visible", true);
+            if (tryObtainToken()) {
+                TreeMap<String, Object> transactionData = new TreeMap<>();
+                transactionData.put("owner_address", from);
+                transactionData.put("to_address", to);
+                transactionData.put("amount", amount);
+                transactionData.put("visible", true);
 
-            String payload = objectMapper.writeValueAsString(transactionData);
-            RequestBody body = RequestBody.create(payload, mediaType);
-            Request request = new Request.Builder()
-                    .url(baseUrl + "/wallet/createtransaction")
-                    .method("POST", body)
-                    .addHeader("TRON-PRO-API-KEY", apiKey)
-                    .addHeader("Content-Type", "application/json")
-                    .build();
-            Response response = client.newCall(request).execute();
+                String payload = objectMapper.writeValueAsString(transactionData);
+                RequestBody body = RequestBody.create(payload, mediaType);
+                Request request = new Request.Builder()
+                        .url(baseUrl + "/wallet/createtransaction")
+                        .method("POST", body)
+                        .addHeader("TRON-PRO-API-KEY", apiKey)
+                        .addHeader("Content-Type", "application/json")
+                        .build();
+                Response response = client.newCall(request).execute();
 
-            responseStr = response.body().string();
-            checkReponseForFrequencyLimit(response, responseStr);
-            TreeMap<String, Object> map = objectMapper.readValue(responseStr,
-                    new TypeReference<TreeMap<String, Object>>() {
-                    });
-            logger.info("Response" + map);
-            return map;
+                responseStr = response.body().string();
+                checkReponseForFrequencyLimit(response, responseStr);
+                TreeMap<String, Object> map = objectMapper.readValue(responseStr,
+                        new TypeReference<TreeMap<String, Object>>() {
+                        });
+                logger.info("Response" + map);
+                return map;
+            } else {
+                logger.error("Could not obtain bucket4j token for createTransaction");
+            }
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+        return new TreeMap<>();
     }
 
     public TreeMap<String, Object> broadcastTransaction(TreeMap<String, Object> transactionData) {
         String responseStr = "";
         try {
-            rateLimiter.acquire();
-            String jsonData = objectMapper.writeValueAsString(transactionData);
-            RequestBody body = RequestBody.create(jsonData, mediaType);
-            Request request = new Request.Builder()
-                    .url(baseUrl + "/wallet/broadcasttransaction")
-                    .method("POST", body)
-                    .addHeader("TRON-PRO-API-KEY", apiKey)
-                    .addHeader("Content-Type", "application/json")
-                    .build();
-            Response response = client.newCall(request).execute();
+            if (tryObtainToken()) {
+                String jsonData = objectMapper.writeValueAsString(transactionData);
+                RequestBody body = RequestBody.create(jsonData, mediaType);
+                Request request = new Request.Builder()
+                        .url(baseUrl + "/wallet/broadcasttransaction")
+                        .method("POST", body)
+                        .addHeader("TRON-PRO-API-KEY", apiKey)
+                        .addHeader("Content-Type", "application/json")
+                        .build();
+                Response response = client.newCall(request).execute();
 
-            responseStr = response.body().string();
-            checkReponseForFrequencyLimit(response, responseStr);
-            TreeMap<String, Object> map = objectMapper.readValue(responseStr,
-                    new TypeReference<TreeMap<String, Object>>() {
-                    });
-            logger.info("broadcastTransaction " + map);
-            return map;
+                responseStr = response.body().string();
+                checkReponseForFrequencyLimit(response, responseStr);
+                TreeMap<String, Object> map = objectMapper.readValue(responseStr,
+                        new TypeReference<TreeMap<String, Object>>() {
+                        });
+                logger.info("broadcastTransaction " + map);
+                return map;
+            } else {
+                logger.error("Could not obtain bucket4j token for broadcastTransaction");
+            }
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+        return new TreeMap<>();
     }
 
     public List<Transaction> getTransactions(String address,
@@ -113,32 +123,34 @@ public class TrongridRestClient {
 
         String responseStr = "";
         try {
-            rateLimiter.acquire();
+            if (tryObtainToken()) {
+                HttpUrl url = HttpUrl.parse(this.baseUrl)
+                    .newBuilder()
+                        .addPathSegments("v1/accounts/%s/transactions".formatted(address))
+                        .addQueryParameter("only_confirmed", onlyConfirmed.toString())
+                        .addQueryParameter("only_to", onlyTo.toString())
+                        // .addQueryParameter("only_from", onlyFrom.toString())
+                        .addQueryParameter("limit", limit.toString())
+                        .build();
 
-            HttpUrl url = HttpUrl.parse(this.baseUrl)
-                .newBuilder()
-                    .addPathSegments("v1/accounts/%s/transactions".formatted(address))
-                    .addQueryParameter("only_confirmed", onlyConfirmed.toString())
-                    .addQueryParameter("only_to", onlyTo.toString())
-                    // .addQueryParameter("only_from", onlyFrom.toString())
-                    .addQueryParameter("limit", limit.toString())
-                    .build();
 
+                Request request = new Request.Builder()
+                        .url(url)
+                        .get()
+                        .addHeader("TRON-PRO-API-KEY", apiKey)
+                        .addHeader("Content-Type", "application/json")
+                        .build();
+                Response response = client.newCall(request).execute();
 
-            Request request = new Request.Builder()
-                    .url(url)
-                    .get()
-                    .addHeader("TRON-PRO-API-KEY", apiKey)
-                    .addHeader("Content-Type", "application/json")
-                    .build();
-            Response response = client.newCall(request).execute();
-
-            responseStr = response.body().string();
-            checkReponseForFrequencyLimit(response, responseStr);
-            V1AccountsAddressTransactionsGet200Response responseTyped = objectMapper.readValue(responseStr, V1AccountsAddressTransactionsGet200Response.class);
-            result = responseTyped.getData() == null || responseTyped.getData().isEmpty()
-                ? Collections.emptyList()
-                : responseTyped.getData();
+                responseStr = response.body().string();
+                checkReponseForFrequencyLimit(response, responseStr);
+                V1AccountsAddressTransactionsGet200Response responseTyped = objectMapper.readValue(responseStr, V1AccountsAddressTransactionsGet200Response.class);
+                result = responseTyped.getData() == null || responseTyped.getData().isEmpty()
+                    ? Collections.emptyList()
+                    : responseTyped.getData();
+            } else {
+                logger.error("Could not obtain bucket4j token for getTransactions");
+            }
         } catch (Exception e) {
             logger.error("Could not getTransactions response: {}", responseStr, e);
             throw new RuntimeException(e);
@@ -152,7 +164,8 @@ public class TrongridRestClient {
 
         String responseStr = "";
         try {
-            rateLimiter.acquire();
+            if (tryObtainToken()) {
+
 
             HttpUrl url = HttpUrl.parse(this.baseUrl)
                 .newBuilder()
@@ -172,6 +185,10 @@ public class TrongridRestClient {
             result = responseTyped.getData() == null || responseTyped.getData().isEmpty()
                 ? null
                 : responseTyped.getData().get(0);
+            } else {
+                logger.error("Could not obtain bucket4j token for getAccountInfo");
+            }
+
         } catch (Exception e) {
             logger.error("Could not getAccountInfo response: {}", responseStr, e);
             throw new RuntimeException(e);
@@ -184,5 +201,9 @@ public class TrongridRestClient {
         if (response.code() != 200) {
             logger.error("Response is not 200: {}, boyd {}", response.code(), body);
         }
+    }
+
+    private boolean tryObtainToken() throws InterruptedException {
+        return bucket.asBlocking().tryConsume(1, Duration.ofSeconds(40));
     }
 }

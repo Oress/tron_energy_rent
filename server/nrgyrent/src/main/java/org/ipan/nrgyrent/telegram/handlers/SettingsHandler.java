@@ -4,8 +4,12 @@ import java.util.List;
 import java.util.Locale;
 
 import org.ipan.nrgyrent.domain.model.AppUser;
+import org.ipan.nrgyrent.domain.model.BalanceReferralProgram;
 import org.ipan.nrgyrent.domain.model.projections.TransactionHistoryDto;
+import org.ipan.nrgyrent.domain.model.repository.AppUserRepo;
+import org.ipan.nrgyrent.domain.model.repository.BalanceReferralProgramRepo;
 import org.ipan.nrgyrent.domain.model.repository.OrderRepo;
+import org.ipan.nrgyrent.domain.model.repository.ReferralCommissionRepo;
 import org.ipan.nrgyrent.domain.service.UserService;
 import org.ipan.nrgyrent.telegram.InlineMenuCallbacks;
 import org.ipan.nrgyrent.telegram.States;
@@ -29,6 +33,9 @@ public class SettingsHandler {
     private final TelegramMessages telegramMessages;
     private final UserService userService;
     private final OrderRepo orderRepo;
+    private final BalanceReferralProgramRepo balanceReferralProgramRepo;
+    private final ReferralCommissionRepo referralCommissionRepo;
+    private final AppUserRepo userRepo;
 
     private final HistoryViews historyViews;
 
@@ -36,6 +43,7 @@ public class SettingsHandler {
         @MatchState(state = States.MAIN_MENU, callbackData = InlineMenuCallbacks.SETTINGS),
         @MatchState(state = States.HISTORY, callbackData = InlineMenuCallbacks.GO_BACK),
         @MatchState(state = States.SETTINGS_CHANGE_LANGUAGE, callbackData = InlineMenuCallbacks.GO_BACK),
+        @MatchState(state = States.REFERALS, callbackData = InlineMenuCallbacks.GO_BACK),
     })
     public void settingsMenu(UserState userState, Update update) {
         telegramMessages.updateMsgToSettings(userState);
@@ -69,5 +77,22 @@ public class SettingsHandler {
             : orderRepo.findAllTransactions(userState.getTelegramId(), 10);
         historyViews.updMenuToHistoryMenu(page.reversed(), update.getCallbackQuery());
         telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.HISTORY));
+    }
+
+    @MatchState(state = States.SETTINGS, callbackData = InlineMenuCallbacks.MANAGE_REFERALS)
+    public void showReferals(UserState userState, Update update) {
+        AppUser user = userService.getById(userState.getTelegramId());
+
+        List<BalanceReferralProgram> byBalanceId = balanceReferralProgramRepo.findByBalanceId(user.getBalance().getId());
+
+        if (!byBalanceId.isEmpty()) {
+            BalanceReferralProgram referralProgram = byBalanceId.get(0);
+
+            Long pendingCommissionSun = referralCommissionRepo.findSumOfAllPendingByBalanceId(referralProgram.getId());
+            List<AppUser> referals = userRepo.findAllByBalRefProgId(referralProgram.getId());
+
+            telegramMessages.updMenuToReferalSummary(userState, user, referralProgram, referals, pendingCommissionSun == null ? 0 : pendingCommissionSun);
+            telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.REFERALS));
+        }
     }
 }

@@ -23,6 +23,9 @@ public class RefProgramLabels {
         return getLocalizedMessage("user.ref_program.description", label, percentage, link);
     }
 
+    public String refProgramDescriptionWoDescription(String percentage, String link) {
+        return getLocalizedMessage("user.ref_program.descriptionwolabel", percentage, link);
+    }
 
     public String manage() {
         return getLocalizedMessage("admin.referal.manage");
@@ -52,8 +55,8 @@ public class RefProgramLabels {
         return getLocalizedMessage("admin.referal.actions.change_percentage");
     }
 
-    public String actionsPreview(String label, Integer percentage, String formatDateToUtc) {
-        return getLocalizedMessage("admin.referal.preview", label, percentage, formatDateToUtc);
+    public String actionsPreview(String label, Integer percentage, String isPredefined, String formatDateToUtc) {
+        return getLocalizedMessage("admin.referal.preview", label, percentage, isPredefined, formatDateToUtc);
     }
 
     public @NonNull String actionsRenamePromptLabel() {

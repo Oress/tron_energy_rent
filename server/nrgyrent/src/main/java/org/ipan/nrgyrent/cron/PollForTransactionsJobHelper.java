@@ -133,7 +133,6 @@ public class PollForTransactionsJobHelper {
                         logger.error("Unknown balance type for balance ID: {}", balance.getId());
                     }
                 }
-                Thread.sleep(500);
             } catch (Exception e) {
                 logger.error("Error processing balance: id: {} wallet: {}", balance.getId(), depositAddress, e);
                 continue; // Skip this balance if there's an error

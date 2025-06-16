@@ -30,6 +30,9 @@ public class ReferralProgram {
     @Column
     private Integer percentage;
 
+    @Column(name = "is_predefined")
+    private Boolean predefined = Boolean.FALSE;
+
     @CreationTimestamp
     @Column(name = "created_at")
     private Instant createdAt;

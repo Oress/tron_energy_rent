@@ -98,6 +98,12 @@ public class FormattingTools {
                 formatStartLink(refProgram.getLink()));
     }
 
+    public String formatRefProgmamWoDescription(BalanceReferralProgram refProgram) {
+        return refProgramLabels.refProgramDescriptionWoDescription(
+                refProgram.getReferralProgram().getPercentage().toString(),
+                formatStartLink(refProgram.getLink()));
+    }
+
     public static String formatBalanceTrx(BigDecimal balanceTrx) {
         return df.format(balanceTrx);
     }

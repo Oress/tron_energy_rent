@@ -11,6 +11,10 @@ spring:
     change-log: classpath:db/changelog/changelog-root.xml
     drop-first: false
     parameters:
+      defaultRefProgramId: 0
+      defaultRefProgramLabel: '5%'
+      defaultRefProgramPercentage: 5
+
       defaultTariffId: 1
       defaultTariffLabel: Стандартный
       txType1Amount: 5500000
@@ -63,7 +67,7 @@ app:
     key: ${APP_ITRX_API_KEY}
     secret: ${APP_ITRX_API_SECRET}
   trongrid:
-    qps: 10
+    qps: 15
     base-url: ${APP_TRONGRID_URL:https://nile.trongrid.io} # For mainnet, use https://api.trongrid.io
     api-key: ${APP_TRONGRID_API_KEY}
   telegram:

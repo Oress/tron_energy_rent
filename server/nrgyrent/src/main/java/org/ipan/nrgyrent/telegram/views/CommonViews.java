@@ -44,4 +44,22 @@ public class CommonViews {
                                         .build()))
                 .build();
     }
+
+    public InlineKeyboardMarkup getYesNoMarkup() {
+        return InlineKeyboardMarkup
+                .builder()
+                .keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text(commonLabels.no())
+                                        .callbackData(InlineMenuCallbacks.CONFIRM_NO)
+                                        .build(),
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text(commonLabels.yes())
+                                        .callbackData(InlineMenuCallbacks.CONFIRM_YES)
+                                        .build()))
+                .build();
+    }
 }
