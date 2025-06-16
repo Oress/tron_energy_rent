@@ -807,8 +807,8 @@
         <sql>
             INSERT INTO nrg_balance_referral_programs (id, link, balance_id, ref_prog_id, created_at)
             SELECT nextval('nrg_balance_referral_programs_seq'), u.telegram_id::text, u.balance_id, ${defaultRefProgramId}, now()
-            FROM nrg_users u
-            WHERE u.bal_ref_prog_id is NULL;
+            FROM nrg_users u left join nrg_balance_referral_programs brp on u.balance_id = brp.balance_id
+            WHERE brp.id is NULL and u.group_balance_id is NULL;
         </sql>
     </changeSet>
 
