@@ -38,7 +38,7 @@ public class TrongridRestClient {
 
     public TrongridRestClient(
             ObjectMapper objectMapper,
-            @Value("${app.trongrid.qps:10}") Integer qps,
+            @Value("${app.trongrid.qps:14}") Integer qps,
             @Value("${app.trongrid.base-url:https://nile.trongrid.io}") String baseUrl,
             @Value("${app.trongrid.api-key}") String apiKey) {
         this.objectMapper = objectMapper;
