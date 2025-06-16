@@ -88,6 +88,7 @@ public class UserService {
             }
             appUser.setDisabled(true);
             balanceService.deactivateUserBalance(appUser.getBalance().getId());
+            referalProgramService.removeRefProgram(appUser.getTelegramId());
         }
     }
 

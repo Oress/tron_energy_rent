@@ -132,4 +132,25 @@ public class ReferalProgramService {
         logger.info("ReferralProgram percentage changed successfully: id: {} label: {}", referralProgram.getId(), referralProgram.getLabel());
         return referralProgram;
     }
+
+    @Transactional
+    public void removeRefProgram(Long userId) {
+        AppUser targetUser = userRepo.findById(userId).orElse(null);
+        if (targetUser == null) {
+            logger.error("User with id {} not found", userId);
+            throw new IllegalArgumentException("User with id {} not found");
+        }
+
+        List<BalanceReferralProgram> exisitingPrograms = balanceReferralProgramRepo.findByBalanceId(targetUser.getBalance().getId());
+        BalanceReferralProgram brp;
+        if (!exisitingPrograms.isEmpty()) {
+            brp = exisitingPrograms.get(0);
+
+            balanceReferralProgramRepo.delete(brp);
+
+            logger.warn("DELETNG REF. PROGRAM FOR userId {}", userId);
+        } else {
+            logger.warn("No referal program were found for DELETION userId {}", userId);
+        }
+    }
 }

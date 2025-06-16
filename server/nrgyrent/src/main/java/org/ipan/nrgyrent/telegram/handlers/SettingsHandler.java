@@ -1,5 +1,6 @@
 package org.ipan.nrgyrent.telegram.handlers;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
@@ -97,15 +98,17 @@ public class SettingsHandler {
         AppUser user = userService.getById(userState.getTelegramId());
 
         List<BalanceReferralProgram> byBalanceId = balanceReferralProgramRepo.findByBalanceId(user.getBalance().getId());
+        BalanceReferralProgram referralProgram = byBalanceId.isEmpty() ? null : byBalanceId.get(0);
 
-        if (!byBalanceId.isEmpty()) {
-            BalanceReferralProgram referralProgram = byBalanceId.get(0);
+        Long pendingCommissionSun = 0L;
+        List<AppUser> referals = Collections.emptyList();
 
-            Long pendingCommissionSun = referralCommissionRepo.findSumOfAllPendingByBalanceId(referralProgram.getId());
-            List<AppUser> referals = userRepo.findAllByBalRefProgId(referralProgram.getId());
-
-            telegramMessages.updMenuToReferalSummary(userState, user, referralProgram, referals, pendingCommissionSun == null ? 0 : pendingCommissionSun);
-            telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.REFERALS));
+        // for groups
+        if (referralProgram != null) {
+            pendingCommissionSun = referralProgram == null ? 0 : referralCommissionRepo.findSumOfAllPendingByBalanceRefProgId(referralProgram.getId()).orElse(0L);
+            referals = userRepo.findAllByBalRefProgId(referralProgram.getId());
         }
+        telegramMessages.updMenuToReferalSummary(userState, user, referralProgram, referals, pendingCommissionSun == null ? 0 : pendingCommissionSun);
+        telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.REFERALS));
     }
 }

@@ -70,7 +70,7 @@ public class TelegramMessages {
                 .messageId(userState.getMenuMessageId())
                 .text(commonLabels.referalsSummary(
                         FormattingTools.formatBalance(pendingCommissionSun),
-                        formattingTools.formatRefProgmamWoDescription(refProgram),
+                        refProgram == null ? commonLabels.refProgramNotSet() : formattingTools.formatRefProgmamWoDescription(refProgram),
                         referalsStr))
                 .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();

@@ -820,4 +820,25 @@
         </addColumn>
     </changeSet>
 
+    <changeSet id="drop fk_nrg_referral_commissions_bal_ref_prog_id" author="oress">
+        <dropForeignKeyConstraint
+            baseTableName="nrg_referral_commissions"
+            constraintName="fk_nrg_referral_commissions_bal_ref_prog_id"/>
+    </changeSet>
+
+    <changeSet id="recreate fk_nrg_referral_commissions_bal_ref_prog_id with onDelete null" author="oress">
+        <addForeignKeyConstraint constraintName="fk_nrg_referral_commissions_bal_ref_prog_id"
+            baseTableName="nrg_referral_commissions"
+            baseColumnNames="bal_ref_prog_id"
+            referencedTableName="nrg_balance_referral_programs"
+            referencedColumnNames="id" 
+            onDelete="SET NULL"/>
+    </changeSet>
+
+    <changeSet id="drop null constraint for nrg_referral_commissions bal_ref_prog_id" author="yourname">
+        <dropNotNullConstraint tableName="nrg_referral_commissions"
+            columnName="bal_ref_prog_id"
+            columnDataType="bigint"/>
+    </changeSet>
+
 </databaseChangeLog>

@@ -206,4 +206,8 @@ public class CommonLabels {
     public String noReferrals() {
         return getLocalizedMessage("referal.no_referrals");
     }
+
+    public String refProgramNotSet() {
+        return getLocalizedMessage("referal.not_set");
+    }
 }

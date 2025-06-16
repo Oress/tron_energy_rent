@@ -3,6 +3,7 @@ package org.ipan.nrgyrent.domain.service;
 import java.util.List;
 
 import org.apache.commons.lang3.NotImplementedException;
+import org.ipan.nrgyrent.LiquibaseParameters;
 import org.ipan.nrgyrent.domain.exception.InvalidAdjustedBalanceException;
 import org.ipan.nrgyrent.domain.exception.NotEnoughBalanceException;
 import org.ipan.nrgyrent.domain.exception.UserAlreadyHasGroupBalanceException;
@@ -41,6 +42,8 @@ public class BalanceService {
     private final BalanceRepo balanceRepo;
     private final ManualBalanceAdjustmentActionRepo manualBalanceAdjustmentActionRepo;
     private final ManagedWalletService managedWalletService;
+    private final ReferalProgramService referalProgramService;
+    private final LiquibaseParameters liquibaseParameters;
 
     @Transactional
     public Balance removeUsersFromTheGroupBalance(Long balanceId, List<TgUserId> userInfos) {
@@ -72,6 +75,7 @@ public class BalanceService {
                 balance.setManager(null);
             }
             userToRemove.setGroupBalance(null);
+            referalProgramService.createReferalProgramForUser(userToRemove.getTelegramId(), liquibaseParameters.getDefaultRefProgramId());
         }
 
         return balance;
@@ -107,6 +111,7 @@ public class BalanceService {
             }
 
             userToAdd.setGroupBalance(balance);
+            referalProgramService.removeRefProgram(userToAdd.getTelegramId());
         }
         return balance;
     }
@@ -197,6 +202,7 @@ public class BalanceService {
         balanceRepo.save(balance);
 
         manager.setGroupBalance(balance);
+        referalProgramService.removeRefProgram(managerId);
 
         return balance;
     }
@@ -244,6 +250,7 @@ public class BalanceService {
         balance.setManager(null);
         userRepo.findAllByGroupBalanceId(balanceId).forEach(user -> {
             user.setGroupBalance(null);
+            referalProgramService.createReferalProgramForUser(user.getTelegramId(), liquibaseParameters.getDefaultRefProgramId());
         });
     }
 
@@ -273,29 +280,30 @@ public class BalanceService {
 
     @Transactional
     public void changeManager(Long selectedBalanceId, TgUserId tgUserId) {
-        Long userId = tgUserId.getId();
+        Long newManagerId = tgUserId.getId();
         Balance selectedBalance = balanceRepo.findById(selectedBalanceId).orElse(null);
         if (selectedBalance == null) {
             logger.error("Balance not found for changing manager: {}", selectedBalanceId);
             throw new IllegalArgumentException("Balance not found for changing manager");
         }
 
-        AppUser newManager = userRepo.findById(userId).orElse(null);
+        AppUser newManager = userRepo.findById(newManagerId).orElse(null);
         if (newManager == null) {
-            logger.error("User not found for changing manager: {}", userId);
+            logger.error("User not found for changing manager: {}", newManagerId);
             throw new UserNotRegisteredException(List.of(tgUserId), "User not found for changing manager");
         }
 
         if (newManager.getDisabled()) {
-            logger.error("User cannot be assigned as manager because they are DISABLED, user: {}", userId);
+            logger.error("User cannot be assigned as manager because they are DISABLED, user: {}", newManagerId);
             throw new UserIsDisabledException("member in another group {}");
         }
 
         if (newManager.isInGroup() && !selectedBalanceId.equals(newManager.getGroupBalance().getId())) {
-            logger.error("User cannot be assigned as manager because they are member in another group, user: {}, group {}", userId, newManager.getGroupBalance().getIdAndLabel());
+            logger.error("User cannot be assigned as manager because they are member in another group, user: {}, group {}", newManagerId, newManager.getGroupBalance().getIdAndLabel());
             throw new UserAlreadyHasGroupBalanceException("member in another group {}");
         }
 
+        referalProgramService.removeRefProgram(newManagerId);
         selectedBalance.setManager(newManager);
         newManager.setGroupBalance(selectedBalance);
     }
