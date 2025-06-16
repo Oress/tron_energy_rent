@@ -812,4 +812,12 @@
         </sql>
     </changeSet>
 
+    <changeSet id="extend nrg_users with show_wallets_in_menu" author="oress">
+        <addColumn tableName="nrg_users">
+            <column name="show_wallets_in_menu" type="boolean" defaultValue="false">
+                <constraints nullable="false" />
+            </column>
+        </addColumn>
+    </changeSet>
+
 </databaseChangeLog>

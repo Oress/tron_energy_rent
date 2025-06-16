@@ -18,6 +18,8 @@ public class InlineMenuCallbacks {
     public static final String MANAGE_GROUP = "manage_group";
     public static final String MANAGE_REFERALS = "manage_referals";
     public static final String WITHDRAW_TRX = "withdraw_trx";
+    public static final String OPT_SHOW_WALLET_DISABLE = "opt_show_wallet_disable";
+    public static final String OPT_SHOW_WALLET_ENABLE = "opt_show_wallet_enable";
 
     public static final String ADMIN_MENU = "admin_menu";
 
@@ -82,4 +84,23 @@ public class InlineMenuCallbacks {
 
     public static final String CONFIRM_YES = "confirm_yes";
     public static final String CONFIRM_NO = "confirm_no";
+
+
+    private static final String QUICK_TRANSACTION = "/quick_tx/";
+    public static String getQuickTxCallback(Long userWalletId) {
+        return QUICK_TRANSACTION + userWalletId;
+    }
+
+    public static boolean isQuickTxCallback(String data) {
+        return data.startsWith(QUICK_TRANSACTION);
+    }
+
+    public static Long getWalletIdForQuickTx(String data) {
+        Long walletId = null;
+        if (data.startsWith(QUICK_TRANSACTION)) {
+            String walletIdStr = data.split(QUICK_TRANSACTION)[1];
+            walletId = Long.parseLong(walletIdStr);
+        }
+        return walletId;
+    }
 }

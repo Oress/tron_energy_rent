@@ -1,5 +1,6 @@
 package org.ipan.nrgyrent.telegram.handlers;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -8,6 +9,7 @@ import org.ipan.nrgyrent.domain.model.AppUser;
 import org.ipan.nrgyrent.domain.model.Order;
 import org.ipan.nrgyrent.domain.model.Tariff;
 import org.ipan.nrgyrent.domain.model.UserWallet;
+import org.ipan.nrgyrent.domain.model.repository.UserWalletRepo;
 import org.ipan.nrgyrent.domain.service.OrderService;
 import org.ipan.nrgyrent.domain.service.UserService;
 import org.ipan.nrgyrent.domain.service.UserWalletService;
@@ -50,8 +52,46 @@ public class TransactionsHandler {
     private final UserService userService;
     private final OrderService orderService;
     private final UserWalletService userWalletService;
+    private final UserWalletRepo userWalletRepo;
     private final TelegramMessages telegramMessages;
     private final FormattingTools formattingTools;
+
+    @MatchState(state = States.MAIN_MENU, updateTypes = UpdateType.CALLBACK_QUERY)
+    public void startQuickTransaction(UserState userState, Update update) {
+        CallbackQuery callbackQuery = update.getCallbackQuery();
+        String data = callbackQuery.getData();
+        Long walletIdForQuickTx = InlineMenuCallbacks.getWalletIdForQuickTx(data);
+
+        if (walletIdForQuickTx != null) {
+            AppUser byId = userService.getById(userState.getTelegramId());
+            Tariff tariff = byId.getTariffToUse();
+
+            if (tariff == null) {
+                logger.error("Quick TX. No tariff found during transaction for user: {}", userState.getTelegramId());
+                transactionsViews.somethingWentWrong(userState);
+                telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.TRANSACTION_ERROR));
+                return;
+            }
+            
+            UserWallet userWallet = userWalletRepo.findById(walletIdForQuickTx).orElse(null);
+            if (userWallet == null) {
+                logger.error("Quick TX. Could not find wallet {} for user: {}", walletIdForQuickTx, userState.getTelegramId());
+                transactionsViews.somethingWentWrong(userState);
+                telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.TRANSACTION_ERROR));
+                return;
+            }
+
+            if (!userState.getTelegramId().equals(userWallet.getUser().getTelegramId())) {
+                logger.error("Quick TX. Wallet {} does not belong to this user {}", walletIdForQuickTx, userState.getTelegramId());
+                transactionsViews.somethingWentWrong(userState);
+                telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.TRANSACTION_ERROR));
+                return;
+            }
+
+            tryMakeTransaction(userState, AppConstants.ENERGY_65K, AppConstants.DURATION_1H, userWallet.getAddress(), 1, tariff.getTransactionType1AmountSun(), tariff.getId());
+        }
+    }
+
 
     @MatchState(state = States.MAIN_MENU, callbackData = InlineMenuCallbacks.CUSTOM_TRANSACTION_AMOUNT)
     public void startCustomTransactionAmount65K_promptAmount(UserState userState, Update update) {
@@ -145,7 +185,7 @@ public class TransactionsHandler {
         if (txAmount == null) {
             txAmount = 1;
         }
-        handlePromptWallet(userState, update, energyAmountPerTx, transactionParams.getNumberOfTransactions(), pricePerTx, tariff.getId());
+        handlePromptWallet(userState, update, energyAmountPerTx, txAmount, pricePerTx, tariff.getId());
     }
 
     private void handlePromptWallet(UserState userState, Update update, Integer energyAmountPerTx, Integer txAmount, Long sunAmountPerTx, Long tariffId) {
@@ -190,7 +230,12 @@ public class TransactionsHandler {
                 AppUser user = userService.getById(userState.getTelegramId());
                 transactionsViews.updMenuToTransactionPending(userState);
 
-                Message newMenuMsg = telegramMessages.sendUserMainMenuBasedOnRole(userState, userState.getChatId(), user);
+                List<UserWallet> userWallets = Collections.emptyList();
+                if (user.getShowWalletsMenu()) {
+                    userWallets = userWalletService.getWallets(user.getTelegramId());
+                }
+                
+                Message newMenuMsg = telegramMessages.sendUserMainMenuBasedOnRole(userState, userState.getChatId(), user, userWallets);
                 telegramState.updateUserState(userState.getTelegramId(), userState
                         .withState(States.MAIN_MENU)
                         .withChatId(newMenuMsg.getChatId())

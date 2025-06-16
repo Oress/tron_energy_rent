@@ -30,6 +30,13 @@ public class UserService {
     private final LiquibaseParameters liquibaseParameters;
 
     @Transactional
+    public AppUser setShowWalletOption(Long userId, Boolean value) {
+        AppUser appUser = userRepo.findById(userId).orElse(null);
+        appUser.setShowWalletsMenu(value);
+        return appUser;
+    }
+
+    @Transactional
     public AppUser createUser(CreateUserCommand command) {
         AppUser appUser = userRepo.findById(command.getTelegramId()).orElse(null);
         if (appUser != null) {

@@ -48,6 +48,9 @@ public class AppUser {
     @Enumerated(EnumType.STRING)
     private UserRole role = UserRole.USER;
 
+    @Column(name = "show_wallets_in_menu")
+    private Boolean showWalletsMenu = Boolean.FALSE;
+
     private Boolean disabled = Boolean.FALSE;
 
     @Column(name = "language_code")

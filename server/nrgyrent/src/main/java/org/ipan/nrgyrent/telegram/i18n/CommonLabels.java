@@ -143,6 +143,17 @@ public class CommonLabels {
         return getLocalizedMessage("settings.change_language");
     }
 
+    public String settingsDescription() {
+        return getLocalizedMessage("settings.description");
+    }
+
+    public String settingsShowWalletsEnabled() {
+        return getLocalizedMessage("settings.show_wallets_in_menu.enabled");
+    }
+
+    public String settingsShowWalletsDisabled() {
+        return getLocalizedMessage("settings.show_wallets_in_menu.disabled");
+    }
 
     public String somethingWentWrong() {
         return getLocalizedMessage("common.something_went_wrong");

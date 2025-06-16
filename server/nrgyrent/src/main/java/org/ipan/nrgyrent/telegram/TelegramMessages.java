@@ -9,6 +9,7 @@ import org.ipan.nrgyrent.domain.model.BalanceReferralProgram;
 import org.ipan.nrgyrent.domain.model.Order;
 import org.ipan.nrgyrent.domain.model.Tariff;
 import org.ipan.nrgyrent.domain.model.UserRole;
+import org.ipan.nrgyrent.domain.model.UserWallet;
 import org.ipan.nrgyrent.telegram.i18n.CommonLabels;
 import org.ipan.nrgyrent.telegram.i18n.TransactionLabels;
 import org.ipan.nrgyrent.telegram.state.UserState;
@@ -81,13 +82,14 @@ public class TelegramMessages {
     }
 
     @SneakyThrows
-    public void updateMsgToSettings(UserState userState) {
+    public void updateMsgToSettings(UserState userState, AppUser user) {
         EditMessageText message = EditMessageText
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
-                .text(commonLabels.menuSettings())
-                .replyMarkup(settingsMenuMarkup())
+                .text(commonLabels.settingsDescription())
+                .replyMarkup(settingsMenuMarkup(user.getShowWalletsMenu()))
+                .parseMode("MARKDOWN")
                 .build();
         try {
             tgClient.execute(message);
@@ -261,19 +263,19 @@ public class TelegramMessages {
     }
 
     @SneakyThrows
-    public Message sendUserMainMenuBasedOnRole(UserState userState, Long chatId, AppUser user) {
+    public Message sendUserMainMenuBasedOnRole(UserState userState, Long chatId, AppUser user, List<UserWallet> wallets) {
         UserRole role = user != null ? user.getRole() : UserRole.USER;
 
         Message newMenuMsg = switch (role) {
-            case ADMIN -> sendAdminMainMenu(userState, chatId, user);
-            default -> sendMainMenu(userState, chatId, user);
+            case ADMIN -> sendAdminMainMenu(userState, chatId, user, wallets);
+            default -> sendMainMenu(userState, chatId, user, wallets);
         };
         return newMenuMsg;
     }
 
     @Retryable
     @SneakyThrows
-    public Message sendMainMenu(UserState userState, Long chatId, AppUser user) {
+    public Message sendMainMenu(UserState userState, Long chatId, AppUser user, List<UserWallet> wallets) {
         Tariff tariff = user.getTariffToUse();
         boolean showWithdrawBtn = !user.isInGroup() || user.isGroupManager();
 
@@ -281,7 +283,7 @@ public class TelegramMessages {
                 .builder()
                 .chatId(chatId)
                 .text(getMainMenuMessage(user))
-                .replyMarkup(getMainMenuReplyMarkup(userState.isManager(), false, tariff, showWithdrawBtn))
+                .replyMarkup(getMainMenuReplyMarkup(userState.isManager(), false, tariff, showWithdrawBtn, wallets))
                 .linkPreviewOptions(LinkPreviewOptions.builder().isDisabled(true).build())
                 .parseMode("MARKDOWN")
                 .build();
@@ -290,7 +292,7 @@ public class TelegramMessages {
 
     @Retryable
     @SneakyThrows
-    public Message sendAdminMainMenu(UserState userState, Long chatId, AppUser user) {
+    public Message sendAdminMainMenu(UserState userState, Long chatId, AppUser user, List<UserWallet> wallets) {
         Tariff tariff = user.getTariffToUse();
         boolean showWithdrawBtn = !user.isInGroup() || user.isGroupManager();
 
@@ -299,7 +301,7 @@ public class TelegramMessages {
                 .chatId(chatId)
                 .linkPreviewOptions(LinkPreviewOptions.builder().isDisabled(true).build())
                 .text(getMainMenuMessage(user))
-                .replyMarkup(getMainMenuReplyMarkup(userState.isManager(), true, tariff, showWithdrawBtn))
+                .replyMarkup(getMainMenuReplyMarkup(userState.isManager(), true, tariff, showWithdrawBtn, wallets))
                 .parseMode("MARKDOWN")
                 .build();
         return tgClient.execute(message);
@@ -327,18 +329,18 @@ public class TelegramMessages {
     }
 
     @SneakyThrows
-    public void updateUserMainMenuBasedOnRole(UserState userState, AppUser user) {
+    public void updateUserMainMenuBasedOnRole(UserState userState, AppUser user, List<UserWallet> wallets) {
         UserRole role = user != null ? user.getRole() : UserRole.USER;
 
         switch (role) {
-            case ADMIN -> updateMsgToAdminMainMenu(userState, user);
-            default -> updateMsgToMainMenu(userState, user);
+            case ADMIN -> updateMsgToAdminMainMenu(userState, user, wallets);
+            default -> updateMsgToMainMenu(userState, user, wallets);
         }
         ;
     }
 
     @SneakyThrows
-    public void updateMsgToMainMenu(UserState userState, AppUser user) {
+    public void updateMsgToMainMenu(UserState userState, AppUser user, List<UserWallet> wallets) {
         Tariff tariff = user.getTariffToUse();
         boolean showWithdrawBtn = !user.isInGroup() || user.isGroupManager();
 
@@ -349,13 +351,13 @@ public class TelegramMessages {
                 .text(getMainMenuMessage(user))
                 .linkPreviewOptions(LinkPreviewOptions.builder().isDisabled(true).build())
                 .parseMode("MARKDOWN")
-                .replyMarkup(getMainMenuReplyMarkup(userState.isManager(), false, tariff, showWithdrawBtn))
+                .replyMarkup(getMainMenuReplyMarkup(userState.isManager(), false, tariff, showWithdrawBtn, wallets))
                 .build();
         tgClient.execute(message);
     }
 
     @SneakyThrows
-    public void updateMsgToAdminMainMenu(UserState userState, AppUser user) {
+    public void updateMsgToAdminMainMenu(UserState userState, AppUser user, List<UserWallet> userWallets) {
         Tariff tariff = user.getTariffToUse();
         boolean showWithdrawBtn = !user.isInGroup() || user.isGroupManager();
 
@@ -366,7 +368,7 @@ public class TelegramMessages {
                 .text(getMainMenuMessage(user))
                 .parseMode("MARKDOWN")
                 .linkPreviewOptions(LinkPreviewOptions.builder().isDisabled(true).build())
-                .replyMarkup(getMainMenuReplyMarkup(userState.isManager(), true, tariff, showWithdrawBtn))
+                .replyMarkup(getMainMenuReplyMarkup(userState.isManager(), true, tariff, showWithdrawBtn, userWallets))
                 .build();
         tgClient.execute(message);
     }
@@ -435,7 +437,7 @@ public class TelegramMessages {
                 .build();
     }
 
-    private InlineKeyboardMarkup settingsMenuMarkup() {
+    private InlineKeyboardMarkup settingsMenuMarkup(Boolean showWalletsInMenuEnabled) {
         var builder = InlineKeyboardMarkup
                 .builder()
                 .keyboardRow(
@@ -458,8 +460,28 @@ public class TelegramMessages {
                                         .builder()
                                         .text(commonLabels.settingsChangeLanguage())
                                         .callbackData(InlineMenuCallbacks.CHANGE_LANGUAGE)
-                                        .build()))
-                .keyboardRow(
+                                        .build()));
+
+
+                if (showWalletsInMenuEnabled) {
+                    builder.keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text(commonLabels.settingsShowWalletsEnabled())
+                                        .callbackData(InlineMenuCallbacks.OPT_SHOW_WALLET_DISABLE)
+                                        .build()));
+                } else {
+                    builder.keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text(commonLabels.settingsShowWalletsDisabled())
+                                        .callbackData(InlineMenuCallbacks.OPT_SHOW_WALLET_ENABLE)
+                                        .build()));
+                }
+                        
+                builder.keyboardRow(
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
@@ -470,7 +492,7 @@ public class TelegramMessages {
     }
 
     private InlineKeyboardMarkup getMainMenuReplyMarkup(Boolean isManager, Boolean isAdmin, Tariff tariff,
-            boolean showWithdrawBtn) {
+            boolean showWithdrawBtn, List<UserWallet> wallets) {
         var builder = InlineKeyboardMarkup
                 .builder()
                 .keyboardRow(
@@ -554,6 +576,19 @@ public class TelegramMessages {
                                     .text(commonLabels.getMenuAdminMenu())
                                     .callbackData(InlineMenuCallbacks.ADMIN_MENU)
                                     .build()));
+        }
+
+        if (!wallets.isEmpty()) {
+            for (UserWallet wallet : wallets) {
+                builder.keyboardRow(
+                    new InlineKeyboardRow(
+                            InlineKeyboardButton
+                                    .builder()
+                                    .text(WalletTools.formatTronAddressAndLabel(wallet.getAddress(), wallet.getLabel()))
+                                    .callbackData(InlineMenuCallbacks.getQuickTxCallback(wallet.getId()))
+                                    .build()));
+            }
+
         }
         return builder.build();
     }

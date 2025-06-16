@@ -1,9 +1,13 @@
 package org.ipan.nrgyrent.telegram.handlers;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Locale;
 
 import org.ipan.nrgyrent.domain.model.AppUser;
+import org.ipan.nrgyrent.domain.model.UserWallet;
 import org.ipan.nrgyrent.domain.service.UserService;
+import org.ipan.nrgyrent.domain.service.UserWalletService;
 import org.ipan.nrgyrent.telegram.InlineMenuCallbacks;
 import org.ipan.nrgyrent.telegram.States;
 import org.ipan.nrgyrent.telegram.TelegramMessages;
@@ -24,6 +28,7 @@ public class MainMenuHandler {
     private final TelegramState telegramState;
     private final TelegramMessages telegramMessages;
     private final UserService userService;
+    private final UserWalletService userWalletService;
 
     private final DepositViews depositViews;
 
@@ -36,7 +41,13 @@ public class MainMenuHandler {
             userService.setLanguage(userState.getTelegramId(), data);
 
             TgUserLocaleHolder.setUserLocale(Locale.of(data));
-            telegramMessages.updateUserMainMenuBasedOnRole(userState, user);
+
+            List<UserWallet> userWallets = Collections.emptyList();
+            if (user.getShowWalletsMenu()) {
+                userWallets = userWalletService.getWallets(user.getTelegramId());
+            }
+
+            telegramMessages.updateUserMainMenuBasedOnRole(userState, user, userWallets);
             telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.MAIN_MENU));
         }
     }

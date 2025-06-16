@@ -1,16 +1,17 @@
 package org.ipan.nrgyrent.telegram;
 
 import java.lang.reflect.Method;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
 import org.ipan.nrgyrent.domain.model.AppUser;
 import org.ipan.nrgyrent.domain.model.Balance;
-import org.ipan.nrgyrent.domain.model.BalanceReferralProgram;
 import org.ipan.nrgyrent.domain.model.UserRole;
-import org.ipan.nrgyrent.domain.model.repository.BalanceReferralProgramRepo;
+import org.ipan.nrgyrent.domain.model.UserWallet;
 import org.ipan.nrgyrent.domain.service.UserService;
+import org.ipan.nrgyrent.domain.service.UserWalletService;
 import org.ipan.nrgyrent.domain.service.commands.users.CreateUserCommand;
 import org.ipan.nrgyrent.telegram.i18n.TgUserLocaleHolder;
 import org.ipan.nrgyrent.telegram.state.TelegramState;
@@ -40,7 +41,7 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
     private TelegramState telegramState;
     private TelegramMessages telegramMessages;
     private UserService userService;
-    private BalanceReferralProgramRepo balanceReferralProgramRepo;
+    private UserWalletService userWalletService;
     private FormattingTools formattingTools;
 
     private final StateHandlerRegistry stateHandlerRegistry;
@@ -151,13 +152,18 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
         } else if (callbackQuery != null) {
             String data = callbackQuery.getData();
 
+            List<UserWallet> userWallets = Collections.emptyList();
+            if (user.getShowWalletsMenu()) {
+                userWallets = userWalletService.getWallets(user.getTelegramId());
+            }
+
             if (InlineMenuCallbacks.TO_MAIN_MENU.equals(data)) {
                 switch (userState.getRole()) {
                     case ADMIN:
-                        telegramMessages.updateMsgToAdminMainMenu(userState, user);
+                        telegramMessages.updateMsgToAdminMainMenu(userState, user, userWallets);
                         break;
                     default:
-                        telegramMessages.updateMsgToMainMenu(userState, user);
+                        telegramMessages.updateMsgToMainMenu(userState, user, userWallets);
                         break;
                 }
                 telegramState.updateUserState(userId, userState.withState(States.MAIN_MENU));

@@ -46,7 +46,19 @@ public class SettingsHandler {
         @MatchState(state = States.REFERALS, callbackData = InlineMenuCallbacks.GO_BACK),
     })
     public void settingsMenu(UserState userState, Update update) {
-        telegramMessages.updateMsgToSettings(userState);
+        AppUser user = userService.getById(userState.getTelegramId());
+        telegramMessages.updateMsgToSettings(userState, user);
+        telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.SETTINGS));
+    }
+
+    @MatchStates({
+        @MatchState(state = States.SETTINGS, callbackData = InlineMenuCallbacks.OPT_SHOW_WALLET_DISABLE),
+        @MatchState(state = States.SETTINGS, callbackData = InlineMenuCallbacks.OPT_SHOW_WALLET_ENABLE),
+    })
+    public void enableDisableOptShowWallet(UserState userState, Update update) {
+        userService.setShowWalletOption(userState.getTelegramId(), InlineMenuCallbacks.OPT_SHOW_WALLET_ENABLE.equals(update.getCallbackQuery().getData()));
+        AppUser user = userService.getById(userState.getTelegramId());
+        telegramMessages.updateMsgToSettings(userState, user);
         telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.SETTINGS));
     }
 
@@ -62,9 +74,10 @@ public class SettingsHandler {
 
         if ("en".equals(data) || "ru".equals(data)) {
             userService.setLanguage(userState.getTelegramId(), data);
+            AppUser user = userService.getById(userState.getTelegramId());
 
             TgUserLocaleHolder.setUserLocale(Locale.of(data));
-            telegramMessages.updateMsgToSettings(userState);
+            telegramMessages.updateMsgToSettings(userState, user);
             telegramState.updateUserState(userState.getTelegramId(), userState.withLanguageCode(data).withState(States.SETTINGS));
         }
     }
