@@ -841,4 +841,26 @@
             columnDataType="bigint"/>
     </changeSet>
 
+    <changeSet id="extend nrg_referral_programs with calc_type" author="oress">
+        <addColumn tableName="nrg_referral_programs">
+            <column name="calc_type" type="text" defaultValue="PERCENT_FROM_PROFIT">
+                <constraints nullable="false" />
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="extend nrg_referral_commissions with calc_type" author="oress">
+        <addColumn tableName="nrg_referral_commissions">
+            <column name="calc_type" type="text" defaultValue="PERCENT_FROM_PROFIT">
+                <constraints nullable="false" />
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="change calc_type for default ref. program" author="oress">
+        <sql>
+            update nrg_referral_programs set calc_type = 'PERCENT_FROM_REVENUE' where id = ${defaultRefProgramId}
+        </sql>
+    </changeSet>
+
 </databaseChangeLog>

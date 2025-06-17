@@ -6,6 +6,8 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -29,6 +31,10 @@ public class ReferralProgram {
 
     @Column
     private Integer percentage;
+
+    @Column(name="calc_type")
+    @Enumerated(EnumType.STRING)
+    private ReferralProgramCalcType calcType = ReferralProgramCalcType.PERCENT_FROM_PROFIT;
 
     @Column(name = "is_predefined")
     private Boolean predefined = Boolean.FALSE;

@@ -12,6 +12,7 @@ import org.ipan.nrgyrent.domain.model.Order;
 import org.ipan.nrgyrent.domain.model.OrderStatus;
 import org.ipan.nrgyrent.domain.model.ReferralCommission;
 import org.ipan.nrgyrent.domain.model.ReferralProgram;
+import org.ipan.nrgyrent.domain.model.ReferralProgramCalcType;
 import org.ipan.nrgyrent.domain.model.Tariff;
 import org.ipan.nrgyrent.domain.model.repository.OrderRepo;
 import org.ipan.nrgyrent.domain.model.repository.ReferralCommissionRepo;
@@ -109,18 +110,17 @@ public class OrderService {
             logger.info("Generating referral commission record from order {}", order.getId());
             ReferralProgram referralProgram = balanceReferralProgram.getReferralProgram();
 
-            Long profitLong = order.getSunAmount() - order.getItrxFeeSunAmount();
-            BigDecimal profit = new BigDecimal(profitLong);
-            BigDecimal commission = profit
-                .divide(AppConstants.HUNDRED)
-                .multiply(new BigDecimal(referralProgram.getPercentage()))
-                .setScale(0, RoundingMode.DOWN);
-
-            Long commissionLong = commission.longValue();
+            ReferralProgramCalcType calcType = referralProgram.getCalcType();
+            Long commissionLong = switch (calcType) {
+                case ReferralProgramCalcType.PERCENT_FROM_PROFIT -> calculateCommissionAsPercentFromProfit(order, referralProgram);
+                case ReferralProgramCalcType.PERCENT_FROM_REVENUE -> calculateCommissionAsPercentFromRevenue(order, referralProgram);
+                default -> 0L;
+            };
 
             if (commissionLong > 0) {
                 ReferralCommission referralCommission = new ReferralCommission();
                 referralCommission.setAmountSun(commissionLong);
+                referralCommission.setCalcType(calcType);
                 referralCommission.setOrder(order);
                 referralCommission.setBalanceReferralProgram(balanceReferralProgram);
                 referralCommission.setPercentage(referralProgram.getPercentage());
@@ -132,6 +132,27 @@ public class OrderService {
         }
 
         return order;
+    }
+
+    private Long calculateCommissionAsPercentFromProfit(Order order, ReferralProgram referralProgram) {
+        Long profitLong = order.getSunAmount() - order.getItrxFeeSunAmount();
+        BigDecimal profit = new BigDecimal(profitLong);
+        BigDecimal commission = profit
+            .divide(AppConstants.HUNDRED)
+            .multiply(new BigDecimal(referralProgram.getPercentage()))
+            .setScale(0, RoundingMode.DOWN);
+
+        return commission.longValue();
+    }
+
+    private Long calculateCommissionAsPercentFromRevenue(Order order, ReferralProgram referralProgram) {
+        BigDecimal revenue = new BigDecimal(order.getSunAmount());
+        BigDecimal commission = revenue
+            .divide(AppConstants.HUNDRED)
+            .multiply(new BigDecimal(referralProgram.getPercentage()))
+            .setScale(0, RoundingMode.DOWN);
+
+        return commission.longValue();
     }
 
     @Transactional

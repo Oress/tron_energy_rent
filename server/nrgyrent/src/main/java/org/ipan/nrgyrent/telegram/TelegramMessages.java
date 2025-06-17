@@ -438,15 +438,27 @@ public class TelegramMessages {
     }
 
     private InlineKeyboardMarkup settingsMenuMarkup(Boolean showWalletsInMenuEnabled) {
-        var builder = InlineKeyboardMarkup
-                .builder()
-                .keyboardRow(
-                        new InlineKeyboardRow(
-                                InlineKeyboardButton
-                                        .builder()
-                                        .text(commonLabels.settingsTxHistory())
-                                        .callbackData(InlineMenuCallbacks.HISTORY)
-                                        .build()))
+        var builder = InlineKeyboardMarkup.builder();
+
+        if (showWalletsInMenuEnabled) {
+                builder.keyboardRow(
+                new InlineKeyboardRow(
+                        InlineKeyboardButton
+                                .builder()
+                                .text(commonLabels.settingsShowWalletsEnabled())
+                                .callbackData(InlineMenuCallbacks.OPT_SHOW_WALLET_DISABLE)
+                                .build()));
+        } else {
+                builder.keyboardRow(
+                new InlineKeyboardRow(
+                        InlineKeyboardButton
+                                .builder()
+                                .text(commonLabels.settingsShowWalletsDisabled())
+                                .callbackData(InlineMenuCallbacks.OPT_SHOW_WALLET_ENABLE)
+                                .build()));
+        }
+
+        builder
                 .keyboardRow(
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
@@ -458,29 +470,17 @@ public class TelegramMessages {
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
+                                        .text(commonLabels.settingsTxHistory())
+                                        .callbackData(InlineMenuCallbacks.HISTORY)
+                                        .build()))
+
+                .keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
                                         .text(commonLabels.settingsChangeLanguage())
                                         .callbackData(InlineMenuCallbacks.CHANGE_LANGUAGE)
                                         .build()));
-
-
-                if (showWalletsInMenuEnabled) {
-                    builder.keyboardRow(
-                        new InlineKeyboardRow(
-                                InlineKeyboardButton
-                                        .builder()
-                                        .text(commonLabels.settingsShowWalletsEnabled())
-                                        .callbackData(InlineMenuCallbacks.OPT_SHOW_WALLET_DISABLE)
-                                        .build()));
-                } else {
-                    builder.keyboardRow(
-                        new InlineKeyboardRow(
-                                InlineKeyboardButton
-                                        .builder()
-                                        .text(commonLabels.settingsShowWalletsDisabled())
-                                        .callbackData(InlineMenuCallbacks.OPT_SHOW_WALLET_ENABLE)
-                                        .build()));
-                }
-                        
                 builder.keyboardRow(
                         new InlineKeyboardRow(
                                 InlineKeyboardButton

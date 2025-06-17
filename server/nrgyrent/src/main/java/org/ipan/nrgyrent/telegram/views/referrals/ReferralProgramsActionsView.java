@@ -1,6 +1,7 @@
 package org.ipan.nrgyrent.telegram.views.referrals;
 
 import org.ipan.nrgyrent.domain.model.ReferralProgram;
+import org.ipan.nrgyrent.domain.model.ReferralProgramCalcType;
 import org.ipan.nrgyrent.telegram.InlineMenuCallbacks;
 import org.ipan.nrgyrent.telegram.i18n.CommonLabels;
 import org.ipan.nrgyrent.telegram.i18n.RefProgramLabels;
@@ -114,9 +115,18 @@ public class ReferralProgramsActionsView {
         return refProgramLabels.actionsPreview(
                 refProgram.getLabel(),
                 refProgram.getPercentage(),
+                getCalcTypeLabel(refProgram.getCalcType()),
                 refProgram.getPredefined() ? commonLabels.yes() : commonLabels.no(),
                 FormattingTools.formatDateToUtc(refProgram.getCreatedAt())
         );
+    }
+
+    private String getCalcTypeLabel(ReferralProgramCalcType calcType) {
+        return switch(calcType) {
+                case ReferralProgramCalcType.PERCENT_FROM_PROFIT -> refProgramLabels.percent_from_profit();
+                case ReferralProgramCalcType.PERCENT_FROM_REVENUE -> refProgramLabels.percent_from_revenue();
+                default -> "-";
+        };
     }
 
     private InlineKeyboardMarkup getManageRefProgramActionsMarkup(Boolean showBackButton, Boolean canChange) {

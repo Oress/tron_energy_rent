@@ -1,6 +1,7 @@
 package org.ipan.nrgyrent.telegram.utils;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.sql.Timestamp;
 import java.text.DecimalFormat;
 import java.time.Instant;
@@ -88,7 +89,7 @@ public class FormattingTools {
     }
 
     public static String formatBalance(Long balanceSun) {
-        return df.format(BigDecimal.valueOf(balanceSun).divide(BigDecimal.valueOf(1_000_000D)));
+        return df.format(BigDecimal.valueOf(balanceSun).divide(BigDecimal.valueOf(1_000_000D)).setScale(2, RoundingMode.HALF_DOWN));
     }
 
     public String formatRefProgmam(BalanceReferralProgram refProgram) {

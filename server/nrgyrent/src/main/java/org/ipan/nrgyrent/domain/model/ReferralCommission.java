@@ -43,6 +43,10 @@ public class ReferralCommission {
 
     private Integer percentage;
 
+    @Column(name="calc_type")
+    @Enumerated(EnumType.STRING)
+    private ReferralProgramCalcType calcType = ReferralProgramCalcType.PERCENT_FROM_PROFIT;
+
     @Column(name="amount_sun")
     private Long amountSun;
 
