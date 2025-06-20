@@ -6,6 +6,8 @@ import org.ipan.nrgyrent.domain.service.OrderService;
 import org.ipan.nrgyrent.domain.service.commands.orders.AddOrUpdateOrderCommand;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
+import org.springframework.core.annotation.Order;
+
 
 @Component
 @AllArgsConstructor
@@ -14,6 +16,7 @@ public class OrderEventDomainListener {
     private final OrderService orderService;
 
     @EventListener
+    @Order(1)
     public void onOrderCompleted(OrderCompletedEvent event) {
         logger.trace("Order completed event received: {}", event);
         AddOrUpdateOrderCommand command = AddOrUpdateOrderCommand.builder()
@@ -26,6 +29,7 @@ public class OrderEventDomainListener {
     }
 
     @EventListener
+    @Order(1)
     public void onOrderFailed(OrderFailedEvent event) {
         logger.trace("Order failed event received: {}", event);
         AddOrUpdateOrderCommand command = AddOrUpdateOrderCommand.builder()

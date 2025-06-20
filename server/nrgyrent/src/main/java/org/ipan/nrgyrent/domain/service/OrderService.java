@@ -35,6 +35,7 @@ public class OrderService {
     private final OrderRepo orderRepo;
     private final BalanceService balanceService;
     private final ReferralCommissionRepo referralCommissionRepo;
+    private final AutoDelegationSessionService autoDelegationSessionService;
 
     @Transactional
     public Order createPendingOrder(AddOrUpdateOrderCommand command) {
@@ -83,6 +84,11 @@ public class OrderService {
         order.setTariff(tariff);
 
         em.persist(order);
+
+        Long autoTopupSessionId = command.getAutoDelegationSessionId();
+        if (autoTopupSessionId != null) {
+            autoDelegationSessionService.createTopupEventForOrder(order, autoTopupSessionId, command.getDelegationEventType());
+        }
 
         return order;
     }

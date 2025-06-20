@@ -863,4 +863,110 @@
         </sql>
     </changeSet>
 
+    <changeSet id="create table nrg_autodelegation_sessions" author="oress">
+        <createSequence sequenceName="nrg_autodelegation_sessions_seq"
+                    dataType="bigint"
+                    incrementBy="1"
+                    startValue="1" />
+
+        <createTable tableName="nrg_autodelegation_sessions">
+            <column name="id" type="bigint">
+                <constraints primaryKey="true" nullable="false" unique="true" />
+            </column>
+            <column name="address" type="text">
+                <constraints nullable="false" />
+            </column>
+
+            <column name="user_id" type="bigint" >
+                <constraints nullable="false" />
+            </column>
+
+            <column name="message_to_update" type="bigint" />
+            <column name="chat_id" type="bigint" />
+
+            <column name="last_sc_invocation_ts" type="bigint" />
+
+            <column name="status" type="text">
+                <constraints nullable="false" />
+            </column>
+            <column name="is_active" type="boolean">
+                <constraints nullable="false" />
+            </column>
+            <column name="created_at" type="TIMESTAMP" />
+        </createTable>
+    </changeSet>
+
+    <changeSet id="create index idx_nrg_autodelegation_sessions_address" author="oress">
+        <createIndex indexName="idx_nrg_autodelegation_sessions_address" tableName="nrg_autodelegation_sessions">
+            <column name="address" />
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="create index idx_nrg_autodelegation_sessions_is_active" author="oress">
+        <createIndex indexName="idx_nrg_autodelegation_sessions_is_active" tableName="nrg_autodelegation_sessions">
+            <column name="is_active" />
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="create index idx_nrg_autodelegation_sessions_user_id" author="oress">
+        <createIndex indexName="idx_nrg_autodelegation_sessions_user_id" tableName="nrg_autodelegation_sessions">
+            <column name="user_id" />
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="create fk fk_nrg_autodelegation_sessions_user_id" author="oress">
+        <addForeignKeyConstraint constraintName="fk_nrg_autodelegation_sessions_user_id"
+            baseTableName="nrg_autodelegation_sessions"
+            baseColumnNames="user_id"
+            referencedTableName="nrg_users"
+            referencedColumnNames="telegram_id" />
+    </changeSet>
+
+    <changeSet id="create table nrg_autodelegation_events" author="oress">
+        <createSequence sequenceName="nrg_autodelegation_events_seq"
+                    dataType="bigint"
+                    incrementBy="1"
+                    startValue="1" />
+
+        <createTable tableName="nrg_autodelegation_events">
+            <column name="id" type="bigint">
+                <constraints primaryKey="true" nullable="false" unique="true" />
+            </column>
+            <column name="session_id" type="bigint">
+                <constraints nullable="false" />
+            </column>
+            <column name="type" type="text" />
+            <column name="order_id" type="bigint" />
+            <column name="timestamp" type="bigint" />
+        </createTable>
+    </changeSet>
+
+    <changeSet id="create index idx_nrg_autodelegation_events_session_id" author="oress">
+        <createIndex indexName="idx_nrg_autodelegation_events_session_id" tableName="nrg_autodelegation_events">
+            <column name="session_id" />
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="create index idx_nrg_autodelegation_events_order_id" author="oress">
+        <createIndex indexName="idx_nrg_autodelegation_events_order_id" tableName="nrg_autodelegation_events">
+            <column name="order_id" />
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="create fk fk_nrg_autodelegation_events_session_id" author="oress">
+        <addForeignKeyConstraint constraintName="fk_nrg_autodelegation_events_session_id"
+            baseTableName="nrg_autodelegation_events"
+            baseColumnNames="session_id"
+            referencedTableName="nrg_autodelegation_sessions"
+            referencedColumnNames="id"
+            onDelete="CASCADE"/>
+    </changeSet>
+
+    <changeSet id="create fk fk_nrg_autodelegation_events_order_id" author="oress">
+        <addForeignKeyConstraint constraintName="fk_nrg_autodelegation_events_order_id"
+            baseTableName="nrg_autodelegation_events"
+            baseColumnNames="order_id"
+            referencedTableName="nrg_orders"
+            referencedColumnNames="id" />
+    </changeSet>
 </databaseChangeLog>

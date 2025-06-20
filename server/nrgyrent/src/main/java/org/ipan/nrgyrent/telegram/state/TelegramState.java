@@ -63,4 +63,8 @@ public interface TelegramState {
 
     AddRefProgramState getOrCreateAddRefProgramState(Long userId);
     AddRefProgramState updateAddRefProgramState(Long userId, AddRefProgramState addTariffState);
+
+    WalletMonitoringState getWalletMonitoringState(String address);
+    WalletMonitoringState createWalletMonitoringState(Long sessionId, String address);
+    WalletMonitoringState removeWalletMonitoringState(String address);
 }

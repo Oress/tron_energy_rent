@@ -519,6 +519,16 @@ public class TelegramMessages {
                                                 FormattingTools.formatBalance(tariff.getTransactionType1AmountSun())))
                                         .callbackData(InlineMenuCallbacks.CUSTOM_TRANSACTION_AMOUNT)
                                         .build()));
+        if (isAdmin) {
+            builder
+                .keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text(commonLabels.getAutoDelegation())
+                                        .callbackData(InlineMenuCallbacks.AUTOTOPUP)
+                                        .build()));
+        }
 
         if (showWithdrawBtn) {
             builder.keyboardRow(

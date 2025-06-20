@@ -1,0 +1,12 @@
+package org.ipan.nrgyrent.domain.model.autodelegation;
+
+public enum AutoDelegationSessionStatus {
+    ACTIVE,
+    STOPPED_INSUFFICIENT_BALANCE,
+    STOPPED_SYSTEM_RESTART,
+    STOPPED_NODE_DISCONNECTED,
+    STOPPED_ENERGY_UNUSED,
+    STOPPED_ERROR,
+    STOPPED_INACTIVE_WALLET,
+    STOPPED_BY_USER
+}

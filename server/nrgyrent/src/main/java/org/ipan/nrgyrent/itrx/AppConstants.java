@@ -7,6 +7,7 @@ public class AppConstants {
 
     public static final Long DEFAULT_TARIFF_ID = 1L;
 
+    public static final Long HOUR_MILLIS = 60L * 60 * 1000;
     public static final String DURATION_1H = "1H";
     public static BigDecimal trxToSunRate = new BigDecimal(1_000_000);
 

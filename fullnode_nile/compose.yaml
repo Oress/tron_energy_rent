@@ -1,0 +1,12 @@
+services:
+  tron-node:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: tron_node_lite
+    ports:
+      - 5555:5555
+      - 8090:8090
+    volumes:
+      - ./config-nile.conf:/nile-testnet/build/libs/config.conf
+      - ./output-directory:/nile-testnet/build/libs/output-directory

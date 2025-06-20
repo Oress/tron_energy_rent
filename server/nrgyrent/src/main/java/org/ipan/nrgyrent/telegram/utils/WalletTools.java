@@ -23,7 +23,10 @@ public class WalletTools {
 
     public static String formatTronAddressAndLabel(String address, String label) {
         String formattedAddress = formatTronAddress(address);
-        return formattedAddress + " (" + label + ")";
+        if (label != null && !label.isEmpty()) {
+            formattedAddress = formattedAddress + " (" + label + ")";
+        }
+        return formattedAddress;
     }
 
     public static String formatTronAddressSuffixOnly(String address) {

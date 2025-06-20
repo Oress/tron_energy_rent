@@ -101,6 +101,10 @@ public class CommonLabels {
         return getLocalizedMessage("menu.tx_custom_amnt", amount);
     }
 
+    public String getAutoDelegation() {
+        return getLocalizedMessage("menu.auto_delegation");
+    }
+
     public String getMenuManageGroup() {
         return getLocalizedMessage("menu.manage_group");
     }
@@ -210,4 +214,13 @@ public class CommonLabels {
     public String refProgramNotSet() {
         return getLocalizedMessage("referal.not_set");
     }
+
+    public String greenCircle() {
+        return "🟢";
+    }
+
+    public String redCircle() {
+        return "🔴";
+    }
+
 }

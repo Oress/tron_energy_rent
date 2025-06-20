@@ -1,0 +1,12 @@
+services:
+  fulltron-node:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: tron_fullnode
+    ports:
+      - 5555:5555
+      - 8090:8090
+    volumes:
+      - ./main_net_config.conf:/java-tron/build/libs/config.conf
+      - ./output-directory:/java-tron/build/libs/output-directory

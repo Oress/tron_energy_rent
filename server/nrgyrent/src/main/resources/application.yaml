@@ -35,6 +35,9 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         generate_statistics: false
 app:
+  fullnode:
+    http-api-url: ${APP_FULLNODE_HTTPAPI_URL:http://homelab.lan:8090}
+    zero-mq-url: ${APP_FULLNODE_ZMQ_URL:tcp://homelab.lan:5555}
   bot:
     username: ${APP_BOT_USERNAME:tron_energy_rent_dev_bot}
   sweeping:

@@ -2,6 +2,7 @@ package org.ipan.nrgyrent.domain.service.commands.orders;
 
 import lombok.Builder;
 import lombok.Data;
+import org.ipan.nrgyrent.domain.model.autodelegation.AutoDelegationEventType;
 
 @Data
 @Builder
@@ -19,6 +20,9 @@ public class AddOrUpdateOrderCommand {
     private String correlationId;
     private String serial;
     private Long tariffId;
+
+    private Long autoDelegationSessionId;
+    private AutoDelegationEventType delegationEventType;
 //    private OrderStatus orderStatus;
 
     private Integer itrxStatus;

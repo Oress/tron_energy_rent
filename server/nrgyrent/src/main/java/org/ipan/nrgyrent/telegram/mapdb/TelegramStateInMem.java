@@ -3,19 +3,10 @@ package org.ipan.nrgyrent.telegram.mapdb;
 import org.ipan.nrgyrent.telegram.States;
 import org.ipan.nrgyrent.telegram.mapdb.tariff.TariffEditInMem;
 import org.ipan.nrgyrent.telegram.mapdb.tariff.TariffSearchStateInMem;
-import org.ipan.nrgyrent.telegram.state.AddWalletState;
-import org.ipan.nrgyrent.telegram.state.BalanceEdit;
-import org.ipan.nrgyrent.telegram.state.GroupSearchState;
-import org.ipan.nrgyrent.telegram.state.TelegramState;
-import org.ipan.nrgyrent.telegram.state.TransactionParams;
-import org.ipan.nrgyrent.telegram.state.UserEdit;
-import org.ipan.nrgyrent.telegram.state.UserSearchState;
-import org.ipan.nrgyrent.telegram.state.UserState;
-import org.ipan.nrgyrent.telegram.state.WithdrawParams;
+import org.ipan.nrgyrent.telegram.state.*;
 import org.ipan.nrgyrent.telegram.state.referral.AddRefProgramState;
 import org.ipan.nrgyrent.telegram.state.referral.RefProgramEdit;
 import org.ipan.nrgyrent.telegram.state.referral.RefProgramSearchState;
-import org.ipan.nrgyrent.telegram.state.AddGroupState;
 import org.ipan.nrgyrent.telegram.state.tariff.AddTariffState;
 import org.ipan.nrgyrent.telegram.state.tariff.TariffEdit;
 import org.ipan.nrgyrent.telegram.state.tariff.TariffSearchState;
@@ -47,6 +38,7 @@ public class TelegramStateInMem implements TelegramState {
     private final HTreeMap<Long, RefProgramSearchStateInMem> refProgramSearchState;
     private final HTreeMap<Long, RefProgramEditInMem> refProgramEditStateMap;
     private final HTreeMap<Long, AddRefProgramStateInMem> addRefProgramStateMap;
+    private final HTreeMap<String, WalletMonitoringStateInMem> walletMonitoringStateMap;
 
     public TelegramStateInMem(DB db, ObjectMapper objectMapper) {
         this.userStateMap = db.hashMap("userState")
@@ -118,6 +110,10 @@ public class TelegramStateInMem implements TelegramState {
         this.addRefProgramStateMap = db.hashMap("addRefProgramStateMap")
                 .keySerializer(Serializer.LONG)
                 .valueSerializer(new GenericSerializer<>(AddRefProgramStateInMem.class, objectMapper))
+                .createOrOpen();
+        this.walletMonitoringStateMap = db.hashMap("walletMonitoringStateMap")
+                .keySerializer(Serializer.STRING)
+                .valueSerializer(new GenericSerializer<>(WalletMonitoringStateInMem.class, objectMapper))
                 .createOrOpen();
     }
 
@@ -325,5 +321,20 @@ public class TelegramStateInMem implements TelegramState {
     @Override
     public AddRefProgramState updateAddRefProgramState(Long userId, AddRefProgramState addTariffState) {
         return this.addRefProgramStateMap.put(userId, AddRefProgramStateInMem.of(addTariffState));
+    }
+
+    @Override
+    public WalletMonitoringState getWalletMonitoringState(String address) {
+        return walletMonitoringStateMap.get(address);
+    }
+
+    @Override
+    public WalletMonitoringState createWalletMonitoringState(Long sessionId, String address) {
+        return walletMonitoringStateMap.put(address, WalletMonitoringStateInMem.builder().address(address).sessionId(sessionId).build());
+    }
+
+    @Override
+    public WalletMonitoringState removeWalletMonitoringState(String address) {
+        return walletMonitoringStateMap.remove(address);
     }
 }

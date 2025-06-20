@@ -1,6 +1,14 @@
 package org.ipan.nrgyrent.telegram;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class InlineMenuCallbacks {
+    private final static Gson gson = new GsonBuilder().disableHtmlEscaping().create();
+
     public static final String TO_MAIN_MENU = "action_main_menu";
     public static final String GO_BACK = "action_go_back";
     public static final String DEPOSIT = "deposit";
@@ -12,6 +20,7 @@ public class InlineMenuCallbacks {
     public static final String TRANSACTION_65k = "transaction_65k";
     public static final String TRANSACTION_131k = "transaction_131k";
     public static final String CUSTOM_TRANSACTION_AMOUNT = "custom_transaction_amount";
+    public static final String AUTOTOPUP = "autotopup";
 
     public static final String SETTINGS = "settings";
     public static final String HISTORY = "history";
@@ -91,10 +100,6 @@ public class InlineMenuCallbacks {
         return QUICK_TRANSACTION + userWalletId;
     }
 
-    public static boolean isQuickTxCallback(String data) {
-        return data.startsWith(QUICK_TRANSACTION);
-    }
-
     public static Long getWalletIdForQuickTx(String data) {
         Long walletId = null;
         if (data.startsWith(QUICK_TRANSACTION)) {
@@ -102,5 +107,45 @@ public class InlineMenuCallbacks {
             walletId = Long.parseLong(walletIdStr);
         }
         return walletId;
+    }
+
+
+    private static final String TOGGLE_AUTO_TOPUP = "/tatpp/";
+    public static String createToggleAutoTopupCallback(String address, Long sessionId) {
+        ToggleWalletSessionPayload payload;
+        if (sessionId != null) {
+            payload = new ToggleWalletSessionPayload(sessionId);
+        } else {
+            payload = new ToggleWalletSessionPayload(address);
+        }
+        return TOGGLE_AUTO_TOPUP + gson.toJson(payload);
+    }
+
+    public static ToggleWalletSessionPayload getToggleWalletSession(String data) {
+        ToggleWalletSessionPayload payload = null;
+        if (data.startsWith(TOGGLE_AUTO_TOPUP)) {
+            String payloadStr = data.split(TOGGLE_AUTO_TOPUP)[1];
+
+            try {
+                payload = gson.fromJson(payloadStr, ToggleWalletSessionPayload.class);
+            } catch (Exception e) {
+                logger.error("Cannot extract payload for ToggleWalletSessionPayload ", e);
+            }
+        }
+        return payload;
+    }
+
+    @Getter
+    public static class ToggleWalletSessionPayload {
+        private String address;
+        private Long sessionId;
+
+        public ToggleWalletSessionPayload(String address) {
+            this.address = address;
+        }
+
+        public ToggleWalletSessionPayload(Long sessionId) {
+            this.sessionId = sessionId;
+        }
     }
 }
