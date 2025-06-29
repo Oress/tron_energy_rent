@@ -30,8 +30,8 @@ public class CommonLabels {
         return getLocalizedMessage("common.cross");
     }
 
-    public String getMainWelcome(String balanceLbl) {
-        return getLocalizedMessage("main.welcome", balanceLbl);
+    public String getMainWelcome(String balanceLbl, String simpleTxPrice) {
+        return getLocalizedMessage("main.welcome", balanceLbl, simpleTxPrice);
     }
 
     public String getCommonGroupBalance(String trx) {
