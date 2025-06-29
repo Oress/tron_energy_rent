@@ -35,6 +35,10 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         generate_statistics: false
 app:
+  alerts:
+    itrx-balance:
+      interval: ${APP_ITRX_BALANCE_ALERT_INTERVAL:180} # seconds
+      threashold : ${APP_ITRX_BALANCE_THRESHOLD:800000000} # 800 TRX
   fullnode:
     http-api-url: ${APP_FULLNODE_HTTPAPI_URL:http://homelab.lan:8090}
     zero-mq-url: ${APP_FULLNODE_ZMQ_URL:tcp://homelab.lan:5555}

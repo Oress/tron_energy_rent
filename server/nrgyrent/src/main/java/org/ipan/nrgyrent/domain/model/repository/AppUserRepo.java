@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.ipan.nrgyrent.domain.model.AppUser;
+import org.ipan.nrgyrent.domain.model.UserRole;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -25,4 +26,6 @@ public interface AppUserRepo extends JpaRepository<AppUser, Long> {
 
     @Query("select u from AppUser u join u.referralProgram rp where rp.id = :balanceRefProgramId")
     List<AppUser> findAllByBalRefProgId(Long balanceRefProgramId);
+
+    List<AppUser> findAllByRole(UserRole role);
 }

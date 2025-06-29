@@ -223,4 +223,8 @@ public class CommonLabels {
         return "🔴";
     }
 
+    public String alertItrxBalanceLow(Locale locale, String currentBalance) {
+        return getLocalizedMessage("alerts.itrx_balance_low", locale, currentBalance);
+    }
+
 }

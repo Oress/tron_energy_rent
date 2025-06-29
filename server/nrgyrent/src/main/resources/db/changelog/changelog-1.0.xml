@@ -969,4 +969,41 @@
             referencedTableName="nrg_orders"
             referencedColumnNames="id" />
     </changeSet>
+
+    <changeSet id="create nrg_alerts_seq" author="oress">
+        <createSequence sequenceName="nrg_alerts_seq"
+                        dataType="bigint"
+                        incrementBy="1"
+                        startValue="1" />
+    </changeSet>
+
+    <changeSet id="create table nrg_alerts" author="oress">
+        <createTable tableName="nrg_alerts">
+            <column name="id" type="bigint">
+                <constraints primaryKey="true" nullable="false" unique="true" />
+            </column>
+
+            <column name="name" type="text">
+                <constraints nullable="false" />
+            </column>
+
+            <column name="status" type="text" />
+            <column name="trigger_value" type="text" />
+            <column name="resolved_at" type="timestamp" />
+            <column name="triggered_at" type="timestamp" />
+        </createTable>
+    </changeSet>
+
+    <changeSet id="create index idx_nrg_alerts_name" author="oress">
+        <createIndex indexName="idx_nrg_alerts_name" tableName="nrg_alerts">
+            <column name="name" />
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="create index idx_nrg_alerts_status" author="oress">
+        <createIndex indexName="idx_nrg_alerts_status" tableName="nrg_alerts">
+            <column name="status" />
+        </createIndex>
+    </changeSet>
+
 </databaseChangeLog>
