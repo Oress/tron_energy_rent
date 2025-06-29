@@ -89,7 +89,7 @@ public class FormattingTools {
     }
 
     public static String formatBalance(Long balanceSun) {
-        return df.format(BigDecimal.valueOf(balanceSun).divide(BigDecimal.valueOf(1_000_000D)).setScale(2, RoundingMode.HALF_DOWN));
+        return df.format(BigDecimal.valueOf(balanceSun).divide(BigDecimal.valueOf(1_000_000D)).setScale(2, RoundingMode.DOWN));
     }
 
     public String formatRefProgmam(BalanceReferralProgram refProgram) {

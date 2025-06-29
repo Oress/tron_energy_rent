@@ -163,8 +163,8 @@ public class CommonLabels {
         return getLocalizedMessage("common.something_went_wrong");
     }
 
-    public String topup(Locale loc) {
-        return getLocalizedMessage("notification.topup", loc);
+    public String topup(Locale loc, String trx) {
+        return getLocalizedMessage("notification.topup", loc, trx);
     }
 
     public String withdrawFail(Locale loc) {

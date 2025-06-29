@@ -186,11 +186,12 @@ public class TelegramMessages {
     }
 
     @SneakyThrows
-    public void sendTopupNotification(UserState userState) {
+    public void sendTopupNotification(UserState userState, Long depositSun) {
         SendMessage message = SendMessage
                 .builder()
                 .chatId(userState.getChatId())
-                .text(commonLabels.topup(userState.getLocaleOrDefault()))
+                .text(commonLabels.topup(userState.getLocaleOrDefault(), FormattingTools.formatBalance(depositSun)))
+                .parseMode("MARKDOWN")
                 .replyMarkup(getOkNotificationMarkup())
                 .build();
         tgClient.execute(message);

@@ -121,13 +121,13 @@ public class PollForTransactionsJobHelper {
                         logger.info("Sending top-up notification for individual balance ID: {}", balance.getId());
                         AppUser user = appUserRepo.findByBalanceId(balance.getId());
                         UserState userState = telegramState.getOrCreateUserState(user.getTelegramId());
-                        telegramMessages.sendTopupNotification(userState);
+                        telegramMessages.sendTopupNotification(userState, topUp);
                     } else if (BalanceType.GROUP.equals(balance.getType())) {
                         logger.info("Sending top-up notification for group balance ID: {}", balance.getId());
                         Set<AppUser> users = appUserRepo.findAllByGroupBalanceId(balance.getId());
                         for (AppUser user : users) {
                             UserState userState = telegramState.getOrCreateUserState(user.getTelegramId());
-                            telegramMessages.sendTopupNotification(userState);
+                            telegramMessages.sendTopupNotification(userState, topUp);
                         }
                     } else {
                         logger.error("Unknown balance type for balance ID: {}", balance.getId());
