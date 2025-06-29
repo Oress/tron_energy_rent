@@ -241,4 +241,42 @@ public class UsersActionHandler {
             manageUserActionsView.userBalanceAdjusted(userState);
         }
     }
+
+    @MatchState(state = States.ADMIN_MANAGE_USERS_ACTION_PREVIEW, callbackData = InlineMenuCallbacks.MANAGE_USER_ACTION_ADJUST_WITHDRAW_LIMIT)
+    public void startAdjustWithdrawLimit(UserState userState, Update update) {
+        manageUserActionsView.promptNewUserWithdrawLimit(userState);
+        telegramState.updateUserState(userState.getTelegramId(),
+                userState.withState(States.ADMIN_MANAGE_USER_ACTION_PROMPT_WITHDRAW_LIMIT));
+    }
+
+    @MatchState(state = States.ADMIN_MANAGE_USER_ACTION_PROMPT_WITHDRAW_LIMIT, updateTypes = UpdateType.MESSAGE)
+    public void handleNewWithdrawLimit(UserState userState, Update update) {
+        Message message = update.getMessage();
+        if (message.hasText()) {
+            logger.info("Adjusting user balance: {}", message.getText());
+            String newLimitTrx = message.getText();
+
+            Long adjustedLimitInSunLong;
+            try {
+                adjustedLimitInSunLong = parseUtils.parseTrxStrToSunLong(newLimitTrx);
+            } catch (IllegalArgumentException e) {
+                logger.warn("Invalid TRX amount: {}", newLimitTrx);
+                return;
+            }
+
+            Long telegramId = userState.getTelegramId();
+            if (adjustedLimitInSunLong < 0) {
+                logger.warn("Adjusted withdraw limit is negative: {}", adjustedLimitInSunLong);
+                manageUserActionsView.withdrawLimitIsNegative(userState);
+                return;
+            }
+
+            UserEdit userEdit = telegramState.getOrCreateUserEdit(telegramId);
+            AppUser byId = userService.getById(userEdit.getSelectedUserId());
+
+            balanceService.adjustWithdrawLimit(byId.getBalance().getId(), adjustedLimitInSunLong);
+
+            manageUserActionsView.userWithdrawAdjusted(userState);
+        }
+    }
 }

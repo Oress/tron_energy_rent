@@ -57,10 +57,16 @@ public class WithdrawalHandlerHelper {
             return;
         }
 
+        if (!withdrawBalance.canWithdraw(amountSun)) {
+            logger.error("User's overspent their daily limit {}, can withdraw at the moment {}", userId, withdrawBalance.getDailyWithdrawalRemainingSun());
+            UserState userState = telegramState.getOrCreateUserState(userId);
+            withdrawViews.updWithdrawalFailNotEnoughLimit(userState, withdrawBalance.getDailyWithdrawalRemainingSun());
+            return;
+        }
+
         if (withdrawBalance.getSunBalance() < totalSubstractSumAmount) {
             logger.error("User {} has not enough balance for withdrawal", userId);
             UserState userState = telegramState.getOrCreateUserState(userId);
-            // TODO: send message with update menuId.
             withdrawViews.updWithdrawalFailNotEnoughBalance(userState);
             return;
         }

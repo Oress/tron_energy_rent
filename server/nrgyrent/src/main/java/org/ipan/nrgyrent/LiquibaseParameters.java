@@ -12,4 +12,5 @@ public class LiquibaseParameters {
     private Long defaultRefProgramId;
     private String defaultRefProgramLabel;
     private Integer defaultRefProgramPercentage;
+    private Long defaultBalanceDailyLimit;
 }

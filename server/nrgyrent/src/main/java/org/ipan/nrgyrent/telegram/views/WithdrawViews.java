@@ -83,6 +83,18 @@ public class WithdrawViews {
     }
 
     @SneakyThrows
+    public void updWithdrawalFailNotEnoughLimit(UserState userState, Long dailyWithdrawalRemainingSun) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
+                .text(withdrawLabels.notEnoughLimit(FormattingTools.formatBalance(dailyWithdrawalRemainingSun)))
+                .replyMarkup(commonViews.getToMainMenuMarkup())
+                .build();
+        tgClient.execute(message);
+    }
+
+    @SneakyThrows
     public void updWithdrawalFailServiceNotEnoughBalance(UserState userState) {
         EditMessageText message = EditMessageText
                 .builder()
@@ -127,6 +139,22 @@ public class WithdrawViews {
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
                 .text(getPromptAmountForWithdrawalNotEnoughBalance(balance))
+                .parseMode("MARKDOWN")
+                .replyMarkup(commonViews.getToMainMenuMarkup())
+                .build();
+        try {
+            tgClient.execute(message);
+        } catch (Exception e) {
+            logger.error("Could not promptAmountAgainNotEnoughBalance", e);
+        }
+    }
+
+    public void promptAmountAgainNotEnoughLimit(UserState userState, Balance balance) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
+                .text(getPromptAmountForWithdrawalNotEnoughLimit(balance))
                 .parseMode("MARKDOWN")
                 .replyMarkup(commonViews.getToMainMenuMarkup())
                 .build();
@@ -205,10 +233,16 @@ public class WithdrawViews {
     }
 
     private String getPromptAmountForWithdrawal(Balance balance) {
-        return withdrawLabels.promptAllowedToWithdraw(FormattingTools.formatBalance(Long.max(0, balance.getSunBalance() - AppConstants.WITHDRAWAL_FEE)));
+        long max = Long.max(0, Long.min(balance.getDailyWithdrawalRemainingSun(), balance.getSunBalance() - AppConstants.WITHDRAWAL_FEE));
+        return withdrawLabels.promptAllowedToWithdraw(FormattingTools.formatBalance(max));
     }
 
     private String getPromptAmountForWithdrawalNotEnoughBalance(Balance balance) {
         return withdrawLabels.promptNotEnoughtBalance(FormattingTools.formatBalance(Long.max(0, balance.getSunBalance() - AppConstants.WITHDRAWAL_FEE)));
+    }
+
+    private String getPromptAmountForWithdrawalNotEnoughLimit(Balance balance) {
+        long max = Long.max(0, Long.min(balance.getDailyWithdrawalRemainingSun(), balance.getSunBalance() - AppConstants.WITHDRAWAL_FEE));
+        return withdrawLabels.promptNotEnoughLimit(FormattingTools.formatBalance(max));
     }
 }

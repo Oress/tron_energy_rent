@@ -43,12 +43,20 @@ public class WithdrawLabels {
         return getLocalizedMessage("withdraw.not_enough_balance");
     }
 
+    public String notEnoughLimit(String limit) {
+        return getLocalizedMessage("withdraw.not_enough_limit", limit);
+    }
+
     public String serviceNotEnoughtBalance() {
         return getLocalizedMessage("withdraw.service_not_enough_balance");
     }
 
     public String promptNotEnoughtBalance(String formatBalance) {
         return getLocalizedMessage("withdraw.prompt_not_enough_balance", formatBalance);
+    }
+
+    public String promptNotEnoughLimit(String formatBalance) {
+        return getLocalizedMessage("withdraw.prompt_not_enough_limit", formatBalance);
     }
 
     public String promptAllowedToWithdraw(String formatBalance) {

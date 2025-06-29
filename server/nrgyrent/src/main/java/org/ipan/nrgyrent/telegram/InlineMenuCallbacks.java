@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class InlineMenuCallbacks {
+    public static final String MANAGE_USER_ACTION_ADJUST_WITHDRAW_LIMIT = "manage_user_action_adjust_withdraw_limit";
     private final static Gson gson = new GsonBuilder().disableHtmlEscaping().create();
 
     public static final String TO_MAIN_MENU = "action_main_menu";
@@ -76,6 +77,7 @@ public class InlineMenuCallbacks {
 
     public static final String MANAGE_GROUPS_ACTION_CHANGE_MANAGER = "manage_groups_action_change_manager";
     public static final String MANAGE_GROUPS_ACTION_ADJUST_BALANCE_MANUALLY = "manage_groups_action_adjust_balance_manually";
+    public static final String MANAGE_GROUPS_ACTION_ADJUST_WITHDRAW_LIMIT = "manage_groups_action_adjust_withdraw_limit";
     public static final String MANAGE_GROUPS_ACTION_RENAME = "manage_groups_action_rename";
     public static final String MANAGE_GROUPS_ACTION_CHANGE_TARIFF = "manage_groups_action_change_tariff";
     public static final String MANAGE_GROUPS_ACTION_VIEW_USERS = "manage_groups_action_view_users";

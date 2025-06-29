@@ -150,6 +150,21 @@ public class ManageGroupActionsView {
         }
     }
 
+    public void groupWithdrawLimitIsNegative(UserState userState) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
+                .text(manageGrouopsLabels.changeWithdrawLimitNotNegative())
+                .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
+                .build();
+        try {
+            tgClient.execute(message);
+        } catch (Exception e) {
+            logger.error("Could not groupWithdrawLimitIsNegative userstate {}", userState, e);
+        }
+    }
+
     @SneakyThrows
     public void updMenuManagerChanged(UserState userState) {
         EditMessageText message = EditMessageText
@@ -297,6 +312,18 @@ public class ManageGroupActionsView {
     }
 
     @SneakyThrows
+    public void groupWithdrawLimitAdjusted(UserState userState) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
+                .text(manageGrouopsLabels.changeWithdrawLimitSuccess())
+                .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
+                .build();
+        tgClient.execute(message);
+    }
+
+    @SneakyThrows
     public void groupUsersAdded(UserState userState) {
         EditMessageText message = EditMessageText
                 .builder()
@@ -385,6 +412,18 @@ public class ManageGroupActionsView {
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
                 .text(manageGrouopsLabels.changeBalancePromptBalance())
+                .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
+                .build();
+        tgClient.execute(message);
+    }
+
+    @SneakyThrows
+    public void promptNewWithdrawLimit(UserState userState) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
+                .text(manageGrouopsLabels.changeWithdrawLimitPromptTotal())
                 .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
         tgClient.execute(message);
@@ -496,7 +535,10 @@ public class ManageGroupActionsView {
                 tariffLabel,
                 balance.getIsActive() ? commonLabels.check() : commonLabels.cross(),
                 balance.getDepositAddress(),
-                FormattingTools.formatBalance(balance.getSunBalance()));
+                FormattingTools.formatBalance(balance.getSunBalance()),
+                FormattingTools.formatBalance(balance.getDailyWithdrawalLimitSun()),
+                FormattingTools.formatBalance(balance.getDailyWithdrawalRemainingSun())
+                );
     }
 
     private InlineKeyboardMarkup getManageGroupActionsMarkup(Boolean showBackButton, Boolean canEdit) {
@@ -533,6 +575,13 @@ public class ManageGroupActionsView {
                                         .builder()
                                         .text(manageGrouopsLabels.menuChangeBalance())
                                         .callbackData(InlineMenuCallbacks.MANAGE_GROUPS_ACTION_ADJUST_BALANCE_MANUALLY)
+                                        .build()))
+                .keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text(manageGrouopsLabels.menuChangeWithdrawLimit())
+                                        .callbackData(InlineMenuCallbacks.MANAGE_GROUPS_ACTION_ADJUST_WITHDRAW_LIMIT)
                                         .build()))
                 .keyboardRow(
                         new InlineKeyboardRow(

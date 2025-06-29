@@ -19,8 +19,9 @@ public class ManageUserLabels {
     }
 
     public String preview(String telegramId, String valOrDash, String valOrDash2, String tariffLabel, Object object,
-            String depositAddress, String formatBalance, String refferalProgram) {
-        return getLocalizedMessage("manage_users.preview", telegramId, valOrDash, valOrDash2, tariffLabel, object, depositAddress, formatBalance, refferalProgram);
+            String depositAddress, String formatBalance, String withdrawLimitTotal, String withdrawLimitRemaining, String refferalProgram) {
+        return getLocalizedMessage("manage_users.preview", telegramId, valOrDash, valOrDash2, tariffLabel, object, depositAddress, formatBalance,
+                withdrawLimitTotal, withdrawLimitRemaining, refferalProgram);
     }
 
     public String menuChangeTariff() {
@@ -33,6 +34,10 @@ public class ManageUserLabels {
 
     public String menuChangeBalance() {
         return getLocalizedMessage("manage_users.menu.change_balance");
+    }
+
+    public String menuChangeWithdrawLimit() {
+        return getLocalizedMessage("manage_users.menu.change_withdraw_limit");
     }
 
     public String menuDeactivate() {
@@ -51,6 +56,10 @@ public class ManageUserLabels {
         return getLocalizedMessage("manage_users.change_balance.prompt_amount");
     }
 
+    public String changeWithdrawLimitPromptAmount() {
+        return getLocalizedMessage("manage_users.withdraw_limit.prompt_amount");
+    }
+
     public String changeRefProgramSuccess() {
         return getLocalizedMessage("manage_users.change_ref_program.success");
     }
@@ -59,8 +68,16 @@ public class ManageUserLabels {
         return getLocalizedMessage("manage_users.change_balance.negative");
     }
 
+    public String changeWithdrawLimitNegative() {
+        return getLocalizedMessage("manage_users.change_withdraw_limit.negative");
+    }
+
     public String changeBalanceSuccess() {
         return getLocalizedMessage("manage_users.change_balance.success");
+    }
+
+    public String changeWithdrawSuccess() {
+        return getLocalizedMessage("manage_users.change_withdraw.success");
     }
 
     public String changeTariffSuccess() {

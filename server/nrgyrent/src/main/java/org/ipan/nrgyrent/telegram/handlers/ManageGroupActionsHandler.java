@@ -179,6 +179,45 @@ public class ManageGroupActionsHandler {
         }
     }
 
+    @MatchState(forAdmin = true, state = States.ADMIN_MANAGE_GROUPS_ACTION_PREVIEW, callbackData = InlineMenuCallbacks.MANAGE_GROUPS_ACTION_ADJUST_WITHDRAW_LIMIT)
+    public void startAdjustWithdrawLimit(UserState userState, Update update) {
+        manageGroupActionsView.promptNewWithdrawLimit(userState);
+        telegramState.updateUserState(userState.getTelegramId(),
+                userState.withState(States.ADMIN_MANAGE_GROUPS_ACTION_PROMPT_NEW_WITHDRAW_LIMIT));
+    }
+
+    @MatchState(forAdmin = true, state = States.ADMIN_MANAGE_GROUPS_ACTION_PROMPT_NEW_WITHDRAW_LIMIT, updateTypes = UpdateType.MESSAGE)
+    public void handleAdjustedWithdrawLimit(UserState userState, Update update) {
+        Message message = update.getMessage();
+        if (message.hasText()) {
+            logger.info("Adjusting group withdraw limit: {}", message.getText());
+            String newLimit = message.getText();
+            try {
+                // TODO: catch NumberFormatException
+                BigDecimal adjustedLimitInTrx = new BigDecimal(newLimit);
+                BigDecimal adjustedLimitInSun = adjustedLimitInTrx.multiply(AppConstants.trxToSunRate);
+                Long telegramId = userState.getTelegramId();
+
+                long adjustedLimitInSunLong = adjustedLimitInSun.longValue();
+
+                if (adjustedLimitInSunLong < 0) {
+                    logger.warn("Adjusted withdraw limit is negative: {}", adjustedLimitInSunLong);
+                    manageGroupActionsView.groupWithdrawLimitIsNegative(userState);
+                    return;
+                }
+
+                BalanceEdit openBalance = telegramState.getOrCreateBalanceEdit(telegramId);
+                balanceService.adjustWithdrawLimit(openBalance.getSelectedBalanceId(), adjustedLimitInSunLong);
+
+                manageGroupActionsView.groupWithdrawLimitAdjusted(userState);
+                telegramState.updateUserState(userState.getTelegramId(),
+                        userState.withState(States.ADMIN_MANAGE_GROUPS_ACTION_WITHDRAW_LIMIT_ADJUSTED_SUCCESS));
+            } catch (Exception e) {
+                logger.error("Invalid format {}", newLimit, e);
+            }
+        }
+    }
+
     @MatchState(forAdmin = true, state = States.ADMIN_MANAGE_GROUPS_ACTION_PREVIEW, callbackData = InlineMenuCallbacks.MANAGE_GROUPS_ACTION_ADJUST_BALANCE_MANUALLY)
     public void startAdjustBalanceManually(UserState userState, Update update) {
         manageGroupActionsView.promptNewGroupBalance(userState);

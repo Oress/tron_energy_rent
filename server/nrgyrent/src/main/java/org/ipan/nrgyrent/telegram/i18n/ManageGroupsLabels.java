@@ -22,8 +22,9 @@ public class ManageGroupsLabels {
         return getLocalizedMessage("manage_group.choose_users");
     }
 
-    public String preview(String name, String manager, String date, String tariff, String active, String wallet, String balance) {
-        return getLocalizedMessage("manage_group.preview", name, manager, date, tariff, active, wallet, balance);
+    public String preview(String name, String manager, String date, String tariff, String active, String wallet, String balance,
+                          String withdrawLimitTotal, String withdrawLimitRemaining) {
+        return getLocalizedMessage("manage_group.preview", name, manager, date, tariff, active, wallet, balance, withdrawLimitTotal, withdrawLimitRemaining);
     }
 
     public String menuReviewUsers() {
@@ -36,6 +37,10 @@ public class ManageGroupsLabels {
 
     public String menuChangeBalance() {
         return getLocalizedMessage("manage_group.preview.actions.change_balance");
+    }
+
+    public String menuChangeWithdrawLimit() {
+        return getLocalizedMessage("manage_group.preview.actions.change_withdraw_limit");
     }
 
     public String menuAddUsers() {
@@ -75,6 +80,10 @@ public class ManageGroupsLabels {
         return getLocalizedMessage("manage_group.prompt.new_balance");
     }
 
+    public String changeWithdrawLimitPromptTotal() {
+        return getLocalizedMessage("manage_group.prompt.new_withdraw_limit");
+    }
+
     public String addUsersPromptUsers() {
         return getLocalizedMessage("manage_group.prompt.new_users");
     }
@@ -97,6 +106,10 @@ public class ManageGroupsLabels {
 
     public String changeBalanceSuccess() {
         return getLocalizedMessage("manage_group.change_tariff.success");
+    }
+
+    public String changeWithdrawLimitSuccess() {
+        return getLocalizedMessage("manage_group.withdraw_limit.success");
     }
 
     public String addUsersSuccess() {
@@ -145,6 +158,10 @@ public class ManageGroupsLabels {
 
     public String changeBalanceNotNegative() {
         return getLocalizedMessage("manage_group.balance_negative");
+    }
+
+    public String changeWithdrawLimitNotNegative() {
+        return getLocalizedMessage("manage_group.withdraw_limit_negative");
     }
 
     public String msg() {

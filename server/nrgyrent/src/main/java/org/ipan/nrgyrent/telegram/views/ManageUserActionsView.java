@@ -84,6 +84,21 @@ public class ManageUserActionsView {
         }
     }
 
+    public void withdrawLimitIsNegative(UserState userState) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
+                .text(manageUserLabels.changeWithdrawLimitNegative())
+                .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
+                .build();
+        try {
+            tgClient.execute(message);
+        } catch (Exception e) {
+            logger.error("Could not withdrawLimitIsNegative userstate {}", userState, e);
+        }
+    }
+
     @SneakyThrows
     public void userDeleted(UserState userState) {
         EditMessageText message = EditMessageText
@@ -103,6 +118,18 @@ public class ManageUserActionsView {
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
                 .text(manageUserLabels.changeBalanceSuccess())
+                .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
+                .build();
+        tgClient.execute(message);
+    }
+
+    @SneakyThrows
+    public void userWithdrawAdjusted(UserState userState) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
+                .text(manageUserLabels.changeWithdrawSuccess())
                 .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
         tgClient.execute(message);
@@ -140,6 +167,18 @@ public class ManageUserActionsView {
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
                 .text(manageUserLabels.changeBalancePromptAmount())
+                .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
+                .build();
+        tgClient.execute(message);
+    }
+
+    @SneakyThrows
+    public void promptNewUserWithdrawLimit(UserState userState) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
+                .text(manageUserLabels.changeWithdrawLimitPromptAmount())
                 .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
         tgClient.execute(message);
@@ -196,6 +235,8 @@ public class ManageUserActionsView {
                 user.getDisabled() ? commonLabels.cross() : commonLabels.check(),
                 user.getBalance().getDepositAddress(),
                 FormattingTools.formatBalance(user.getBalance().getSunBalance()),
+                FormattingTools.formatBalance(user.getBalance().getDailyWithdrawalLimitSun()),
+                FormattingTools.formatBalance(user.getBalance().getDailyWithdrawalRemainingSun()),
                 refProgram == null ? "" : ParseUtils.escapeMarkdown(formattingTools.formatRefProgmam(refProgram))
                 );
     }
@@ -223,6 +264,13 @@ public class ManageUserActionsView {
                                         .builder()
                                         .text(manageUserLabels.menuChangeBalance())
                                         .callbackData(InlineMenuCallbacks.MANAGE_USER_ACTION_ADJUST_BALANCE_MANUALLY)
+                                        .build()))
+                .keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text(manageUserLabels.menuChangeWithdrawLimit())
+                                        .callbackData(InlineMenuCallbacks.MANAGE_USER_ACTION_ADJUST_WITHDRAW_LIMIT)
                                         .build()));
 
         if (showDeactivateBtn) {

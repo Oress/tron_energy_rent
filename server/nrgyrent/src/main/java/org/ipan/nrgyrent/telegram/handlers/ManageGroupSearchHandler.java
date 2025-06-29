@@ -131,12 +131,14 @@ public class ManageGroupSearchHandler {
 
     @MatchStates({
         @MatchState(state = States.ADMIN_MANAGE_GROUPS_ACTION_PROMPT_NEW_BALANCE, callbackData = InlineMenuCallbacks.GO_BACK),
+        @MatchState(state = States.ADMIN_MANAGE_GROUPS_ACTION_PROMPT_NEW_WITHDRAW_LIMIT, callbackData = InlineMenuCallbacks.GO_BACK),
         @MatchState(state = States.ADMIN_MANAGE_GROUPS_ACTION_PROMPT_NEW_LABEL, callbackData = InlineMenuCallbacks.GO_BACK),
         @MatchState(state = States.ADMIN_MANAGE_GROUPS_ACTION_ADD_USERS, callbackData = InlineMenuCallbacks.GO_BACK),
         @MatchState(state = States.ADMIN_MANAGE_GROUPS_ACTION_REMOVE_USERS, callbackData = InlineMenuCallbacks.GO_BACK),
         @MatchState(state = States.ADMIN_MANAGE_GROUPS_ACTION_USERS_REVIEW, callbackData = InlineMenuCallbacks.GO_BACK),
         @MatchState(state = States.ADMIN_MANAGE_GROUPS_ACTION_RENAMED_SUCCESS, callbackData = InlineMenuCallbacks.GO_BACK),
         @MatchState(state = States.ADMIN_MANAGE_GROUPS_ACTION_BALANCE_ADJUSTED_SUCCESS, callbackData = InlineMenuCallbacks.GO_BACK),
+        @MatchState(state = States.ADMIN_MANAGE_GROUPS_ACTION_WITHDRAW_LIMIT_ADJUSTED_SUCCESS, callbackData = InlineMenuCallbacks.GO_BACK),
         @MatchState(state = States.ADMIN_MANAGE_GROUPS_ACTION_DEACTIVATE_SUCCESS, callbackData = InlineMenuCallbacks.GO_BACK),
         @MatchState(state = States.ADMIN_MANAGE_GROUPS_ACTION_PROMPT_NEW_MANAGER, callbackData = InlineMenuCallbacks.GO_BACK),
         @MatchState(state = States.ADMIN_MANAGE_GROUPS_ACTION_MANAGER_CHANGED_SUCCESS, callbackData = InlineMenuCallbacks.GO_BACK),

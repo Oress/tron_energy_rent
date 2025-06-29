@@ -54,6 +54,11 @@ public class Balance {
     @Column(name = "last_tx_timestamp")
     private Long lastTxTimestamp;
 
+    @Column(name = "daily_withdrawal_limit_sun")
+    private Long dailyWithdrawalLimitSun;
+
+    @Column(name = "daily_withdrawal_remaining_sun")
+    private Long dailyWithdrawalRemainingSun;
 
     @Column(name = "is_active")
     private Boolean isActive = Boolean.TRUE;
@@ -79,5 +84,13 @@ public class Balance {
 
     public String getIdAndLabel() {
         return "ID: %s  Label: %s".formatted(id, label);
+    }
+
+    public boolean canWithdraw(Long amountSun) {
+        return dailyWithdrawalRemainingSun >= amountSun;
+    }
+
+    public void resetDailyWithdrawalLimit() {
+        dailyWithdrawalRemainingSun = dailyWithdrawalLimitSun;
     }
 }

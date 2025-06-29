@@ -11,6 +11,8 @@ spring:
     change-log: classpath:db/changelog/changelog-root.xml
     drop-first: false
     parameters:
+      defaultBalanceDailyLimit: 200000000
+
       defaultRefProgramId: 0
       defaultRefProgramLabel: '5%'
       defaultRefProgramPercentage: 5

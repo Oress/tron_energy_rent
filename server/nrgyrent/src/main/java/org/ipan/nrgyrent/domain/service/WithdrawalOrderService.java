@@ -41,6 +41,7 @@ public class WithdrawalOrderService {
 
         Balance targetBalance = user.getBalanceToUse();
         balanceService.subtractSunBalance(targetBalance, amountSun + feeAmountSun);
+        balanceService.subtractWithdrawLimit(targetBalance, amountSun);
         logger.info("User {} withdrawing {} to {}", userId,  amountSun, receiveAddress);
 
         WithdrawalOrder order = new WithdrawalOrder();
@@ -94,6 +95,7 @@ public class WithdrawalOrderService {
 
         Balance balance = withdrawalOrder.getBalance();
         balance.setSunBalance(balance.getSunBalance() + withdrawalOrder.getSunAmount() + withdrawalOrder.getFeeSunAmount());
+        balanceService.refundWithdrawLimit(balance, withdrawalOrder.getSunAmount());
 
         return withdrawalOrder;
     }

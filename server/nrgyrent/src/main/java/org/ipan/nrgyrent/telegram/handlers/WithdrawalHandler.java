@@ -114,6 +114,12 @@ public class WithdrawalHandler {
                     return;
                 }
 
+                if (!balance.canWithdraw(sunAmountLong)) {
+                    logger.warn("User {} has not enough LIMIT for withdrawal, remaining: {}, required: {}, fee: {}", userState.getTelegramId(), balance.getDailyWithdrawalRemainingSun(), sunAmountLong, AppConstants.WITHDRAWAL_FEE);
+                    withdrawViews.promptAmountAgainNotEnoughLimit(userState, balance);
+                    return;
+                }
+
                 if (balance.getSunBalance() < sunAmountLong + AppConstants.WITHDRAWAL_FEE) {
                     logger.warn("User {} has not enough balance for withdrawal, balance: {}, required: {}, fee: {}", userState.getTelegramId(), balance.getSunBalance(), sunAmountLong, AppConstants.WITHDRAWAL_FEE);
                     withdrawViews.promptAmountAgainNotEnoughBalance(userState, balance);

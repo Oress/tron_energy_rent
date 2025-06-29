@@ -134,6 +134,24 @@ public class BalanceService {
     }
 
     @Transactional
+    public Balance adjustWithdrawLimit(Long balanceId, Long totalLimit) {
+        Balance balance = balanceRepo.findById(balanceId).orElse(null);
+        if (balance == null) {
+            logger.error("Balance not found for adjusting limit: {}", balanceId);
+            throw new IllegalArgumentException("Balance not found for adjusting limit");
+        }
+        // amountSun should be > 0
+        if (totalLimit < 0) {
+            logger.warn("New amount is negative: {}", totalLimit);
+            throw new InvalidAdjustedBalanceException("New amount is negative");
+        }
+
+        balance.setDailyWithdrawalLimitSun(totalLimit);
+        balance.setDailyWithdrawalRemainingSun(totalLimit);
+        return balance;
+    }
+
+    @Transactional
     public Balance adjustBalance(Long balanceId, Long amountSun, Long createdBy) {
         Balance balance = balanceRepo.findById(balanceId).orElse(null);
         if (balance == null) {
@@ -196,6 +214,7 @@ public class BalanceService {
         balance.setType(BalanceType.GROUP);
         balance.setManager(manager);
         balance.setDepositAddress(depositWallet.getBase58Address());
+        setDefaultWithdrawLimits(balance);
 
         balance.setTariff(getTariffOrDefault(tariffId));
 
@@ -216,7 +235,7 @@ public class BalanceService {
         balance.setDepositAddress(depositWallet.getBase58Address());
 
         balance.setTariff(getTariffOrDefault(command.getTariffId()));
-
+        setDefaultWithdrawLimits(balance);
         balanceRepo.save(balance);
 
         user.setBalance(balance);
@@ -279,6 +298,28 @@ public class BalanceService {
     }
 
     @Transactional
+    public void subtractWithdrawLimit(Balance targetBalance, long sunAmount) {
+        if (targetBalance == null) {
+            throw new IllegalArgumentException("Balance not found");
+        }
+
+        if (targetBalance.getDailyWithdrawalRemainingSun() < sunAmount) {
+            throw new NotEnoughBalanceException("Not enough limit");
+        }
+
+        targetBalance.setDailyWithdrawalRemainingSun(targetBalance.getDailyWithdrawalRemainingSun() - sunAmount);
+    }
+
+    @Transactional
+    public void refundWithdrawLimit(Balance targetBalance, long sunAmount) {
+        if (targetBalance == null) {
+            throw new IllegalArgumentException("Balance not found");
+        }
+
+        targetBalance.setDailyWithdrawalRemainingSun(targetBalance.getDailyWithdrawalRemainingSun() + sunAmount);
+    }
+
+    @Transactional
     public void changeManager(Long selectedBalanceId, TgUserId tgUserId) {
         Long newManagerId = tgUserId.getId();
         Balance selectedBalance = balanceRepo.findById(selectedBalanceId).orElse(null);
@@ -317,5 +358,10 @@ public class BalanceService {
             result = tariffRepo.getDefaultTariff();
         }
         return result;
+    }
+
+    private void setDefaultWithdrawLimits(Balance balance) {
+        balance.setDailyWithdrawalLimitSun(liquibaseParameters.getDefaultBalanceDailyLimit());
+        balance.setDailyWithdrawalRemainingSun(liquibaseParameters.getDefaultBalanceDailyLimit());
     }
 }

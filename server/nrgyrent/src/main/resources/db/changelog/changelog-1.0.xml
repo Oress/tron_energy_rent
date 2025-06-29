@@ -1006,4 +1006,10 @@
         </createIndex>
     </changeSet>
 
+    <changeSet id="add daily withdrawal limits to nrg_balances" author="oress">
+        <addColumn tableName="nrg_balances">
+            <column name="daily_withdrawal_limit_sun" type="bigint" defaultValue="${defaultBalanceDailyLimit}" />
+            <column name="daily_withdrawal_remaining_sun" type="bigint" defaultValue="${defaultBalanceDailyLimit}" />
+        </addColumn>
+    </changeSet>
 </databaseChangeLog>
