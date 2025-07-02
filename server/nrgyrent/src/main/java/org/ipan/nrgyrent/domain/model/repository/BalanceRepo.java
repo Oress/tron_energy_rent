@@ -19,6 +19,11 @@ public interface BalanceRepo extends JpaRepository<Balance, Long> {
     List<Balance> findAllByIsActive(Boolean isActive);
     List<Balance> findAllByTariffId(Long tariffId);
 
+    @Query("select b.id from Balance b where b.isActive = :isActive")
+    List<Long> findAllIdsByIsActive(Boolean isActive);
+
     @Query("select distinct b from ReferralCommission c join c.balanceReferralProgram brp join brp.balance b where c.status = ReferralCommissionStatus.PENDING")
     Set<Balance> findAllWithPendingReferralCommissions();
+
+    Balance findByDepositAddress(String depositAddress);
 }

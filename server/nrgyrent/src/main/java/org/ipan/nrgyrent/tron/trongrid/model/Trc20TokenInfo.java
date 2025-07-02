@@ -7,13 +7,9 @@ import lombok.ToString;
 @ToString
 @Getter
 @Setter
-public class AccountInfo {
+public class Trc20TokenInfo {
+  private String symbol;
   private String address;
-  private Long balance;
-  private Long create_time;
-
-  public Long getBalance() {
-    return balance != null ? balance : 0L;
-  }
+  private Integer decimals;
+  private String name;
 }
-

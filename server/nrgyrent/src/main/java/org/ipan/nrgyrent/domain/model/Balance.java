@@ -54,6 +54,12 @@ public class Balance {
     @Column(name = "last_tx_timestamp")
     private Long lastTxTimestamp;
 
+    @Column(name = "last_trc20_tx_id")
+    private String lastTrc20TxId;
+
+    @Column(name = "last_trc20_tx_timestamp")
+    private Long lastTrc20TxTimestamp;
+
     @Column(name = "daily_withdrawal_limit_sun")
     private Long dailyWithdrawalLimitSun;
 

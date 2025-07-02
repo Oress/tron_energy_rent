@@ -167,6 +167,14 @@ public class CommonLabels {
         return getLocalizedMessage("notification.topup", loc, trx);
     }
 
+    public String topupUsdt(Locale loc, String usdt, String rate, String bybitFee, String walletActivation, String resultTrx) {
+        return getLocalizedMessage("notification.topup_usdt", loc, usdt, rate, bybitFee, walletActivation, resultTrx);
+    }
+
+    public String walletActivationFee(Locale loc, String trx) {
+        return getLocalizedMessage("notification.topup_usdt.activation_fee", loc, trx);
+    }
+
     public String withdrawFail(Locale loc) {
         return getLocalizedMessage("notification.withdraw.fail", loc);
     }

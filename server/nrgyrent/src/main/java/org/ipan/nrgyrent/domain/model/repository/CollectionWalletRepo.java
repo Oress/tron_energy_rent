@@ -9,4 +9,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface CollectionWalletRepo extends JpaRepository<CollectionWallet, Long> {
     List<CollectionWallet> findAllByIsActive(Boolean isActive);
+    CollectionWallet findFirstByIsActive(Boolean isActive);
 }

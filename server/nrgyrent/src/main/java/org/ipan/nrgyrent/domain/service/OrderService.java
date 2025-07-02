@@ -5,15 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import org.apache.commons.lang3.NotImplementedException;
-import org.ipan.nrgyrent.domain.model.AppUser;
-import org.ipan.nrgyrent.domain.model.Balance;
-import org.ipan.nrgyrent.domain.model.BalanceReferralProgram;
-import org.ipan.nrgyrent.domain.model.Order;
-import org.ipan.nrgyrent.domain.model.OrderStatus;
-import org.ipan.nrgyrent.domain.model.ReferralCommission;
-import org.ipan.nrgyrent.domain.model.ReferralProgram;
-import org.ipan.nrgyrent.domain.model.ReferralProgramCalcType;
-import org.ipan.nrgyrent.domain.model.Tariff;
+import org.ipan.nrgyrent.domain.model.*;
 import org.ipan.nrgyrent.domain.model.repository.OrderRepo;
 import org.ipan.nrgyrent.domain.model.repository.ReferralCommissionRepo;
 import org.ipan.nrgyrent.domain.model.repository.TariffRepo;
@@ -41,32 +33,41 @@ public class OrderService {
     public Order createPendingOrder(AddOrUpdateOrderCommand command) {
         EntityManager em = getEntityManager();
 
-        AppUser user = em.find(AppUser.class, command.getUserId());
-
-        if (user == null) {
-            logger.error("User is not found when creating pending order, command {}", command);
-            throw new IllegalArgumentException("User not found");
-        }
-
-        if (command.getDuration() == null || command.getEnergyAmountPerTx() == null || command.getSunAmountPerTx() == null || command.getTxAmount() == null
-            || command.getCorrelationId() == null || command.getReceiveAddress() == null ||command.getItrxFeeSunAmount() == null) {
-                logger.error("Some of the command properties are not set, command {}", command);
-                throw new IllegalArgumentException("Some of the command properties are not set");
-        }
-
+        AppUser user = null;
         Tariff tariff = null;
-        // It should not be null but just in case.
-        if (command.getTariffId() != null) {
-            tariff = tariffRepo.getReferenceById(command.getTariffId());
+        Balance targetBalance = null;
+        Long totalSunAmount = null;
+
+        // Make check only for normal orders
+        if (OrderType.USER.equals(command.getType())) {
+            user = em.find(AppUser.class, command.getUserId());
+
+            if (user == null) {
+                logger.error("User is not found when creating pending order, command {}", command);
+                throw new IllegalArgumentException("User not found");
+            }
+
+            if (command.getDuration() == null || command.getEnergyAmountPerTx() == null || command.getSunAmountPerTx() == null || command.getTxAmount() == null
+                || command.getCorrelationId() == null || command.getReceiveAddress() == null ||command.getItrxFeeSunAmount() == null) {
+                    logger.error("Some of the command properties are not set, command {}", command);
+                    throw new IllegalArgumentException("Some of the command properties are not set");
+            }
+
+            // It should not be null but just in case.
+            if (command.getTariffId() != null) {
+                tariff = tariffRepo.getReferenceById(command.getTariffId());
+            }
+
+            totalSunAmount = command.getTxAmount() * command.getSunAmountPerTx();
+
+            targetBalance = user.getBalanceToUse();
+            balanceService.subtractSunBalance(targetBalance, totalSunAmount);
+            logger.info("Creating a pending order for user id {} username: {} balance: {} params: {}", user.getTelegramId(), user.getTelegramUsername(), targetBalance.getId(), command);
+        } else {
+            logger.info("Creating SYSTEM ORDER params: {}", command);
         }
 
-        Long totalSunAmount = command.getTxAmount() * command.getSunAmountPerTx();
         Integer totalEnergyAmount = command.getTxAmount() * command.getEnergyAmountPerTx();
-
-        Balance targetBalance = user.getBalanceToUse();
-        balanceService.subtractSunBalance(targetBalance, totalSunAmount);
-
-        logger.info("Creating a pending order for user id {} username: {} balance: {} params: {}", user.getTelegramId(), user.getTelegramUsername(), targetBalance.getId(), command);
 
         Order order = new Order();
         order.setUser(user);
@@ -82,6 +83,7 @@ public class OrderService {
         order.setMessageToUpdate(command.getMessageIdToUpdate());
         order.setChatId(command.getChatId());
         order.setTariff(tariff);
+        order.setType(command.getType());
 
         em.persist(order);
 
@@ -109,31 +111,33 @@ public class OrderService {
         order.setTxId(command.getTxId());
         order.setSerial(command.getSerial());
 
-        // Generate the referral commission record if user was invited
-        AppUser user = order.getUser();
-        BalanceReferralProgram balanceReferralProgram = user.getReferralProgram();
-        if (balanceReferralProgram != null) {
-            logger.info("Generating referral commission record from order {}", order.getId());
-            ReferralProgram referralProgram = balanceReferralProgram.getReferralProgram();
+        if (OrderType.USER.equals(order.getType())) {
+            // Generate the referral commission record if user was invited
+            AppUser user = order.getUser();
+            BalanceReferralProgram balanceReferralProgram = user.getReferralProgram();
+            if (balanceReferralProgram != null) {
+                logger.info("Generating referral commission record from order {}", order.getId());
+                ReferralProgram referralProgram = balanceReferralProgram.getReferralProgram();
 
-            ReferralProgramCalcType calcType = referralProgram.getCalcType();
-            Long commissionLong = switch (calcType) {
-                case ReferralProgramCalcType.PERCENT_FROM_PROFIT -> calculateCommissionAsPercentFromProfit(order, referralProgram);
-                case ReferralProgramCalcType.PERCENT_FROM_REVENUE -> calculateCommissionAsPercentFromRevenue(order, referralProgram);
-                default -> 0L;
-            };
+                ReferralProgramCalcType calcType = referralProgram.getCalcType();
+                Long commissionLong = switch (calcType) {
+                    case ReferralProgramCalcType.PERCENT_FROM_PROFIT -> calculateCommissionAsPercentFromProfit(order, referralProgram);
+                    case ReferralProgramCalcType.PERCENT_FROM_REVENUE -> calculateCommissionAsPercentFromRevenue(order, referralProgram);
+                    default -> 0L;
+                };
 
-            if (commissionLong > 0) {
-                ReferralCommission referralCommission = new ReferralCommission();
-                referralCommission.setAmountSun(commissionLong);
-                referralCommission.setCalcType(calcType);
-                referralCommission.setOrder(order);
-                referralCommission.setBalanceReferralProgram(balanceReferralProgram);
-                referralCommission.setPercentage(referralProgram.getPercentage());
-                referralCommission.setReferralProgram(referralProgram);
-                referralCommissionRepo.save(referralCommission);
-            } else {
-                logger.error("The commission is negative {} for order id: {}, correlation id{}", commissionLong, order.getId(), command.getCorrelationId());
+                if (commissionLong > 0) {
+                    ReferralCommission referralCommission = new ReferralCommission();
+                    referralCommission.setAmountSun(commissionLong);
+                    referralCommission.setCalcType(calcType);
+                    referralCommission.setOrder(order);
+                    referralCommission.setBalanceReferralProgram(balanceReferralProgram);
+                    referralCommission.setPercentage(referralProgram.getPercentage());
+                    referralCommission.setReferralProgram(referralProgram);
+                    referralCommissionRepo.save(referralCommission);
+                } else {
+                    logger.error("The commission is negative {} for order id: {}, correlation id{}", commissionLong, order.getId(), command.getCorrelationId());
+                }
             }
         }
 
@@ -176,8 +180,10 @@ public class OrderService {
         order.setItrxStatus(command.getItrxStatus());
         order.setSerial(command.getSerial());
 
-        Balance balance = order.getBalance();
-        balance.setSunBalance(balance.getSunBalance() + order.getSunAmount());
+        if (OrderType.USER.equals(order.getType())) {
+            Balance balance = order.getBalance();
+            balance.setSunBalance(balance.getSunBalance() + order.getSunAmount());
+        }
 
         return order;
     }

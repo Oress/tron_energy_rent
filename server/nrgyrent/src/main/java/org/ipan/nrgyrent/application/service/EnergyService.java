@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.ipan.nrgyrent.domain.events.autotopup.AutoDelegationSessionEventPublisher;
 import org.ipan.nrgyrent.domain.exception.NotEnoughBalanceException;
 import org.ipan.nrgyrent.domain.model.AppUser;
+import org.ipan.nrgyrent.domain.model.OrderType;
 import org.ipan.nrgyrent.domain.model.autodelegation.AutoDelegationEventType;
 import org.ipan.nrgyrent.domain.model.autodelegation.AutoDelegationSession;
 import org.ipan.nrgyrent.domain.model.Order;
@@ -151,6 +152,46 @@ public class EnergyService {
         autoDelegationSessionEventPublisher.publishSessionDeactivated(session.getId());
     }
 
+    public Order tryMakeSystemTransaction(String duration, String receiveAddress) {
+        Order pendingOrder = null;
+
+        if (WalletTools.isValidTronAddress(receiveAddress)) {
+            UUID correlationId = UUID.randomUUID();
+            EstimateOrderAmountResponse estimateOrderResponse = itrxService.estimateOrderPrice(null, duration, receiveAddress);
+
+            try {
+                var builder = AddOrUpdateOrderCommand.builder()
+                        .receiveAddress(receiveAddress)
+                        .energyAmountPerTx(estimateOrderResponse.getEnergy_amount())
+                        .txAmount(1)
+                        .duration(duration)
+                        .type(OrderType.WITHDRAW_TRX_TO_BYBIT)
+                        .itrxFeeSunAmount(estimateOrderResponse.getTotal_price())
+                        .correlationId(correlationId.toString());
+                pendingOrder = orderService.createPendingOrder(builder.build());
+                PlaceOrderResponse placeOrderResponse = itrxService.placeOrder(estimateOrderResponse.getEnergy_amount(), duration, receiveAddress,
+                        correlationId);
+
+                if (placeOrderResponse.getErrno() != ITRX_OK_CODE) {
+                    orderService.refundOrder(
+                            AddOrUpdateOrderCommand.builder()
+                                    .correlationId(correlationId.toString())
+                                    .build());
+                }
+            } catch (Exception e) {
+                logger.error("Error while placing order ", e);
+                if (pendingOrder != null) {
+                    orderService.refundOrder(
+                            AddOrUpdateOrderCommand.builder()
+                                    .correlationId(correlationId.toString())
+                                    .build());
+                }
+                throw e;
+            }
+        }
+        return pendingOrder;
+    }
+
     public Order tryMakeTransaction(UserState userState, Integer energyAmountPerTx, String duration, String receiveAddress, Integer txAmount,
             Long sunAmountPerTx, Long tariffId, Long autoDelegationSessionId, AutoDelegationEventType delegationEventType) {
         Order pendingOrder = null;
@@ -167,6 +208,7 @@ public class EnergyService {
                         .energyAmountPerTx(energyAmountPerTx)
                         .txAmount(txAmount)
                         .tariffId(tariffId)
+                        .type(OrderType.USER)
                         .sunAmountPerTx(sunAmountPerTx)
                         .duration(duration)
                         .itrxFeeSunAmount(estimateOrderResponse.getTotal_price())

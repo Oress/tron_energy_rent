@@ -88,6 +88,10 @@ public class FormattingTools {
         return String.format("%s %s", user.getTelegramUsername(), user.getTelegramFirstName());
     }
 
+    public static String formatUsdt(Long usdt) {
+        return df.format(BigDecimal.valueOf(usdt).divide(BigDecimal.valueOf(1_000_000D)).setScale(2, RoundingMode.DOWN));
+    }
+
     public static String formatBalance(Long balanceSun) {
         return df.format(BigDecimal.valueOf(balanceSun).divide(BigDecimal.valueOf(1_000_000D)).setScale(2, RoundingMode.DOWN));
     }

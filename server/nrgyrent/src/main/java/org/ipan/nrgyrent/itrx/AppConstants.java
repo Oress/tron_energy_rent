@@ -19,6 +19,8 @@ public class AppConstants {
 
     public static final Long WITHDRAWAL_FEE = 1_000_000L;
 
+    public static final BigDecimal MIN_TRANSFER_AMOUNT_USDT = new BigDecimal(10L); // 10 USDT
+
     public static final Long MIN_TRANSFER_AMOUNT_SUN = 10_000_000L;
     public static final Long MIN_WITHDRAWAL_AMOUNT = 10_000_000L;
 }

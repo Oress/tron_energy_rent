@@ -84,10 +84,14 @@ public class RestClient {
     }
 
 
-    public EstimateOrderAmountResponse estimateOrderPrice(int energyAmnt, String period, String receiveAddress) {
+    public EstimateOrderAmountResponse estimateOrderPrice(Integer energyAmnt, String period, String receiveAddress) {
         try {
-            HttpUrl url = HttpUrl.parse(baseUrl + "/api/v1/frontend/order/price").newBuilder()
-                    .addQueryParameter("energy_amount", String.valueOf(energyAmnt))
+            HttpUrl.Builder builder = HttpUrl.parse(baseUrl + "/api/v1/frontend/order/price").newBuilder();
+
+            if(energyAmnt != null) {
+                builder.addQueryParameter("energy_amount", String.valueOf(energyAmnt));
+            }
+            HttpUrl url = builder
                     .addQueryParameter("period", period)
                     .addQueryParameter("to_address", receiveAddress)
                     .build();

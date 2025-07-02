@@ -76,6 +76,9 @@ public class Order {
     @Column(name = "order_status")
     private OrderStatus orderStatus;
 
+    @Enumerated(EnumType.STRING)
+    private OrderType type;
+
     // Result from the callback
     @Column(name = "itrx_status")
     private Integer itrxStatus;

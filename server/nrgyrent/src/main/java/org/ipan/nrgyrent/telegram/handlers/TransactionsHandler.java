@@ -5,10 +5,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.ipan.nrgyrent.domain.exception.NotEnoughBalanceException;
-import org.ipan.nrgyrent.domain.model.AppUser;
-import org.ipan.nrgyrent.domain.model.Order;
-import org.ipan.nrgyrent.domain.model.Tariff;
-import org.ipan.nrgyrent.domain.model.UserWallet;
+import org.ipan.nrgyrent.domain.model.*;
 import org.ipan.nrgyrent.domain.model.repository.UserWalletRepo;
 import org.ipan.nrgyrent.domain.service.OrderService;
 import org.ipan.nrgyrent.domain.service.UserService;
@@ -223,6 +220,7 @@ public class TransactionsHandler {
                                 .duration(duration)
                                 .messageIdToUpdate(userState.getMenuMessageId())
                                 .chatId(userState.getChatId())
+                                .type(OrderType.USER)
                                 .itrxFeeSunAmount(estimateOrderResponse.getTotal_price())
                                 .correlationId(correlationId.toString())
                                 .build());

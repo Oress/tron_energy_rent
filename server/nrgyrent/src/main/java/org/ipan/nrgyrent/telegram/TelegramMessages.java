@@ -1,15 +1,12 @@
 package org.ipan.nrgyrent.telegram;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.ipan.nrgyrent.domain.model.AppUser;
-import org.ipan.nrgyrent.domain.model.Balance;
-import org.ipan.nrgyrent.domain.model.BalanceReferralProgram;
-import org.ipan.nrgyrent.domain.model.Order;
-import org.ipan.nrgyrent.domain.model.Tariff;
-import org.ipan.nrgyrent.domain.model.UserRole;
-import org.ipan.nrgyrent.domain.model.UserWallet;
+import org.ipan.nrgyrent.domain.model.*;
+import org.ipan.nrgyrent.itrx.AppConstants;
 import org.ipan.nrgyrent.telegram.i18n.CommonLabels;
 import org.ipan.nrgyrent.telegram.i18n.TransactionLabels;
 import org.ipan.nrgyrent.telegram.state.UserState;
@@ -198,6 +195,25 @@ public class TelegramMessages {
     }
 
     @SneakyThrows
+    public void sendTopupUsdtNotification(UserState userState, DepositTransaction depositTransaction) {
+        SendMessage message = SendMessage
+                .builder()
+                .chatId(userState.getChatId())
+                .text(commonLabels.topupUsdt(userState.getLocaleOrDefault(),
+                        FormattingTools.formatUsdt(depositTransaction.getOriginalAmount()),
+                        depositTransaction.getTrxToUsdtRate().toString(),
+                        BigDecimal.valueOf(depositTransaction.getBybitFeeSun()).divide(AppConstants.trxToSunRate, 6, RoundingMode.DOWN).toString(),
+                        depositTransaction.includeWalletActivationFee()
+                                ? commonLabels.walletActivationFee(userState.getLocaleOrDefault(), FormattingTools.formatBalance(depositTransaction.getActivationFeeSun())) : "",
+                        FormattingTools.formatBalance(depositTransaction.getAmount()))
+                )
+                .parseMode("MARKDOWN")
+                .replyMarkup(getOkNotificationMarkup())
+                .build();
+        tgClient.execute(message);
+    }
+
+    @SneakyThrows
     public void sendReferalPaymentNotification(UserState userState, Long amountSun) {
         SendMessage message = SendMessage
                 .builder()
@@ -349,7 +365,6 @@ public class TelegramMessages {
             case ADMIN -> updateMsgToAdminMainMenu(userState, user, wallets);
             default -> updateMsgToMainMenu(userState, user, wallets);
         }
-        ;
     }
 
     @SneakyThrows

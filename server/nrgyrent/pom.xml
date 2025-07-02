@@ -24,6 +24,18 @@
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>fastjson</artifactId>
+            <version>2.0.31</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.github.tronprotocol</groupId>
+            <artifactId>trident</artifactId>
+            <version>0.10.0</version>
+        </dependency>
+
         <!-- https://mvnrepository.com/artifact/com.google.code.gson/gson -->
         <dependency>
             <groupId>com.google.code.gson</groupId>

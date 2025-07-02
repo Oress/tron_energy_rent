@@ -1012,4 +1012,49 @@
             <column name="daily_withdrawal_remaining_sun" type="bigint" defaultValue="${defaultBalanceDailyLimit}" />
         </addColumn>
     </changeSet>
+
+    <changeSet id="add type to nrg_deposit_transactions" author="oress">
+        <addColumn tableName="nrg_deposit_transactions">
+            <column name="order_id" type="bigint" />
+            <column name="status" type="text" defaultValue="COMPLETED" />
+            <column name="usdt_to_trx_rate" type="decimal(20,6)" />
+            <column name="type" type="text" defaultValue="TRX" />
+            <column name="original_amount" type="bigint" />
+            <column name="bybit_usdt_tx" type="text" />
+            <column name="bybit_transfer_id" type="text" />
+            <column name="bybit_order_id" type="text" />
+            <column name="bybit_fee_sun" type="bigint" />
+            <column name="activation_fee_sun" type="bigint" />
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="add fk_nrg_deposit_transactions_order_id" author="oress">
+        <addForeignKeyConstraint baseTableName="nrg_deposit_transactions" baseColumnNames="order_id"
+                                 constraintName="fk_nrg_deposit_transactions_order_id"
+                                 referencedTableName="nrg_orders"
+                                 referencedColumnNames="id" />
+    </changeSet>
+
+    <changeSet id="add idx_nrg_deposit_transactions_order_id" author="oress">
+        <createIndex tableName="nrg_deposit_transactions" indexName="idx_nrg_deposit_transactions_order_id">
+            <column name="order_id" />
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="add last_trc20_tx_id and last_trc20_tx_timestamp to nrg_balances" author="oress">
+        <addColumn tableName="nrg_balances">
+            <column name="last_trc20_tx_id" type="text" />
+            <column name="last_trc20_tx_timestamp" type="bigint" />
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="drop not null amount nrg_deposit_transactions" author="oress">
+        <dropNotNullConstraint tableName="nrg_deposit_transactions" columnName="amount" />
+    </changeSet>
+
+    <changeSet id="add type nrg_orders" author="oress">
+        <addColumn tableName="nrg_orders">
+            <column name="type" type="text" defaultValue="USER"/>
+        </addColumn>
+    </changeSet>
 </databaseChangeLog>

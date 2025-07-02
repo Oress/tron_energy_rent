@@ -26,11 +26,12 @@ public class PollForTransactionsJob {
 
     @Scheduled(initialDelay = 1, fixedRate = 3, timeUnit = TimeUnit.MINUTES)
     public void scheduleTasks() {
-        List<Balance> activeBalances = balanceRepo.findAllByIsActive(Boolean.TRUE);
+        List<Long> activeBalances = balanceRepo.findAllIdsByIsActive(Boolean.TRUE);
 
         for (int i = 0; i < activeBalances.size(); i += BATCH_SIZE) {
-            List<Balance> batch = activeBalances.subList(i, Math.min(i + BATCH_SIZE, activeBalances.size()));
-            helper.processBatch(batch);
+            List<Long> batch = activeBalances.subList(i, Math.min(i + BATCH_SIZE, activeBalances.size()));
+            helper.processBatchForTrxTx(batch);
+            helper.processBatchForTrc20Tx(batch);
         }
     }
 }
