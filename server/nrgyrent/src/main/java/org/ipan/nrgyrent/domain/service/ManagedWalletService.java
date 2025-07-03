@@ -69,7 +69,7 @@ public class ManagedWalletService {
     }
 
     @SneakyThrows
-    private static byte[] decrypt(byte[] ciphertext, byte[] key) {
+    public static byte[] decrypt(byte[] ciphertext, byte[] key) {
         byte[] iv = new byte[IV_LENGTH];
         System.arraycopy(ciphertext, 0, iv, 0, IV_LENGTH);
         GCMParameterSpec spec = new GCMParameterSpec(GCM_TAG_LENGTH, iv);

@@ -2,6 +2,7 @@ package org.ipan.nrgyrent.cron;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.bouncycastle.util.encoders.Hex;
 import org.ipan.nrgyrent.BybitConfig;
 import org.ipan.nrgyrent.bybit.BybitRestClient;
 import org.ipan.nrgyrent.bybit.dto.*;
@@ -20,6 +21,7 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Configuration;
 
 import java.math.BigDecimal;
+import java.util.Base64;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.TreeMap;
@@ -38,6 +40,12 @@ public class UsdtDepositHelperApplicationRunner implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
+/*        byte[] hex = Hex.decode("");
+        String keyB64 = "";
+        byte[] key = Base64.getDecoder().decode(keyB64);
+        byte[] pk = ManagedWalletService.decrypt(hex, key);
+        logger.info("Decrypted private key: {}", Hex.toHexString(pk));*/
+
 //        bybitRestClient.getUsdtDeposits("0x7e4a057f5f5eaf04a3524ddecc09034fd5a041741208fe21edd8913e4f528375");
 //        sendUsdtToAddress("TLwfsW16jor7K9Zt1hbRdHdrhXJUNz9mE7", 500_000_000L);
 

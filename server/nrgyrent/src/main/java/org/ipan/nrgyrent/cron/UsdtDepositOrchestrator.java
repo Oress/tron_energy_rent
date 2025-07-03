@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.ipan.nrgyrent.bybit.BybitRestClient;
+import org.ipan.nrgyrent.bybit.dto.DepositData;
 import org.ipan.nrgyrent.domain.model.DepositStatus;
 import org.ipan.nrgyrent.domain.model.DepositTransaction;
 import org.ipan.nrgyrent.domain.model.DepositType;
@@ -48,7 +49,11 @@ public class UsdtDepositOrchestrator {
             // skip it for dev, leave it for prod, because bybit testnet does not support nile tests
             if (!configurableEnvironment.matchesProfiles("dev")) {
                 for (int i = 0; i < 20; i++) {
-                    bybitRestClient.getUsdtDeposits(txId);
+                    DepositData depositData = bybitRestClient.getUsdtDeposits(txId);
+                    // https://bybit-exchange.github.io/docs/v5/enum#depositstatus
+                    if (depositData != null && depositData.getStatus() != null && (depositData.getStatus() == 10012 || depositData.getStatus() == 3)) {
+                        break;
+                    }
                     Thread.sleep(3000);
                 }
             }

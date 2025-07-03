@@ -8,7 +8,7 @@ public class DepositData {
     private String chain;
     private String amount;
     private String txID;
-    private String status;
+    private Integer status;
     private String confirmations;
     private String fromAddress;
 }
