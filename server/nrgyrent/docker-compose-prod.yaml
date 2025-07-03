@@ -7,6 +7,16 @@ services:
     ports:
       - 8080:8080
 
+  utils:
+    extends:
+      file: docker-compose-base.yaml
+      service: utilsservice
+    entrypoint:
+      - java
+      - -jar
+      - application.jar
+      - showintertrans
+
   postgres:
     restart: unless-stopped
     extends:

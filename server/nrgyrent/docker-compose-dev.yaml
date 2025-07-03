@@ -1,4 +1,14 @@
 services:
+  utils:
+    extends:
+      file: docker-compose-base.yaml
+      service: utilsservice
+    entrypoint:
+      - java
+      - -jar
+      - application.jar
+      - showintertrans
+
   postgres:
     extends:
       file: docker-compose-base.yaml

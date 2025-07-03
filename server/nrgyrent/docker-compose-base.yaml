@@ -41,6 +41,16 @@ services:
 
       - TELEGRAM_BOT_TOKEN
 
+  utilsservice:
+    build:
+      context: ../../utils
+      dockerfile: Dockerfile
+    image: energy-rent-utils
+    environment:
+      - APP_BYBIT_API_KEY
+      - APP_BYBIT_API_SECRET
+      - APP_BYBIT_USDT_DEP_WALLET
+      - APP_USDT_ADDRESS
 
   postgresservice:
     image: postgres:16.0
