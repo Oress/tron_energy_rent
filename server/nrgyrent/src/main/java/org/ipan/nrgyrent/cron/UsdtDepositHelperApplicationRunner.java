@@ -86,8 +86,8 @@ public class UsdtDepositHelperApplicationRunner implements ApplicationRunner {
 
 /*
         BigDecimal amount = new BigDecimal(100);
-        bybitRestClient.internalTransfer("FUND", "UNIFIED", amount, "USDT");
-        Thread.sleep(1000);
+//        bybitRestClient.internalTransfer("FUND", "UNIFIED", amount, "USDT");
+//        Thread.sleep(1000);
         PlaceOrderResponse response = bybitRestClient.placeMarketOrderTRXUSDT(amount);
 
         if (response.getRetCode() != 0) {
@@ -97,7 +97,8 @@ public class UsdtDepositHelperApplicationRunner implements ApplicationRunner {
             Thread.sleep(1000);
             GetOrderData orderData = bybitRestClient.getOrderStatus(response.getResult().getOrderId());
             logger.info("Bybit. Order data: {}", orderData);
-        }*/
+        }
+ */
     }
 
     private void sendUsdtToAddress(String depositWallet, Long amount) {

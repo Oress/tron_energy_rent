@@ -278,6 +278,61 @@ public class BybitRestClient {
                 : null;
     }
 
+    @SneakyThrows
+    public void queryAddress() {
+        String timestamp = String.valueOf(System.currentTimeMillis());
+
+        Map<String, Object> map = new HashMap<>();
+        map.put("coin", "USDT");
+        map.put("chainType", "TRC20");
+
+        String signature = genGetSign(map, timestamp);
+        StringBuilder sb = genQueryStr(map);
+
+        Request request = new Request.Builder()
+                .url(bybitConfig.getUrlToUse() + "/v5/asset/deposit/query-address?" + sb)
+                .get()
+                .addHeader("X-BAPI-API-KEY", bybitConfig.getApiKey())
+                .addHeader("X-BAPI-TIMESTAMP", timestamp)
+                .addHeader("X-BAPI-SIGN", signature)
+                .addHeader("X-BAPI-RECV-WINDOW", bybitConfig.getRecvWindow())
+                .addHeader("Content-Type", "application/json")
+                .build();
+        Response response = client.newCall(request).execute();
+
+        String string = response.body().string();
+//        DepositsResponse result = gson.fromJson(string, DepositsResponse.class);
+
+        logger.info("Response getUsdtDeposits " + string);
+//        DepositInner result1 = result.getResult();
+    }
+
+    @SneakyThrows
+    public void getInteralTransferHistory() {
+        String timestamp = String.valueOf(System.currentTimeMillis());
+
+        Map<String, Object> map = new HashMap<>();
+        map.put("coin", "USDT");
+
+        String signature = genGetSign(map, timestamp);
+        StringBuilder sb = genQueryStr(map);
+
+        Request request = new Request.Builder()
+                .url(bybitConfig.getUrlToUse() + "/v5/asset/transfer/query-inter-transfer-list?" + sb)
+                .get()
+                .addHeader("X-BAPI-API-KEY", bybitConfig.getApiKey())
+                .addHeader("X-BAPI-TIMESTAMP", timestamp)
+                .addHeader("X-BAPI-SIGN", signature)
+                .addHeader("X-BAPI-RECV-WINDOW", bybitConfig.getRecvWindow())
+                .addHeader("Content-Type", "application/json")
+                .build();
+        Response response = client.newCall(request).execute();
+
+        String string = response.body().string();
+
+        logger.info("Response getInteralTransferHistory " + string);
+    }
+
     private String genPostSign(Map<String, Object> params, String timestamp) throws NoSuchAlgorithmException, InvalidKeyException {
         Mac sha256_HMAC = Mac.getInstance("HmacSHA256");
         SecretKeySpec secret_key = new SecretKeySpec(bybitConfig.getApiSecret().getBytes(), "HmacSHA256");
@@ -339,4 +394,5 @@ public class BybitRestClient {
         sb.deleteCharAt(sb.length() - 1);
         return sb;
     }
+
 }
