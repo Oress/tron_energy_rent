@@ -21,6 +21,7 @@ public class UsdtDepositOrchestrator {
     private BybitRestClient bybitRestClient;
     private ConfigurableEnvironment configurableEnvironment;
 
+    @SneakyThrows
     public void startOrchestrateUsdtDeposit(Long depositTransactionId) {
         DepositTransaction depositTransaction = depositTransactionRepo.findById(depositTransactionId).get();
 
@@ -29,6 +30,7 @@ public class UsdtDepositOrchestrator {
             return;
         }
         usdtDepositHelper.tryActivateWallet(depositTransaction);
+        Thread.sleep(2000);
         usdtDepositHelper.rentEnergyForUsdtTransfer(depositTransaction);
     }
 

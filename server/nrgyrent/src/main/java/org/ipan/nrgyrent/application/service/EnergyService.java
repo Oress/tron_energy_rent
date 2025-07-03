@@ -152,12 +152,12 @@ public class EnergyService {
         autoDelegationSessionEventPublisher.publishSessionDeactivated(session.getId());
     }
 
-    public Order tryMakeSystemTransaction(String duration, String receiveAddress) {
+    public Order tryMakeSystemTransaction(Integer energyAmount, String duration, String receiveAddress) {
         Order pendingOrder = null;
 
         if (WalletTools.isValidTronAddress(receiveAddress)) {
             UUID correlationId = UUID.randomUUID();
-            EstimateOrderAmountResponse estimateOrderResponse = itrxService.estimateOrderPrice(null, duration, receiveAddress);
+            EstimateOrderAmountResponse estimateOrderResponse = itrxService.estimateOrderPrice(energyAmount, duration, receiveAddress);
 
             try {
                 var builder = AddOrUpdateOrderCommand.builder()

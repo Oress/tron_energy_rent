@@ -11,7 +11,8 @@ import org.ipan.nrgyrent.domain.model.*;
 import org.ipan.nrgyrent.domain.model.repository.*;
 import org.ipan.nrgyrent.domain.service.ManagedWalletService;
 import org.ipan.nrgyrent.itrx.AppConstants;
-import org.ipan.nrgyrent.itrx.RestClient;
+import org.ipan.nrgyrent.itrx.ItrxService;
+import org.ipan.nrgyrent.itrx.dto.EstimateOrderAmountResponse;
 import org.ipan.nrgyrent.telegram.TelegramMessages;
 import org.ipan.nrgyrent.telegram.state.TelegramState;
 import org.ipan.nrgyrent.telegram.state.UserState;
@@ -34,7 +35,7 @@ public class UsdtDepositHelper {
     private final CollectionWalletRepo collectionWalletRepo;
     private final TelegramMessages telegramMessages;
     private final TelegramState telegramState;
-    private final RestClient restClient;
+    private final ItrxService itrxService;
     private TrongridRestClient trongridRestClient;
     private EnergyService energyService;
     private BybitConfig bybitConfig;
@@ -132,7 +133,8 @@ public class UsdtDepositHelper {
     }
 
     public void rentEnergyForUsdtTransfer(DepositTransaction depositTransaction) {
-        Order order = energyService.tryMakeSystemTransaction(AppConstants.DURATION_1H, depositTransaction.getWalletTo());
+        EstimateOrderAmountResponse estimateOrderResponse = itrxService.estimateOrderPrice(null, AppConstants.DURATION_1H, bybitConfig.getUsdtDepositAddress());
+        Order order = energyService.tryMakeSystemTransaction(estimateOrderResponse.getEnergy_amount(), AppConstants.DURATION_1H, depositTransaction.getWalletTo());
         depositTransaction.setStatus(DepositStatus.USDT_ENERGY_RENTED);
         depositTransaction.setSystemOrder(order);
         depositTransactionRepo.save(depositTransaction);
