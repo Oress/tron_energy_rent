@@ -35,7 +35,7 @@ public class UsdtDepositOrchestrator {
         usdtDepositHelper.rentEnergyForUsdtTransfer(depositTransaction);
     }
 
-    @Async
+    @Async(CronJobConfig.USDT_DEPOSIT_EXECUTOR)
     public void continueOrchestrateUsdtDepositWithOrderId(String orderCorrelationId) {
         try {
             DepositTransaction depositTransaction = depositTransactionRepo.findBySystemOrderCorrelationId(orderCorrelationId);

@@ -48,7 +48,10 @@ public class UsdtDepositHelper {
     public GetOrderData placeBuyOrderUsdtToTrx(DepositTransaction depositTransaction) {
         GetOrderData result = null;
 
-        BigDecimal amount = BigDecimal.valueOf(depositTransaction.getOriginalAmount()).divide(BigDecimal.valueOf(1_000_000), 2, RoundingMode.DOWN);
+        BigDecimal amount = BigDecimal.valueOf(depositTransaction.getOriginalAmount())
+                .subtract(new BigDecimal("0.01"))
+                .divide(BigDecimal.valueOf(1_000_000), 2, RoundingMode.DOWN);
+
         InternalTransferResponse internalTransferResponse = bybitRestClient.internalTransfer("FUND", "UNIFIED", amount, "USDT");
 
         if (internalTransferResponse.getRetCode() != 0) {
@@ -94,7 +97,8 @@ public class UsdtDepositHelper {
         BigDecimal deposit = trxTotal
                 .subtract(bybitFeeTrx)  // Bybit fee ~ 0.1%
                 .subtract(BigDecimal.valueOf(depositTransaction.getActivationFeeSun()).divide(AppConstants.trxToSunRate, 2, RoundingMode.DOWN))  // activation fee 0 or 1.1 TRX
-                .subtract(BigDecimal.ONE.divide(new BigDecimal(result.getAvgPrice()), 6, RoundingMode.DOWN)); // 1 USDT for renting energy
+                .subtract(BigDecimal.ONE.divide(new BigDecimal(result.getAvgPrice()), 6, RoundingMode.DOWN)) // 1 USDT for renting energy
+                .add(new BigDecimal("0.01").divide(new BigDecimal(result.getAvgPrice()), 6, RoundingMode.DOWN)); // 0.01 USDT compensation left on the account
         long depositSun = deposit.multiply(AppConstants.trxToSunRate).longValue();
 
         depositTransaction.setBybitFeeSun(bybitFeeTrx.multiply(AppConstants.trxToSunRate).longValue());
@@ -142,8 +146,12 @@ public class UsdtDepositHelper {
 
     public String transferUsdtToBybit(DepositTransaction depositTransaction) {
         String depositWallet = depositTransaction.getWalletTo();
-
-        TreeMap<String, Object> responseProps = trongridRestClient.transferUsdtSmartContract(depositWallet, bybitConfig.getUsdtDepositAddress(), depositTransaction.getOriginalAmount());
+        // 0.01 usdt should be left in account so that the following transfers would cost 2x less
+        // the bot's commission covers it
+        Long oneCent = 10_000L;
+        TreeMap<String, Object> responseProps = trongridRestClient.transferUsdtSmartContract(depositWallet,
+                bybitConfig.getUsdtDepositAddress(),
+                depositTransaction.getOriginalAmount() - oneCent);
         LinkedHashMap<String, Object> transaction = (LinkedHashMap<String, Object>) responseProps.get("transaction");
         String txId = (String) transaction.get("txID");
         ManagedWallet managedWallet = managedWalletRepo.findById(depositWallet).get();

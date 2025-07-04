@@ -21,6 +21,7 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public class CronJobConfig {
     public static final String TRON_TRANSACTION_EXECUTOR = "tronTransactionExecutor";
+    public static final String USDT_DEPOSIT_EXECUTOR = "usdt_deposit_executor";
 
     private final ReferralCommissionHelper referralCommissionHelper;
     private final BalanceRepo balanceRepo;
@@ -33,6 +34,15 @@ public class CronJobConfig {
         return Executors.newFixedThreadPool(3, runnable -> {
             Thread thread = new Thread(runnable);
             thread.setName("tronTransactionExecutor-" + thread.threadId());
+            return thread;
+        });
+    }
+
+    @Bean(name = USDT_DEPOSIT_EXECUTOR)
+    public Executor usdtDepositExecutor() {
+        return Executors.newFixedThreadPool(3, runnable -> {
+            Thread thread = new Thread(runnable);
+            thread.setName("usdt_deposit_executor-" + thread.threadId());
             return thread;
         });
     }
