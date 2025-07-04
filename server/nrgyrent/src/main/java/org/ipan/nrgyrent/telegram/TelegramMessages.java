@@ -203,8 +203,6 @@ public class TelegramMessages {
                         FormattingTools.formatUsdt(depositTransaction.getOriginalAmount()),
                         depositTransaction.getTrxToUsdtRate().toString(),
                         BigDecimal.valueOf(depositTransaction.getBybitFeeSun()).divide(AppConstants.trxToSunRate, 6, RoundingMode.DOWN).toString(),
-                        depositTransaction.includeWalletActivationFee()
-                                ? commonLabels.walletActivationFee(userState.getLocaleOrDefault(), FormattingTools.formatBalance(depositTransaction.getActivationFeeSun())) : "",
                         FormattingTools.formatBalance(depositTransaction.getAmount()))
                 )
                 .parseMode("MARKDOWN")

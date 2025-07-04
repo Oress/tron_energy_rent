@@ -96,7 +96,6 @@ public class UsdtDepositHelper {
         BigDecimal bybitFeeTrx = new BigDecimal(result.getCumExecFee());
         BigDecimal deposit = trxTotal
                 .subtract(bybitFeeTrx)  // Bybit fee ~ 0.1%
-                .subtract(BigDecimal.valueOf(depositTransaction.getActivationFeeSun()).divide(AppConstants.trxToSunRate, 2, RoundingMode.DOWN))  // activation fee 0 or 1.1 TRX
                 .subtract(BigDecimal.ONE.divide(new BigDecimal(result.getAvgPrice()), 6, RoundingMode.DOWN)) // 1 USDT for renting energy
                 .add(new BigDecimal("0.01").divide(new BigDecimal(result.getAvgPrice()), 6, RoundingMode.DOWN)); // 0.01 USDT compensation left on the account
         long depositSun = deposit.multiply(AppConstants.trxToSunRate).longValue();
