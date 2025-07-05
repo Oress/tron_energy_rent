@@ -27,6 +27,7 @@ public class CronJobConfig {
     private final BalanceRepo balanceRepo;
     private final CollectionWalletRepo collectionWalletRepo;
     private final CollectionWalletBalanceMonitorJob collectionWalletBalanceMonitorJob;
+    private final BybitBalanceMonitorJob bybitBalanceMonitorJob;
 
     @Bean(name = TRON_TRANSACTION_EXECUTOR)
     @ConditionalOnProperty(name = "app.cron.tron.transaction.enabled")
@@ -65,5 +66,10 @@ public class CronJobConfig {
         for (CollectionWallet collectionWallet : all) {
             collectionWalletBalanceMonitorJob.processWallet(collectionWallet.getId());
         }
+    }
+
+    @Scheduled(fixedRate = 2, timeUnit = TimeUnit.MINUTES)
+    public void monitorBybitBalance() {
+        bybitBalanceMonitorJob.monitor();
     }
 }

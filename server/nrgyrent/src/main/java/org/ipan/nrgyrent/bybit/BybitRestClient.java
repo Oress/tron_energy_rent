@@ -31,6 +31,36 @@ public class BybitRestClient {
     private final BybitConfig bybitConfig;
 
     @SneakyThrows
+    public GetCoinBalanceResp getCoinBalance(String coin, String accountType) {
+        String timestamp = String.valueOf(System.currentTimeMillis());
+
+        Map<String, Object> map = new HashMap<>();
+        map.put("accountType", accountType);
+        map.put("coin", coin);
+
+        String signature = genGetSign(map, timestamp);
+        StringBuilder sb = genQueryStr(map);
+
+        Request request = new Request.Builder()
+                .url(bybitConfig.getUrlToUse() + "/v5/asset/transfer/query-account-coin-balance?" + sb)
+                .get()
+                .addHeader("X-BAPI-API-KEY", bybitConfig.getApiKey())
+                .addHeader("X-BAPI-TIMESTAMP", timestamp)
+                .addHeader("X-BAPI-SIGN", signature)
+                .addHeader("X-BAPI-RECV-WINDOW", bybitConfig.getRecvWindow())
+                .addHeader("Content-Type", "application/json")
+                .build();
+        Response response = client.newCall(request).execute();
+
+        String string = response.body().string();
+        GetCoinBalanceResp result = gson.fromJson(string, GetCoinBalanceResp.class);
+
+        logger.info("Response" + string);
+        return result;
+    }
+
+
+    @SneakyThrows
     public void convertResultQuery() {
         String timestamp = String.valueOf(System.currentTimeMillis());
 
