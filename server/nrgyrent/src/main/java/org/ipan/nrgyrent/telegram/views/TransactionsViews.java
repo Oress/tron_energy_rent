@@ -144,7 +144,7 @@ public class TransactionsViews {
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
                 .text(commonLabels.somethingWentWrong())
-                .replyMarkup(commonViews.getToMainMenuMarkup())
+//                .replyMarkup(commonViews.getToMainMenuMarkup())
                 .build();
         try {
             tgClient.execute(message);

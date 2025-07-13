@@ -1068,4 +1068,14 @@
         </createTable>
     </changeSet>
 
+    <changeSet id="create table nrg_itrx_balance" author="oress">
+        <createTable tableName="nrg_itrx_balance">
+            <column name="id" type="text">
+                <constraints primaryKey="true" nullable="false" unique="true" />
+            </column>
+            <column name="balance" type="bigint" />
+            <column name="updated_at" type="timestamp" />
+        </createTable>
+    </changeSet>
+
 </databaseChangeLog>

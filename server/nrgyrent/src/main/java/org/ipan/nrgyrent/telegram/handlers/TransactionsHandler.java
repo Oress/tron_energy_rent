@@ -53,6 +53,25 @@ public class TransactionsHandler {
     private final TelegramMessages telegramMessages;
     private final FormattingTools formattingTools;
 
+    @MatchState(state = States.MAIN_MENU, updateTypes = UpdateType.MESSAGE)
+    public void quickTransactionFromMenu(UserState userState, Update update) {
+        Message message = update.getMessage();
+        if (message.hasText() && WalletTools.isValidTronAddress(message.getText())) {
+            telegramMessages.deleteMessage(message);
+            AppUser byId = userService.getById(userState.getTelegramId());
+            Tariff tariff = byId.getTariffToUse();
+
+            if (tariff == null) {
+                logger.error("Menu TX. No tariff found during transaction for user: {}", userState.getTelegramId());
+                transactionsViews.somethingWentWrong(userState);
+                telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.TRANSACTION_ERROR));
+                return;
+            }
+
+            tryMakeTransaction(userState, AppConstants.ENERGY_65K, AppConstants.DURATION_1H, message.getText(), 1, tariff.getTransactionType1AmountSun(), tariff.getId());
+        }
+    }
+
     @MatchState(state = States.MAIN_MENU, updateTypes = UpdateType.CALLBACK_QUERY)
     public void startQuickTransaction(UserState userState, Update update) {
         CallbackQuery callbackQuery = update.getCallbackQuery();
@@ -278,8 +297,9 @@ public class TransactionsHandler {
                                     .correlationId(correlationId.toString())
                                     .build());
                     transactionsViews.somethingWentWrong(userState, pendingOrder);
+                } else {
+                    transactionsViews.somethingWentWrong(userState);
                 }
-                transactionsViews.somethingWentWrong(userState);
             }
         }
     }

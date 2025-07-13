@@ -2,12 +2,10 @@ package org.ipan.nrgyrent.cron;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.ipan.nrgyrent.domain.model.Alert;
-import org.ipan.nrgyrent.domain.model.AlertStatus;
-import org.ipan.nrgyrent.domain.model.AppUser;
-import org.ipan.nrgyrent.domain.model.UserRole;
+import org.ipan.nrgyrent.domain.model.*;
 import org.ipan.nrgyrent.domain.model.repository.AlertRepo;
 import org.ipan.nrgyrent.domain.model.repository.AppUserRepo;
+import org.ipan.nrgyrent.domain.model.repository.ItrxBalanceRepository;
 import org.ipan.nrgyrent.domain.service.AlertService;
 import org.ipan.nrgyrent.itrx.RestClient;
 import org.ipan.nrgyrent.itrx.dto.ApiUsageResponse;
@@ -25,12 +23,14 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @RequiredArgsConstructor
 public class ItrxBalanceMonitorCronJob {
+    public static final String ITRX = "ITRX";
     private final RestClient restClient;
     private final TelegramMessages telegramMessages;
     private final TelegramState telegramState;
     private final AppUserRepo userRepo;
     private final AlertRepo alertRepo;
     private final AlertService alertService;
+    private final ItrxBalanceRepository itrxBalanceRepository;
 
     @Value("${app.alerts.itrx-balance.threashold:800000000}")
     private Long balanceThreshold;
@@ -41,6 +41,16 @@ public class ItrxBalanceMonitorCronJob {
             ApiUsageResponse apiStats = restClient.getApiStats();
             Long currentBalance = apiStats.getBalance();
             Alert activeAlert = alertRepo.findByNameAndStatus(Alert.ITRX_BALANCE_LOW, AlertStatus.OPEN);
+
+            ItrxBalance itrxBalance = itrxBalanceRepository.findById(ITRX).orElse(null);
+            if (itrxBalance == null) {
+                itrxBalance = new ItrxBalance();
+                itrxBalance.setId(ITRX);
+                itrxBalance.setBalance(currentBalance);
+            } else {
+                itrxBalance.setBalance(currentBalance);
+            }
+            itrxBalanceRepository.save(itrxBalance);
 
             if (currentBalance < balanceThreshold) {
                 logger.warn("🚨 ALERT: ITRX balance is low! Current balance: {}, Threshold: {}", currentBalance, balanceThreshold);
