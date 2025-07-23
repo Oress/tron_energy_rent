@@ -5,7 +5,11 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import org.apache.commons.lang3.NotImplementedException;
+import org.ipan.nrgyrent.domain.exception.AutodelegateReserveExceededException;
+import org.ipan.nrgyrent.domain.exception.OrderAlreadyExistsException;
 import org.ipan.nrgyrent.domain.model.*;
+import org.ipan.nrgyrent.domain.model.autodelegation.AutoDelegationSession;
+import org.ipan.nrgyrent.domain.model.repository.AutoDelegationSessionRepo;
 import org.ipan.nrgyrent.domain.model.repository.OrderRepo;
 import org.ipan.nrgyrent.domain.model.repository.ReferralCommissionRepo;
 import org.ipan.nrgyrent.domain.model.repository.TariffRepo;
@@ -28,6 +32,14 @@ public class OrderService {
     private final BalanceService balanceService;
     private final ReferralCommissionRepo referralCommissionRepo;
     private final AutoDelegationSessionService autoDelegationSessionService;
+    private final AutoDelegationSessionRepo autoDelegationSessionRepo;
+
+    @Transactional
+    public Order createAutodelegateOrder(AddOrUpdateOrderCommand command) {
+        Order order = createPendingOrder(command);
+        order = completeOrder(command);
+        return order;
+    }
 
     @Transactional
     public Order createPendingOrder(AddOrUpdateOrderCommand command) {
@@ -53,6 +65,15 @@ public class OrderService {
                     throw new IllegalArgumentException("Some of the command properties are not set");
             }
 
+            // usually the auto delegation order.
+            if (command.getSerial() != null) {
+                Order orderWithSameSerial = orderRepo.findBySerialEquals(command.getSerial());
+                if (orderWithSameSerial != null) {
+                    logger.error("Order with the same serial already exists serial {}", command.getSerial());
+                    throw new OrderAlreadyExistsException("Order with the same serial already exists serial");
+                }
+            }
+
             // It should not be null but just in case.
             if (command.getTariffId() != null) {
                 tariff = tariffRepo.getReferenceById(command.getTariffId());
@@ -62,6 +83,19 @@ public class OrderService {
 
             targetBalance = user.getBalanceToUse();
             balanceService.subtractSunBalance(targetBalance, totalSunAmount);
+
+            if (command.getAutoDelegationSessionId() == null) {
+                AutoDelegationSession session = autoDelegationSessionRepo.findByUserTelegramIdAndActive(user.getTelegramId(), true);
+                if (session != null) {
+                    // user has active autodelegate session
+                    // We need to keep some as a reserve which is transactionType2 cost
+                    if (targetBalance.getSunBalance() < tariff.getMaxAutodelegateFee()) {
+                        logger.error("The user {} has active session id, and balance after regular transaction is lower than min reserve for auto delegation", user.getTelegramId());
+                        throw new AutodelegateReserveExceededException("A user has active session id, and balance after regular transaction is lower than min reserve for auto delegation", tariff.getMaxAutodelegateFee());
+                    }
+                }
+            }
+
             logger.info("Creating a pending order for user id {} username: {} balance: {} params: {}", user.getTelegramId(), user.getTelegramUsername(), targetBalance.getId(), command);
         } else {
             logger.info("Creating SYSTEM ORDER params: {}", command);
@@ -85,12 +119,12 @@ public class OrderService {
         order.setTariff(tariff);
         order.setType(command.getType());
 
-        em.persist(order);
-
         Long autoTopupSessionId = command.getAutoDelegationSessionId();
         if (autoTopupSessionId != null) {
-            autoDelegationSessionService.createTopupEventForOrder(order, autoTopupSessionId, command.getDelegationEventType());
+            order.setAutoDelegationSession(autoDelegationSessionRepo.findById(autoTopupSessionId).get());
         }
+
+        em.persist(order);
 
         return order;
     }

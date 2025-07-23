@@ -25,6 +25,10 @@ public interface AutoDelegationSessionRepo extends JpaRepository<AutoDelegationS
     """)
     List<WalletWithAutoTopupSession> findActiveSessionsWithWalletInfo(Long userId);
 
-    @Query("select s from AutoDelegationSession s join s.events e join e.order o where o.id = :orderId")
-    AutoDelegationSession findSessionByOrderId(Long orderId);
+//    @Query("select s from AutoDelegationSession s join s.events e join e.order o where o.id = :orderId")
+//    AutoDelegationSession findSessionByOrderId(Long orderId);
+
+    AutoDelegationSession findByUserTelegramIdAndActive(Long userId, Boolean active);
+
+    List<AutoDelegationSession> findAllByActive(Boolean active);
 }

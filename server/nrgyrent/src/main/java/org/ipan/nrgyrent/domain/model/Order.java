@@ -20,6 +20,7 @@ import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import org.ipan.nrgyrent.domain.model.autodelegation.AutoDelegationSession;
 
 @Entity
 @Getter
@@ -43,6 +44,10 @@ public class Order {
     @ManyToOne
     @JoinColumn(name = "tariff_id", referencedColumnName = "id", foreignKey = @ForeignKey(name = "fk_nrg_orders_tariff_id"))
     private Tariff tariff;
+
+    @ManyToOne
+    @JoinColumn(name = "autodelegate_session_id")
+    private AutoDelegationSession autoDelegationSession;
 
     @Column(name = "itrx_fee_sun_amount")
     private Long itrxFeeSunAmount;

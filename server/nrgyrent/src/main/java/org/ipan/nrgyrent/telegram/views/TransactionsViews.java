@@ -123,6 +123,21 @@ public class TransactionsViews {
         }
     }
 
+    public void notEnoughBalanceAutodelegateReserve(UserState userState, Long amount) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
+                .text(transactionLabels.notEnoughtBalanceAutodelegateReserve(FormattingTools.formatBalance(amount)))
+                .replyMarkup(commonViews.getToMainMenuMarkup())
+                .build();
+        try {
+            tgClient.execute(message);
+        } catch (Exception e) {
+            logger.error("Could not notEnoughBalance userstate {}", userState, e);
+        }
+    }
+
     public void somethingWentWrong(UserState userState, Order order) {
         EditMessageText message = EditMessageText
                 .builder()

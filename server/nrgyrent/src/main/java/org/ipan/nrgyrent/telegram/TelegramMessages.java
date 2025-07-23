@@ -309,7 +309,7 @@ public class TelegramMessages {
         SendMessage message = SendMessage
                 .builder()
                 .chatId(chatId)
-                .text(getMainMenuMessage(user, tariff))
+                .text(getMainMenuMessage(userState, user, tariff))
                 .replyMarkup(getMainMenuReplyMarkup(userState.isManager(), false, tariff, showWithdrawBtn, wallets))
                 .linkPreviewOptions(LinkPreviewOptions.builder().isDisabled(true).build())
                 .parseMode("MARKDOWN")
@@ -327,7 +327,7 @@ public class TelegramMessages {
                 .builder()
                 .chatId(chatId)
                 .linkPreviewOptions(LinkPreviewOptions.builder().isDisabled(true).build())
-                .text(getMainMenuMessage(user, tariff))
+                .text(getMainMenuMessage(userState, user, tariff))
                 .replyMarkup(getMainMenuReplyMarkup(userState.isManager(), true, tariff, showWithdrawBtn, wallets))
                 .parseMode("MARKDOWN")
                 .build();
@@ -374,7 +374,7 @@ public class TelegramMessages {
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
-                .text(getMainMenuMessage(user, tariff))
+                .text(getMainMenuMessage(userState, user, tariff))
                 .linkPreviewOptions(LinkPreviewOptions.builder().isDisabled(true).build())
                 .parseMode("MARKDOWN")
                 .replyMarkup(getMainMenuReplyMarkup(userState.isManager(), false, tariff, showWithdrawBtn, wallets))
@@ -391,7 +391,7 @@ public class TelegramMessages {
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
-                .text(getMainMenuMessage(user, tariff))
+                .text(getMainMenuMessage(userState, user, tariff))
                 .parseMode("MARKDOWN")
                 .linkPreviewOptions(LinkPreviewOptions.builder().isDisabled(true).build())
                 .replyMarkup(getMainMenuReplyMarkup(userState.isManager(), true, tariff, showWithdrawBtn, userWallets))
@@ -399,14 +399,14 @@ public class TelegramMessages {
         tgClient.execute(message);
     }
 
-    private String getMainMenuMessage(AppUser user, Tariff tariff) {
+    private String getMainMenuMessage(UserState userState, AppUser user, Tariff tariff) {
         Balance balanceToUse = user.getBalanceToUse();
 
         String balanceLabel = user.isInGroup()
-                ? commonLabels.getCommonGroupBalance(FormattingTools.formatBalance(balanceToUse.getSunBalance()))
-                : commonLabels.getCommonPersonalBalance(FormattingTools.formatBalance(balanceToUse.getSunBalance()));
+                ? commonLabels.getCommonGroupBalance(userState.getLocaleOrDefault(), FormattingTools.formatBalance(balanceToUse.getSunBalance()))
+                : commonLabels.getCommonPersonalBalance(userState.getLocaleOrDefault(), FormattingTools.formatBalance(balanceToUse.getSunBalance()));
 
-        String mainWelcome = commonLabels.getMainWelcome(balanceLabel,
+        String mainWelcome = commonLabels.getMainWelcome(userState.getLocaleOrDefault(), balanceLabel,
                 FormattingTools.formatBalance(tariff.getTransactionType1AmountSun())
                 );
 
@@ -547,7 +547,6 @@ public class TelegramMessages {
                                                 FormattingTools.formatBalance(tariff.getTransactionType1AmountSun())))
                                         .callbackData(InlineMenuCallbacks.CUSTOM_TRANSACTION_AMOUNT)
                                         .build()));
-        if (isAdmin) {
             builder
                 .keyboardRow(
                         new InlineKeyboardRow(
@@ -556,7 +555,6 @@ public class TelegramMessages {
                                         .text(commonLabels.getAutoDelegation())
                                         .callbackData(InlineMenuCallbacks.AUTOTOPUP)
                                         .build()));
-        }
 
         if (showWithdrawBtn) {
             builder.keyboardRow(

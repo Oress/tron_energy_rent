@@ -21,8 +21,33 @@ public class AutoDelegateLabels {
         return messageSource.getMessage(key, args, locale);
     }
 
-    public String sessionStatusMessage(Locale locale, String s, String statusText, String s1, String eventsString) {
-        return getLocalizedMessage("autodelegate.session_status_msg", locale, s, statusText, s1, eventsString);
+    public String sessionStartMessage(Locale locale, String walletAddress) {
+        return getLocalizedMessage("autodelegate.session_start_msg", locale, walletAddress);
+    }
+
+    public String sessionStopManually(Locale locale, String walletAddress) {
+        return getLocalizedMessage("autodelegate.session_stop.manually", locale, walletAddress);
+    }
+
+    public String cannotStartSessionLowBalance(Locale locale) {
+        return getLocalizedMessage("autodelegate.session_start.low_balance", locale);
+    }
+
+    public String sessionStopLowBalance(Locale locale, String walletAddress) {
+        return getLocalizedMessage("autodelegate.session_stop.low_balance", locale, walletAddress);
+    }
+
+    public String sessionStopInactivity(Locale locale, String walletAddress) {
+        return getLocalizedMessage("autodelegate.session_stop.inactivity", locale, walletAddress);
+    }
+
+
+    public String sessionStatusMessage(Locale locale, String s, String statusText, String s1) {
+        return getLocalizedMessage("autodelegate.session_status_msg", locale, s, statusText, s1);
+    }
+
+    public String transactionSuccess(Locale locale, String amount, String receiveAddress) {
+        return getLocalizedMessage("autodelegate.transactions.success", locale, amount, receiveAddress);
     }
 
     public String eventSessionStopped(Locale localeOrDefault) {
@@ -46,6 +71,10 @@ public class AutoDelegateLabels {
     }
 
     public String unableToStartSessionDueToSystemOffline() {
+        return getLocalizedMessage("autodelegate.unable_to_start");
+    }
+
+    public String unableToStartSessionDueToInitProblem() {
         return getLocalizedMessage("autodelegate.unable_to_start");
     }
 

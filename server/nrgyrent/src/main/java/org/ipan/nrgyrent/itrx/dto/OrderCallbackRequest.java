@@ -6,6 +6,7 @@ import lombok.ToString;
 @Getter
 @ToString
 public class OrderCallbackRequest {
+    public Long amount; // payedAmountInSun
     public String active_hash; // If activated, activated txid
     public String bandwidth_hash; // If there is bandwidth, the txid of the bandwidth
     public Integer energy_amount; // Order energy
@@ -17,4 +18,9 @@ public class OrderCallbackRequest {
     public String type; // type
     public String receive_address; // receive address
     public String source; // order source
+    public String period;
+
+    public boolean isAutoDelegate() {
+        return "count_delegate".equals(source);
+    }
 }

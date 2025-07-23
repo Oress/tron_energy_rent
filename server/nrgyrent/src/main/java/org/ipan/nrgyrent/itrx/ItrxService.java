@@ -40,16 +40,18 @@ public class ItrxService {
 
     public void processCallback(OrderCallbackRequest placeOrderResponse) {
         logger.info("Processing callback: {}", placeOrderResponse);
-        UUID correlationId = UUID.fromString(placeOrderResponse.out_trade_no);
-        logger.info("Correlation ID: {}", correlationId);
+        if (placeOrderResponse.out_trade_no != null) {
+            UUID correlationId = UUID.fromString(placeOrderResponse.out_trade_no);
+            logger.info("Correlation ID: {}", correlationId);
+        }
 
-        CompletableFuture<OrderCallbackRequest> futureResponse = correlationResponse.get(correlationId);
+/*        CompletableFuture<OrderCallbackRequest> futureResponse = correlationResponse.get(correlationId);
         if (futureResponse != null) {
             logger.info("Completing future response for correlation ID: {}", correlationId);
             futureResponse.complete(placeOrderResponse);
         } else {
             logger.error("No future response found for correlation ID: {}", correlationId);
-        }
+        }*/
         sendOrderEvent(placeOrderResponse);
     }
 
@@ -72,7 +74,23 @@ public class ItrxService {
 
     private void sendOrderEvent(OrderCallbackRequest orderCallbackRequest) {
         if (orderCallbackRequest.status == ITRX_ORDER_SUCCESS) {
-            eventPublisher.publishOrderCompletedEvent(orderCallbackRequest.out_trade_no, ITRX_ORDER_SUCCESS, orderCallbackRequest.txid, orderCallbackRequest.serial);
+            String correlationId = orderCallbackRequest.out_trade_no;
+            if (orderCallbackRequest.isAutoDelegate()) {
+                correlationId = UUID.randomUUID().toString();
+            }
+
+            eventPublisher.publishOrderCompletedEvent(
+                    correlationId,
+                    ITRX_ORDER_SUCCESS,
+                    orderCallbackRequest.txid,
+                    orderCallbackRequest.serial,
+                    orderCallbackRequest.isAutoDelegate(),
+                    orderCallbackRequest.getReceive_address(),
+                    orderCallbackRequest.getPeriod(),
+                    orderCallbackRequest.getAmount(),
+                    orderCallbackRequest.getPeriod(),
+                    orderCallbackRequest.getEnergy_amount()
+            );
         } else if (orderCallbackRequest.status == ITRX_ORDER_ERROR) {
             eventPublisher.publishOrderFailedEvent(orderCallbackRequest.out_trade_no, ITRX_ORDER_ERROR, orderCallbackRequest.serial);
         }

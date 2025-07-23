@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
+import org.ipan.nrgyrent.domain.exception.AutodelegateReserveExceededException;
 import org.ipan.nrgyrent.domain.exception.NotEnoughBalanceException;
 import org.ipan.nrgyrent.domain.model.*;
 import org.ipan.nrgyrent.domain.model.repository.UserWalletRepo;
@@ -270,7 +271,9 @@ public class TransactionsHandler {
                     return;
                 }
 
-            } catch (NotEnoughBalanceException e) {
+            } catch (AutodelegateReserveExceededException e) {
+                transactionsViews.notEnoughBalanceAutodelegateReserve(userState, e.getMinimumAmount());
+            }  catch (NotEnoughBalanceException e) {
                 transactionsViews.notEnoughBalance(userState);
             } catch (InactiveAddressException e) {
                 if (pendingOrder != null) {

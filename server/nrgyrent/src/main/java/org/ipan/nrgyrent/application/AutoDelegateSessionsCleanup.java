@@ -22,7 +22,7 @@ public class AutoDelegateSessionsCleanup {
     private final EnergyService energyService;
 
     @Transactional
-    @EventListener(ApplicationReadyEvent.class)
+//    @EventListener(ApplicationReadyEvent.class)
     public void onApplicationEvent() {
         logger.info("Application shutting down - deactivating all active delegation sessions");
         List<AutoDelegationSession> activeSessions = autoDelegationSessionRepo.findByActive(true);
@@ -39,7 +39,7 @@ public class AutoDelegateSessionsCleanup {
 
     @Transactional
     @Async
-    @EventListener(FullNodeDisconnectedEvent.class)
+//    @EventListener(FullNodeDisconnectedEvent.class)
     public void onNodeDisconnected() {
         logger.info("Application shutting down - deactivating all active delegation sessions");
         List<AutoDelegationSession> activeSessions = autoDelegationSessionRepo.findByActive(true);

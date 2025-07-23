@@ -1078,4 +1078,24 @@
         </createTable>
     </changeSet>
 
+    <changeSet id="extend nrg_orders with autodelegate_session_id" author="oress">
+        <addColumn tableName="nrg_orders">
+            <column name="autodelegate_session_id" type="bigint" />
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="create fk_nrg_orders_autodelegate_session_id" author="oress">
+        <addForeignKeyConstraint constraintName="fk_nrg_orders_autodelegate_session_id"
+                                 baseTableName="nrg_orders"
+                                 baseColumnNames="autodelegate_session_id"
+                                 referencedTableName="nrg_autodelegation_sessions"
+                                 referencedColumnNames="id" />
+    </changeSet>
+
+    <changeSet id="add idx_nrg_orders_autodelegate_session_id" author="oress">
+        <createIndex tableName="nrg_orders" indexName="idx_nrg_orders_autodelegate_session_id">
+            <column name="autodelegate_session_id" />
+        </createIndex>
+    </changeSet>
+
 </databaseChangeLog>

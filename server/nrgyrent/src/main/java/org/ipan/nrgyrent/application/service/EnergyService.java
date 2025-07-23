@@ -19,6 +19,7 @@ import org.ipan.nrgyrent.domain.service.commands.orders.AddOrUpdateOrderCommand;
 import org.ipan.nrgyrent.itrx.AppConstants;
 import org.ipan.nrgyrent.itrx.InactiveAddressException;
 import org.ipan.nrgyrent.itrx.ItrxService;
+import org.ipan.nrgyrent.itrx.RestClient;
 import org.ipan.nrgyrent.itrx.dto.EstimateOrderAmountResponse;
 import org.ipan.nrgyrent.itrx.dto.PlaceOrderResponse;
 import org.ipan.nrgyrent.telegram.state.TelegramState;
@@ -42,6 +43,7 @@ public class EnergyService {
 
     private final TelegramState telegramState;
     private final ItrxService itrxService;
+    private final RestClient itrxRestClient;
     private final OrderService orderService;
 
     private final AutoDelegationSessionRepo autoTopupConfigRepo;
@@ -63,14 +65,29 @@ public class EnergyService {
                 wallet
         );
         // 2. save session to cache
-        telegramState.createWalletMonitoringState(newSession.getId(), wallet);
+//        telegramState.createWalletMonitoringState(newSession.getId(), wallet);
         return newSession;
     }
 
-    public void deactivateSessionManually(Long sessionId) {
+    public AutoDelegationSession deactivateSessionLowBalance(Long sessionId) {
+        logger.info("AUTO DELEGATION. Deactivating auto delegation (low balance) session id {} ", sessionId);
+        AutoDelegationSession byId = autoTopupConfigRepo.findById(sessionId).orElseThrow(() -> new IllegalStateException("Session is not found by id"));
+        byId = deactivateSession(byId, AutoDelegationSessionStatus.STOPPED_INSUFFICIENT_BALANCE);
+        return byId;
+    }
+
+    public AutoDelegationSession deactivateSessionInactivity(Long sessionId) {
+        logger.info("AUTO DELEGATION. Deactivating auto delegation (inactivity) session id {} ", sessionId);
+        AutoDelegationSession byId = autoTopupConfigRepo.findById(sessionId).orElseThrow(() -> new IllegalStateException("Session is not found by id"));
+        byId = deactivateSession(byId, AutoDelegationSessionStatus.STOPPED_INACTIVITY);
+        return byId;
+    }
+
+    public AutoDelegationSession deactivateSessionManually(Long sessionId) {
         logger.info("AUTO DELEGATION. Deactivating auto delegation (manually) session id {} ", sessionId);
         AutoDelegationSession byId = autoTopupConfigRepo.findById(sessionId).orElseThrow(() -> new IllegalStateException("Session is not found by id"));
-        deactivateSession(byId, AutoDelegationSessionStatus.STOPPED_BY_USER);
+        byId = deactivateSession(byId, AutoDelegationSessionStatus.STOPPED_BY_USER);
+        return byId;
     }
 
     public void deactivateSessionSystemRestart(Long sessionId) {
@@ -83,6 +100,18 @@ public class EnergyService {
         logger.info("AUTO DELEGATION. Deactivating auto delegation (restart) session id {} ", sessionId);
         AutoDelegationSession byId = autoTopupConfigRepo.findById(sessionId).orElseThrow(() -> new IllegalStateException("Session is not found by id"));
         deactivateSession(byId, AutoDelegationSessionStatus.STOPPED_NODE_DISCONNECTED);
+    }
+
+    public void deactivateSessionInitProblem(Long sessionId) {
+        logger.info("AUTO DELEGATION. Deactivating auto delegation (Initialization problem) session id {} ", sessionId);
+        AutoDelegationSession byId = autoTopupConfigRepo.findById(sessionId).orElseThrow(() -> new IllegalStateException("Session is not found by id"));
+        deactivateSession(byId, AutoDelegationSessionStatus.STOPPED_INIT_PROBLEM);
+    }
+
+    public void deactivateSessionInactiveWallet(Long sessionId) {
+        logger.info("AUTO DELEGATION. Deactivating auto delegation (Initialization problem) session id {} ", sessionId);
+        AutoDelegationSession byId = autoTopupConfigRepo.findById(sessionId).orElseThrow(() -> new IllegalStateException("Session is not found by id"));
+        deactivateSession(byId, AutoDelegationSessionStatus.STOPPED_INACTIVE_WALLET);
     }
 
     @Async
@@ -146,10 +175,13 @@ public class EnergyService {
         return order;
     }
 
-    private void deactivateSession(AutoDelegationSession session, AutoDelegationSessionStatus status) {
+    private AutoDelegationSession deactivateSession(AutoDelegationSession session, AutoDelegationSessionStatus status) {
         AutoDelegationSession removedSession = autoDelegationSessionService.deactivate(session.getId(), status);
-        telegramState.removeWalletMonitoringState(removedSession.getAddress());
-        autoDelegationSessionEventPublisher.publishSessionDeactivated(session.getId());
+
+        itrxRestClient.editDelegatePolicy(session.getAddress(), true);
+//        telegramState.removeWalletMonitoringState(removedSession.getAddress());
+//        autoDelegationSessionEventPublisher.publishSessionDeactivated(session.getId());
+        return removedSession;
     }
 
     public Order tryMakeSystemTransaction(Integer energyAmount, String duration, String receiveAddress) {

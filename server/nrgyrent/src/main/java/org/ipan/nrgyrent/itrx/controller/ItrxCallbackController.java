@@ -3,8 +3,9 @@ package org.ipan.nrgyrent.itrx.controller;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.apache.commons.codec.digest.HmacAlgorithms;
+import org.apache.commons.codec.digest.HmacUtils;
 import org.ipan.nrgyrent.itrx.ItrxService;
-import org.ipan.nrgyrent.itrx.Utils;
 import org.ipan.nrgyrent.itrx.dto.OrderCallbackRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,7 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 @RestController
 @Slf4j
 public class ItrxCallbackController {
-    private static final Gson gson = new GsonBuilder().disableHtmlEscaping().create();
+    private static final Gson gson = new GsonBuilder().disableHtmlEscaping().serializeNulls().create();
 
     @Value("${app.itrx.key}")
     String apiKey;
@@ -43,7 +44,7 @@ public class ItrxCallbackController {
 
         String message = timestamp + "&" + jsonData;
 
-        String expectedSignature = Utils.encodeHmacSHA256(message, apiSecret);
+        String expectedSignature = new HmacUtils(HmacAlgorithms.HMAC_SHA_256, apiSecret).hmacHex(message);
 
         if (!signature.equals(expectedSignature)) {
             logger.error("Invalid signature: expected {}, got {}", expectedSignature, signature);

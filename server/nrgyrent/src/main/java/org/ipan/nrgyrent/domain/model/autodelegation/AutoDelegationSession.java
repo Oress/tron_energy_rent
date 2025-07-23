@@ -20,8 +20,8 @@ public class AutoDelegationSession {
     @SequenceGenerator(name = "nrg_autodelegation_sessions_seq", sequenceName = "nrg_autodelegation_sessions_seq", allocationSize = 1)
     private Long id;
 
-    @OneToMany(mappedBy = "session", cascade = CascadeType.ALL)
-    private List<AutoDelegationEvent> events = new ArrayList<>();
+//    @OneToMany(mappedBy = "session", cascade = CascadeType.ALL)
+//    private List<AutoDelegationEvent> events = new ArrayList<>();
 
     @Column
     private String address;

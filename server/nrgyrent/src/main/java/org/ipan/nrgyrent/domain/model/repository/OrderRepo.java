@@ -84,4 +84,8 @@ public interface OrderRepo extends JpaRepository<Order, Long> {
             """,
     nativeQuery = true)
     List<TransactionHistoryDto> findAllTransactionsForManager(Long userId,  int limit);
+
+    Order findBySerialEquals(String serial);
+
+    Order findTop1ByAutoDelegationSessionIdOrderByCreatedAtDesc(Long sessionId);
 }

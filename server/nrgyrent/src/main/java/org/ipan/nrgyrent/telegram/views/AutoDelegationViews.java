@@ -3,6 +3,7 @@ package org.ipan.nrgyrent.telegram.views;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.ipan.nrgyrent.domain.model.Order;
 import org.ipan.nrgyrent.domain.model.autodelegation.AutoDelegationEvent;
 import org.ipan.nrgyrent.domain.model.autodelegation.AutoDelegationSession;
 import org.ipan.nrgyrent.domain.model.autodelegation.AutoDelegationSessionStatus;
@@ -14,7 +15,9 @@ import org.ipan.nrgyrent.telegram.state.UserState;
 import org.ipan.nrgyrent.telegram.utils.FormattingTools;
 import org.ipan.nrgyrent.telegram.utils.WalletTools;
 import org.springframework.stereotype.Component;
+import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
+import org.telegram.telegrambots.meta.api.objects.message.Message;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
@@ -48,6 +51,37 @@ public class AutoDelegationViews {
         }
     }
 
+    public void inactiveWallet(UserState userState) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
+                .text("Cannot start autodelegation for inactive wallet")
+                .replyMarkup(commonViews.getToMainMenuMarkup())
+                .build();
+        try {
+            tgClient.execute(message);
+        } catch (Exception e) {
+            logger.error("Could not nodeIsUnavailableRightNow userstate {}", userState, e);
+        }
+    }
+
+
+    public void unableToStartInitProblem(UserState userState) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
+                .replyMarkup(commonViews.getToMainMenuMarkup())
+                .text(autoDelegateLabels.unableToStartSessionDueToInitProblem())
+                .build();
+        try {
+            tgClient.execute(message);
+        } catch (Exception e) {
+            logger.error("Could not nodeIsUnavailableRightNow userstate {}", userState, e);
+        }
+    }
+
     public void nodeIsUnavailableRightNow(UserState userState) {
         EditMessageText message = EditMessageText
                 .builder()
@@ -63,6 +97,111 @@ public class AutoDelegationViews {
         }
     }
 
+    public void autoDelegateSessionCreated(UserState userState, AutoDelegationSession session) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(session.getChatId())
+                .messageId(session.getMessageToUpdate())
+                .text(autoDelegateLabels.sessionStartMessage(
+                        userState.getLocaleOrDefault(),
+                        WalletTools.formatTronAddress(session.getAddress())
+                ))
+                .build();
+        try {
+            tgClient.execute(message);
+        } catch (Exception e) {
+            logger.error("Could not updateToTopupSessionStatus userstate {}", userState, e);
+        }
+    }
+
+    public void autoDelegateSessionStoppedManually(UserState userState, AutoDelegationSession session) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
+                .text(autoDelegateLabels.sessionStopManually(
+                        userState.getLocaleOrDefault(),
+                        WalletTools.formatTronAddress(session.getAddress())
+                ))
+                .build();
+        try {
+            tgClient.execute(message);
+        } catch (Exception e) {
+            logger.error("Could not updateToTopupSessionStatus userstate {}", userState, e);
+        }
+    }
+
+    public void cannotStartAutoDelegateSessionLowBalance(UserState userState) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .messageId(userState.getMenuMessageId())
+                .chatId(userState.getChatId())
+                .text(autoDelegateLabels.cannotStartSessionLowBalance(userState.getLocaleOrDefault()))
+                .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
+                .build();
+        try {
+            tgClient.execute(message);
+        } catch (Exception e) {
+            logger.error("Could not cannotStartAutoDelegateSessionLowBalance userstate {}", userState, e);
+        }
+    }
+
+
+    public void autoDelegateSessionStoppedLowBalance(UserState userState, AutoDelegationSession session) {
+        SendMessage message = SendMessage
+                .builder()
+                .chatId(userState.getChatId())
+                .text(autoDelegateLabels.sessionStopLowBalance(
+                        userState.getLocaleOrDefault(),
+                        WalletTools.formatTronAddress(session.getAddress())
+                ))
+                .build();
+        try {
+            tgClient.execute(message);
+        } catch (Exception e) {
+            logger.error("Could not updateToTopupSessionStatus userstate {}", userState, e);
+        }
+    }
+
+    public void autoDelegateSessionStoppedInactivity(UserState userState, AutoDelegationSession session) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
+                .text(autoDelegateLabels.sessionStopInactivity(
+                        userState.getLocaleOrDefault(),
+                        WalletTools.formatTronAddress(session.getAddress())
+                ))
+                .build();
+        try {
+            tgClient.execute(message);
+        } catch (Exception e) {
+            logger.error("Could not updateToTopupSessionStatus userstate {}", userState, e);
+        }
+    }
+
+    public void sendAutoDelegationTransactionNotification(UserState userState, Order order) {
+        String label = autoDelegateLabels.transactionSuccess(
+                userState.getLocaleOrDefault(),
+                FormattingTools.formatBalance(order.getSunAmount()),
+                WalletTools.formatTronAddress(order.getReceiveAddress()));
+
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
+                .text(label)
+                // .replyMarkup(getToMainMenuNotificationMarkup())
+                // .parseMode("MARKDOWN")
+                .build();
+        try {
+            tgClient.execute(message);
+        } catch (Exception e) {
+            logger.error("Failed to sendTransactionSuccessNotification user: {}", userState, e);
+        }
+        return;
+    }
+
     public void updateSessionStatus(UserState userState, AutoDelegationSession session) {
         EditMessageText message = EditMessageText
                 .builder()
@@ -72,8 +211,7 @@ public class AutoDelegationViews {
                         userState.getLocaleOrDefault(),
                         mapStatusToEmoji(session.getStatus()),
                         getStatusText(userState, session.getStatus()),
-                        WalletTools.formatTronAddress(session.getAddress()),
-                        getEventsString(userState, session)
+                        WalletTools.formatTronAddress(session.getAddress())
                 ))
                 .build();
         try {
@@ -94,11 +232,6 @@ public class AutoDelegationViews {
                  AutoDelegationSessionStatus.STOPPED_INSUFFICIENT_BALANCE -> commonLabels.redCircle();
             default -> "💀";
         };
-    }
-
-    private String getEventsString(UserState userState, AutoDelegationSession delegationSession) {
-        return delegationSession.getEvents().stream().sorted(Comparator.comparingLong(AutoDelegationEvent::getTimestamp))
-                .map(event -> getEventString(userState, event)).collect(Collectors.joining("\n"));
     }
 
     private String getEventString(UserState userState, AutoDelegationEvent event) {
@@ -148,6 +281,19 @@ public class AutoDelegationViews {
                 .build();
         tgClient.execute(message);
     }
+
+    @SneakyThrows
+    public Message autoDelegationMenuMsg(UserState userState, List<WalletWithAutoTopupSession> walletsWithSessions) {
+        SendMessage message = SendMessage
+                .builder()
+                .chatId(userState.getChatId())
+                .text(autoDelegateLabels.description(userState.getLocaleOrDefault()))
+                .parseMode("MARKDOWN")
+                .replyMarkup(getWalletsMenuMarkup(walletsWithSessions))
+                .build();
+        return tgClient.execute(message);
+    }
+
 
     private InlineKeyboardMarkup getWalletsMenuMarkup(List<WalletWithAutoTopupSession> wallets) {
         List<InlineKeyboardRow> walletRows = wallets.stream().map(walletSession -> {

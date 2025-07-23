@@ -27,6 +27,10 @@ public class TransactionLabels {
         return getLocalizedMessage("transactions.error.not_enough_balance");
     }
 
+    public String notEnoughtBalanceAutodelegateReserve(String amount) {
+        return getLocalizedMessage("transactions.error.not_enough_balance_autodelegate_reserve", amount);
+    }
+
     public String inProgress() {
         return getLocalizedMessage("transactions.in_progress");
     }

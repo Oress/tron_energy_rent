@@ -7,9 +7,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
 
-import org.ipan.nrgyrent.itrx.dto.ApiUsageResponse;
-import org.ipan.nrgyrent.itrx.dto.EstimateOrderAmountResponse;
-import org.ipan.nrgyrent.itrx.dto.PlaceOrderResponse;
+import org.ipan.nrgyrent.itrx.dto.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -83,7 +81,6 @@ public class RestClient {
         return placeOrderResponse;
     }
 
-
     public EstimateOrderAmountResponse estimateOrderPrice(Integer energyAmnt, String period, String receiveAddress) {
         try {
             HttpUrl.Builder builder = HttpUrl.parse(baseUrl + "/api/v1/frontend/order/price").newBuilder();
@@ -111,6 +108,89 @@ public class RestClient {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @SneakyThrows
+    public CreateDelegatePolicyResponse createDelegatePolicy(Integer times, String receiveAddress) {
+        String timestamp = String.valueOf(Instant.now().getEpochSecond());
+
+        Map<String, Object> data = Map.of(
+                "times", times,
+                "receive_address", receiveAddress,
+                "unused_times_threshold", "",
+                "count_bandwidth_limit", false
+        );
+
+        // Sorting the keys
+        TreeMap<String, Object> sortedData = new TreeMap<>(data);
+        String json_data = gson.toJson(sortedData);
+
+        String message = timestamp + "&" + json_data;
+        String signature = null;
+        signature = Utils.encodeHmacSHA256(message, apiSecret);
+
+        RequestBody body = RequestBody.create(json_data, mediaType);
+        Request request = new Request.Builder()
+                .url(baseUrl + "/api/v1/frontend/count-delegate-policy")
+                .method("POST", body)
+                .addHeader("API-KEY", apiKey)
+                .addHeader("TIMESTAMP", timestamp)
+                .addHeader("SIGNATURE", signature)
+                .addHeader("Content-Type", "application/json")
+                .build();
+        Response response = client.newCall(request).execute();
+
+        CreateDelegatePolicyResponse createDelegatePolicyResponse = gson.fromJson(response.body().charStream(), CreateDelegatePolicyResponse.class);
+        String details = createDelegatePolicyResponse.getDetail() != null ? createDelegatePolicyResponse.getDetail() : "";
+        if (details.contains("is the inactive address.")) {
+            logger.error("Transaction attempt to inactive address: {} for AUTO DELEGATION", details);
+            throw new InactiveAddressException("Transaction attempt to inactive address: " + details);
+        }
+
+        if (details.contains("Insufficient funds")) {
+            logger.error("ITRX balance is insufficient: {} for AUTO DELEGATION", details);
+            throw new ItrxInsufficientFundsException("ITRX balance is insufficient: " + details);
+        }
+
+        logger.info("CreateDelegatePolicyResponse " + createDelegatePolicyResponse);
+        return createDelegatePolicyResponse;
+    }
+
+    @SneakyThrows
+    public DelegatePolicyResponse editDelegatePolicy(String receiveAddress, Boolean pause) {
+        String timestamp = String.valueOf(Instant.now().getEpochSecond());
+
+        Map<String, Object> data = Map.of(
+                "receive_address", receiveAddress,
+                "count_bandwidth_limit", false,
+                "count_limit_dynamic", 0,
+                "is_always", false,
+                "pause", pause
+        );
+
+        // Sorting the keys
+        TreeMap<String, Object> sortedData = new TreeMap<>(data);
+        String json_data = gson.toJson(sortedData);
+
+        String message = timestamp + "&" + json_data;
+        String signature = null;
+        signature = Utils.encodeHmacSHA256(message, apiSecret);
+
+        RequestBody body = RequestBody.create(json_data, mediaType);
+        Request request = new Request.Builder()
+                .url(baseUrl + "/api/v1/frontend/count-delegate-policy/edit-address")
+                .method("POST", body)
+                .addHeader("API-KEY", apiKey)
+                .addHeader("TIMESTAMP", timestamp)
+                .addHeader("SIGNATURE", signature)
+                .addHeader("Content-Type", "application/json")
+                .build();
+        Response response = client.newCall(request).execute();
+
+        DelegatePolicyResponse createDelegatePolicyResponse = gson.fromJson(response.body().charStream(), DelegatePolicyResponse.class);
+
+        logger.info("DelegatePolicyResponse" + createDelegatePolicyResponse);
+        return createDelegatePolicyResponse;
     }
 
     public ApiUsageResponse getApiStats() {

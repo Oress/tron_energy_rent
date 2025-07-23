@@ -30,16 +30,16 @@ public class CommonLabels {
         return getLocalizedMessage("common.cross");
     }
 
-    public String getMainWelcome(String balanceLbl, String simpleTxPrice) {
-        return getLocalizedMessage("main.welcome", balanceLbl, simpleTxPrice);
+    public String getMainWelcome(Locale localeOrDefault, String balanceLbl, String simpleTxPrice) {
+        return getLocalizedMessage("main.welcome", localeOrDefault, balanceLbl, simpleTxPrice);
     }
 
-    public String getCommonGroupBalance(String trx) {
-        return getLocalizedMessage("common.balance.group", trx);
+    public String getCommonGroupBalance(Locale localeOrDefault, String trx) {
+        return getLocalizedMessage("common.balance.group",localeOrDefault, trx);
     }
 
-    public String getCommonPersonalBalance(String trx) {
-        return getLocalizedMessage("common.balance.personal", trx);
+    public String getCommonPersonalBalance(Locale localeOrDefault, String trx) {
+        return getLocalizedMessage("common.balance.personal", localeOrDefault, trx);
     }
 
     public String yes() {

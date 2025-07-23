@@ -2,6 +2,7 @@ package org.ipan.nrgyrent.domain.service;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.ipan.nrgyrent.domain.exception.NotEnoughBalanceException;
 import org.ipan.nrgyrent.domain.exception.WalletAlreadyHasActiveSessionException;
 import org.ipan.nrgyrent.domain.exception.WalletSessionAlreadyDeactivatedException;
 import org.ipan.nrgyrent.domain.exception.WalletSessionHasUnexpectedStatusException;
@@ -34,6 +35,13 @@ public class AutoDelegationSessionService {
 
         AppUser user = appUserRepo.findById(userId).orElseThrow(() -> new IllegalStateException("User is not registered"));
 
+        Balance balanceToUse = user.getBalanceToUse();
+        Tariff tariffToUse = user.getTariffToUse();
+        if (balanceToUse.getSunBalance() < tariffToUse.getMaxAutodelegateFee()) {
+            logger.error("Not enough balance to start a session userId {}", user.getTelegramId());
+            throw new NotEnoughBalanceException("Not enough balance to start a session");
+        }
+
         AutoDelegationSession newSession = new AutoDelegationSession();
         newSession.setAddress(walletAddress);
         newSession.setUser(user);
@@ -55,6 +63,8 @@ public class AutoDelegationSessionService {
                 && !AutoDelegationSessionStatus.STOPPED_NODE_DISCONNECTED.equals(reason)
                 && !AutoDelegationSessionStatus.STOPPED_SYSTEM_RESTART.equals(reason)
                 && !AutoDelegationSessionStatus.STOPPED_INACTIVE_WALLET.equals(reason)
+                && !AutoDelegationSessionStatus.STOPPED_INIT_PROBLEM.equals(reason)
+                && !AutoDelegationSessionStatus.STOPPED_INACTIVITY.equals(reason)
                 && !AutoDelegationSessionStatus.STOPPED_ERROR.equals(reason)
         ) {
             logger.error("Invalid reason for deactivation provided: {}", reason);
@@ -73,7 +83,7 @@ public class AutoDelegationSessionService {
 
         sessionToDeactivate.setStatus(reason);
         sessionToDeactivate.setActive(Boolean.FALSE);
-        sessionToDeactivate.getEvents().add(generateSessionEndedEvent(sessionToDeactivate));
+//        sessionToDeactivate.getEvents().add(generateSessionEndedEvent(sessionToDeactivate));
         return sessionToDeactivate;
     }
 

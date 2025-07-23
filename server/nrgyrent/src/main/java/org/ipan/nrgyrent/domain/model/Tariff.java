@@ -23,6 +23,8 @@ import lombok.ToString;
 @ToString
 @Table(name = "nrg_tariffs")
 public class Tariff {
+    private static final long ATODELEGATE_ADDITION = 400_000L;
+
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "nrg_tariffs_seq")
     @SequenceGenerator(name = "nrg_tariffs_seq", sequenceName = "nrg_tariffs_seq", allocationSize = 1)
@@ -50,4 +52,20 @@ public class Tariff {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private Instant updatedAt;
+
+    public Long getAutodelegateType1AmountSun() {
+        return transactionType1AmountSun + ATODELEGATE_ADDITION;
+    }
+
+    public Long getAutodelegateType2AmountSun() {
+        return transactionType2AmountSun + ATODELEGATE_ADDITION;
+    }
+
+    public Long getMaxAutodelegateFee() {
+        return Math.max(
+                getAutodelegateType1AmountSun(),
+                getAutodelegateType2AmountSun()
+        );
+    }
+
 }
