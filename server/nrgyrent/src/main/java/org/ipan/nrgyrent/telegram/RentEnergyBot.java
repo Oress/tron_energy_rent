@@ -246,6 +246,7 @@ public class RentEnergyBot implements LongPollingSingleThreadUpdateConsumer {
     private String extractLangFromUser(User from) {
         return switch(from.getLanguageCode()) {
             case "ru" -> "ru";
+            case "uk" -> "uk";
             default -> "en";
         };
     }

@@ -341,6 +341,10 @@ public class TelegramMessages {
                 .builder()
                 .chatId(chatId)
                 .text("""
+                        👋 Ласкаво просимо до Flash Tron Rent!
+                        Будь ласка, виберіть потрібну мову, щоб продовжити.
+                        Ви завжди можете змінити мову в меню налаштувань пізніше.
+                        ────────
                         👋 Добро пожаловать в Flash Tron Rent!
                         Пожалуйста, выберите предпочитаемый язык, чтобы продолжить.
                         Вы всегда можете изменить язык в меню настроек позже.
@@ -420,6 +424,13 @@ public class TelegramMessages {
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
+                                        .text("Українська")
+                                        .callbackData("uk")
+                                        .build()))
+                .keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
                                         .text("Русский")
                                         .callbackData("ru")
                                         .build()))
@@ -436,6 +447,13 @@ public class TelegramMessages {
     private InlineKeyboardMarkup changeLanguageNotficationMarkup() {
         return InlineKeyboardMarkup
                 .builder()
+                .keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text("Українська")
+                                        .callbackData("uk")
+                                        .build()))
                 .keyboardRow(
                         new InlineKeyboardRow(
                                 InlineKeyboardButton

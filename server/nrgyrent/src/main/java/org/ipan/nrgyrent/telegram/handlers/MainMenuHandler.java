@@ -37,7 +37,7 @@ public class MainMenuHandler {
         AppUser user = userService.getById(userState.getTelegramId());
         String data = update.getCallbackQuery().getData();
         
-        if ("en".equals(data) || "ru".equals(data)) {
+        if ("en".equals(data) || "ru".equals(data) || "uk".equals(data)) {
             userService.setLanguage(userState.getTelegramId(), data);
 
             TgUserLocaleHolder.setUserLocale(Locale.of(data));

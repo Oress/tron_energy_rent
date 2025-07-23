@@ -70,8 +70,8 @@ public class UserService {
     public AppUser setLanguage(Long userId, String language) {
         AppUser appUser = userRepo.findById(userId).orElse(null);
 
-        if (!"en".equals(language) && !"ru".equals(language)) {
-            throw new IllegalArgumentException("language is neither en nor ru");
+        if (!"en".equals(language) && !"ru".equals(language) && !"uk".equals(language)) {
+            throw new IllegalArgumentException("language is neither en nor ru nor uk");
         }
 
         appUser.setLanguageCode(language);

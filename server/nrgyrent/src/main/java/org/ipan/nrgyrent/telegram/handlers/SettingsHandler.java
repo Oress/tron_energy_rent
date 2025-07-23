@@ -73,7 +73,7 @@ public class SettingsHandler {
     public void handleNewLanguage(UserState userState, Update update) {
         String data = update.getCallbackQuery().getData();
 
-        if ("en".equals(data) || "ru".equals(data)) {
+        if ("en".equals(data) || "ru".equals(data) || "uk".equals(data)) {
             userService.setLanguage(userState.getTelegramId(), data);
             AppUser user = userService.getById(userState.getTelegramId());
 
