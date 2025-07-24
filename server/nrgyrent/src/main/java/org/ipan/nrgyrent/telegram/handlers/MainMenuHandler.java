@@ -47,6 +47,7 @@ public class MainMenuHandler {
                 userWallets = userWalletService.getWallets(user.getTelegramId());
             }
 
+            userState = userState.withLanguageCode(data);
             telegramMessages.updateUserMainMenuBasedOnRole(userState, user, userWallets);
             telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.MAIN_MENU));
         }
