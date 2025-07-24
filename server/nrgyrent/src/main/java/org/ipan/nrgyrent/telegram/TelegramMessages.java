@@ -341,13 +341,13 @@ public class TelegramMessages {
                 .builder()
                 .chatId(chatId)
                 .text("""
-                        👋 Ласкаво просимо до Flash Tron Rent!
-                        Будь ласка, виберіть потрібну мову, щоб продовжити.
-                        Ви завжди можете змінити мову в меню налаштувань пізніше.
-                        ────────
                         👋 Добро пожаловать в Flash Tron Rent!
                         Пожалуйста, выберите предпочитаемый язык, чтобы продолжить.
                         Вы всегда можете изменить язык в меню настроек позже.
+                        ────────
+                        👋 Ласкаво просимо до Flash Tron Rent!
+                        Будь ласка, виберіть потрібну мову, щоб продовжити.
+                        Ви завжди можете змінити мову в меню налаштувань пізніше.
                         ────────
                         👋 Welcome to the Flash Tron Rent!
                         Please select your preferred language to continue.
@@ -424,15 +424,15 @@ public class TelegramMessages {
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text("Українська")
-                                        .callbackData("uk")
+                                        .text("Русский")
+                                        .callbackData("ru")
                                         .build()))
                 .keyboardRow(
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text("Русский")
-                                        .callbackData("ru")
+                                        .text("Українська")
+                                        .callbackData("uk")
                                         .build()))
                 .keyboardRow(
                         new InlineKeyboardRow(
@@ -451,15 +451,15 @@ public class TelegramMessages {
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text("Українська")
-                                        .callbackData("uk")
+                                        .text("Русский")
+                                        .callbackData("ru")
                                         .build()))
                 .keyboardRow(
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text("Русский")
-                                        .callbackData("ru")
+                                        .text("Українська")
+                                        .callbackData("uk")
                                         .build()))
                 .keyboardRow(
                         new InlineKeyboardRow(
