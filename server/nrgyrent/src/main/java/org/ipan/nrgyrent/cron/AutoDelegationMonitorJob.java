@@ -27,7 +27,7 @@ import java.util.List;
 @AllArgsConstructor
 @Slf4j
 public class AutoDelegationMonitorJob {
-    public static final int MAX_IDLE_HOURS = 12;
+    public static final int MAX_IDLE_MINUTES = 24 * 60 - 20;
 
     private final AutoDelegationSessionRepo autoDelegationSessionRepo;
     private final OrderRepo orderRepo;
@@ -49,7 +49,7 @@ public class AutoDelegationMonitorJob {
                     : session.getCreatedAt();
 
             Duration duration = Duration.between(Instant.now(), dtFrom);
-            if (duration.abs().toHours() >= MAX_IDLE_HOURS) {
+            if (duration.abs().toMinutes() >= MAX_IDLE_MINUTES) {
                 AppUser user = session.getUser();
                 Long telegramId = user.getTelegramId();
                 energyService.deactivateSessionLowBalance(session.getId());

@@ -69,7 +69,7 @@ public class CronJobConfig {
         }
     }
 
-    @Scheduled(fixedRate = 10, timeUnit = TimeUnit.MINUTES)
+    @Scheduled(fixedRate = 5, timeUnit = TimeUnit.MINUTES)
     public void autoDelegationMonitorJob() {
         autoDelegationMonitorJob.monitorForInactiveSessions();
     }

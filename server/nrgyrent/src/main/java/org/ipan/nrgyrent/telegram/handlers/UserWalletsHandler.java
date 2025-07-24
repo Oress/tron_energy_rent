@@ -44,10 +44,18 @@ public class UserWalletsHandler {
         telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.WALLETS));
     }
 
-    @MatchState(state = States.WALLETS, callbackData = InlineMenuCallbacks.ADD_WALLETS)
+    @MatchStates({
+            @MatchState(state = States.WALLETS, callbackData = InlineMenuCallbacks.ADD_WALLETS),
+            @MatchState(state = States.AUTOTOPUP, callbackData = InlineMenuCallbacks.ADD_WALLETS),
+    })
     public void handleAddNewWallet(UserState userState, Update update) {
         walletsViews.updMenuToPromptWalletAddress(userState);
-        telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.NEW_WALLET_PROMPT_ADDRESS));
+
+        States newState = switch (userState.getState()) {
+            case States.AUTOTOPUP -> States.AUTO_TOPUP_NEW_WALLET_PROMPT_ADDRESS;
+            default -> States.NEW_WALLET_PROMPT_ADDRESS;
+        };
+        telegramState.updateUserState(userState.getTelegramId(), userState.withState(newState));
     }
 
     @MatchState(state = States.WALLETS, updateTypes = UpdateType.CALLBACK_QUERY)
@@ -77,7 +85,10 @@ public class UserWalletsHandler {
     }
 
 
-    @MatchState(state = States.NEW_WALLET_PROMPT_ADDRESS, updateTypes = UpdateType.MESSAGE)
+    @MatchStates({
+            @MatchState(state = States.NEW_WALLET_PROMPT_ADDRESS, updateTypes = UpdateType.MESSAGE),
+            @MatchState(state = States.AUTO_TOPUP_NEW_WALLET_PROMPT_ADDRESS, updateTypes = UpdateType.MESSAGE),
+    })
     public void handlePromptNewAddress(UserState userState, Update update) {
         Message message = update.getMessage();
         if (!message.hasText()) {

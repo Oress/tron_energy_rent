@@ -11,6 +11,7 @@ import org.ipan.nrgyrent.domain.model.projections.WalletWithAutoTopupSession;
 import org.ipan.nrgyrent.telegram.InlineMenuCallbacks;
 import org.ipan.nrgyrent.telegram.i18n.AutoDelegateLabels;
 import org.ipan.nrgyrent.telegram.i18n.CommonLabels;
+import org.ipan.nrgyrent.telegram.i18n.WalletLabels;
 import org.ipan.nrgyrent.telegram.state.UserState;
 import org.ipan.nrgyrent.telegram.utils.FormattingTools;
 import org.ipan.nrgyrent.telegram.utils.WalletTools;
@@ -23,9 +24,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKe
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
 
-import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -33,6 +32,7 @@ import java.util.stream.Collectors;
 public class AutoDelegationViews {
     private final TelegramClient tgClient;
     private final CommonLabels commonLabels;
+    private final WalletLabels walletLabels;
     private final CommonViews commonViews;
     private final AutoDelegateLabels autoDelegateLabels;
 
@@ -309,7 +309,15 @@ public class AutoDelegationViews {
         InlineKeyboardMarkup.InlineKeyboardMarkupBuilder<?, ?> builder = InlineKeyboardMarkup.builder();
         walletRows.forEach(builder::keyboardRow);
 
-        return builder.keyboardRow(
+        return builder
+                .keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text(walletLabels.addWallet())
+                                        .callbackData(InlineMenuCallbacks.ADD_WALLETS)
+                                        .build()))
+                .keyboardRow(
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
