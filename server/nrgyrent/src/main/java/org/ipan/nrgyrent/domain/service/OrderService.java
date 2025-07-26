@@ -179,24 +179,30 @@ public class OrderService {
     }
 
     private Long calculateCommissionAsPercentFromProfit(Order order, ReferralProgram referralProgram) {
-        Long actualProfitLong = order.getSunAmount() - order.getItrxFeeSunAmount();
-        Long profitVisible = order.getSunAmount() - referralProgram.getSubtractAmount();
+        long actualProfitLong = order.getSunAmount() - order.getItrxFeeSunAmount();
+        long profitVisible = order.getSunAmount() - referralProgram.getSubtractAmount();
 
         BigDecimal profit = new BigDecimal(profitVisible);
         BigDecimal commissionVisible = profit
-            .divide(AppConstants.HUNDRED)
-            .multiply(new BigDecimal(referralProgram.getPercentage()))
-            .setScale(0, RoundingMode.DOWN);
+                .divide(AppConstants.HUNDRED)
+                .multiply(new BigDecimal(referralProgram.getPercentage()))
+                .setScale(0, RoundingMode.DOWN);
 
         BigDecimal profitAct = new BigDecimal(actualProfitLong);
         BigDecimal commissionActual = profitAct
-            .divide(AppConstants.HUNDRED)
-            .multiply(new BigDecimal(referralProgram.getPercentage()))
-            .setScale(0, RoundingMode.DOWN);
+                .divide(AppConstants.HUNDRED)
+                .multiply(new BigDecimal(referralProgram.getPercentage()))
+                .setScale(0, RoundingMode.DOWN);
 
-        order.setRefProgramProfitRemainder(commissionActual.longValue() - commissionVisible.longValue());
+        long baseEnergyAmount = order.getEnergyAmount() / order.getTxAmount();
 
-        return commissionVisible.longValue();
+        // do this only for 65K energy amount orders
+        if (baseEnergyAmount == AppConstants.ENERGY_65K) {
+            order.setRefProgramProfitRemainder(commissionActual.longValue() - commissionVisible.longValue());
+            return commissionVisible.longValue();
+        } else {
+            return commissionActual.longValue();
+        }
     }
 
     private Long calculateCommissionAsPercentFromRevenue(Order order, ReferralProgram referralProgram) {
