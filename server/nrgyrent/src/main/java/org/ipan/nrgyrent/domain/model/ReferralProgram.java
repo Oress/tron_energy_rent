@@ -32,6 +32,9 @@ public class ReferralProgram {
     @Column
     private Integer percentage;
 
+    @Column(name = "subtract_amount")
+    private Long subtractAmount;
+
     @Column(name="calc_type")
     @Enumerated(EnumType.STRING)
     private ReferralProgramCalcType calcType = ReferralProgramCalcType.PERCENT_FROM_PROFIT;

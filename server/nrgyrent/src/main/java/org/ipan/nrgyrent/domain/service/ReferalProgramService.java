@@ -8,6 +8,7 @@ import org.ipan.nrgyrent.domain.model.ReferralProgram;
 import org.ipan.nrgyrent.domain.model.repository.AppUserRepo;
 import org.ipan.nrgyrent.domain.model.repository.BalanceReferralProgramRepo;
 import org.ipan.nrgyrent.domain.model.repository.ReferralProgramRepo;
+import org.ipan.nrgyrent.itrx.AppConstants;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -88,6 +89,7 @@ public class ReferalProgramService {
         ReferralProgram refProgram = new ReferralProgram();
         refProgram.setLabel(label);
         refProgram.setPercentage(percentage);
+        refProgram.setSubtractAmount(AppConstants.BASE_SUBTRACT_AMOUNT);
 
         referralProgramRepo.save(refProgram);
 

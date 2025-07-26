@@ -55,6 +55,10 @@ public class Order {
     @Column(name = "sun_amount")
     private Long sunAmount;
 
+//    This field contains the remainder refProgram. (i.e. instead of actual itrx.io commission it uses nrg_referral_programs)
+    @Column(name = "ref_program_profit_remainder")
+    private Long refProgramProfitRemainder;
+
     @Column(name = "tx_amount")
     private Integer txAmount;
 

@@ -179,12 +179,16 @@ public class OrderService {
     }
 
     private Long calculateCommissionAsPercentFromProfit(Order order, ReferralProgram referralProgram) {
-        Long profitLong = order.getSunAmount() - order.getItrxFeeSunAmount();
+        Long actualProfitLong = order.getSunAmount() - order.getItrxFeeSunAmount();
+        Long profitLong = order.getSunAmount() - referralProgram.getSubtractAmount();
+
         BigDecimal profit = new BigDecimal(profitLong);
         BigDecimal commission = profit
             .divide(AppConstants.HUNDRED)
             .multiply(new BigDecimal(referralProgram.getPercentage()))
             .setScale(0, RoundingMode.DOWN);
+
+        order.setRefProgramProfitRemainder(actualProfitLong - commission.longValue());
 
         return commission.longValue();
     }

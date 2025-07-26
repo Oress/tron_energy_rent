@@ -5,6 +5,8 @@ import java.math.BigDecimal;
 public class AppConstants {
     public static final BigDecimal HUNDRED = new BigDecimal(100);
 
+    public static final Long BASE_SUBTRACT_AMOUNT = 3_175_000L;
+
     public static final Long DEFAULT_TARIFF_ID = 1L;
 
     public static final Long HOUR_MILLIS = 60L * 60 * 1000;

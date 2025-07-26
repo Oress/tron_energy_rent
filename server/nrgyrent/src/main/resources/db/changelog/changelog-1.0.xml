@@ -1098,4 +1098,16 @@
         </createIndex>
     </changeSet>
 
+    <changeSet id="extend nrg_referral_programs with subtract_amount" author="oress">
+        <addColumn tableName="nrg_referral_programs">
+            <column name="subtract_amount" type="bigint" defaultValue="3175000" />
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="extend nrg_orders with ref_program_profit_remainder" author="oress">
+        <addColumn tableName="nrg_orders">
+            <column name="ref_program_profit_remainder" type="bigint" />
+        </addColumn>
+    </changeSet>
+
 </databaseChangeLog>
