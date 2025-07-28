@@ -25,6 +25,6 @@ public class AddressesWatchlist {
     }
 
     public boolean contains(String address) {
-        return addresses.contains(address);
+        return address != null && addresses.contains(address);
     }
 }
