@@ -18,9 +18,8 @@ NC='\033[0m' # No Color
 
 # Logging functions
 log_info() {
-    echo -e "${GREEN}[INFO]${NC} $1"
+    echo -e "${GREEN}[INFO]${NC} $(date '+%Y-%m-%d %H:%M:%S') $1"
 }
-
 log_warn() {
     echo -e "${YELLOW}[WARN]${NC} $1"
 }
