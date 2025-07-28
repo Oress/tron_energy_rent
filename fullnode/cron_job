@@ -1,0 +1,1 @@
+*/5 * * * * root BASE_PATH=/root/tron_energy_rent/fullnode /root/tron_energy_rent/fullnode/prune_fullnode.sh >> /root/tron_energy_rent/fullnode/prune.log 2>&1

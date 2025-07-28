@@ -5,6 +5,7 @@ import jakarta.annotation.PostConstruct;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.ipan.nrgyrent.FullnodeConfig;
+import org.ipan.nrgyrent.application.service.DepositService;
 import org.ipan.nrgyrent.application.service.EnergyService;
 import org.ipan.nrgyrent.domain.events.autotopup.AutoDelegationSessionEventPublisher;
 import org.ipan.nrgyrent.telegram.state.TelegramState;
@@ -13,13 +14,16 @@ import org.ipan.nrgyrent.tron.node.events.dto.AddressTransactionEvent;
 import org.springframework.stereotype.Component;
 import org.zeromq.SocketType;
 import org.zeromq.ZMQ;
+import zmq.Msg;
 
 import java.util.Arrays;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 
-@Component
+//@Component
+// ZeroMq plugin does not some types of events.
+/*
 @Slf4j
 @AllArgsConstructor
 public class TronZeroMqListener {
@@ -27,8 +31,10 @@ public class TronZeroMqListener {
 
     private final BlockingQueue<AddressTransactionEvent> queue = new LinkedBlockingQueue<>(10000);
     private final TelegramState telegramState;
+    private final AddressesWatchlist addressesWatchlist;
     private final ObjectMapper objectMapper;
     private final EnergyService energyService;
+    private final DepositService depositService;
     private final FullnodeConfig fullnodeConfig;
     private final AutoDelegationSessionEventPublisher autoDelegationSessionEventPublisher;
     private final ExecutorService pollingTp = Executors.newFixedThreadPool(1);
@@ -61,6 +67,7 @@ public class TronZeroMqListener {
                         }
 
                         // Check for transactionTrigger
+                        logger.info("msg {}", new String(payload));
                         if (checkForTransactionTrigger(payload)) continue;
 
                         AddressTransactionEvent value = objectMapper.readValue(payload, AddressTransactionEvent.class);
@@ -96,7 +103,7 @@ public class TronZeroMqListener {
                 try {
                     AddressTransactionEvent event = queue.poll(10, TimeUnit.SECONDS);
                     if (event != null) {
-                        energyService.processTxEventAsync(event);
+                        depositService.processTxEventAsync(event);
                     }
                 } catch (InterruptedException e) {
                     logger.error("Exception when processing message", e);
@@ -114,6 +121,16 @@ public class TronZeroMqListener {
             }
         }
 
+        if (ContractTypes.TRANSFER.equals(value.getContractType())) {
+            String fromAddress = value.getFromAddress();
+            String toAddress = value.getToAddress();
+            if (addressesWatchlist.contains(fromAddress) || addressesWatchlist.contains(toAddress)) {
+                return true;
+            }
+        }
+
+*/
+/*
         if (ContractTypes.UNDELEGATE_RESOURCE.equals(value.getContractType())) {
             String toAddress = value.getToAddress();
             if (toAddress != null && !toAddress.isBlank()) {
@@ -121,6 +138,8 @@ public class TronZeroMqListener {
                  return walletMonitoringState != null;
             }
         }
+*//*
+
         return false;
     }
 
@@ -129,4 +148,4 @@ public class TronZeroMqListener {
     private boolean checkForTransactionTrigger(byte[] bytes) {
         return Arrays.compare(transactionTrigger, bytes) == 0;
     }
-}
+}*/

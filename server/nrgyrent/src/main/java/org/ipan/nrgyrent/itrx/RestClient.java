@@ -9,6 +9,7 @@ import okhttp3.*;
 
 import org.ipan.nrgyrent.itrx.dto.*;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
@@ -81,6 +82,7 @@ public class RestClient {
         return placeOrderResponse;
     }
 
+    @Retryable
     public EstimateOrderAmountResponse estimateOrderPrice(Integer energyAmnt, String period, String receiveAddress) {
         try {
             HttpUrl.Builder builder = HttpUrl.parse(baseUrl + "/api/v1/frontend/order/price").newBuilder();

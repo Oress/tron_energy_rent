@@ -10,4 +10,6 @@ public interface DepositTransactionRepo extends JpaRepository<DepositTransaction
     DepositTransaction findBySystemOrder(Order systemOrder);
 
     DepositTransaction findBySystemOrderCorrelationId(String systemOrderCorrelationId);
+
+    DepositTransaction findByTxId(String txId);
 }

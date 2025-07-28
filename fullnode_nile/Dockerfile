@@ -1,7 +1,12 @@
 FROM openjdk:8-jdk
 
 RUN git clone https://github.com/tron-nile-testnet/nile-testnet.git
-WORKDIR ./nile-testnet
+RUN git clone https://github.com/tronprotocol/event-plugin.git
+
+WORKDIR ./event-plugin
+RUN chmod +x ./gradlew && ./gradlew clean build -x test
+
+WORKDIR ../nile-testnet
 RUN chmod +x ./gradlew && ./gradlew clean build -x test
 
 

@@ -267,8 +267,7 @@ public class PollForTransactionsJobHelper {
             logger.warn("Timestamp is null for transaction: {} wallet {}", tx, walletAddress);
         }
 
-        BigDecimal usdtAmount = new BigDecimal(tx.getValue()).divide(AppConstants.trxToSunRate, 2, RoundingMode.DOWN);
-
+        Long usdtAmount = tx.getValue() != null ? Long.parseLong(tx.getValue()) : 0L;
         return TRANSFER.equals(tx.getType())
                 && ts != null && ts > lastTxTimestamp
                 && walletAddress.equals(tx.getTo())

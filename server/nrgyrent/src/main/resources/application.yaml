@@ -36,6 +36,26 @@ spring:
         use_sql_comments: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
         generate_statistics: false
+  kafka:
+    bootstrap-servers: ${KAFKA_SERVERS:localhost:9094}
+    consumer:
+      group-id: tg_app_group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      # Alternative for JSON deserialization:
+      # value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      auto-offset-reset: earliest  # or 'latest'
+      enable-auto-commit: false  # For manual acknowledgment
+      max-poll-records: 500
+      properties:
+        reconnect:
+          backoff:
+            max:
+              ms: 30000
+        heartbeat:
+          interval:
+            ms: 10000
+
 app:
   bybit:
     url-testnet: https://api-testnet.bybit.com

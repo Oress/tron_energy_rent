@@ -1110,4 +1110,10 @@
         </addColumn>
     </changeSet>
 
+    <changeSet id="add idx_nrg_deposit_transactions_tx_id" author="oress">
+        <createIndex indexName="idx_nrg_deposit_transactions_tx_id" tableName="nrg_deposit_transactions">
+            <column name="tx_id" />
+        </createIndex>
+    </changeSet>
+
 </databaseChangeLog>

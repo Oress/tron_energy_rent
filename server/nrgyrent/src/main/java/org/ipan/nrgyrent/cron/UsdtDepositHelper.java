@@ -48,6 +48,7 @@ public class UsdtDepositHelper {
     public GetOrderData placeBuyOrderUsdtToTrx(DepositTransaction depositTransaction) {
         GetOrderData result = null;
 
+        // leave 1 cent for cheaper energy in the future
         BigDecimal amount = BigDecimal.valueOf(depositTransaction.getOriginalAmount())
                 .subtract(new BigDecimal("0.01"))
                 .divide(BigDecimal.valueOf(1_000_000), 2, RoundingMode.DOWN);
@@ -83,7 +84,7 @@ public class UsdtDepositHelper {
         Thread.sleep(1000);
         result = bybitRestClient.getOrderStatus(response.getResult().getOrderId());
         if (!"Filled".equals(result.getOrderStatus())) {
-            logger.error("Bybit. Order has unexpected status: {}", response);
+            logger.error("Bybit. Order has unexpected status: {}", result);
             depositTransaction.setStatus(DepositStatus.USDT_MARKET_ORDER_UNEXPECTED_STATUS);
             depositTransactionRepo.save(depositTransaction);
             return null;

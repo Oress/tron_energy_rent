@@ -26,4 +26,7 @@ public interface BalanceRepo extends JpaRepository<Balance, Long> {
     Set<Balance> findAllWithPendingReferralCommissions();
 
     Balance findByDepositAddress(String depositAddress);
+
+    @Query("select b.depositAddress from Balance b where b.isActive = true")
+    Set<String> findAllActiveAddresses();
 }

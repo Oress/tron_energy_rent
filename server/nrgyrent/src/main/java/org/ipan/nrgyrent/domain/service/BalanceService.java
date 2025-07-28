@@ -23,6 +23,7 @@ import org.ipan.nrgyrent.domain.model.repository.ManualBalanceAdjustmentActionRe
 import org.ipan.nrgyrent.domain.model.repository.TariffRepo;
 import org.ipan.nrgyrent.domain.service.commands.TgUserId;
 import org.ipan.nrgyrent.domain.service.commands.users.CreateUserCommand;
+import org.ipan.nrgyrent.tron.node.events.AddressesWatchlist;
 import org.springframework.beans.factory.annotation.Lookup;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
@@ -37,6 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 @AllArgsConstructor
 @Slf4j
 public class BalanceService {
+    private final AddressesWatchlist addressesWatchlist; // ideally, communicate via events
     private final TariffRepo tariffRepo;
     private final AppUserRepo userRepo;
     private final BalanceRepo balanceRepo;
@@ -220,6 +222,8 @@ public class BalanceService {
 
         balanceRepo.save(balance);
 
+        addressesWatchlist.addAddress(balance.getDepositAddress());
+
         manager.setGroupBalance(balance);
         referalProgramService.removeRefProgram(managerId);
 
@@ -237,6 +241,7 @@ public class BalanceService {
         balance.setTariff(getTariffOrDefault(command.getTariffId()));
         setDefaultWithdrawLimits(balance);
         balanceRepo.save(balance);
+        addressesWatchlist.addAddress(balance.getDepositAddress());
 
         user.setBalance(balance);
 

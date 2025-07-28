@@ -1,9 +1,13 @@
 FROM openjdk:8-jdk
 
+RUN git clone https://github.com/tronprotocol/event-plugin.git
 RUN git clone https://github.com/tronprotocol/java-tron.git
-WORKDIR ./java-tron
+
+WORKDIR ./event-plugin
 RUN chmod +x ./gradlew && ./gradlew clean build -x test
 
+WORKDIR ../java-tron
+RUN chmod +x ./gradlew && ./gradlew clean build -x test
 
 WORKDIR ./build/libs
 RUN mkdir output-directory
