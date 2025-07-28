@@ -44,7 +44,7 @@ spring:
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       # Alternative for JSON deserialization:
       # value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
-      auto-offset-reset: earliest  # or 'latest'
+      auto-offset-reset: latest  # or 'latest'
       enable-auto-commit: false  # For manual acknowledgment
       max-poll-records: 500
       properties:
