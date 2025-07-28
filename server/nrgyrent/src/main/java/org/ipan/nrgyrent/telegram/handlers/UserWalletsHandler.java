@@ -35,6 +35,8 @@ public class UserWalletsHandler {
 
     @MatchStates({
         @MatchState(state = States.MAIN_MENU, callbackData = InlineMenuCallbacks.WALLETS),
+        @MatchState(state = States.ADD_WALLETS_SUCCESS, callbackData = InlineMenuCallbacks.GO_BACK),
+        @MatchState(state = States.DELETE_WALLETS_SUCCESS, callbackData = InlineMenuCallbacks.GO_BACK),
         @MatchState(state = States.USER_WALLET_PREVIEW, callbackData = InlineMenuCallbacks.GO_BACK),
         @MatchState(state = States.NEW_WALLET_PROMPT_ADDRESS, callbackData = InlineMenuCallbacks.GO_BACK)
     })
@@ -100,14 +102,22 @@ public class UserWalletsHandler {
         if (WalletTools.isValidTronAddress(text)) {
             AddWalletState addWalletState = telegramState.getOrCreateAddWalletState(userState.getTelegramId());
             telegramState.updateAddWalletState(userState.getTelegramId(), addWalletState.withAddress(text));
-            telegramState.updateUserState(userState.getTelegramId(),
-                    userState.withState(States.NEW_WALLET_PROMPT_LABEL));
+
+            States newState = switch (userState.getState()) {
+                case States.AUTO_TOPUP_NEW_WALLET_PROMPT_ADDRESS -> States.AUTO_TOPUP_NEW_WALLET_PROMPT_LABEL;
+                default -> States.NEW_WALLET_PROMPT_LABEL;
+            };
+
+            telegramState.updateUserState(userState.getTelegramId(), userState.withState(newState));
             walletsViews.updMenuToPromptWalletLabel(userState);
         }
         // TODO: send validation message to user
     }
 
-    @MatchState(state = States.NEW_WALLET_PROMPT_LABEL, updateTypes = UpdateType.MESSAGE)
+    @MatchStates({
+        @MatchState(state = States.NEW_WALLET_PROMPT_LABEL, updateTypes = UpdateType.MESSAGE),
+        @MatchState(state = States.AUTO_TOPUP_NEW_WALLET_PROMPT_LABEL, updateTypes = UpdateType.MESSAGE)
+    })
     public void handlePromptNewLabel(UserState userState, Update update) {
         Message message = update.getMessage();
         if (message == null || !message.hasText()) {
@@ -123,7 +133,13 @@ public class UserWalletsHandler {
                         .label(text)
                         .userId(userState.getTelegramId())
                         .build());
-        telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.ADD_WALLETS_SUCCESS));
+
+        States newState = switch (userState.getState()) {
+            case States.AUTO_TOPUP_NEW_WALLET_PROMPT_LABEL -> States.AUTO_TOPUP_NEW_WALLET_PROMPT_SUCCESS;
+            default -> States.ADD_WALLETS_SUCCESS;
+        };
+
+        telegramState.updateUserState(userState.getTelegramId(), userState.withState(newState));
         walletsViews.updMenuToAddWalletSuccessMenu(userState);
     }
 }

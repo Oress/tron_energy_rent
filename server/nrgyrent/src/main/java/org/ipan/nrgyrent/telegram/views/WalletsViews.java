@@ -63,7 +63,7 @@ public class WalletsViews {
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
                 .text(walletLabels.deleteWalletSuccess())
-                .replyMarkup(commonViews.getToMainMenuMarkup())
+                .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
         tgClient.execute(message);
     }
@@ -76,7 +76,7 @@ public class WalletsViews {
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
                 .text(walletLabels.addWalletSuccess())
-                .replyMarkup(commonViews.getToMainMenuMarkup())
+                .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
         tgClient.execute(message);
     }

@@ -50,6 +50,7 @@ public class AutoDelegationHandler {
             @MatchState(state = States.AUTODELEGATE_START_ERROR, callbackData = InlineMenuCallbacks.GO_BACK),
             @MatchState(state = States.AUTO_TOPUP_NEW_WALLET_PROMPT_ADDRESS, callbackData = InlineMenuCallbacks.GO_BACK),
             @MatchState(state = States.AUTO_TOPUP_NEW_WALLET_PROMPT_LABEL, callbackData = InlineMenuCallbacks.GO_BACK),
+            @MatchState(state = States.AUTO_TOPUP_NEW_WALLET_PROMPT_SUCCESS, callbackData = InlineMenuCallbacks.GO_BACK),
     })
     public void handleAutoDelegationMenu(UserState userState, Update update) {
         List<WalletWithAutoTopupSession> walletsWithSessions = autoDelegationSessionRepo.findActiveSessionsWithWalletInfo(userState.getTelegramId());
