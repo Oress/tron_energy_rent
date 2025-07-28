@@ -23,6 +23,7 @@ services:
       - APP_BYBIT_USDT_DEP_WALLET
       - APP_USDT_ADDRESS
 
+      - KAFKA_SERVERS
       - APP_ITRX_API_KEY
       - APP_ITRX_API_SECRET
       - APP_ITRX_BASE_URL
