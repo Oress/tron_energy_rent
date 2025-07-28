@@ -44,3 +44,5 @@ services:
     volumes:
       - ./main_net_config.conf:/java-tron/build/libs/config.conf
       - ./output-directory:/java-tron/build/libs/output-directory
+volumes:
+  kafka_data: {}
