@@ -198,7 +198,7 @@ public class OrderService {
 
         // do this only for 65K energy amount orders
         if (baseEnergyAmount == AppConstants.ENERGY_65K) {
-            order.setRefProgramProfitRemainder(commissionActual.longValue() - commissionVisible.longValue());
+            order.setRefProgramProfitRemainder(actualProfitLong - profitVisible);
             return commissionVisible.longValue();
         } else {
             return commissionActual.longValue();
