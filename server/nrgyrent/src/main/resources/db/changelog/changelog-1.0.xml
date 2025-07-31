@@ -1136,4 +1136,14 @@
         </sql>
     </changeSet>
 
+    <changeSet id="create fk_nrg_balances_bal_ref_prog_id" author="oress">
+        <addForeignKeyConstraint constraintName="fk_nrg_balances_bal_ref_prog_id"
+                                 baseTableName="nrg_balances"
+                                 baseColumnNames="bal_ref_prog_id"
+                                 referencedTableName="nrg_balance_referral_programs"
+                                 referencedColumnNames="id"
+                                 onDelete="SET NULL"
+        />
+    </changeSet>
+
 </databaseChangeLog>
