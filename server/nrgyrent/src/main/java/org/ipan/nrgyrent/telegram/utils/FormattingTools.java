@@ -11,10 +11,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.ipan.nrgyrent.domain.model.AppUser;
-import org.ipan.nrgyrent.domain.model.BalanceReferralProgram;
-import org.ipan.nrgyrent.domain.model.OrderStatus;
-import org.ipan.nrgyrent.domain.model.WithdrawalStatus;
+import org.ipan.nrgyrent.domain.model.*;
+import org.ipan.nrgyrent.domain.model.projections.ReferralDto;
 import org.ipan.nrgyrent.domain.service.commands.TgUserId;
 import org.ipan.nrgyrent.telegram.i18n.CommonLabels;
 import org.ipan.nrgyrent.telegram.i18n.RefProgramLabels;
@@ -48,6 +46,21 @@ public class FormattingTools {
         String idStr = "ID: %s".formatted(id);
         return List.of(idStr, loginStr, nameStr).stream().filter(s -> !s.isEmpty()).collect(Collectors.joining(", "));
     }
+
+    public String formatReferral(ReferralDto referralDto) {
+        if (referralDto == null) {
+            return "-";
+        }
+        if (BalanceType.INDIVIDUAL.equals(referralDto.getType())) {
+            String login = referralDto.getLogin() != null ? commonLabels.userLogin(referralDto.getLogin()) : "";
+            String name = referralDto.getName() != null ? commonLabels.userName(referralDto.getName()) : "";
+            return List.of(login, name).stream().filter(s -> !s.isEmpty()).collect(Collectors.joining(", "));
+        } else if (BalanceType.GROUP.equals(referralDto.getType())) {
+            return commonLabels.groupLabel(referralDto.getGroupName());
+        }
+        return "-";
+    }
+
 
     public String formatUserForSearch(AppUser user) {
         if (user == null) {

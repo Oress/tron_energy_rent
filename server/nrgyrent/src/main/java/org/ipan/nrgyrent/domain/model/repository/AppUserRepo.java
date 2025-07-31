@@ -24,8 +24,5 @@ public interface AppUserRepo extends JpaRepository<AppUser, Long> {
             )
     Page<AppUser> searchByUsernameAndFirstname(String username, String firstName, PageRequest of);
 
-    @Query("select u from AppUser u join u.referralProgram rp where rp.id = :balanceRefProgramId")
-    List<AppUser> findAllByBalRefProgId(Long balanceRefProgramId);
-
     List<AppUser> findAllByRole(UserRole role);
 }

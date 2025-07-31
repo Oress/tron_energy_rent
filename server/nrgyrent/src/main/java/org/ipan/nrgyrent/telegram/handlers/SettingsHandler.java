@@ -6,11 +6,9 @@ import java.util.Locale;
 
 import org.ipan.nrgyrent.domain.model.AppUser;
 import org.ipan.nrgyrent.domain.model.BalanceReferralProgram;
+import org.ipan.nrgyrent.domain.model.projections.ReferralDto;
 import org.ipan.nrgyrent.domain.model.projections.TransactionHistoryDto;
-import org.ipan.nrgyrent.domain.model.repository.AppUserRepo;
-import org.ipan.nrgyrent.domain.model.repository.BalanceReferralProgramRepo;
-import org.ipan.nrgyrent.domain.model.repository.OrderRepo;
-import org.ipan.nrgyrent.domain.model.repository.ReferralCommissionRepo;
+import org.ipan.nrgyrent.domain.model.repository.*;
 import org.ipan.nrgyrent.domain.service.UserService;
 import org.ipan.nrgyrent.telegram.InlineMenuCallbacks;
 import org.ipan.nrgyrent.telegram.States;
@@ -37,6 +35,7 @@ public class SettingsHandler {
     private final BalanceReferralProgramRepo balanceReferralProgramRepo;
     private final ReferralCommissionRepo referralCommissionRepo;
     private final AppUserRepo userRepo;
+    private final BalanceRepo balanceRepo;
 
     private final HistoryViews historyViews;
 
@@ -101,12 +100,12 @@ public class SettingsHandler {
         BalanceReferralProgram referralProgram = byBalanceId.isEmpty() ? null : byBalanceId.get(0);
 
         Long pendingCommissionSun = 0L;
-        List<AppUser> referals = Collections.emptyList();
+        List<ReferralDto> referals = Collections.emptyList();
 
         // for groups
         if (referralProgram != null) {
             pendingCommissionSun = referralProgram == null ? 0 : referralCommissionRepo.findSumOfAllPendingByBalanceRefProgId(referralProgram.getId()).orElse(0L);
-            referals = userRepo.findAllByBalRefProgId(referralProgram.getId());
+            referals = balanceRepo.findAllByBalRefProgId(referralProgram.getId());
         }
         telegramMessages.updMenuToReferalSummary(userState, user, referralProgram, referals, pendingCommissionSun == null ? 0 : pendingCommissionSun);
         telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.REFERALS));

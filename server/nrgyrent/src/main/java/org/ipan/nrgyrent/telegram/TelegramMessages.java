@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.ipan.nrgyrent.domain.model.*;
+import org.ipan.nrgyrent.domain.model.projections.ReferralDto;
 import org.ipan.nrgyrent.itrx.AppConstants;
 import org.ipan.nrgyrent.telegram.i18n.CommonLabels;
 import org.ipan.nrgyrent.telegram.i18n.TransactionLabels;
@@ -55,8 +56,8 @@ public class TelegramMessages {
 
     @SneakyThrows
     public void updMenuToReferalSummary(UserState userState, AppUser user, BalanceReferralProgram refProgram,
-            List<AppUser> referals, Long pendingCommissionSun) {
-        String referalsStr = referals.stream().map(u -> formattingTools.formatUserForSearch(u))
+                                        List<ReferralDto> referals, Long pendingCommissionSun) {
+        String referalsStr = referals.stream().map(u -> formattingTools.formatReferral(u))
                 .collect(Collectors.joining("\n"));
         if (referalsStr.isBlank()) {
             referalsStr = commonLabels.noReferrals();

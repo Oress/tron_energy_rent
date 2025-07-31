@@ -187,6 +187,10 @@ public class CommonLabels {
         return getLocalizedMessage("user_format.name", name);
     }
 
+    public String groupLabel(String label) {
+        return getLocalizedMessage("group_format.label", label);
+    }
+
     public String defaultTariffWarning() {
         return getLocalizedMessage("warning.default_tariff");
     }
