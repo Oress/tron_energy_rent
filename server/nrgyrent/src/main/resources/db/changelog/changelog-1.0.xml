@@ -1116,4 +1116,24 @@
         </createIndex>
     </changeSet>
 
+    <changeSet id="extend nrg_balances with column bal_ref_prog_id" author="oress">
+        <addColumn tableName="nrg_balances">
+            <column name="bal_ref_prog_id" type="bigint" />
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="add idx_nrg_balances_bal_ref_prog_id" author="oress">
+        <createIndex tableName="nrg_balances" indexName="idx_nrg_balances_bal_ref_prog_id">
+            <column name="bal_ref_prog_id" />
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="migrate users.bal_ref_prog_id to nrg_balances.bal_ref_prog_id" author="oress">
+        <sql>
+            UPDATE nrg_balances b SET bal_ref_prog_id = u.bal_ref_prog_id
+            FROM nrg_users u
+            WHERE b.id = u.balance_id AND u.bal_ref_prog_id IS NOT NULL;
+        </sql>
+    </changeSet>
+
 </databaseChangeLog>

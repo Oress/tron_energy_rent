@@ -6,7 +6,6 @@ import org.apache.commons.lang3.NotImplementedException;
 import org.ipan.nrgyrent.LiquibaseParameters;
 import org.ipan.nrgyrent.domain.model.AppUser;
 import org.ipan.nrgyrent.domain.model.Balance;
-import org.ipan.nrgyrent.domain.model.BalanceReferralProgram;
 import org.ipan.nrgyrent.domain.model.repository.BalanceReferralProgramRepo;
 import org.ipan.nrgyrent.domain.model.repository.UserRepo;
 import org.ipan.nrgyrent.domain.service.commands.TgUserId;
@@ -100,7 +99,8 @@ public class UserService {
             appUser.setLanguageCode(command.getLanguageCode());
         }
 
-        String link = command.getRefferalLink();
+/*        String link = command.getRefferalLink();
+
         if (link != null && !link.isEmpty()) {
             BalanceReferralProgram refferalProgram = balanceReferralProgramRepo.findByLink(link);
 
@@ -110,6 +110,7 @@ public class UserService {
                 logger.error("Cannot find refferal program by link {} user id {} login {}", link, command.getTelegramId(), command.getUsername());
             }
         }
+*/
     }
 
     public AppUser getById(Long telegramId) {

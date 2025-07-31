@@ -140,15 +140,21 @@ public class OrderService {
         }
 
         Order order = byCorrelationId.get();
+
+        if (OrderStatus.COMPLETED.equals(order.getOrderStatus())) {
+            logger.warn("Order with correlation id {} is already completed, skipping completion", command.getCorrelationId());
+            return order;
+        }
+
         order.setOrderStatus(OrderStatus.COMPLETED);
         order.setItrxStatus(command.getItrxStatus());
         order.setTxId(command.getTxId());
         order.setSerial(command.getSerial());
 
         if (OrderType.USER.equals(order.getType())) {
-            // Generate the referral commission record if user was invited
+            // Generate the referral commission record if user/group was invited
             AppUser user = order.getUser();
-            BalanceReferralProgram balanceReferralProgram = user.getReferralProgram();
+            BalanceReferralProgram balanceReferralProgram = user.getBalanceToUse().getReferralProgram();
             if (balanceReferralProgram != null) {
                 logger.info("Generating referral commission record from order {}", order.getId());
                 ReferralProgram referralProgram = balanceReferralProgram.getReferralProgram();
@@ -180,7 +186,7 @@ public class OrderService {
 
     private Long calculateCommissionAsPercentFromProfit(Order order, ReferralProgram referralProgram) {
         long actualProfitLong = order.getSunAmount() - order.getItrxFeeSunAmount();
-        long profitVisible = order.getSunAmount() - referralProgram.getSubtractAmount();
+        long profitVisible = order.getSunAmount() - referralProgram.getSubtractAmount() * order.getTxAmount();
 
         BigDecimal profit = new BigDecimal(profitVisible);
         BigDecimal commissionVisible = profit

@@ -11,16 +11,8 @@ import org.ipan.nrgyrent.domain.exception.UserIsDisabledException;
 import org.ipan.nrgyrent.domain.exception.UserIsManagerException;
 import org.ipan.nrgyrent.domain.exception.UserNotRegisteredException;
 import org.ipan.nrgyrent.domain.exception.UsersMustBelongToTheSameGroupException;
-import org.ipan.nrgyrent.domain.model.AppUser;
-import org.ipan.nrgyrent.domain.model.Balance;
-import org.ipan.nrgyrent.domain.model.BalanceType;
-import org.ipan.nrgyrent.domain.model.ManagedWallet;
-import org.ipan.nrgyrent.domain.model.ManualBalanceAdjustmentAction;
-import org.ipan.nrgyrent.domain.model.Tariff;
-import org.ipan.nrgyrent.domain.model.repository.AppUserRepo;
-import org.ipan.nrgyrent.domain.model.repository.BalanceRepo;
-import org.ipan.nrgyrent.domain.model.repository.ManualBalanceAdjustmentActionRepo;
-import org.ipan.nrgyrent.domain.model.repository.TariffRepo;
+import org.ipan.nrgyrent.domain.model.*;
+import org.ipan.nrgyrent.domain.model.repository.*;
 import org.ipan.nrgyrent.domain.service.commands.TgUserId;
 import org.ipan.nrgyrent.domain.service.commands.users.CreateUserCommand;
 import org.ipan.nrgyrent.tron.node.events.AddressesWatchlist;
@@ -46,6 +38,7 @@ public class BalanceService {
     private final ManagedWalletService managedWalletService;
     private final ReferalProgramService referalProgramService;
     private final LiquibaseParameters liquibaseParameters;
+    private final BalanceReferralProgramRepo balanceReferralProgramRepo;
 
     @Transactional
     public Balance removeUsersFromTheGroupBalance(Long balanceId, List<TgUserId> userInfos) {
@@ -240,6 +233,18 @@ public class BalanceService {
 
         balance.setTariff(getTariffOrDefault(command.getTariffId()));
         setDefaultWithdrawLimits(balance);
+
+        String link = command.getRefferalLink();
+        if (link != null && !link.isEmpty()) {
+            BalanceReferralProgram refferalProgram = balanceReferralProgramRepo.findByLink(link);
+
+            if (refferalProgram != null) {
+                balance.setReferralProgram(refferalProgram);
+            } else {
+                logger.error("Cannot find refferal program by link {} user id {} login {}", link, command.getTelegramId(), command.getUsername());
+            }
+        }
+
         balanceRepo.save(balance);
         addressesWatchlist.addAddress(balance.getDepositAddress());
 

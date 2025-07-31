@@ -2,20 +2,9 @@ package org.ipan.nrgyrent.domain.model;
 
 import java.time.Instant;
 
+import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.SequenceGenerator;
-import jakarta.persistence.Table;
-import jakarta.persistence.Version;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -33,6 +22,10 @@ public class Balance {
     private String depositAddress;
 
     private String label;
+
+    @JoinColumn(name = "bal_ref_prog_id")
+    @ManyToOne
+    private BalanceReferralProgram referralProgram;
 
     @JoinColumn(name = "manager_id")
     @OneToOne
