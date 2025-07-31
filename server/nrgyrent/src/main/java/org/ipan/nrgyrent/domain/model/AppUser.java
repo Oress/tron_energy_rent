@@ -38,10 +38,10 @@ public class AppUser {
     private Balance balance;
 
     // migrated to balance entity to support referral programs for group balances
-//    @Deprecated
-//    @JoinColumn(name = "bal_ref_prog_id")
-//    @ManyToOne
-//    private BalanceReferralProgram referralProgram;
+    @Deprecated
+    @JoinColumn(name = "bal_ref_prog_id")
+    @ManyToOne
+    private BalanceReferralProgram referralProgram;
 
     @JoinColumn(name = "group_balance_id")
     @ManyToOne
