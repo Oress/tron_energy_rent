@@ -45,7 +45,7 @@ public class UserWalletService {
     @GetMapping
     @Transactional(readOnly = true)
     public List<UserWallet> getWallets(Long userId) {
-        return userWalletRepo.findByUserTelegramId(userId);
+        return userWalletRepo.findByUserTelegramIdOrderByCreatedAt(userId);
     }
 
     @Transactional

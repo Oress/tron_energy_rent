@@ -8,6 +8,6 @@ import java.util.List;
 
 @Repository
 public interface UserWalletRepo extends JpaRepository<UserWallet, Long> {
-    List<UserWallet> findByUserTelegramId(Long userId);
+    List<UserWallet> findByUserTelegramIdOrderByCreatedAt(Long userTelegramId);
     List<UserWallet> findByUserTelegramIdAndAddress(Long userId, String address);
 }
