@@ -186,13 +186,6 @@ public class OrderService {
 
     private Long calculateCommissionAsPercentFromProfit(Order order, ReferralProgram referralProgram) {
         long actualProfitLong = order.getSunAmount() - order.getItrxFeeSunAmount();
-        long profitVisible = order.getSunAmount() - referralProgram.getSubtractAmount() * order.getTxAmount();
-
-        BigDecimal profit = new BigDecimal(profitVisible);
-        BigDecimal commissionVisible = profit
-                .divide(AppConstants.HUNDRED)
-                .multiply(new BigDecimal(referralProgram.getPercentage()))
-                .setScale(0, RoundingMode.DOWN);
 
         BigDecimal profitAct = new BigDecimal(actualProfitLong);
         BigDecimal commissionActual = profitAct
@@ -204,6 +197,25 @@ public class OrderService {
 
         // do this only for 65K energy amount orders
         if (baseEnergyAmount == AppConstants.ENERGY_65K) {
+            long profitVisible = order.getSunAmount() - referralProgram.getSubtractAmountTx1() * order.getTxAmount();
+
+            BigDecimal profit = new BigDecimal(profitVisible);
+            BigDecimal commissionVisible = profit
+                    .divide(AppConstants.HUNDRED)
+                    .multiply(new BigDecimal(referralProgram.getPercentage()))
+                    .setScale(0, RoundingMode.DOWN);
+
+            order.setRefProgramProfitRemainder(actualProfitLong - profitVisible);
+            return commissionVisible.longValue();
+        } else if (baseEnergyAmount == AppConstants.ENERGY_131K) {
+            long profitVisible = order.getSunAmount() - referralProgram.getSubtractAmountTx2() * order.getTxAmount();
+
+            BigDecimal profit = new BigDecimal(profitVisible);
+            BigDecimal commissionVisible = profit
+                    .divide(AppConstants.HUNDRED)
+                    .multiply(new BigDecimal(referralProgram.getPercentage()))
+                    .setScale(0, RoundingMode.DOWN);
+
             order.setRefProgramProfitRemainder(actualProfitLong - profitVisible);
             return commissionVisible.longValue();
         } else {

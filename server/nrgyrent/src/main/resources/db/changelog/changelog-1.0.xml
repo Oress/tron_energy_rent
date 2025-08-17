@@ -1146,4 +1146,10 @@
         />
     </changeSet>
 
+    <changeSet id="extend nrg_referral_programs with subtract_amount_tx2" author="oress">
+        <addColumn tableName="nrg_referral_programs">
+            <column name="subtract_amount_tx2" type="bigint" defaultValue="5895000" />
+        </addColumn>
+    </changeSet>
+
 </databaseChangeLog>

@@ -33,7 +33,10 @@ public class ReferralProgram {
     private Integer percentage;
 
     @Column(name = "subtract_amount")
-    private Long subtractAmount;
+    private Long subtractAmountTx1;
+
+    @Column(name = "subtract_amount_tx2")
+    private Long subtractAmountTx2;
 
     @Column(name="calc_type")
     @Enumerated(EnumType.STRING)
