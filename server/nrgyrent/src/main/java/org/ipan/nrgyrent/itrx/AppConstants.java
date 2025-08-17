@@ -6,7 +6,7 @@ public class AppConstants {
     public static final BigDecimal HUNDRED = new BigDecimal(100);
 
     public static final Long BASE_SUBTRACT_AMOUNT_TX1 = 3_175_000L;
-    public static final Long BASE_SUBTRACT_AMOUNT_TX2 = 5_895_000L;
+    public static final Long BASE_SUBTRACT_AMOUNT_TX2 = 6_350_000L;
 
     public static final Long DEFAULT_TARIFF_ID = 1L;
 
