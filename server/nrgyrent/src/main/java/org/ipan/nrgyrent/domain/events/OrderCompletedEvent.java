@@ -12,14 +12,13 @@ public class OrderCompletedEvent extends ApplicationEvent {
 
     private final Boolean isAutoDelegation;
     private final String receiveAddress;
-    private final String period;
     private final Long amount; // sun
     private final String duration;
     private final Integer energyAmount;
 
     public OrderCompletedEvent(Object eventSource, String correlationId, Integer itrxStatus, String txId,
                                String serial, Boolean isAutoDelegation, String receiveAddress,
-                               String period, Long amount, String duration, Integer energyAmount) {
+                               Long amount, String duration, Integer energyAmount) {
         super(eventSource);
         this.itrxStatus = itrxStatus;
         this.txId = txId;
@@ -27,7 +26,6 @@ public class OrderCompletedEvent extends ApplicationEvent {
         this.serial = serial;
         this.isAutoDelegation = isAutoDelegation;
         this.receiveAddress = receiveAddress;
-        this.period = period;
         this.amount = amount;
         this.duration = duration;
         this.energyAmount = energyAmount;

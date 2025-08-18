@@ -4,6 +4,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
+import org.ipan.nrgyrent.EnergyProvider;
+import org.ipan.nrgyrent.EnergyProviders;
 import org.ipan.nrgyrent.domain.exception.AutodelegateReserveExceededException;
 import org.ipan.nrgyrent.domain.exception.NotEnoughBalanceException;
 import org.ipan.nrgyrent.domain.model.*;
@@ -42,11 +44,10 @@ import lombok.extern.slf4j.Slf4j;
 @TransitionHandler
 @Slf4j
 public class TransactionsHandler {
-    private static final int ITRX_OK_CODE = 0;
-
     private final TelegramState telegramState;
     private final TransactionsViews transactionsViews;
     private final ItrxService itrxService;
+    private final EnergyProviders energyProviders;
     private final UserService userService;
     private final OrderService orderService;
     private final UserWalletService userWalletService;
@@ -69,7 +70,9 @@ public class TransactionsHandler {
                 return;
             }
 
-            tryMakeTransaction(userState, AppConstants.ENERGY_65K, AppConstants.DURATION_1H, message.getText(), 1, tariff.getTransactionType1AmountSun(), tariff.getId());
+            tryMakeTransaction(userState, AppConstants.ENERGY_65K, AppConstants.DURATION_1H,
+                    message.getText(), 1, tariff.getTransactionType1AmountSun(), tariff.getId(),
+                    byId.getBalanceToUse().getEnergyProvider());
         }
     }
 
@@ -105,7 +108,9 @@ public class TransactionsHandler {
                 return;
             }
 
-            tryMakeTransaction(userState, AppConstants.ENERGY_65K, AppConstants.DURATION_1H, userWallet.getAddress(), 1, tariff.getTransactionType1AmountSun(), tariff.getId());
+            tryMakeTransaction(userState, AppConstants.ENERGY_65K, AppConstants.DURATION_1H, userWallet.getAddress(),
+                    1, tariff.getTransactionType1AmountSun(), tariff.getId(),
+                    byId.getBalanceToUse().getEnergyProvider());
         }
     }
 
@@ -202,33 +207,37 @@ public class TransactionsHandler {
         if (txAmount == null) {
             txAmount = 1;
         }
-        handlePromptWallet(userState, update, energyAmountPerTx, txAmount, pricePerTx, tariff.getId());
+        handlePromptWallet(userState, update, energyAmountPerTx, txAmount, pricePerTx, tariff.getId(),
+                byId.getBalanceToUse().getEnergyProvider());
     }
 
-    private void handlePromptWallet(UserState userState, Update update, Integer energyAmountPerTx, Integer txAmount, Long sunAmountPerTx, Long tariffId) {
+    private void handlePromptWallet(UserState userState, Update update, Integer energyAmountPerTx, Integer txAmount, Long sunAmountPerTx,
+                                    Long tariffId, EnergyProviderName providerName) {
         CallbackQuery callbackQuery = update.getCallbackQuery();
         if (callbackQuery != null) {
-            tryMakeTransaction(userState, energyAmountPerTx, AppConstants.DURATION_1H, callbackQuery.getData(), txAmount, sunAmountPerTx, tariffId);
+            tryMakeTransaction(userState, energyAmountPerTx, AppConstants.DURATION_1H, callbackQuery.getData(), txAmount, sunAmountPerTx, tariffId, providerName);
         }
 
         Message message = update.getMessage();
         if (message != null && message.hasText()) {
             telegramMessages.deleteMessage(message);
-            tryMakeTransaction(userState, energyAmountPerTx, AppConstants.DURATION_1H, message.getText(), txAmount, sunAmountPerTx, tariffId);
+            tryMakeTransaction(userState, energyAmountPerTx, AppConstants.DURATION_1H, message.getText(), txAmount, sunAmountPerTx, tariffId, providerName);
         }
     }
 
     private void tryMakeTransaction(UserState userState, Integer energyAmountPerTx, String duration, String receiveAddress, Integer txAmount,
-            Long sunAmountPerTx, Long tariffId) {
+            Long sunAmountPerTx, Long tariffId, EnergyProviderName providerName) {
         if (WalletTools.isValidTronAddress(receiveAddress)) {
             transactionsViews.updMenuToTransactionInProgress(userState);
 
+            EnergyProvider energyProvider = energyProviders.getProvider(providerName.name());
+
             UUID correlationId = UUID.randomUUID();
             Integer totalRentEnergy = energyAmountPerTx * txAmount;
-            EstimateOrderAmountResponse estimateOrderResponse = itrxService.estimateOrderPrice(totalRentEnergy, duration, receiveAddress);
+            EstimateOrderAmountResponse estimateOrderResponse = energyProvider.estimateOrderPrice(totalRentEnergy, duration, receiveAddress);
 
             Order pendingOrder = null;
-            try {
+            try {//TODO: add provider field to the order table
                 pendingOrder = orderService.createPendingOrder(
                         AddOrUpdateOrderCommand.builder()
                                 .userId(userState.getTelegramId())
@@ -243,6 +252,7 @@ public class TransactionsHandler {
                                 .type(OrderType.USER)
                                 .itrxFeeSunAmount(estimateOrderResponse.getTotal_price())
                                 .correlationId(correlationId.toString())
+                                .energyProvider(providerName)
                                 .build());
 
                 AppUser user = userService.getById(userState.getTelegramId());
@@ -259,17 +269,8 @@ public class TransactionsHandler {
                         .withChatId(newMenuMsg.getChatId())
                         .withMenuMessageId(newMenuMsg.getMessageId()));
 
-                PlaceOrderResponse placeOrderResponse = itrxService.placeOrder(totalRentEnergy, duration, receiveAddress,
+                PlaceOrderResponse placeOrderResponse = energyProvider.placeOrder(totalRentEnergy, duration, receiveAddress,
                         correlationId);
-
-                if (placeOrderResponse.getErrno() != ITRX_OK_CODE) {
-                    orderService.refundOrder(
-                            AddOrUpdateOrderCommand.builder()
-                                    .correlationId(correlationId.toString())
-                                    .build());
-                    transactionsViews.somethingWentWrong(userState, pendingOrder);
-                    return;
-                }
 
             } catch (AutodelegateReserveExceededException e) {
                 transactionsViews.notEnoughBalanceAutodelegateReserve(userState, e.getMinimumAmount());
@@ -301,7 +302,7 @@ public class TransactionsHandler {
                                     .build());
                     transactionsViews.somethingWentWrong(userState, pendingOrder);
                 } else {
-                    transactionsViews.somethingWentWrong(userState);
+                    transactionsViews.somethingWentWrongWithReply(userState);
                 }
             }
         }

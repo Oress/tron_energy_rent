@@ -237,6 +237,19 @@ public class TelegramMessages {
         tgClient.execute(message);
     }
 
+    @SneakyThrows
+    public void sendLowCatfeeBalanceAlert(UserState userState, Long currentBalance) {
+        SendMessage message = SendMessage
+                .builder()
+                .chatId(userState.getChatId())
+                .text(commonLabels.alertCatfeeBalanceLow(userState.getLocaleOrDefault(),
+                        FormattingTools.formatBalance(currentBalance)))
+                .replyMarkup(getOkNotificationMarkup())
+                .build();
+        tgClient.execute(message);
+    }
+
+
     public void deleteMessage(Long chatId, Integer messageId) {
         DeleteMessage deleteMessage = DeleteMessage
                 .builder()

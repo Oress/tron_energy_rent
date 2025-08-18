@@ -102,6 +102,10 @@ app:
     callback-url: ${APP_ITRX_CALLBACK_URL}
     key: ${APP_ITRX_API_KEY}
     secret: ${APP_ITRX_API_SECRET}
+  catfee:
+    base-url: ${APP_CATFEE_BASE_URL:"https://nile.catfee.io"} # For mainnet, use https://api.catfee.io
+    key: ${APP_CATFEE_API_KEY}
+    secret: ${APP_CATFEE_API_SECRET}
   trongrid:
     qps: 14
     base-url: ${APP_TRONGRID_URL:https://nile.trongrid.io} # For mainnet, use https://api.trongrid.io

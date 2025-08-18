@@ -39,6 +39,7 @@ public class BalanceService {
     private final ReferalProgramService referalProgramService;
     private final LiquibaseParameters liquibaseParameters;
     private final BalanceReferralProgramRepo balanceReferralProgramRepo;
+    private final NrgConfigsService nrgConfigsService;
 
     @Transactional
     public Balance removeUsersFromTheGroupBalance(Long balanceId, List<TgUserId> userInfos) {
@@ -206,6 +207,7 @@ public class BalanceService {
 
         Balance balance = new Balance();
         balance.setLabel(label);
+        balance.setEnergyProvider(nrgConfigsService.readCurrentProviderConfig());
         balance.setType(BalanceType.GROUP);
         balance.setManager(manager);
         balance.setDepositAddress(depositWallet.getBase58Address());
@@ -230,6 +232,7 @@ public class BalanceService {
         Balance balance = new Balance();
         balance.setType(BalanceType.INDIVIDUAL);
         balance.setDepositAddress(depositWallet.getBase58Address());
+        balance.setEnergyProvider(nrgConfigsService.readCurrentProviderConfig());
 
         balance.setTariff(getTariffOrDefault(command.getTariffId()));
         setDefaultWithdrawLimits(balance);

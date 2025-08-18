@@ -235,4 +235,7 @@ public class CommonLabels {
         return getLocalizedMessage("alerts.itrx_balance_low", locale, currentBalance);
     }
 
+    public String alertCatfeeBalanceLow(Locale locale, String currentBalance) {
+        return getLocalizedMessage("alerts.catfee_balance_low", locale, currentBalance);
+    }
 }

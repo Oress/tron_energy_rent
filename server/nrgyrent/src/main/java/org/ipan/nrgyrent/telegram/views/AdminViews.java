@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.ipan.nrgyrent.domain.model.CollectionWallet;
+import org.ipan.nrgyrent.domain.model.EnergyProviderName;
 import org.ipan.nrgyrent.domain.model.UserWallet;
 import org.ipan.nrgyrent.itrx.dto.ApiUsageResponse;
 import org.ipan.nrgyrent.telegram.InlineMenuCallbacks;
@@ -99,6 +100,19 @@ public class AdminViews {
 
     @Retryable
     @SneakyThrows
+    public void currentEnergyProvider(UserState userState, EnergyProviderName energyProviderName) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
+                .text(adminLabels.energyProvider(energyProviderName.toString()))
+                .replyMarkup(getEnergyProvidersReplyMarkup())
+                .build();
+        tgClient.execute(message);
+    }
+
+    @Retryable
+    @SneakyThrows
     public void sweepWalletsBalance(UserState userState, Map<CollectionWallet, Long> results) {
         EditMessageText message = EditMessageText
                 .builder()
@@ -121,6 +135,33 @@ public class AdminViews {
                 .replyMarkup(getAdminMenuReplyMarkup())
                 .build();
         tgClient.execute(message);
+    }
+
+    private InlineKeyboardMarkup getEnergyProvidersReplyMarkup() {
+        return InlineKeyboardMarkup
+                .builder()
+                .keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text("itrx.io")
+                                        .callbackData(InlineMenuCallbacks.MANAGE_ENERGY_PROVIDER_CHOOSE_ITRX)
+                                        .build()))
+                .keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text("catfee.io")
+                                        .callbackData(InlineMenuCallbacks.MANAGE_ENERGY_PROVIDER_CHOOSE_CATFEE)
+                                        .build()))
+                .keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text(commonLabels.toMainMenu())
+                                        .callbackData(InlineMenuCallbacks.TO_MAIN_MENU)
+                                        .build()))
+                .build();
     }
 
     private InlineKeyboardMarkup getAdminMenuReplyMarkup() {
@@ -153,6 +194,13 @@ public class AdminViews {
                                         .builder()
                                         .text(adminLabels.menuSweepStats())
                                         .callbackData(InlineMenuCallbacks.MANAGE_SWEEP_BALANCE)
+                                        .build()))
+                .keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text(adminLabels.menuEnergyProvider())
+                                        .callbackData(InlineMenuCallbacks.MANAGE_ENERGY_PROVIDER)
                                         .build()))
                 .keyboardRow(
                         new InlineKeyboardRow(

@@ -1,6 +1,7 @@
 package org.ipan.nrgyrent.domain.events;
 
 import lombok.AllArgsConstructor;
+import org.ipan.nrgyrent.domain.model.EnergyProviderName;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
@@ -9,14 +10,19 @@ import org.springframework.stereotype.Component;
 public class OrderEventPublisher {
     private final ApplicationEventPublisher eventPublisher;
 
-    public void publishOrderCompletedEvent(String correlationId, Integer itrxStatus, String txId,
+    public void publishOrderCompletedEvent(String correlationId, Integer responseStatus, String txId,
                                            String serial, Boolean isAutoDelegation, String receiveAddress,
-                                           String period, Long amount, String duration, Integer energyAmount) {
-        eventPublisher.publishEvent(new OrderCompletedEvent(this, correlationId, itrxStatus, txId, serial,
-                isAutoDelegation, receiveAddress, period, amount, duration, energyAmount));
+                                           Long amount, String duration, Integer energyAmount) {
+        eventPublisher.publishEvent(new OrderCompletedEvent(this, correlationId, responseStatus, txId, serial,
+                isAutoDelegation, receiveAddress, amount, duration, energyAmount));
     }
 
     public void publishOrderFailedEvent(String correlationId, Integer itrxStatus, String serial) {
         eventPublisher.publishEvent(new OrderFailedEvent(this, correlationId, itrxStatus, serial));
     }
+
+    public void publishBalanceUpdateEvent(EnergyProviderName energyProvider, Long newBalance) {
+        eventPublisher.publishEvent(new BalanceUpdatedEvent(this, energyProvider, newBalance));
+    }
+
 }

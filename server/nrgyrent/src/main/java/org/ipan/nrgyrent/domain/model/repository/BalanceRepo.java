@@ -5,11 +5,13 @@ import java.util.Set;
 
 import org.ipan.nrgyrent.domain.model.Balance;
 import org.ipan.nrgyrent.domain.model.BalanceType;
+import org.ipan.nrgyrent.domain.model.EnergyProviderName;
 import org.ipan.nrgyrent.domain.model.projections.ReferralDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
@@ -38,4 +40,8 @@ public interface BalanceRepo extends JpaRepository<Balance, Long> {
             order by b.id asc
     """)
     List<ReferralDto> findAllByBalRefProgId(Long balanceRefProgramId);
+
+    @Modifying
+    @Query("update Balance b set b.energyProvider = :value")
+    void updateAllBalancesForEnergyProvider(EnergyProviderName value);
 }

@@ -12,6 +12,7 @@ import java.time.Instant;
 @Setter
 @Table(name = "nrg_alerts")
 public class Alert {
+    public static final String CATFEE_BALANCE_LOW = "catfee_balance_low";
     public static final String ITRX_BALANCE_LOW = "itrx_balance_low";
 
     @Id

@@ -19,6 +19,8 @@ import java.util.TreeMap;
 @Component
 @Slf4j
 public class RestClient {
+    private static final int ITRX_OK_CODE = 0;
+
     private final OkHttpClient client = new OkHttpClient().newBuilder().build();
     private final MediaType mediaType = MediaType.parse("application/json");
     private final Gson gson = new GsonBuilder().disableHtmlEscaping().create();
@@ -79,6 +81,12 @@ public class RestClient {
         }
 
         logger.info("Response" + placeOrderResponse);
+
+        if (placeOrderResponse.getErrno() != ITRX_OK_CODE) {
+            logger.error("Something went wrong: {} correlation id: {}", placeOrderResponse, correlationId);
+            throw new IllegalStateException("Something went wrong");
+        }
+
         return placeOrderResponse;
     }
 

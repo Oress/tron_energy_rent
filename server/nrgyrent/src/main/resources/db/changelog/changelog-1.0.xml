@@ -1152,4 +1152,34 @@
         </addColumn>
     </changeSet>
 
+    <changeSet id="extend nrg_balances with energy_provider" author="oress">
+        <addColumn tableName="nrg_balances">
+            <column name="energy_provider" type="text" defaultValue="ITRX" />
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="create table nrg_configs" author="oress">
+        <createTable tableName="nrg_configs">
+            <column name="id" type="text">
+                <constraints primaryKey="true" nullable="false" unique="true" />
+            </column>
+            <column name="value" type="text" />
+            <column name="updated_at" type="timestamp" />
+        </createTable>
+    </changeSet>
+
+    <changeSet id="default ENERGY_PROVIDER config record" author="oress">
+        <insert tableName="nrg_configs">
+            <column name="id" value="ENERGY_PROVIDER" />
+            <column name="value" value="ITRX" />
+            <column name="updated_at" valueDate="now()" />
+        </insert>
+    </changeSet>
+
+    <changeSet id="extend nrg_orders with energy_provider" author="oress">
+        <addColumn tableName="nrg_orders">
+            <column name="energy_provider" type="text" />
+        </addColumn>
+    </changeSet>
+
 </databaseChangeLog>

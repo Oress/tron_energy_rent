@@ -5,6 +5,11 @@ import java.math.BigDecimal;
 public class AppConstants {
     public static final BigDecimal HUNDRED = new BigDecimal(100);
 
+    public static final String PROVIDER_CATFEE = "CATFEE";
+    public static final String PROVIDER_ITRX = "ITRX";
+
+    public static final String CONFIG_ENERGY_PROVIDER = "ENERGY_PROVIDER";
+
     public static final Long BASE_SUBTRACT_AMOUNT_TX1 = 3_175_000L;
     public static final Long BASE_SUBTRACT_AMOUNT_TX2 = 6_350_000L;
 

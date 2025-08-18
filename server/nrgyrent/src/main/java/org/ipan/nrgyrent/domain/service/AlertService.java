@@ -15,6 +15,17 @@ public class AlertService {
     private final AlertRepo alertRepo;
 
     @Transactional
+    public Alert createCatfeeBalanceLowAlert(Long triggerValue) {
+        Alert alert = new Alert();
+        alert.setName(Alert.CATFEE_BALANCE_LOW);
+        alert.setTriggerValue(triggerValue.toString());
+        alertRepo.save(alert);
+
+        return alert;
+    }
+
+
+    @Transactional
     public Alert createItrxBalanceLowAlert(Long triggerValue) {
         Alert alert = new Alert();
         alert.setName(Alert.ITRX_BALANCE_LOW);
@@ -25,7 +36,7 @@ public class AlertService {
     }
 
     @Transactional
-    public Alert resolveItrxBalanceLowAlert(Long alertId) {
+    public Alert resolveBalanceLowAlert(Long alertId) {
         Alert alert = alertRepo.findById(alertId).orElseThrow(() -> new IllegalArgumentException("Alert not found with id: " + alertId));
         alert.setStatus(AlertStatus.CLOSED);
         alert.setResolvedAt(Instant.now());

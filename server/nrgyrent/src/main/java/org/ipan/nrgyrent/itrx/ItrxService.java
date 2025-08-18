@@ -6,6 +6,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import org.ipan.nrgyrent.EnergyProvider;
 import org.ipan.nrgyrent.domain.events.OrderEventPublisher;
 import org.ipan.nrgyrent.itrx.dto.EstimateOrderAmountResponse;
 import org.ipan.nrgyrent.itrx.dto.OrderCallbackRequest;
@@ -15,10 +16,10 @@ import org.springframework.stereotype.Service;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-@Service
+@Service(AppConstants.PROVIDER_ITRX)
 @AllArgsConstructor
 @Slf4j
-public class ItrxService {
+public class ItrxService implements EnergyProvider {
     public static final int ITRX_ORDER_SUCCESS = 40;
     public static final int ITRX_ORDER_ERROR = 41;
     private final ConcurrentHashMap<UUID, CompletableFuture<OrderCallbackRequest>> correlationResponse = new ConcurrentHashMap<>();
@@ -86,7 +87,6 @@ public class ItrxService {
                     orderCallbackRequest.serial,
                     orderCallbackRequest.isAutoDelegate(),
                     orderCallbackRequest.getReceive_address(),
-                    orderCallbackRequest.getPeriod(),
                     orderCallbackRequest.getAmount(),
                     orderCallbackRequest.getPeriod(),
                     orderCallbackRequest.getEnergy_amount()

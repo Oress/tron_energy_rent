@@ -2,6 +2,7 @@ package org.ipan.nrgyrent.domain.service.commands.orders;
 
 import lombok.Builder;
 import lombok.Data;
+import org.ipan.nrgyrent.domain.model.EnergyProviderName;
 import org.ipan.nrgyrent.domain.model.OrderType;
 import org.ipan.nrgyrent.domain.model.autodelegation.AutoDelegationEventType;
 
@@ -19,6 +20,7 @@ public class AddOrUpdateOrderCommand {
     private String receiveAddress;
     private String duration;
     private String correlationId;
+    private EnergyProviderName energyProvider;
     private String serial;
     private Long tariffId;
     private OrderType type;

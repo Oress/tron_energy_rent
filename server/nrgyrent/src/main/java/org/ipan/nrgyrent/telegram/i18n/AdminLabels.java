@@ -42,6 +42,10 @@ public class AdminLabels {
         return getLocalizedMessage("admin.menu_sweep_stats");
     }
 
+    public String menuEnergyProvider() {
+        return getLocalizedMessage("admin.menu_energy_provider");
+    }
+
     public String menuWithdrawSweep() {
         return getLocalizedMessage("admin.menu_withdraw_sweep");
     }
@@ -69,6 +73,10 @@ public class AdminLabels {
 
     public String itrxStats(String balance, String totalNumOfOrders, String totalEnergy, String itrxFee) {
         return getLocalizedMessage("admin.itrx_stats", balance, totalNumOfOrders, totalEnergy, itrxFee);
+    }
+
+    public String energyProvider(String currentProvider) {
+        return getLocalizedMessage("admin.current_energy_provider", currentProvider);
     }
 
     public String sweepStats(String wallets) {

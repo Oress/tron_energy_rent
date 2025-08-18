@@ -79,6 +79,10 @@ public class Order {
     @Column(name = "correlation_id")
     private String correlationId;
 
+    @Column(name = "energy_provider")
+    @Enumerated(EnumType.STRING)
+    private EnergyProviderName energyProvider;
+
     private String serial;
 
     @Enumerated(EnumType.STRING)

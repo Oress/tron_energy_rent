@@ -6,8 +6,10 @@ import java.util.List;
 import java.util.Map;
 
 import org.ipan.nrgyrent.domain.model.CollectionWallet;
+import org.ipan.nrgyrent.domain.model.EnergyProviderName;
 import org.ipan.nrgyrent.domain.model.UserWallet;
 import org.ipan.nrgyrent.domain.model.repository.CollectionWalletRepo;
+import org.ipan.nrgyrent.domain.service.NrgConfigsService;
 import org.ipan.nrgyrent.domain.service.UserWalletService;
 import org.ipan.nrgyrent.itrx.AppConstants;
 import org.ipan.nrgyrent.itrx.RestClient;
@@ -44,6 +46,7 @@ public class AdminMenuHandler {
     private final AdminMenuHandlerHelper adminMenuHandlerHelper;
 
     private final AdminViews adminViews;
+    private final NrgConfigsService nrgConfigsService;
 
     @MatchStates({
         @MatchState(forAdmin = true, state = States.MAIN_MENU, callbackData = InlineMenuCallbacks.ADMIN_MENU),
@@ -55,10 +58,32 @@ public class AdminMenuHandler {
         @MatchState(forAdmin = true, state = States.ADMIN_VIEW_PROMPT_WITHDRAW_AMOUNT, callbackData = InlineMenuCallbacks.GO_BACK),
         @MatchState(forAdmin = true, state = States.ADMIN_MANAGE_TARIFFS, callbackData = InlineMenuCallbacks.GO_BACK),
         @MatchState(forAdmin = true, state = States.ADMIN_MANAGE_REF_PROGRAMS, callbackData = InlineMenuCallbacks.GO_BACK),
+        @MatchState(forAdmin = true, state = States.ADMIN_VIEW_CURRENT_ENERGY_PROVIDER, callbackData = InlineMenuCallbacks.GO_BACK),
     })
     public void handleAdminMenu(UserState userState, Update update) {
         adminViews.updMenuToAdminMenu(userState);
         telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.ADMIN_MENU));
+    }
+
+    @MatchState(forAdmin = true, state = States.ADMIN_MENU, callbackData = InlineMenuCallbacks.MANAGE_ENERGY_PROVIDER)
+    public void showCurrentEnergyProvider(UserState userState, Update update) {
+        EnergyProviderName energyProviderName = nrgConfigsService.readCurrentProviderConfig();
+
+        adminViews.currentEnergyProvider(userState, energyProviderName);
+        telegramState.updateUserState(userState.getTelegramId(),
+                userState.withState(States.ADMIN_VIEW_CURRENT_ENERGY_PROVIDER));
+    }
+
+    @MatchState(forAdmin = true, state = States.ADMIN_VIEW_CURRENT_ENERGY_PROVIDER, callbackData = InlineMenuCallbacks.MANAGE_ENERGY_PROVIDER_CHOOSE_ITRX)
+    public void updateCurrentEnergyProviderToItrx(UserState userState, Update update) {
+        nrgConfigsService.updateCurrentProviderConfig(EnergyProviderName.ITRX);
+        showCurrentEnergyProvider(userState, update);
+    }
+
+    @MatchState(forAdmin = true, state = States.ADMIN_VIEW_CURRENT_ENERGY_PROVIDER, callbackData = InlineMenuCallbacks.MANAGE_ENERGY_PROVIDER_CHOOSE_CATFEE)
+    public void updateCurrentEnergyProviderToCatfee(UserState userState, Update update) {
+        nrgConfigsService.updateCurrentProviderConfig(EnergyProviderName.CATFEE);
+        showCurrentEnergyProvider(userState, update);
     }
 
     @MatchState(forAdmin = true, state = States.ADMIN_MENU, callbackData = InlineMenuCallbacks.MANAGE_ITRX_BALANCE)

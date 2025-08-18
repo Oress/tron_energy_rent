@@ -68,6 +68,7 @@ public class OrderEventDomainListener {
                     .itrxStatus(event.getItrxStatus())
                     .txId(event.getTxId())
                     .serial(event.getSerial())
+                    .itrxFeeSunAmount(event.getAmount()) // for catfee service
                     .build();
             orderService.completeOrder(command);
         }

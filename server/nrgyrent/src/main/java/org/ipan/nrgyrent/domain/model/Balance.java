@@ -38,6 +38,10 @@ public class Balance {
     @Enumerated(EnumType.STRING)
     private BalanceType type = BalanceType.INDIVIDUAL;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "energy_provider")
+    private EnergyProviderName energyProvider;
+
     @Column(name = "sun_balance")
     private Long sunBalance = 0L;
 

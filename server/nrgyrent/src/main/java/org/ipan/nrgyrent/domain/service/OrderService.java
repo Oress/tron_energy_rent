@@ -59,8 +59,9 @@ public class OrderService {
                 throw new IllegalArgumentException("User not found");
             }
 
+            // command.getItrxFeeSunAmount() - depending on the service fee can be set later
             if (command.getDuration() == null || command.getEnergyAmountPerTx() == null || command.getSunAmountPerTx() == null || command.getTxAmount() == null
-                || command.getCorrelationId() == null || command.getReceiveAddress() == null ||command.getItrxFeeSunAmount() == null) {
+                || command.getCorrelationId() == null || command.getReceiveAddress() == null) {
                     logger.error("Some of the command properties are not set, command {}", command);
                     throw new IllegalArgumentException("Some of the command properties are not set");
             }
@@ -109,6 +110,7 @@ public class OrderService {
         order.setOrderStatus(OrderStatus.PENDING);
         order.setDuration(command.getDuration());
         order.setCorrelationId(command.getCorrelationId());
+        order.setEnergyProvider(command.getEnergyProvider());
         order.setTxAmount(command.getTxAmount());
         order.setSunAmount(totalSunAmount);
         order.setEnergyAmount(totalEnergyAmount);
@@ -150,6 +152,11 @@ public class OrderService {
         order.setItrxStatus(command.getItrxStatus());
         order.setTxId(command.getTxId());
         order.setSerial(command.getSerial());
+
+        if (order.getItrxFeeSunAmount() == null && command.getItrxFeeSunAmount() != null) {
+            order.setItrxFeeSunAmount(command.getItrxFeeSunAmount());
+        }
+
 
         if (OrderType.USER.equals(order.getType())) {
             // Generate the referral commission record if user/group was invited

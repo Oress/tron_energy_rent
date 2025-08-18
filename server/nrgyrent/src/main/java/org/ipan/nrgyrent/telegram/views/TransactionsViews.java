@@ -168,6 +168,21 @@ public class TransactionsViews {
         }
     }
 
+    public void somethingWentWrongWithReply(UserState userState) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
+                .text(commonLabels.somethingWentWrong())
+                .replyMarkup(commonViews.getToMainMenuMarkup())
+                .build();
+        try {
+            tgClient.execute(message);
+        } catch (Exception e) {
+            logger.error("Could not somethingWentWrong userstate {}", userState, e);
+        }
+    }
+
     public void transactionToInactiveWallet(UserState userState, Order order) {
         EditMessageText message = EditMessageText
                 .builder()
