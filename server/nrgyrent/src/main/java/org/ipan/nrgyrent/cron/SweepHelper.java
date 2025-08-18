@@ -24,7 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 @EnableScheduling
 @Slf4j
 public class SweepHelper {
-    private final Long SUN_THREADSHOLD = 10_000_000L;
+    private final Long SUN_THREADSHOLD = 1_000_000L;
 
     private final Long minWithdrawValue;
     private final ManagedWalletRepo managedWalletRepo;
