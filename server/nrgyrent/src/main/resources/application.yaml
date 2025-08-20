@@ -98,6 +98,7 @@ app:
   mapdb:
     db-path: ${APP_MAPDB_PATH:cache/nrgyrent.db}
   itrx:
+    auto-delegation-threshold: ${APP_ITRX_AUTO_DELEGATION_THRESHOLD:3900000} # 3.9 TRX
     base-url: ${APP_ITRX_BASE_URL:"https://nile.itrx.io"} # For mainnet, use https://api.itrx.io
     callback-url: ${APP_ITRX_CALLBACK_URL}
     key: ${APP_ITRX_API_KEY}

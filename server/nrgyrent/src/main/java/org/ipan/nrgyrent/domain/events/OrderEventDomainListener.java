@@ -1,24 +1,27 @@
 package org.ipan.nrgyrent.domain.events;
 
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.ipan.nrgyrent.domain.model.*;
 import org.ipan.nrgyrent.domain.model.autodelegation.AutoDelegationSession;
 import org.ipan.nrgyrent.domain.model.repository.AutoDelegationSessionRepo;
 import org.ipan.nrgyrent.domain.service.OrderService;
 import org.ipan.nrgyrent.domain.service.commands.orders.AddOrUpdateOrderCommand;
-import org.ipan.nrgyrent.itrx.AppConstants;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 
 @Component
-@AllArgsConstructor
+@RequiredArgsConstructor
 @Slf4j
 public class OrderEventDomainListener {
     private final OrderService orderService;
     private final AutoDelegationSessionRepo autoDelegationSessionRepo;
+
+    @Value("${app.itrx.auto-delegation-threshold}")
+    private Long autoDelegateThreshold;
 
     @EventListener
     @org.springframework.core.annotation.Order(1)
@@ -37,7 +40,9 @@ public class OrderEventDomainListener {
             AppUser user = session.getUser();
             Tariff tariffToUse = user.getTariffToUse();
             Integer energyAmount = event.getEnergyAmount();
-            Long sunAmount = energyAmount <= AppConstants.ENERGY_65K
+            Long feeSunAmount = event.getAmount();
+
+            Long sunAmount = feeSunAmount <= autoDelegateThreshold
                     ? tariffToUse.getAutodelegateType1AmountSun()
                     : tariffToUse.getAutodelegateType2AmountSun();
 
@@ -52,7 +57,8 @@ public class OrderEventDomainListener {
                     .sunAmountPerTx(sunAmount)
                     .duration(event.getDuration())
                     .type(OrderType.USER)
-                    .itrxFeeSunAmount(event.getAmount())
+                    .energyProvider(EnergyProviderName.ITRX)
+                    .itrxFeeSunAmount(feeSunAmount)
                     .itrxStatus(event.getItrxStatus())
                     .txId(event.getTxId())
                     .serial(event.getSerial())
