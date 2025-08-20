@@ -13,6 +13,11 @@ public class AppConstants {
     public static final Long BASE_SUBTRACT_AMOUNT_TX1 = 3_175_000L;
     public static final Long BASE_SUBTRACT_AMOUNT_TX2 = 6_350_000L;
 
+    // this is the default value that is going to be added to the BASE_SUBTRACT_AMOUNT_TX1 and BASE_SUBTRACT_AMOUNT_TX2
+    // for calculating referral commissions
+    public static final Long BASE_SUBTRACT_AMOUNT_SMALL_AMOUNT = 400_000L;
+
+
     public static final Long DEFAULT_TARIFF_ID = 1L;
 
     public static final Long HOUR_MILLIS = 60L * 60 * 1000;

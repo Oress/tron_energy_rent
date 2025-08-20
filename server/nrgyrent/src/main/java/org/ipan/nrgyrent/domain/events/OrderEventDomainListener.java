@@ -7,6 +7,7 @@ import org.ipan.nrgyrent.domain.model.autodelegation.AutoDelegationSession;
 import org.ipan.nrgyrent.domain.model.repository.AutoDelegationSessionRepo;
 import org.ipan.nrgyrent.domain.service.OrderService;
 import org.ipan.nrgyrent.domain.service.commands.orders.AddOrUpdateOrderCommand;
+import org.ipan.nrgyrent.itrx.AppConstants;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
@@ -39,12 +40,19 @@ public class OrderEventDomainListener {
             AutoDelegationSession session = byWalletAndActive.get(0);
             AppUser user = session.getUser();
             Tariff tariffToUse = user.getTariffToUse();
-            Integer energyAmount = event.getEnergyAmount();
+            Integer energyAmount;
             Long feeSunAmount = event.getAmount();
+            Long sunAmount;
 
-            Long sunAmount = feeSunAmount <= autoDelegateThreshold
-                    ? tariffToUse.getAutodelegateType1AmountSun()
-                    : tariffToUse.getAutodelegateType2AmountSun();
+            // this is due to the fact that itrx.io ALWAYS delegates 131k energy,
+            // but with different fee (according to what was used 65k or 131k)
+            if (feeSunAmount <= autoDelegateThreshold) {
+                sunAmount = tariffToUse.getAutodelegateType1AmountSun();
+                energyAmount = AppConstants.ENERGY_65K;
+            } else {
+                sunAmount = tariffToUse.getAutodelegateType2AmountSun();
+                energyAmount = AppConstants.ENERGY_131K;
+            }
 
             AddOrUpdateOrderCommand command = AddOrUpdateOrderCommand.builder()
                     .correlationId(event.getCorrelationId())

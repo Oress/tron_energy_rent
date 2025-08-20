@@ -204,7 +204,11 @@ public class OrderService {
 
         // do this only for 65K energy amount orders
         if (baseEnergyAmount == AppConstants.ENERGY_65K) {
-            long profitVisible = order.getSunAmount() - referralProgram.getSubtractAmountTx1() * order.getTxAmount();
+            Long transactionCost = order.getAutoDelegationSession() == null
+                    ? referralProgram.getSubtractAmountTx1()
+                    : referralProgram.getSubtractAmountTx1Delegation();
+
+            long profitVisible = order.getSunAmount() - transactionCost * order.getTxAmount();
 
             BigDecimal profit = new BigDecimal(profitVisible);
             BigDecimal commissionVisible = profit
@@ -215,7 +219,11 @@ public class OrderService {
             order.setRefProgramProfitRemainder(actualProfitLong - profitVisible);
             return commissionVisible.longValue();
         } else if (baseEnergyAmount == AppConstants.ENERGY_131K) {
-            long profitVisible = order.getSunAmount() - referralProgram.getSubtractAmountTx2() * order.getTxAmount();
+            Long transactionCost = order.getAutoDelegationSession() == null
+                    ? referralProgram.getSubtractAmountTx2()
+                    : referralProgram.getSubtractAmountTx2Delegation();
+
+            long profitVisible = order.getSunAmount() - transactionCost * order.getTxAmount();
 
             BigDecimal profit = new BigDecimal(profitVisible);
             BigDecimal commissionVisible = profit

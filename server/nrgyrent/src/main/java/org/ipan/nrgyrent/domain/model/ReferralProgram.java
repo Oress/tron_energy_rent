@@ -15,6 +15,7 @@ import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
+import org.ipan.nrgyrent.itrx.AppConstants;
 
 @Entity
 @Getter
@@ -48,4 +49,12 @@ public class ReferralProgram {
     @CreationTimestamp
     @Column(name = "created_at")
     private Instant createdAt;
+
+    public Long getSubtractAmountTx1Delegation() {
+        return subtractAmountTx1 + AppConstants.BASE_SUBTRACT_AMOUNT_SMALL_AMOUNT;
+    }
+
+    public Long getSubtractAmountTx2Delegation() {
+        return subtractAmountTx2 + AppConstants.BASE_SUBTRACT_AMOUNT_SMALL_AMOUNT;
+    }
 }
