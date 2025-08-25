@@ -1182,4 +1182,15 @@
         </addColumn>
     </changeSet>
 
+    <changeSet id="extend nrg_referral_programs with provider specific amounts" author="oress">
+        <addColumn tableName="nrg_referral_programs">
+            <column name="subtract_amount_tx1_catfee" type="bigint" defaultValue="3175000" />
+            <column name="subtract_amount_tx2_catfee" type="bigint" defaultValue="6350000" />
+
+            <!-- Autodelegation -->
+            <column name="subtract_amount_tx1_auto_itrx" type="bigint" defaultValue="3575000" />
+            <column name="subtract_amount_tx2_auto_itrx" type="bigint" defaultValue="6750000" />
+        </addColumn>
+    </changeSet>
+
 </databaseChangeLog>

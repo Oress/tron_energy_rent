@@ -33,11 +33,24 @@ public class ReferralProgram {
     @Column
     private Integer percentage;
 
+    // ITRX provider
     @Column(name = "subtract_amount")
-    private Long subtractAmountTx1;
-
+    private Long subtractAmountTx1Itrx;
     @Column(name = "subtract_amount_tx2")
-    private Long subtractAmountTx2;
+    private Long subtractAmountTx2Itrx;
+
+    // ITRX auto delegation
+    @Column(name = "subtract_amount_tx1_auto_itrx")
+    private Long subtractAmountTx1AutoItrx;
+    @Column(name = "subtract_amount_tx2_auto_itrx")
+    private Long subtractAmountTx2AutoItrx;
+
+    // CATFEE provider
+    @Column(name = "subtract_amount_tx1_catfee")
+    private Long subtractAmountTx1Catfee;
+
+    @Column(name = "subtract_amount_tx2_catfee")
+    private Long subtractAmountTx2Catfee;
 
     @Column(name="calc_type")
     @Enumerated(EnumType.STRING)
@@ -49,12 +62,4 @@ public class ReferralProgram {
     @CreationTimestamp
     @Column(name = "created_at")
     private Instant createdAt;
-
-    public Long getSubtractAmountTx1Delegation() {
-        return subtractAmountTx1 + AppConstants.BASE_SUBTRACT_AMOUNT_SMALL_AMOUNT;
-    }
-
-    public Long getSubtractAmountTx2Delegation() {
-        return subtractAmountTx2 + AppConstants.BASE_SUBTRACT_AMOUNT_SMALL_AMOUNT;
-    }
 }

@@ -11,7 +11,9 @@ public class AppConstants {
     public static final String CONFIG_ENERGY_PROVIDER = "ENERGY_PROVIDER";
 
     public static final Long BASE_SUBTRACT_AMOUNT_TX1 = 3_175_000L;
+    public static final Long BASE_SUBTRACT_AMOUNT_TX1_AUTO = 3_575_000L;
     public static final Long BASE_SUBTRACT_AMOUNT_TX2 = 6_350_000L;
+    public static final Long BASE_SUBTRACT_AMOUNT_TX2_AUTO = 6_750_000L;
 
     // this is the default value that is going to be added to the BASE_SUBTRACT_AMOUNT_TX1 and BASE_SUBTRACT_AMOUNT_TX2
     // for calculating referral commissions

@@ -106,4 +106,8 @@ public class Order {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private Instant updatedAt;
+
+    public boolean isAutodelegationOrder() {
+        return autoDelegationSession != null;
+    }
 }

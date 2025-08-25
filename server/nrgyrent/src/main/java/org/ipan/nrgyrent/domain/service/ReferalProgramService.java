@@ -89,8 +89,12 @@ public class ReferalProgramService {
         ReferralProgram refProgram = new ReferralProgram();
         refProgram.setLabel(label);
         refProgram.setPercentage(percentage);
-        refProgram.setSubtractAmountTx1(AppConstants.BASE_SUBTRACT_AMOUNT_TX1);
-        refProgram.setSubtractAmountTx2(AppConstants.BASE_SUBTRACT_AMOUNT_TX2);
+        refProgram.setSubtractAmountTx1Itrx(AppConstants.BASE_SUBTRACT_AMOUNT_TX1);
+        refProgram.setSubtractAmountTx2Itrx(AppConstants.BASE_SUBTRACT_AMOUNT_TX2);
+        refProgram.setSubtractAmountTx1Catfee(AppConstants.BASE_SUBTRACT_AMOUNT_TX1);
+        refProgram.setSubtractAmountTx2Catfee(AppConstants.BASE_SUBTRACT_AMOUNT_TX2);
+        refProgram.setSubtractAmountTx1AutoItrx(AppConstants.BASE_SUBTRACT_AMOUNT_TX1_AUTO);
+        refProgram.setSubtractAmountTx2AutoItrx(AppConstants.BASE_SUBTRACT_AMOUNT_TX2_AUTO);
 
         referralProgramRepo.save(refProgram);
 
