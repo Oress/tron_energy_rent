@@ -56,6 +56,9 @@ public class ReferralProgram {
     @Enumerated(EnumType.STRING)
     private ReferralProgramCalcType calcType = ReferralProgramCalcType.PERCENT_FROM_PROFIT;
 
+    @Column(name = "subtract_amount_use_provider_amount")
+    private Boolean subtractAmountUseProviderAmount = Boolean.FALSE;
+
     @Column(name = "is_predefined")
     private Boolean predefined = Boolean.FALSE;
 

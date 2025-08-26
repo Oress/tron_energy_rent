@@ -27,11 +27,11 @@ import java.util.Optional;
 @AllArgsConstructor
 @Slf4j
 public class OrderService {
+    private final OrderCommissionCalculator orderCommissionCalculator;
     private final TariffRepo tariffRepo;
     private final OrderRepo orderRepo;
     private final BalanceService balanceService;
     private final ReferralCommissionRepo referralCommissionRepo;
-    private final AutoDelegationSessionService autoDelegationSessionService;
     private final AutoDelegationSessionRepo autoDelegationSessionRepo;
 
     @Transactional
@@ -168,8 +168,8 @@ public class OrderService {
 
                 ReferralProgramCalcType calcType = referralProgram.getCalcType();
                 Long commissionLong = switch (calcType) {
-                    case ReferralProgramCalcType.PERCENT_FROM_PROFIT -> calculateCommissionAsPercentFromProfit(order, referralProgram);
-                    case ReferralProgramCalcType.PERCENT_FROM_REVENUE -> calculateCommissionAsPercentFromRevenue(order, referralProgram);
+                    case ReferralProgramCalcType.PERCENT_FROM_PROFIT -> orderCommissionCalculator.calculateCommissionAsPercentFromProfit(order, referralProgram);
+                    case ReferralProgramCalcType.PERCENT_FROM_REVENUE -> orderCommissionCalculator.calculateCommissionAsPercentFromRevenue(order, referralProgram);
                     default -> 0L;
                 };
 
@@ -189,110 +189,6 @@ public class OrderService {
         }
 
         return order;
-    }
-
-    private Long calculateCommissionAsPercentFromProfit(Order order, ReferralProgram referralProgram) {
-        long actualProfitLong = order.getSunAmount() - order.getItrxFeeSunAmount();
-
-        BigDecimal profitAct = new BigDecimal(actualProfitLong);
-        BigDecimal commissionActual = profitAct
-                .divide(AppConstants.HUNDRED)
-                .multiply(new BigDecimal(referralProgram.getPercentage()))
-                .setScale(0, RoundingMode.DOWN);
-
-        long baseEnergyAmount = order.getEnergyAmount() / order.getTxAmount();
-
-        // do this only for 65K energy amount orders
-        if (baseEnergyAmount == AppConstants.ENERGY_65K) {
-            Long transactionCost = getTransaction1Cost(order, referralProgram);
-
-            long profitVisible = order.getSunAmount() - transactionCost * order.getTxAmount();
-
-            BigDecimal profit = new BigDecimal(profitVisible);
-            BigDecimal commissionVisible = profit
-                    .divide(AppConstants.HUNDRED)
-                    .multiply(new BigDecimal(referralProgram.getPercentage()))
-                    .setScale(0, RoundingMode.DOWN);
-
-            order.setRefProgramProfitRemainder(actualProfitLong - profitVisible);
-            return commissionVisible.longValue();
-        } else if (baseEnergyAmount == AppConstants.ENERGY_131K) {
-            Long transactionCost = getTransaction2Cost(order, referralProgram);
-            long profitVisible = order.getSunAmount() - transactionCost * order.getTxAmount();
-
-            BigDecimal profit = new BigDecimal(profitVisible);
-            BigDecimal commissionVisible = profit
-                    .divide(AppConstants.HUNDRED)
-                    .multiply(new BigDecimal(referralProgram.getPercentage()))
-                    .setScale(0, RoundingMode.DOWN);
-
-            order.setRefProgramProfitRemainder(actualProfitLong - profitVisible);
-            return commissionVisible.longValue();
-        } else {
-            return commissionActual.longValue();
-        }
-    }
-
-    private Long getTransaction1Cost(Order order, ReferralProgram referralProgram) {
-        Long result = null;
-        if (order.isAutodelegationOrder()) {
-            switch (order.getEnergyProvider()) {
-                case ITRX:
-                    result = referralProgram.getSubtractAmountTx1AutoItrx();
-                    break;
-                default:
-                    logger.error("Unknown autodelegation provider type");
-            }
-        } else {
-            switch (order.getEnergyProvider()) {
-                case ITRX:
-                    result = referralProgram.getSubtractAmountTx1Itrx();
-                    break;
-                case CATFEE:
-                    result = referralProgram.getSubtractAmountTx1Catfee();
-                    break;
-                default:
-                    logger.error("Unknown provider type");
-            }
-        }
-        return result;
-    }
-
-    private Long getTransaction2Cost(Order order, ReferralProgram referralProgram) {
-        Long result = null;
-        if (order.isAutodelegationOrder()) {
-            switch (order.getEnergyProvider()) {
-                case ITRX:
-                    result = referralProgram.getSubtractAmountTx2AutoItrx();
-                    break;
-                default:
-                    logger.error("Unknown autodelegation provider type");
-            }
-        } else {
-            switch (order.getEnergyProvider()) {
-                case ITRX:
-                    result = referralProgram.getSubtractAmountTx2Itrx();
-                    break;
-                case CATFEE:
-                    result = referralProgram.getSubtractAmountTx2Catfee();
-                    break;
-                default:
-                    logger.error("Unknown provider type");
-            }
-        }
-
-        return result;
-    }
-
-
-    private Long calculateCommissionAsPercentFromRevenue(Order order, ReferralProgram referralProgram) {
-        BigDecimal revenue = new BigDecimal(order.getSunAmount());
-        BigDecimal commission = revenue
-            .divide(AppConstants.HUNDRED)
-            .multiply(new BigDecimal(referralProgram.getPercentage()))
-            .setScale(0, RoundingMode.DOWN);
-
-        return commission.longValue();
     }
 
     @Transactional

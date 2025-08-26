@@ -1193,4 +1193,10 @@
         </addColumn>
     </changeSet>
 
+    <changeSet id="extend nrg_referral_programs with subtract_amount_use_provider_amount" author="oress">
+        <addColumn tableName="nrg_referral_programs">
+            <column name="subtract_amount_use_provider_amount" type="boolean" defaultValue="false" />
+        </addColumn>
+    </changeSet>
+
 </databaseChangeLog>
