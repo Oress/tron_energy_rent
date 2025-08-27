@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class ParseUtils {
-    @Value("${app.rounding.scale:2}")
+    @Value("${app.rounding.scale:3}")
     private Integer scale;
 
     public Long parseTrxStrToSunLong(String trxStr) {

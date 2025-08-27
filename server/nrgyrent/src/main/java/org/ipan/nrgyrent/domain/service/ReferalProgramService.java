@@ -160,4 +160,102 @@ public class ReferalProgramService {
             logger.warn("No referal program were found for DELETION userId {}", userId);
         }
     }
+
+    @Transactional
+    public ReferralProgram toggleSebes(Long refProgramId) {
+        logger.info("toggling sebes for ref. proftram ID {} ", refProgramId);
+        ReferralProgram referralProgram = referralProgramRepo.findById(refProgramId).orElse(null);
+        if (referralProgram == null) {
+            logger.error("ReferralProgram not found for renaming: {}", refProgramId);
+            throw new IllegalArgumentException("ReferralProgram not found for renaming");
+        }
+
+        referralProgram.setSubtractAmountUseProviderAmount(!referralProgram.getSubtractAmountUseProviderAmount());
+        logger.info("ReferralProgram toggle sebes changed successfully: id: {} new Value: {}", referralProgram.getId(), referralProgram.getSubtractAmountUseProviderAmount());
+        return referralProgram;
+    }
+
+    @Transactional
+    public ReferralProgram changeTx1BaseAmount(Long selectedRefProgramId, Long txType1Amount) {
+        logger.info("change base tx1 amount for ref. proftram ID {} ", selectedRefProgramId);
+        ReferralProgram referralProgram = referralProgramRepo.findById(selectedRefProgramId).orElse(null);
+        if (referralProgram == null) {
+            logger.error("ReferralProgram not found for renaming: {}", selectedRefProgramId);
+            throw new IllegalArgumentException("ReferralProgram not found for renaming");
+        }
+
+        if (txType1Amount < 0) {
+            logger.error("txType1Amount cannot be negative");
+            throw new IllegalArgumentException("txType1Amount cannot be negative");
+        }
+
+        referralProgram.setSubtractAmountTx1Catfee(txType1Amount);
+        referralProgram.setSubtractAmountTx1Itrx(txType1Amount);
+
+        logger.info("ReferralProgram change base tx1 amount: id: {} new Value: {}", referralProgram.getId(), referralProgram.getSubtractAmountUseProviderAmount());
+        return referralProgram;
+    }
+
+    @Transactional
+    public ReferralProgram changeTx2BaseAmount(Long selectedRefProgramId, Long txType2Amount) {
+        logger.info("change base tx2 amount for ref. proftram ID {} ", selectedRefProgramId);
+        ReferralProgram referralProgram = referralProgramRepo.findById(selectedRefProgramId).orElse(null);
+        if (referralProgram == null) {
+            logger.error("ReferralProgram not found for renaming: {}", selectedRefProgramId);
+            throw new IllegalArgumentException("ReferralProgram not found for renaming");
+        }
+
+        if (txType2Amount < 0) {
+            logger.error("txType2Amount cannot be negative");
+            throw new IllegalArgumentException("txType1Amount cannot be negative");
+        }
+
+        referralProgram.setSubtractAmountTx2Catfee(txType2Amount);
+        referralProgram.setSubtractAmountTx2Itrx(txType2Amount);
+
+        logger.info("ReferralProgram change base tx2 amount: id: {} new Value: {}", referralProgram.getId(), referralProgram.getSubtractAmountUseProviderAmount());
+        return referralProgram;
+    }
+
+    @Transactional
+    public ReferralProgram changeTx1AutoBaseAmount(Long selectedRefProgramId, Long txType1AutoAmount) {
+        logger.info("change base tx1 auto amount for ref. proftram ID {} ", selectedRefProgramId);
+        ReferralProgram referralProgram = referralProgramRepo.findById(selectedRefProgramId).orElse(null);
+        if (referralProgram == null) {
+            logger.error("ReferralProgram not found for tx1 auto: {}", selectedRefProgramId);
+            throw new IllegalArgumentException("ReferralProgram not found for renaming");
+        }
+
+        if (txType1AutoAmount < 0) {
+            logger.error("txType1AutoAmount cannot be negative");
+            throw new IllegalArgumentException("txType1Amount cannot be negative");
+        }
+
+        referralProgram.setSubtractAmountTx1AutoItrx(txType1AutoAmount);
+
+        logger.info("ReferralProgram change base tx1 auto amount: id: {} new Value: {}", referralProgram.getId(), referralProgram.getSubtractAmountUseProviderAmount());
+        return referralProgram;
+    }
+
+    @Transactional
+    public ReferralProgram changeTx2AutoBaseAmount(Long selectedRefProgramId, Long txType2AutoAmount) {
+        logger.info("change base tx2 auto amount for ref. proftram ID {} ", selectedRefProgramId);
+        ReferralProgram referralProgram = referralProgramRepo.findById(selectedRefProgramId).orElse(null);
+        if (referralProgram == null) {
+            logger.error("ReferralProgram not found for tx1 auto: {}", selectedRefProgramId);
+            throw new IllegalArgumentException("ReferralProgram not found for renaming");
+        }
+
+        if (txType2AutoAmount < 0) {
+            logger.error("txType2AutoAmount cannot be negative");
+            throw new IllegalArgumentException("txType1Amount cannot be negative");
+        }
+
+        referralProgram.setSubtractAmountTx2AutoItrx(txType2AutoAmount);
+
+        logger.info("ReferralProgram change base tx2 auto amount: id: {} new Value: {}", referralProgram.getId(), referralProgram.getSubtractAmountUseProviderAmount());
+        return referralProgram;
+    }
+
+
 }

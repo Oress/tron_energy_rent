@@ -35,7 +35,7 @@ public class ReferralProgramsActionsView {
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
                 .text(getBalanceDescription(refProgram))
-                .replyMarkup(getManageRefProgramActionsMarkup(true, !refProgram.getPredefined()))
+                .replyMarkup(getManageRefProgramActionsMarkup(refProgram))
                 .build();
         tgClient.execute(message);
     }
@@ -117,7 +117,11 @@ public class ReferralProgramsActionsView {
                 refProgram.getPercentage(),
                 getCalcTypeLabel(refProgram.getCalcType()),
                 refProgram.getPredefined() ? commonLabels.yes() : commonLabels.no(),
-                FormattingTools.formatDateToUtc(refProgram.getCreatedAt())
+                FormattingTools.formatDateToUtc(refProgram.getCreatedAt()),
+                        FormattingTools.formatBalance(refProgram.getSubtractAmountTx1Itrx()),
+                        FormattingTools.formatBalance(refProgram.getSubtractAmountTx2Itrx()),
+                        FormattingTools.formatBalance(refProgram.getSubtractAmountTx1AutoItrx()),
+                        FormattingTools.formatBalance(refProgram.getSubtractAmountTx2AutoItrx())
         );
     }
 
@@ -129,7 +133,10 @@ public class ReferralProgramsActionsView {
         };
     }
 
-    private InlineKeyboardMarkup getManageRefProgramActionsMarkup(Boolean showBackButton, Boolean canChange) {
+    private InlineKeyboardMarkup getManageRefProgramActionsMarkup(ReferralProgram refProgram) {
+        boolean canChange = !refProgram.getPredefined();
+        boolean sebesState = refProgram.getSubtractAmountUseProviderAmount();
+
         InlineKeyboardMarkup.InlineKeyboardMarkupBuilder builder = InlineKeyboardMarkup.builder();
         if (canChange) {
             builder.keyboardRow(
@@ -139,6 +146,41 @@ public class ReferralProgramsActionsView {
                                     .text(refProgramLabels.actionsRename())
                                     .callbackData(InlineMenuCallbacks.MANAGE_REF_PROGRAMS_ACTION_RENAME)
                                     .build()))
+                    .keyboardRow(
+                            new InlineKeyboardRow(
+                                    InlineKeyboardButton
+                                            .builder()
+                                            .text(sebesState ? refProgramLabels.enableSebes() : refProgramLabels.disableSebes())
+                                            .callbackData(InlineMenuCallbacks.createToggleRefProgramSebesCallback(refProgram.getId()))
+                                            .build()))
+                    .keyboardRow(
+                            new InlineKeyboardRow(
+                                    InlineKeyboardButton
+                                            .builder()
+                                            .text(refProgramLabels.changeTx1SubtractAmount())
+                                            .callbackData(InlineMenuCallbacks.MANAGE_REF_PROGRAMS_ACTION_CHANGE_BASE_TX1)
+                                            .build()))
+                    .keyboardRow(
+                            new InlineKeyboardRow(
+                                    InlineKeyboardButton
+                                            .builder()
+                                            .text(refProgramLabels.changeTx2SubtractAmount())
+                                            .callbackData(InlineMenuCallbacks.MANAGE_REF_PROGRAMS_ACTION_CHANGE_BASE_TX2)
+                                            .build()))
+                    .keyboardRow(
+                            new InlineKeyboardRow(
+                                    InlineKeyboardButton
+                                            .builder()
+                                            .text(refProgramLabels.changeTx1AutoSubtractAmount())
+                                            .callbackData(InlineMenuCallbacks.MANAGE_REF_PROGRAMS_ACTION_CHANGE_BASE_TX1_AUTO)
+                                            .build()))
+                    .keyboardRow(
+                            new InlineKeyboardRow(
+                                    InlineKeyboardButton
+                                            .builder()
+                                            .text(refProgramLabels.changeTx2AutoSubtractAmount())
+                                            .callbackData(InlineMenuCallbacks.MANAGE_REF_PROGRAMS_ACTION_CHANGE_BASE_TX2_AUTO)
+                                            .build()))
                     .keyboardRow(
                             new InlineKeyboardRow(
                                     InlineKeyboardButton

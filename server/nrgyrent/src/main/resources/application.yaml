@@ -76,7 +76,7 @@ app:
   sweeping:
     min-amount-sun: 10000
   rounding:
-    scale: ${APP_ROUNDING_SCALE:2}
+    scale: ${APP_ROUNDING_SCALE:3}
   pagination:
       ref-programs:
         page-size: ${APP_REF_PROGRAMS_PAGE_SIZE:20}

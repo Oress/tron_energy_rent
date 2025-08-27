@@ -130,8 +130,13 @@ public class ReferralProgramsSearchHandler {
             @MatchState(state = States.ADMIN_MANAGE_REF_PROGRAM_ACTION_PROMPT_NEW_LABEL, callbackData = InlineMenuCallbacks.GO_BACK),
             @MatchState(state = States.ADMIN_MANAGE_REF_PROGRAM_ACTION_RENAMED_SUCCESS, callbackData = InlineMenuCallbacks.GO_BACK),
             @MatchState(state = States.ADMIN_MANAGE_REF_PROGRAM_ACTION_CHANGE_AMOUNT_SUCCESS, callbackData = InlineMenuCallbacks.GO_BACK),
+            @MatchState(state = States.ADMIN_MANAGE_REF_PROGRAM_ACTION_CHANGE_BASE_SUCCESS, callbackData = InlineMenuCallbacks.GO_BACK),
             @MatchState(state = States.ADMIN_MANAGE_REF_PROGRAM_ACTION_DEACTIVATE_SUCCESS, callbackData = InlineMenuCallbacks.GO_BACK),
             @MatchState(state = States.ADMIN_MANAGE_REF_PROGRAM_ACTION_PROMPT_PERCENTAGE, callbackData = InlineMenuCallbacks.GO_BACK),
+            @MatchState(state = States.ADMIN_MANAGE_REF_PROGRAM_ACTION_CHANGE_BASE_TX1, callbackData = InlineMenuCallbacks.GO_BACK),
+            @MatchState(state = States.ADMIN_MANAGE_REF_PROGRAM_ACTION_CHANGE_BASE_TX2, callbackData = InlineMenuCallbacks.GO_BACK),
+            @MatchState(state = States.ADMIN_MANAGE_REF_PROGRAM_ACTION_CHANGE_BASE_TX1_AUTO, callbackData = InlineMenuCallbacks.GO_BACK),
+            @MatchState(state = States.ADMIN_MANAGE_REF_PROGRAM_ACTION_CHANGE_BASE_TX1_AUTO, callbackData = InlineMenuCallbacks.GO_BACK),
     })
     public void openRefProgramFromBackBtn(UserState userState, Update update) {
         RefProgramEdit refProgramEdit = telegramState.getOrCreateRefProgramEdit(userState.getTelegramId());

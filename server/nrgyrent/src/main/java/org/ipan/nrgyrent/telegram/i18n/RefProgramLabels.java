@@ -39,6 +39,10 @@ public class RefProgramLabels {
         return getLocalizedMessage("admin.referal.new.prompt_percentage");
     }
 
+    public String newPromptBaseTxValue() {
+        return getLocalizedMessage("admin.referal.new.base_tx_value");
+    }
+
     public String newSuccess() {
         return getLocalizedMessage("admin.referal.new.success");
     }
@@ -47,16 +51,51 @@ public class RefProgramLabels {
         return getLocalizedMessage("admin.referal.actions.rename.success");
     }
 
+    public String changeBaseAmountSuccess() {
+        return getLocalizedMessage("admin.referal.actions.change_base_amount.success");
+    }
+
     public @NonNull String actionsRename() {
         return getLocalizedMessage("admin.referal.actions.rename");
+    }
+
+    public String disableSebes() {
+        return getLocalizedMessage("admin.referal.actions.disabled_sebes");
+    }
+
+    public String enableSebes() {
+        return getLocalizedMessage("admin.referal.actions.enabled_sebes");
+    }
+
+    public String changeTx1SubtractAmount() {
+        return getLocalizedMessage("admin.referal.actions.change_tx1_subtract_amount");
+    }
+
+    public String changeTx2SubtractAmount() {
+        return getLocalizedMessage("admin.referal.actions.change_tx2_subtract_amount");
+    }
+
+    public String changeTx1AutoSubtractAmount() {
+        return getLocalizedMessage("admin.referal.actions.change_tx1_auto_subtract_amount");
+    }
+
+    public String changeTx2AutoSubtractAmount() {
+        return getLocalizedMessage("admin.referal.actions.change_tx2_auto_subtract_amount");
     }
 
     public @NonNull String actionsChangePercentage() {
         return getLocalizedMessage("admin.referal.actions.change_percentage");
     }
 
-    public String actionsPreview(String label, Integer percentage, String calcType, String isPredefined, String formatDateToUtc) {
-        return getLocalizedMessage("admin.referal.preview", label, percentage, calcType, isPredefined, formatDateToUtc);
+    public String actionsPreview(String label, Integer percentage, String calcType, String isPredefined,
+                                 String formatDateToUtc,
+                                 String tx1BaseAmount,
+                                 String tx2BaseAmount,
+                                 String tx1AutoBaseAmount,
+                                 String tx2AutoBaseAmount
+                                 ) {
+        return getLocalizedMessage("admin.referal.preview", label, percentage, calcType, isPredefined,
+                formatDateToUtc, tx1BaseAmount, tx2BaseAmount, tx1AutoBaseAmount, tx2AutoBaseAmount);
     }
 
     public String percent_from_revenue() {

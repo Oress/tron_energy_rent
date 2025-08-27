@@ -2,6 +2,7 @@ package org.ipan.nrgyrent.telegram;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -62,6 +63,11 @@ public class InlineMenuCallbacks {
     public static final String MANAGE_REF_PROGRAMS_SEARCH = "manage_ref_programs_search";
     public static final String MANAGE_REF_PROGRAMS_ADD = "manage_ref_programs_add_new";
 
+    public static final String MANAGE_REF_PROGRAMS_ACTION_CHANGE_BASE_TX1 = "manage_ref_programs_action_change_base_tx1";
+    public static final String MANAGE_REF_PROGRAMS_ACTION_CHANGE_BASE_TX2 = "manage_ref_programs_action_change_base_tx2";
+    public static final String MANAGE_REF_PROGRAMS_ACTION_CHANGE_BASE_TX1_AUTO = "manage_ref_programs_action_change_base_tx1_auto";
+    public static final String MANAGE_REF_PROGRAMS_ACTION_CHANGE_BASE_TX2_AUTO = "manage_ref_programs_action_change_base_tx2_auto";
+
     public static final String MANAGE_REF_PROGRAMS_ACTION_CHANGE_PERCENTAGE = "manage_ref_programs_action_change_percentage";
     public static final String MANAGE_REF_PROGRAMS_ACTION_RENAME = "manage_ref_programs_action_rename";
     public static final String MANAGE_REF_PROGRAMS_ACTION_DEACTIVATE = "manage_ref_programs_action_deactivate";
@@ -115,6 +121,26 @@ public class InlineMenuCallbacks {
     }
 
 
+    private static final String TOGGLE_REF_PROGRAM_SEBES = "/rp_sebes/";
+    public static String createToggleRefProgramSebesCallback(Long refProgramId) {
+        return TOGGLE_REF_PROGRAM_SEBES + gson.toJson(new ToggleRefProgramSebesPayload(refProgramId));
+    }
+
+    public static ToggleRefProgramSebesPayload getToggleRefProgramSebes(String data) {
+        ToggleRefProgramSebesPayload payload = null;
+        if (data.startsWith(TOGGLE_REF_PROGRAM_SEBES)) {
+            String payloadStr = data.split(TOGGLE_REF_PROGRAM_SEBES)[1];
+
+            try {
+                payload = gson.fromJson(payloadStr, ToggleRefProgramSebesPayload.class);
+            } catch (Exception e) {
+                logger.error("Cannot extract payload for ToggleRefProgramSebesPayload ", e);
+            }
+        }
+        return payload;
+    }
+
+
     private static final String TOGGLE_AUTO_TOPUP = "/tatpp/";
     public static String createToggleAutoTopupCallback(String address, Long sessionId) {
         ToggleWalletSessionPayload payload;
@@ -152,5 +178,11 @@ public class InlineMenuCallbacks {
         public ToggleWalletSessionPayload(Long sessionId) {
             this.sessionId = sessionId;
         }
+    }
+
+    @Getter
+    @AllArgsConstructor
+    public static class ToggleRefProgramSebesPayload {
+        private Long refProgramId;
     }
 }

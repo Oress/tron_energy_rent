@@ -52,4 +52,28 @@ public class ReferralProgramsNewView {
                 .build();
         tgClient.execute(message);
     }
+
+    @SneakyThrows
+    public void promptBaseAmount(UserState userState) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
+                .text(refProgramLabels.newPromptBaseTxValue())
+                .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
+                .build();
+        tgClient.execute(message);
+    }
+
+    @SneakyThrows
+    public void changeTxAmountSuccess(UserState userState) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
+                .text(refProgramLabels.changeBaseAmountSuccess())
+                .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
+                .build();
+        tgClient.execute(message);
+    }
 }
