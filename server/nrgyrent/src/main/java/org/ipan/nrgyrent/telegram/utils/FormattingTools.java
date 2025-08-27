@@ -21,7 +21,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class FormattingTools {
-    private static final DecimalFormat df = new DecimalFormat("# ###.##");
+    private static final DecimalFormat df = new DecimalFormat("# ###.###");
 
     private final CommonLabels commonLabels;
     private final RefProgramLabels refProgramLabels;
@@ -107,6 +107,10 @@ public class FormattingTools {
 
     public static String formatBalance(Long balanceSun) {
         return df.format(BigDecimal.valueOf(balanceSun).divide(BigDecimal.valueOf(1_000_000D)).setScale(2, RoundingMode.DOWN));
+    }
+
+    public static String formatBalance3(Long balanceSun) {
+        return df.format(BigDecimal.valueOf(balanceSun).divide(BigDecimal.valueOf(1_000_000D), 3, RoundingMode.DOWN));
     }
 
     public String formatRefProgmam(BalanceReferralProgram refProgram) {

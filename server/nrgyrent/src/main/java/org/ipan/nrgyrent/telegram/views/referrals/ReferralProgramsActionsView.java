@@ -118,10 +118,10 @@ public class ReferralProgramsActionsView {
                 getCalcTypeLabel(refProgram.getCalcType()),
                 refProgram.getPredefined() ? commonLabels.yes() : commonLabels.no(),
                 FormattingTools.formatDateToUtc(refProgram.getCreatedAt()),
-                        FormattingTools.formatBalance(refProgram.getSubtractAmountTx1Itrx()),
-                        FormattingTools.formatBalance(refProgram.getSubtractAmountTx2Itrx()),
-                        FormattingTools.formatBalance(refProgram.getSubtractAmountTx1AutoItrx()),
-                        FormattingTools.formatBalance(refProgram.getSubtractAmountTx2AutoItrx())
+                        FormattingTools.formatBalance3(refProgram.getSubtractAmountTx1Itrx()),
+                        FormattingTools.formatBalance3(refProgram.getSubtractAmountTx2Itrx()),
+                        FormattingTools.formatBalance3(refProgram.getSubtractAmountTx1AutoItrx()),
+                        FormattingTools.formatBalance3(refProgram.getSubtractAmountTx2AutoItrx())
         );
     }
 
