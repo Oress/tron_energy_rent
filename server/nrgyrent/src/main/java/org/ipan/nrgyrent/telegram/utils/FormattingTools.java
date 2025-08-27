@@ -6,6 +6,7 @@ import java.sql.Timestamp;
 import java.text.DecimalFormat;
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -21,6 +22,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class FormattingTools {
+    private static final DateTimeFormatter utcFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.of("UTC"));
     private static final DecimalFormat df = new DecimalFormat("# ###.###");
 
     private final CommonLabels commonLabels;
@@ -70,6 +72,13 @@ public class FormattingTools {
         String name = user.getTelegramFirstName() != null ? commonLabels.userName(user.getTelegramFirstName()) : "";
         String id = "ID: %s".formatted(user.getTelegramId());
         return List.of(login, name, id).stream().filter(s -> !s.isEmpty()).collect(Collectors.joining(", "));
+    }
+
+    public static String formatDtUtc(Instant dt) {
+        if (dt == null) {
+            return "-";
+        }
+        return utcFormatter.format(dt) + " UTC";
     }
 
     public static String formatUserLink(TgUserId user) {

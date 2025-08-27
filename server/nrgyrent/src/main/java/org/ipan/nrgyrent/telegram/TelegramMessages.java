@@ -2,6 +2,8 @@ package org.ipan.nrgyrent.telegram;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -133,9 +135,12 @@ public class TelegramMessages {
                 .builder()
                 .chatId(order.getChatId())
                 .messageId(order.getMessageToUpdate())
-                .text(getSuccessfulTransactionMessage(userState, order))
+                .text(order.getBalance().isGroup()
+                        ? getSuccessfulTransactionMessageGroup(userState, order)
+                        : getSuccessfulTransactionMessage(userState, order)
+                        )
                 // .replyMarkup(getToMainMenuNotificationMarkup())
-                // .parseMode("MARKDOWN")
+                 .parseMode("MARKDOWN")
                 .build();
         try {
             tgClient.execute(message);
@@ -146,11 +151,24 @@ public class TelegramMessages {
     }
 
     private String getSuccessfulTransactionMessage(UserState userState, Order order) {
-        return transactionLabels.success(
+        return transactionLabels.successIndividual(
                 userState.getLocaleOrDefault(),
                 order.getTxAmount(),
                 FormattingTools.formatBalance(order.getSunAmount()),
-                WalletTools.formatTronAddress(order.getReceiveAddress()));
+                WalletTools.formatTronAddressMd(order.getReceiveAddress()),
+                FormattingTools.formatBalance(order.getBalance().getSunBalance()),
+                formattingTools.formatDtUtc(order.getCreatedAt())
+        );
+    }
+
+    private String getSuccessfulTransactionMessageGroup(UserState userState, Order order) {
+        return transactionLabels.successGroup(
+                userState.getLocaleOrDefault(),
+                order.getTxAmount(),
+                FormattingTools.formatBalance(order.getSunAmount()),
+                WalletTools.formatTronAddressMd(order.getReceiveAddress()),
+                formattingTools.formatDtUtc(order.getCreatedAt())
+        );
     }
 
     private String getFailedTransactionMessage(UserState userState, Order order) {
