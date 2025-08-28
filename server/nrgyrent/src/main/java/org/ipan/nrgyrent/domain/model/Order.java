@@ -110,4 +110,8 @@ public class Order {
     public boolean isAutodelegationOrder() {
         return autoDelegationSession != null;
     }
+
+    public Long getOldBalance() {
+        return balance.getSunBalance() + sunAmount;
+    }
 }

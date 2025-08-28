@@ -157,7 +157,8 @@ public class TelegramMessages {
                 FormattingTools.formatBalance(order.getSunAmount()),
                 WalletTools.formatTronAddressMd(order.getReceiveAddress()),
                 FormattingTools.formatBalance(order.getBalance().getSunBalance()),
-                formattingTools.formatDtUtc(order.getCreatedAt())
+                formattingTools.formatDtUtc(order.getCreatedAt()),
+                FormattingTools.formatBalance(order.getOldBalance())
         );
     }
 

@@ -79,8 +79,8 @@ public class TransactionLabels {
         return getLocalizedMessage("transactions.error.itrx_out_of_trx", id);
     }
 
-    public String successIndividual(Locale locale, Integer amount, String total, String receiver, String balance, String date) {
-        return getLocalizedMessage("transactions.success.individual", locale, amount, total, receiver, balance, date);
+    public String successIndividual(Locale locale, Integer amount, String total, String receiver, String balance, String date, String oldBalance) {
+        return getLocalizedMessage("transactions.success.individual", locale, amount, total, receiver, balance, date, oldBalance);
     }
 
     public String successGroup(Locale locale, Integer amount, String total, String receiver, String date) {
