@@ -55,6 +55,88 @@ public class TransactionsHandler {
     private final TelegramMessages telegramMessages;
     private final FormattingTools formattingTools;
 
+    @MatchState(state = States.MAIN_MENU, callbackData = InlineMenuCallbacks.ESTIMATE_TRANSACTION_COST)
+    public void estimateTxStart(UserState userState, Update update) {
+        transactionsViews.updMenuToEstimateTxCost(userState);
+        telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.ESTIMATE_TRANSACTION_PROMPT_RECEIVE_WALLET));
+    }
+
+    @MatchState(state = States.ESTIMATE_TRANSACTION_PROMPT_RECEIVE_WALLET, updateTypes = UpdateType.MESSAGE)
+    public void estimateTx_handleWallet(UserState userState, Update update) {
+        Message message = update.getMessage();
+        if (message.hasText()) {
+            String receiverStr = message.getText();
+
+            if (WalletTools.isValidTronAddress(receiverStr)) {
+                EstimateOrderAmountResponse estimate = itrxService.estimateOrderPrice(null, AppConstants.DURATION_1H, receiverStr);
+                AppUser byId = userService.getById(userState.getTelegramId());
+                Tariff tariff = byId.getTariffToUse();
+
+                TransactionParams transactionParams = telegramState.getOrCreateTransactionParams(userState.getTelegramId());
+                telegramState.updateTransactionParams(userState.getTelegramId(),
+                        transactionParams.withEnergyAmount(estimate.getEnergy_amount()));
+
+                Long priceToUse = AppConstants.ENERGY_65K == estimate.getEnergy_amount()
+                        ? tariff.getTransactionType1AmountSun()
+                        : tariff.getTransactionType2AmountSun();
+
+                // TODO: validate errors; e.g. incorrect wallets etc.
+                List<UserWallet> wallets = userWalletService.getWallets(userState.getTelegramId());
+                transactionsViews.updMenuToEstimateTxCostResult(userState, receiverStr, priceToUse, wallets);
+                telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.ESTIMATE_TRANSACTION_PROMPT_SHOW_ESTIMATE));
+            }
+        }
+    }
+
+    @MatchState(state = States.ESTIMATE_TRANSACTION_PROMPT_SHOW_ESTIMATE, updateTypes = UpdateType.CALLBACK_QUERY)
+    public void estimateTx_executeTransactionFromCallback(UserState userState, Update update) {
+        CallbackQuery callbackQuery = update.getCallbackQuery();
+        String receiverStr = callbackQuery.getData();
+        if (receiverStr != null) {
+            if (WalletTools.isValidTronAddress(receiverStr)) {
+                AppUser byId = userService.getById(userState.getTelegramId());
+                Tariff tariff = byId.getTariffToUse();
+                TransactionParams transactionParams = telegramState.getOrCreateTransactionParams(userState.getTelegramId());
+
+                Integer energyAmount = transactionParams.getEnergyAmount();
+
+                Long priceToUse = AppConstants.ENERGY_65K == energyAmount
+                        ? tariff.getTransactionType1AmountSun()
+                        : tariff.getTransactionType2AmountSun();
+
+                tryMakeTransaction(userState, energyAmount, AppConstants.DURATION_1H,
+                        receiverStr, 1, priceToUse, tariff.getId(),
+                        byId.getBalanceToUse().getEnergyProvider());
+            }
+        }
+    }
+
+
+    @MatchState(state = States.ESTIMATE_TRANSACTION_PROMPT_SHOW_ESTIMATE, updateTypes = UpdateType.MESSAGE)
+    public void estimateTx_executeTransactionFromText(UserState userState, Update update) {
+        Message message = update.getMessage();
+        if (message.hasText()) {
+            telegramMessages.deleteMessage(message);
+            String receiverStr = message.getText();
+
+            if (WalletTools.isValidTronAddress(receiverStr)) {
+                AppUser byId = userService.getById(userState.getTelegramId());
+                Tariff tariff = byId.getTariffToUse();
+                TransactionParams transactionParams = telegramState.getOrCreateTransactionParams(userState.getTelegramId());
+
+                Integer energyAmount = transactionParams.getEnergyAmount();
+
+                Long priceToUse = AppConstants.ENERGY_65K == energyAmount
+                        ? tariff.getTransactionType1AmountSun()
+                        : tariff.getTransactionType2AmountSun();
+
+                tryMakeTransaction(userState, energyAmount, AppConstants.DURATION_1H,
+                        receiverStr, 1, priceToUse, tariff.getId(),
+                        byId.getBalanceToUse().getEnergyProvider());
+            }
+        }
+    }
+
     @MatchState(state = States.MAIN_MENU, updateTypes = UpdateType.MESSAGE)
     public void quickTransactionFromMenu(UserState userState, Update update) {
         Message message = update.getMessage();

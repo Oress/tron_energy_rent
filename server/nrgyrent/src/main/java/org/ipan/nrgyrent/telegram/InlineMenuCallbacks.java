@@ -22,6 +22,7 @@ public class InlineMenuCallbacks {
     public static final String TRANSACTION_65k = "transaction_65k";
     public static final String TRANSACTION_131k = "transaction_131k";
     public static final String CUSTOM_TRANSACTION_AMOUNT = "custom_transaction_amount";
+    public static final String ESTIMATE_TRANSACTION_COST = "estimate_transaction_cost";
     public static final String AUTOTOPUP = "autotopup";
 
     public static final String SETTINGS = "settings";

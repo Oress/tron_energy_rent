@@ -36,6 +36,34 @@ public class TransactionsViews {
 
     @Retryable
     @SneakyThrows
+    public void updMenuToEstimateTxCost(UserState userState) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
+                .text(transactionLabels.estimateTxCost())
+                .replyMarkup(commonViews.getToMainMenuMarkup())
+                .parseMode("MARKDOWN")
+                .build();
+        tgClient.execute(message);
+    }
+
+    @Retryable
+    @SneakyThrows
+    public void updMenuToEstimateTxCostResult(UserState userState, String usdtReceiver, Long price, List<UserWallet> wallets) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
+                .text(transactionLabels.estimateTxCostResult(usdtReceiver, price))
+                .replyMarkup(getEstimateTxCostResultMarkup(wallets))
+                .parseMode("MARKDOWN")
+                .build();
+        tgClient.execute(message);
+    }
+
+    @Retryable
+    @SneakyThrows
     public void updMenuToPromptTrxAmount(UserState userState, Tariff tariff) {
         EditMessageText message = EditMessageText
                 .builder()
@@ -265,4 +293,32 @@ public class TransactionsViews {
                 )
                 .build();
     }
+
+    private InlineKeyboardMarkup getEstimateTxCostResultMarkup(List<UserWallet> wallets) {
+        List<InlineKeyboardRow> walletRows = wallets.stream().map(wallet -> {
+            InlineKeyboardRow row = new InlineKeyboardRow(
+                    InlineKeyboardButton
+                            .builder()
+                            .text(WalletTools.formatTronAddressAndLabel(wallet.getAddress(), wallet.getLabel()))
+                            .callbackData(wallet.getAddress())
+                            .build());
+            return row;
+        }).toList();
+        InlineKeyboardMarkup.InlineKeyboardMarkupBuilder<?, ?> builder = InlineKeyboardMarkup
+                .builder();
+        walletRows.forEach(builder::keyboardRow);
+
+        return builder
+                .keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text(commonLabels.toMainMenu())
+                                        .callbackData(InlineMenuCallbacks.TO_MAIN_MENU)
+                                        .build())
+
+                )
+                .build();
+    }
+
 }

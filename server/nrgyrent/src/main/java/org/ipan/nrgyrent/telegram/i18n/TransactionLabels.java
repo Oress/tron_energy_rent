@@ -3,6 +3,7 @@ package org.ipan.nrgyrent.telegram.i18n;
 import java.math.BigDecimal;
 import java.util.Locale;
 
+import org.ipan.nrgyrent.telegram.utils.FormattingTools;
 import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Component;
 
@@ -37,6 +38,17 @@ public class TransactionLabels {
 
     public String pending() {
         return getLocalizedMessage("transactions.pending");
+    }
+
+    public String estimateTxCost() {
+        return getLocalizedMessage("transactions.estimate_tx_cost");
+    }
+
+    public String estimateTxCostResult(String usdtReceiver, Long price) {
+        return getLocalizedMessage("transactions.estimate_tx_cost_result",
+                usdtReceiver,
+                FormattingTools.formatBalance(price)
+        );
     }
 
     public String customAmountPromptAmount(String price) {

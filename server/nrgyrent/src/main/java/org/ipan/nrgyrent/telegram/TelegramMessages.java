@@ -596,6 +596,13 @@ public class TelegramMessages {
                                         .text(commonLabels.getTxCustomAmnt(
                                                 FormattingTools.formatBalance(tariff.getTransactionType1AmountSun())))
                                         .callbackData(InlineMenuCallbacks.CUSTOM_TRANSACTION_AMOUNT)
+                                        .build()))
+                .keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text(commonLabels.getEstimateTxCost())
+                                        .callbackData(InlineMenuCallbacks.ESTIMATE_TRANSACTION_COST)
                                         .build()));
             builder
                 .keyboardRow(

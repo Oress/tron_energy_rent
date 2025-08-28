@@ -101,6 +101,10 @@ public class CommonLabels {
         return getLocalizedMessage("menu.tx_custom_amnt", amount);
     }
 
+    public String getEstimateTxCost() {
+        return getLocalizedMessage("menu.estimate_tx_cost");
+    }
+
     public String getAutoDelegation() {
         return getLocalizedMessage("menu.auto_delegation");
     }
