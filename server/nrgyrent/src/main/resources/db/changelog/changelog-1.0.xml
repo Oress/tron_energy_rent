@@ -1199,4 +1199,10 @@
         </addColumn>
     </changeSet>
 
+    <changeSet id="update default tariff prices" author="oress">
+        <sql>
+            update nrg_tariffs set tx_type_1_amount_sun = ${txType1AmountV2}, tx_type_2_amount_sun = ${txType2AmountV2} where id = ${defaultTariffId};
+        </sql>
+    </changeSet>
+
 </databaseChangeLog>

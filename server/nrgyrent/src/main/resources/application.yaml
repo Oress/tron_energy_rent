@@ -21,6 +21,8 @@ spring:
       defaultTariffLabel: Стандартный
       txType1Amount: 5500000
       txType2Amount: 8600000
+      txType1AmountV2: 3500000
+      txType2AmountV2: 7000000
   datasource:
     url: ${POSTGRES_URL:jdbc:postgresql://localhost:5432/postgres}
     username: ${POSTGRES_USER:postgres}

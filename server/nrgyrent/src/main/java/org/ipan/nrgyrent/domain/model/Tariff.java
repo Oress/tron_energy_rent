@@ -23,7 +23,7 @@ import lombok.ToString;
 @ToString
 @Table(name = "nrg_tariffs")
 public class Tariff {
-    private static final long ATODELEGATE_ADDITION = 400_000L;
+    private static final long ATODELEGATE_ADDITION = 600_000L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "nrg_tariffs_seq")
