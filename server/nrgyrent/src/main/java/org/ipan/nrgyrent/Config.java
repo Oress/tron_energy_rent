@@ -1,25 +1,28 @@
 package org.ipan.nrgyrent;
 
+import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
+import org.ipan.nrgyrent.cron.ItrxAlertConfig;
+import org.ipan.nrgyrent.cron.ItrxBalanceMonitorCronJob;
+import org.ipan.nrgyrent.domain.model.Alert;
+import org.ipan.nrgyrent.domain.model.repository.AlertRepo;
+import org.ipan.nrgyrent.domain.model.repository.AppUserRepo;
+import org.ipan.nrgyrent.domain.model.repository.ItrxBalanceRepository;
+import org.ipan.nrgyrent.domain.service.AlertService;
 import org.ipan.nrgyrent.domain.service.CollectionWalletService;
 import org.ipan.nrgyrent.itrx.AppConstants;
 import org.ipan.nrgyrent.itrx.RestClient;
-import org.ipan.nrgyrent.telegram.TelegramMsgScopeBpp;
+import org.ipan.nrgyrent.telegram.TelegramMessages;
+import org.ipan.nrgyrent.telegram.state.TelegramState;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
-import org.springframework.context.support.ResourceBundleMessageSource;
 import org.springframework.retry.annotation.EnableRetry;
 import org.springframework.scheduling.annotation.EnableAsync;
 
-import jakarta.annotation.PostConstruct;
-import lombok.extern.slf4j.Slf4j;
-
 @Configuration
-@EnableRetry
-@EnableAsync
 @EnableAspectJAutoProxy
 @Slf4j
 public class Config {
@@ -37,23 +40,31 @@ public class Config {
     @Autowired
     TrxxConfig trxxConfig;
 
+    @Autowired
+    private TelegramMessages telegramMessages;
+
+    @Autowired
+    private TelegramState telegramState;
+
+    @Autowired
+    private AppUserRepo userRepo;
+
+    @Autowired
+    private AlertRepo alertRepo;
+
+    @Autowired
+    private AlertService alertService;
+
+    @Autowired
+    private ItrxBalanceRepository itrxBalanceRepository;
+
+    @Value("${app.alerts.itrx-balance.threashold:800000000}")
+    private Long balanceThreshold;
+
 
     @PostConstruct
     public void initializeApplication() {
         collectionWalletService.ensureWalletsAreCreated();
-    }
-
-    @Bean
-    public static TelegramMsgScopeBpp beanFactoryPostProcessor() {
-        return new TelegramMsgScopeBpp();
-    }
-
-    @Bean
-    public MessageSource messageSource() {
-        ResourceBundleMessageSource source = new ResourceBundleMessageSource();
-        source.setBasename("messages");
-        source.setDefaultEncoding("UTF-8");
-        return source;
     }
 
     @Bean
@@ -64,5 +75,35 @@ public class Config {
     @Bean(value = AppConstants.TRXX_REST_CLIENT)
     public RestClient trxxRestClient() {
         return new RestClient(trxxConfig);
+    }
+
+    @Bean
+    public ItrxBalanceMonitorCronJob itrxBalanceMonitorCronJob() {
+        return new ItrxBalanceMonitorCronJob(
+                new ItrxAlertConfig(AppConstants.ITRX, Alert.ITRX_BALANCE_LOW),
+                itrxRestClient(),
+                telegramMessages,
+                telegramState,
+                userRepo,
+                alertRepo,
+                alertService,
+                itrxBalanceRepository,
+                balanceThreshold
+        );
+    }
+
+    @Bean(value = AppConstants.TRXX_MONITOR_JOB)
+    public ItrxBalanceMonitorCronJob trxxBalanceMonitorCronJob() {
+        return new ItrxBalanceMonitorCronJob(
+                new ItrxAlertConfig(AppConstants.TRXX, Alert.TRXX_BALANCE_LOW),
+                trxxRestClient(),
+                telegramMessages,
+                telegramState,
+                userRepo,
+                alertRepo,
+                alertService,
+                itrxBalanceRepository,
+                balanceThreshold
+        );
     }
 }

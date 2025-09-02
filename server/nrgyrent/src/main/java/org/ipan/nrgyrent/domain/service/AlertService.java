@@ -15,9 +15,9 @@ public class AlertService {
     private final AlertRepo alertRepo;
 
     @Transactional
-    public Alert createCatfeeBalanceLowAlert(Long triggerValue) {
+    public Alert createAlert(Long triggerValue, String alertName) {
         Alert alert = new Alert();
-        alert.setName(Alert.CATFEE_BALANCE_LOW);
+        alert.setName(alertName);
         alert.setTriggerValue(triggerValue.toString());
         alertRepo.save(alert);
 
@@ -26,9 +26,9 @@ public class AlertService {
 
 
     @Transactional
-    public Alert createItrxBalanceLowAlert(Long triggerValue) {
+    public Alert createCatfeeBalanceLowAlert(Long triggerValue) {
         Alert alert = new Alert();
-        alert.setName(Alert.ITRX_BALANCE_LOW);
+        alert.setName(Alert.CATFEE_BALANCE_LOW);
         alert.setTriggerValue(triggerValue.toString());
         alertRepo.save(alert);
 

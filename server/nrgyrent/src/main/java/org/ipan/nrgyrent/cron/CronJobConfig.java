@@ -10,15 +10,14 @@ import org.ipan.nrgyrent.domain.model.Balance;
 import org.ipan.nrgyrent.domain.model.CollectionWallet;
 import org.ipan.nrgyrent.domain.model.repository.BalanceRepo;
 import org.ipan.nrgyrent.domain.model.repository.CollectionWalletRepo;
+import org.ipan.nrgyrent.itrx.AppConstants;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.Scheduled;
 
-import lombok.AllArgsConstructor;
-
 @Configuration
-@AllArgsConstructor
 public class CronJobConfig {
     public static final String TRON_TRANSACTION_EXECUTOR = "tronTransactionExecutor";
     public static final String USDT_DEPOSIT_EXECUTOR = "usdt_deposit_executor";
@@ -29,6 +28,27 @@ public class CronJobConfig {
     private final CollectionWalletBalanceMonitorJob collectionWalletBalanceMonitorJob;
     private final BybitBalanceMonitorJob bybitBalanceMonitorJob;
     private final AutoDelegationMonitorJob autoDelegationMonitorJob;
+
+    private final ItrxBalanceMonitorCronJob itrxBalanceMonitorCronJob;
+    private final ItrxBalanceMonitorCronJob trxxBalanceMonitorCronJob;
+
+    public CronJobConfig(ReferralCommissionHelper referralCommissionHelper,
+                         BalanceRepo balanceRepo,
+                         CollectionWalletRepo collectionWalletRepo,
+                         CollectionWalletBalanceMonitorJob collectionWalletBalanceMonitorJob,
+                         BybitBalanceMonitorJob bybitBalanceMonitorJob,
+                         AutoDelegationMonitorJob autoDelegationMonitorJob,
+                         ItrxBalanceMonitorCronJob itrxBalanceMonitorCronJob,
+                         @Qualifier(AppConstants.TRXX_MONITOR_JOB) ItrxBalanceMonitorCronJob trxxBalanceMonitorCronJob) {
+        this.referralCommissionHelper = referralCommissionHelper;
+        this.balanceRepo = balanceRepo;
+        this.collectionWalletRepo = collectionWalletRepo;
+        this.collectionWalletBalanceMonitorJob = collectionWalletBalanceMonitorJob;
+        this.bybitBalanceMonitorJob = bybitBalanceMonitorJob;
+        this.autoDelegationMonitorJob = autoDelegationMonitorJob;
+        this.itrxBalanceMonitorCronJob = itrxBalanceMonitorCronJob;
+        this.trxxBalanceMonitorCronJob = trxxBalanceMonitorCronJob;
+    }
 
     @Bean(name = TRON_TRANSACTION_EXECUTOR)
     @ConditionalOnProperty(name = "app.cron.tron.transaction.enabled")
@@ -67,6 +87,16 @@ public class CronJobConfig {
         for (CollectionWallet collectionWallet : all) {
             collectionWalletBalanceMonitorJob.processWallet(collectionWallet.getId());
         }
+    }
+
+    @Scheduled(fixedDelayString = "${app.alerts.itrx-balance.interval:180}", timeUnit = TimeUnit.SECONDS)
+    public void monitorItrxBalance() {
+        itrxBalanceMonitorCronJob.checkBalance();
+    }
+
+    @Scheduled(fixedDelayString = "${app.alerts.itrx-balance.interval:180}", timeUnit = TimeUnit.SECONDS)
+    public void monitorTrxxBalance() {
+        trxxBalanceMonitorCronJob.checkBalance();
     }
 
     @Scheduled(fixedRate = 5, timeUnit = TimeUnit.MINUTES)

@@ -257,6 +257,18 @@ public class TelegramMessages {
     }
 
     @SneakyThrows
+    public void sendLowTrxxBalanceAlert(UserState userState, Long currentBalance) {
+        SendMessage message = SendMessage
+                .builder()
+                .chatId(userState.getChatId())
+                .text(commonLabels.alertTrxxBalanceLow(userState.getLocaleOrDefault(),
+                        FormattingTools.formatBalance(currentBalance)))
+                .replyMarkup(getOkNotificationMarkup())
+                .build();
+        tgClient.execute(message);
+    }
+
+    @SneakyThrows
     public void sendLowCatfeeBalanceAlert(UserState userState, Long currentBalance) {
         SendMessage message = SendMessage
                 .builder()
