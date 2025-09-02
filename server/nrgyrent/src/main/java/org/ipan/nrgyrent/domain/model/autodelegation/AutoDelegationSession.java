@@ -45,6 +45,7 @@ public class AutoDelegationSession {
     private Long lastSmartContractTs;
 
     @Column(name = "energy_provider")
+    @Enumerated(EnumType.STRING)
     private EnergyProviderName energyProvider;
 
     @Column(name = "is_active")
