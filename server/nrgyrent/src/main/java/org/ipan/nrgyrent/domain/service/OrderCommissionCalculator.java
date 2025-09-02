@@ -71,6 +71,7 @@ public class OrderCommissionCalculator {
         Long result = null;
         if (order.isAutodelegationOrder()) {
             switch (order.getEnergyProvider()) {
+                case TRXX:
                 case ITRX:
                     result = referralProgram.getSubtractAmountTx1AutoItrx();
                     break;
@@ -96,6 +97,7 @@ public class OrderCommissionCalculator {
         Long result = null;
         if (order.isAutodelegationOrder()) {
             switch (order.getEnergyProvider()) {
+                case TRXX:
                 case ITRX:
                     result = referralProgram.getSubtractAmountTx2AutoItrx();
                     break;
