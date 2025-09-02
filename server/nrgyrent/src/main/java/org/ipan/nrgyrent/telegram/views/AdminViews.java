@@ -119,7 +119,7 @@ public class AdminViews {
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
                 .text(adminLabels.autoEnergyProvider(energyProviderName.toString()))
-                .replyMarkup(getEnergyProvidersReplyMarkup())
+                .replyMarkup(getAutoEnergyProvidersReplyMarkup())
                 .build();
         tgClient.execute(message);
     }
@@ -149,6 +149,34 @@ public class AdminViews {
                 .build();
         tgClient.execute(message);
     }
+
+    private InlineKeyboardMarkup getAutoEnergyProvidersReplyMarkup() {
+        return InlineKeyboardMarkup
+                .builder()
+                .keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text("itrx.io")
+                                        .callbackData(InlineMenuCallbacks.MANAGE_AUTO_ENERGY_PROVIDER_CHOOSE_ITRX)
+                                        .build()))
+                .keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text("trxx.io")
+                                        .callbackData(InlineMenuCallbacks.MANAGE_AUTO_ENERGY_PROVIDER_CHOOSE_TRXX)
+                                        .build()))
+                .keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text(commonLabels.toMainMenu())
+                                        .callbackData(InlineMenuCallbacks.TO_MAIN_MENU)
+                                        .build()))
+                .build();
+    }
+
 
     private InlineKeyboardMarkup getEnergyProvidersReplyMarkup() {
         return InlineKeyboardMarkup
