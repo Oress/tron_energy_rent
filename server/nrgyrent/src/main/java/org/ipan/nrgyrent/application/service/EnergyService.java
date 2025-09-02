@@ -5,12 +5,9 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.ipan.nrgyrent.domain.events.autotopup.AutoDelegationSessionEventPublisher;
 import org.ipan.nrgyrent.domain.exception.NotEnoughBalanceException;
-import org.ipan.nrgyrent.domain.model.AppUser;
-import org.ipan.nrgyrent.domain.model.OrderType;
+import org.ipan.nrgyrent.domain.model.*;
 import org.ipan.nrgyrent.domain.model.autodelegation.AutoDelegationEventType;
 import org.ipan.nrgyrent.domain.model.autodelegation.AutoDelegationSession;
-import org.ipan.nrgyrent.domain.model.Order;
-import org.ipan.nrgyrent.domain.model.Tariff;
 import org.ipan.nrgyrent.domain.model.autodelegation.AutoDelegationSessionStatus;
 import org.ipan.nrgyrent.domain.model.repository.AutoDelegationSessionRepo;
 import org.ipan.nrgyrent.domain.service.AutoDelegationSessionService;
@@ -29,6 +26,7 @@ import org.ipan.nrgyrent.tron.node.api.FullNodeRestClient;
 import org.ipan.nrgyrent.tron.node.api.dto.AccountResource;
 import org.ipan.nrgyrent.tron.node.events.ContractTypes;
 import org.ipan.nrgyrent.tron.node.events.dto.AddressTransactionEvent;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -36,7 +34,6 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
-@AllArgsConstructor
 @Slf4j
 public class EnergyService {
     private static final int ITRX_OK_CODE = 0;
@@ -44,12 +41,33 @@ public class EnergyService {
     private final TelegramState telegramState;
     private final ItrxService itrxService;
     private final RestClient itrxRestClient;
+    private final RestClient trxxRestClient;
     private final OrderService orderService;
 
     private final AutoDelegationSessionRepo autoTopupConfigRepo;
     private final FullNodeRestClient fullNodeRestClient;
     private final AutoDelegationSessionService autoDelegationSessionService;
     private final AutoDelegationSessionEventPublisher autoDelegationSessionEventPublisher;
+
+    public EnergyService(TelegramState telegramState,
+                         ItrxService itrxService,
+                         RestClient itrxRestClient,
+                         @Qualifier(AppConstants.TRXX_REST_CLIENT) RestClient trxxRestClient,
+                         OrderService orderService,
+                         AutoDelegationSessionRepo autoTopupConfigRepo,
+                         FullNodeRestClient fullNodeRestClient,
+                         AutoDelegationSessionService autoDelegationSessionService,
+                         AutoDelegationSessionEventPublisher autoDelegationSessionEventPublisher) {
+        this.telegramState = telegramState;
+        this.itrxService = itrxService;
+        this.itrxRestClient = itrxRestClient;
+        this.trxxRestClient = trxxRestClient;
+        this.orderService = orderService;
+        this.autoTopupConfigRepo = autoTopupConfigRepo;
+        this.fullNodeRestClient = fullNodeRestClient;
+        this.autoDelegationSessionService = autoDelegationSessionService;
+        this.autoDelegationSessionEventPublisher = autoDelegationSessionEventPublisher;
+    }
 
     @Transactional
     public AutoDelegationSession startAutoTopupSession(UserState userState, String wallet) {
@@ -178,9 +196,12 @@ public class EnergyService {
     private AutoDelegationSession deactivateSession(AutoDelegationSession session, AutoDelegationSessionStatus status) {
         AutoDelegationSession removedSession = autoDelegationSessionService.deactivate(session.getId(), status);
 
-        itrxRestClient.editDelegatePolicy(session.getAddress(), true);
-//        telegramState.removeWalletMonitoringState(removedSession.getAddress());
-//        autoDelegationSessionEventPublisher.publishSessionDeactivated(session.getId());
+        if (removedSession.getEnergyProvider() == EnergyProviderName.TRXX) {
+            trxxRestClient.editDelegatePolicy(session.getAddress(), true);
+        } else {
+            itrxRestClient.editDelegatePolicy(session.getAddress(), true);
+        }
+
         return removedSession;
     }
 

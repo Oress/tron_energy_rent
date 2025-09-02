@@ -86,6 +86,28 @@ public class AdminMenuHandler {
         showCurrentEnergyProvider(userState, update);
     }
 
+
+    @MatchState(forAdmin = true, state = States.ADMIN_MENU, callbackData = InlineMenuCallbacks.MANAGE_AUTO_ENERGY_PROVIDER)
+    public void showCurrentAutoEnergyProvider(UserState userState, Update update) {
+        EnergyProviderName energyProviderName = nrgConfigsService.readCurrentAutoProviderConfig();
+
+        adminViews.currentAutoEnergyProvider(userState, energyProviderName);
+        telegramState.updateUserState(userState.getTelegramId(),
+                userState.withState(States.ADMIN_VIEW_CURRENT_AUTO_ENERGY_PROVIDER));
+    }
+
+    @MatchState(forAdmin = true, state = States.ADMIN_VIEW_CURRENT_AUTO_ENERGY_PROVIDER, callbackData = InlineMenuCallbacks.MANAGE_AUTO_ENERGY_PROVIDER_CHOOSE_ITRX)
+    public void updateAutoCurrentEnergyProviderToItrx(UserState userState, Update update) {
+        nrgConfigsService.updateCurrentAutoProviderConfig(EnergyProviderName.ITRX);
+        showCurrentAutoEnergyProvider(userState, update);
+    }
+
+    @MatchState(forAdmin = true, state = States.ADMIN_VIEW_CURRENT_AUTO_ENERGY_PROVIDER, callbackData = InlineMenuCallbacks.MANAGE_AUTO_ENERGY_PROVIDER_CHOOSE_TRXX)
+    public void updateAutoCurrentEnergyProviderToTrxx(UserState userState, Update update) {
+        nrgConfigsService.updateCurrentAutoProviderConfig(EnergyProviderName.TRXX);
+        showCurrentAutoEnergyProvider(userState, update);
+    }
+
     @MatchState(forAdmin = true, state = States.ADMIN_MENU, callbackData = InlineMenuCallbacks.MANAGE_ITRX_BALANCE)
     public void showItrxBalance(UserState userState, Update update) {
         ApiUsageResponse apiStats = restClient.getApiStats();

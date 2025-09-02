@@ -38,6 +38,9 @@ public class InlineMenuCallbacks {
     public static final String MANAGE_GROUPS = "manage_groups";
     public static final String MANAGE_USERS = "manage_users";
     public static final String MANAGE_ITRX_BALANCE = "manage_itrx_balance";
+    public static final String MANAGE_AUTO_ENERGY_PROVIDER = "manage_energy_provider";
+    public static final String MANAGE_AUTO_ENERGY_PROVIDER_CHOOSE_ITRX = "auto_energy_provider_choose_itrx";
+    public static final String MANAGE_AUTO_ENERGY_PROVIDER_CHOOSE_TRXX = "auto_energy_provider_choose_trxx";
     public static final String MANAGE_ENERGY_PROVIDER = "manage_energy_provider";
     public static final String MANAGE_ENERGY_PROVIDER_CHOOSE_ITRX = "energy_provider_choose_itrx";
     public static final String MANAGE_ENERGY_PROVIDER_CHOOSE_CATFEE = "energy_provider_choose_catfee";

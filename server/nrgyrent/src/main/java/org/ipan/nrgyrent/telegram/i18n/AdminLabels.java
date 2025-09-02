@@ -46,6 +46,10 @@ public class AdminLabels {
         return getLocalizedMessage("admin.menu_energy_provider");
     }
 
+    public String menuAutoEnergyProvider() {
+        return getLocalizedMessage("admin.menu_auto_energy_provider");
+    }
+
     public String menuWithdrawSweep() {
         return getLocalizedMessage("admin.menu_withdraw_sweep");
     }
@@ -77,6 +81,10 @@ public class AdminLabels {
 
     public String energyProvider(String currentProvider) {
         return getLocalizedMessage("admin.current_energy_provider", currentProvider);
+    }
+
+    public String autoEnergyProvider(String currentProvider) {
+        return getLocalizedMessage("admin.current_auto_energy_provider", currentProvider);
     }
 
     public String sweepStats(String wallets) {

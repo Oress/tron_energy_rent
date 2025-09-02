@@ -1211,4 +1211,24 @@
         </sql>
     </changeSet>
 
+    <changeSet id="extend nrg_balances with auto_energy_provider" author="oress">
+        <addColumn tableName="nrg_balances">
+            <column name="auto_energy_provider" type="text" defaultValue="ITRX" />
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="default AUTO_ENERGY_PROVIDER config record" author="oress">
+        <insert tableName="nrg_configs">
+            <column name="id" value="AUTO_ENERGY_PROVIDER" />
+            <column name="value" value="ITRX" />
+            <column name="updated_at" valueDate="now()" />
+        </insert>
+    </changeSet>
+
+
+    <changeSet id="extend nrg_autodelegation_sessions with auto_energy_provider" author="oress">
+        <addColumn tableName="nrg_autodelegation_sessions">
+            <column name="energy_provider" type="text" defaultValue="ITRX" />
+        </addColumn>
+    </changeSet>
 </databaseChangeLog>

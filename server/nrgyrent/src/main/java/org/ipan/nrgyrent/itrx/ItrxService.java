@@ -8,6 +8,7 @@ import java.util.concurrent.TimeoutException;
 
 import org.ipan.nrgyrent.EnergyProvider;
 import org.ipan.nrgyrent.domain.events.OrderEventPublisher;
+import org.ipan.nrgyrent.domain.model.EnergyProviderName;
 import org.ipan.nrgyrent.itrx.dto.EstimateOrderAmountResponse;
 import org.ipan.nrgyrent.itrx.dto.OrderCallbackRequest;
 import org.ipan.nrgyrent.itrx.dto.PlaceOrderResponse;
@@ -39,7 +40,7 @@ public class ItrxService implements EnergyProvider {
         return restClient.placeOrder(energyAmount, duration, receiveAddress, correlationId.toString());
     }
 
-    public void processCallback(OrderCallbackRequest placeOrderResponse) {
+    public void processCallback(OrderCallbackRequest placeOrderResponse, EnergyProviderName energyProvider) {
         logger.info("Processing callback: {}", placeOrderResponse);
         if (placeOrderResponse.out_trade_no != null) {
             UUID correlationId = UUID.fromString(placeOrderResponse.out_trade_no);
@@ -53,7 +54,7 @@ public class ItrxService implements EnergyProvider {
         } else {
             logger.error("No future response found for correlation ID: {}", correlationId);
         }*/
-        sendOrderEvent(placeOrderResponse);
+        sendOrderEvent(placeOrderResponse, energyProvider);
     }
 
     public OrderCallbackRequest getCorrelatedCallbackRequest(UUID correlationId, long timeoutSeconds) {
@@ -73,7 +74,7 @@ public class ItrxService implements EnergyProvider {
         return null;
     }
 
-    private void sendOrderEvent(OrderCallbackRequest orderCallbackRequest) {
+    private void sendOrderEvent(OrderCallbackRequest orderCallbackRequest, EnergyProviderName energyProvider) {
         if (orderCallbackRequest.status == ITRX_ORDER_SUCCESS) {
             String correlationId = orderCallbackRequest.out_trade_no;
             if (orderCallbackRequest.isAutoDelegate()) {
@@ -89,7 +90,8 @@ public class ItrxService implements EnergyProvider {
                     orderCallbackRequest.getReceive_address(),
                     orderCallbackRequest.getAmount(),
                     orderCallbackRequest.getPeriod(),
-                    orderCallbackRequest.getEnergy_amount()
+                    orderCallbackRequest.getEnergy_amount(),
+                    energyProvider
             );
         } else if (orderCallbackRequest.status == ITRX_ORDER_ERROR) {
             eventPublisher.publishOrderFailedEvent(orderCallbackRequest.out_trade_no, ITRX_ORDER_ERROR, orderCallbackRequest.serial);

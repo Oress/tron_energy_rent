@@ -30,4 +30,19 @@ public class NrgConfigsService {
         byId.setValue(value.name());
         balanceRepo.updateAllBalancesForEnergyProvider(value);
     }
+
+    @Transactional(readOnly = true)
+    public EnergyProviderName readCurrentAutoProviderConfig() {
+        NrgConfigs byId = nrgConfigsRepository.findById(AppConstants.CONFIG_AUTO_ENERGY_PROVIDER).get();
+        return EnergyProviderName.valueOf(byId.getValue());
+    }
+
+    @Transactional
+    public void updateCurrentAutoProviderConfig(EnergyProviderName value) {
+        logger.info("Updating current AUTO energy provider config to: {}", value);
+        NrgConfigs byId = nrgConfigsRepository.findById(AppConstants.CONFIG_AUTO_ENERGY_PROVIDER).get();
+        byId.setValue(value.name());
+        balanceRepo.updateAllBalancesForAutoEnergyProvider(value);
+    }
+
 }

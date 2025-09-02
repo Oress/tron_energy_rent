@@ -65,7 +65,7 @@ public class OrderEventDomainListener {
                     .sunAmountPerTx(sunAmount)
                     .duration(event.getDuration())
                     .type(OrderType.USER)
-                    .energyProvider(EnergyProviderName.ITRX)
+                    .energyProvider(event.getProviderName() != null ? event.getProviderName() : EnergyProviderName.ITRX)
                     .itrxFeeSunAmount(feeSunAmount)
                     .itrxStatus(event.getItrxStatus())
                     .txId(event.getTxId())

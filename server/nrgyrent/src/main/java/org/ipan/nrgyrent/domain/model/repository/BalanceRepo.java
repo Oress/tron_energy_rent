@@ -44,4 +44,8 @@ public interface BalanceRepo extends JpaRepository<Balance, Long> {
     @Modifying
     @Query("update Balance b set b.energyProvider = :value")
     void updateAllBalancesForEnergyProvider(EnergyProviderName value);
+
+    @Modifying
+    @Query("update Balance b set b.autoEnergyProvider = :value")
+    void updateAllBalancesForAutoEnergyProvider(EnergyProviderName value);
 }

@@ -42,6 +42,10 @@ public class Balance {
     @Column(name = "energy_provider")
     private EnergyProviderName energyProvider;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "auto_energy_provider")
+    private EnergyProviderName autoEnergyProvider;
+
     @Column(name = "sun_balance")
     private Long sunBalance = 0L;
 

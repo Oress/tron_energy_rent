@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.ipan.nrgyrent.domain.model.AppUser;
+import org.ipan.nrgyrent.domain.model.EnergyProviderName;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -42,6 +43,9 @@ public class AutoDelegationSession {
 
     @Column(name = "last_sc_invocation_ts")
     private Long lastSmartContractTs;
+
+    @Column(name = "energy_provider")
+    private EnergyProviderName energyProvider;
 
     @Column(name = "is_active")
     private Boolean active = Boolean.TRUE;

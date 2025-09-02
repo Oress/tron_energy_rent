@@ -6,12 +6,14 @@ import org.ipan.nrgyrent.application.service.EnergyService;
 import org.ipan.nrgyrent.domain.exception.NotEnoughBalanceException;
 import org.ipan.nrgyrent.domain.exception.WalletAlreadyHasActiveSessionException;
 import org.ipan.nrgyrent.domain.model.AppUser;
+import org.ipan.nrgyrent.domain.model.EnergyProviderName;
 import org.ipan.nrgyrent.domain.model.autodelegation.AutoDelegationSession;
 import org.ipan.nrgyrent.domain.model.UserWallet;
 import org.ipan.nrgyrent.domain.model.projections.WalletWithAutoTopupSession;
 import org.ipan.nrgyrent.domain.model.repository.AutoDelegationSessionRepo;
 import org.ipan.nrgyrent.domain.service.UserService;
 import org.ipan.nrgyrent.domain.service.UserWalletService;
+import org.ipan.nrgyrent.itrx.AppConstants;
 import org.ipan.nrgyrent.itrx.InactiveAddressException;
 import org.ipan.nrgyrent.itrx.RestClient;
 import org.ipan.nrgyrent.itrx.dto.CreateDelegatePolicyResponse;
@@ -25,6 +27,7 @@ import org.ipan.nrgyrent.telegram.statetransitions.MatchStates;
 import org.ipan.nrgyrent.telegram.statetransitions.TransitionHandler;
 import org.ipan.nrgyrent.telegram.statetransitions.UpdateType;
 import org.ipan.nrgyrent.telegram.views.AutoDelegationViews;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.message.Message;
@@ -33,7 +36,6 @@ import java.util.Collections;
 import java.util.List;
 
 @TransitionHandler
-@AllArgsConstructor
 @Slf4j
 public class AutoDelegationHandler {
     private final AutoDelegationViews autoDelegationViews;
@@ -42,8 +44,29 @@ public class AutoDelegationHandler {
     private final AutoDelegationSessionRepo autoDelegationSessionRepo;
     private final EnergyService energyService;
     private final RestClient itrxRestClient;
+    private final RestClient trxxRestClient;
     private final UserService userService;
     private final UserWalletService userWalletService;
+
+    public AutoDelegationHandler(AutoDelegationViews autoDelegationViews,
+                                 TelegramMessages telegramMessages,
+                                 TelegramState telegramState,
+                                 AutoDelegationSessionRepo autoDelegationSessionRepo,
+                                 EnergyService energyService,
+                                 RestClient itrxRestClient,
+                                 @Qualifier(AppConstants.TRXX_REST_CLIENT) RestClient trxxRestClient,
+                                 UserService userService,
+                                 UserWalletService userWalletService) {
+        this.autoDelegationViews = autoDelegationViews;
+        this.telegramMessages = telegramMessages;
+        this.telegramState = telegramState;
+        this.autoDelegationSessionRepo = autoDelegationSessionRepo;
+        this.energyService = energyService;
+        this.itrxRestClient = itrxRestClient;
+        this.trxxRestClient = trxxRestClient;
+        this.userService = userService;
+        this.userWalletService = userWalletService;
+    }
 
     @MatchStates({
             @MatchState(state = States.MAIN_MENU, callbackData = InlineMenuCallbacks.AUTOTOPUP),
@@ -78,7 +101,13 @@ public class AutoDelegationHandler {
                 AutoDelegationSession newSession = null;
                 try {
                     newSession = energyService.startAutoTopupSession(userState, toggleWalletSession.getAddress());
-                    CreateDelegatePolicyResponse createDelegatePolicyResponse = itrxRestClient.createDelegatePolicy(0, toggleWalletSession.getAddress());
+
+                    CreateDelegatePolicyResponse createDelegatePolicyResponse;
+                    if (newSession.getEnergyProvider() == EnergyProviderName.TRXX) {
+                        createDelegatePolicyResponse = trxxRestClient.createDelegatePolicy(0, toggleWalletSession.getAddress());
+                    } else {
+                        createDelegatePolicyResponse = itrxRestClient.createDelegatePolicy(0, toggleWalletSession.getAddress());
+                    }
 
                     if (createDelegatePolicyResponse.getErrno() != 0) {
                         logger.error("Something went wrong when creating a auto delegation session, response {}", createDelegatePolicyResponse);

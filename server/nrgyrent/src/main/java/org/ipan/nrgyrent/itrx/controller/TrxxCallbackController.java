@@ -1,8 +1,8 @@
 package org.ipan.nrgyrent.itrx.controller;
 
-import java.util.Map;
-import java.util.TreeMap;
-
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.HmacAlgorithms;
 import org.apache.commons.codec.digest.HmacUtils;
 import org.ipan.nrgyrent.domain.model.EnergyProviderName;
@@ -16,29 +16,27 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-
-import lombok.extern.slf4j.Slf4j;
+import java.util.Map;
+import java.util.TreeMap;
 
 @RestController
 @Slf4j
-public class ItrxCallbackController {
+public class TrxxCallbackController {
     private static final Gson gson = new GsonBuilder().disableHtmlEscaping().serializeNulls().create();
 
-    @Value("${app.itrx.key}")
+    @Value("${app.trxx.key}")
     String apiKey;
-    @Value("${app.itrx.secret}")
+    @Value("${app.trxx.secret}")
     String apiSecret;
 
     @Autowired
     ItrxService itrxService;
 
-    @PostMapping("/api/itrx/callback")
+    @PostMapping("/api/trxx/callback")
     public ResponseEntity<?> handleCallback(@RequestHeader("TIMESTAMP") String timestamp,
                                             @RequestHeader("SIGNATURE") String signature,
                                             @RequestBody Map<String, Object> requestBody) throws Exception {
-        logger.info("Received callback: {}", requestBody);
+        logger.info("TRXX. Received callback: {}", requestBody);
 
         TreeMap<String, Object> sortedBody = new TreeMap<>(requestBody);
         String jsonData = gson.toJson(sortedBody);
@@ -48,13 +46,13 @@ public class ItrxCallbackController {
         String expectedSignature = new HmacUtils(HmacAlgorithms.HMAC_SHA_256, apiSecret).hmacHex(message);
 
         if (!signature.equals(expectedSignature)) {
-            logger.error("Invalid signature: expected {}, got {}", expectedSignature, signature);
+            logger.error("TRXX. Invalid signature: expected {}, got {}", expectedSignature, signature);
             return ResponseEntity.status(401).body("Invalid signature");
         }
 
         OrderCallbackRequest placeOrderResponse = gson.fromJson(jsonData, OrderCallbackRequest.class);
 
-        itrxService.processCallback(placeOrderResponse, EnergyProviderName.ITRX);
+        itrxService.processCallback(placeOrderResponse, EnergyProviderName.TRXX);
 
         return ResponseEntity.ok().build();
     }

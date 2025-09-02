@@ -1,6 +1,8 @@
 package org.ipan.nrgyrent;
 
 import org.ipan.nrgyrent.domain.service.CollectionWalletService;
+import org.ipan.nrgyrent.itrx.AppConstants;
+import org.ipan.nrgyrent.itrx.RestClient;
 import org.ipan.nrgyrent.telegram.TelegramMsgScopeBpp;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -29,6 +31,12 @@ public class Config {
     @Autowired
     CollectionWalletService collectionWalletService;
 
+    @Autowired
+    ItrxConfig itrxConfig;
+
+    @Autowired
+    TrxxConfig trxxConfig;
+
 
     @PostConstruct
     public void initializeApplication() {
@@ -46,5 +54,15 @@ public class Config {
         source.setBasename("messages");
         source.setDefaultEncoding("UTF-8");
         return source;
+    }
+
+    @Bean
+    public RestClient itrxRestClient() {
+        return new RestClient(itrxConfig);
+    }
+
+    @Bean(value = AppConstants.TRXX_REST_CLIENT)
+    public RestClient trxxRestClient() {
+        return new RestClient(trxxConfig);
     }
 }

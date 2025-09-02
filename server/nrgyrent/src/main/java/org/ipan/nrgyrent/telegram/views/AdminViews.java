@@ -113,6 +113,19 @@ public class AdminViews {
 
     @Retryable
     @SneakyThrows
+    public void currentAutoEnergyProvider(UserState userState, EnergyProviderName energyProviderName) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
+                .text(adminLabels.autoEnergyProvider(energyProviderName.toString()))
+                .replyMarkup(getEnergyProvidersReplyMarkup())
+                .build();
+        tgClient.execute(message);
+    }
+
+    @Retryable
+    @SneakyThrows
     public void sweepWalletsBalance(UserState userState, Map<CollectionWallet, Long> results) {
         EditMessageText message = EditMessageText
                 .builder()
@@ -201,6 +214,13 @@ public class AdminViews {
                                         .builder()
                                         .text(adminLabels.menuEnergyProvider())
                                         .callbackData(InlineMenuCallbacks.MANAGE_ENERGY_PROVIDER)
+                                        .build()))
+                .keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text(adminLabels.menuAutoEnergyProvider())
+                                        .callbackData(InlineMenuCallbacks.MANAGE_AUTO_ENERGY_PROVIDER)
                                         .build()))
                 .keyboardRow(
                         new InlineKeyboardRow(

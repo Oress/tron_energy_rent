@@ -208,6 +208,7 @@ public class BalanceService {
         Balance balance = new Balance();
         balance.setLabel(label);
         balance.setEnergyProvider(nrgConfigsService.readCurrentProviderConfig());
+        balance.setAutoEnergyProvider(nrgConfigsService.readCurrentAutoProviderConfig());
         balance.setType(BalanceType.GROUP);
         balance.setManager(manager);
         balance.setDepositAddress(depositWallet.getBase58Address());
@@ -233,6 +234,7 @@ public class BalanceService {
         balance.setType(BalanceType.INDIVIDUAL);
         balance.setDepositAddress(depositWallet.getBase58Address());
         balance.setEnergyProvider(nrgConfigsService.readCurrentProviderConfig());
+        balance.setAutoEnergyProvider(nrgConfigsService.readCurrentAutoProviderConfig());
 
         balance.setTariff(getTariffOrDefault(command.getTariffId()));
         setDefaultWithdrawLimits(balance);

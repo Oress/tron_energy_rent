@@ -40,7 +40,8 @@ public class CatfeeService implements EnergyProvider {
                 data.getReceiver(),
                 data.getPay_amount_sun(),
                 data.getDuration(),
-                data.getQuantity()
+                data.getQuantity(),
+                EnergyProviderName.CATFEE
         );
         eventPublisher.publishBalanceUpdateEvent(EnergyProviderName.CATFEE, data.getBalance());
 

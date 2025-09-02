@@ -7,6 +7,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
 
+import org.ipan.nrgyrent.ItrxConfig;
 import org.ipan.nrgyrent.itrx.dto.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.retry.annotation.Retryable;
@@ -25,14 +26,17 @@ public class RestClient {
     private final MediaType mediaType = MediaType.parse("application/json");
     private final Gson gson = new GsonBuilder().disableHtmlEscaping().create();
 
-    @Value("${app.itrx.base-url}")
-    public String baseUrl;
-    @Value("${app.itrx.key}")
-    public String apiKey;
-    @Value("${app.itrx.secret}")
-    public String apiSecret;
-    @Value("${app.itrx.callback-url}")
-    public String callbackUrl;
+    public final String baseUrl;
+    public final String apiKey;
+    public final String apiSecret;
+    public final String callbackUrl;
+
+    public RestClient(ItrxConfig itrxConfig) {
+        this.baseUrl = itrxConfig.getBaseUrl();
+        this.apiKey = itrxConfig.getKey();
+        this.apiSecret = itrxConfig.getSecret();
+        this.callbackUrl = itrxConfig.getCallbackUrl();
+    }
 
     // Rental period, 1H/1D/3D/30D
     @SneakyThrows

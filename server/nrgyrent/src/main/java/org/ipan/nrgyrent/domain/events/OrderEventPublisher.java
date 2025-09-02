@@ -12,8 +12,9 @@ public class OrderEventPublisher {
 
     public void publishOrderCompletedEvent(String correlationId, Integer responseStatus, String txId,
                                            String serial, Boolean isAutoDelegation, String receiveAddress,
-                                           Long amount, String duration, Integer energyAmount) {
+                                           Long amount, String duration, Integer energyAmount,EnergyProviderName providerName) {
         eventPublisher.publishEvent(new OrderCompletedEvent(this, correlationId, responseStatus, txId, serial,
+                providerName,
                 isAutoDelegation, receiveAddress, amount, duration, energyAmount));
     }
 

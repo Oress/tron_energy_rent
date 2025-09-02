@@ -47,6 +47,7 @@ public class AutoDelegationSessionService {
         newSession.setUser(user);
         newSession.setMessageToUpdate(messageId);
         newSession.setChatId(chatId);
+        newSession.setEnergyProvider(balanceToUse.getEnergyProvider());
 
         autoDelegationSessionRepo.save(newSession);
 

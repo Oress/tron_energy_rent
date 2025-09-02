@@ -1,6 +1,7 @@
 package org.ipan.nrgyrent.domain.events;
 
 import lombok.Getter;
+import org.ipan.nrgyrent.domain.model.EnergyProviderName;
 import org.springframework.context.ApplicationEvent;
 
 @Getter
@@ -9,6 +10,7 @@ public class OrderCompletedEvent extends ApplicationEvent {
     private final String txId;
     private final String correlationId;
     private final String serial;
+    private final EnergyProviderName providerName;
 
     private final Boolean isAutoDelegation;
     private final String receiveAddress;
@@ -17,13 +19,14 @@ public class OrderCompletedEvent extends ApplicationEvent {
     private final Integer energyAmount;
 
     public OrderCompletedEvent(Object eventSource, String correlationId, Integer itrxStatus, String txId,
-                               String serial, Boolean isAutoDelegation, String receiveAddress,
+                               String serial, EnergyProviderName providerName, Boolean isAutoDelegation, String receiveAddress,
                                Long amount, String duration, Integer energyAmount) {
         super(eventSource);
         this.itrxStatus = itrxStatus;
         this.txId = txId;
         this.correlationId = correlationId;
         this.serial = serial;
+        this.providerName = providerName;
         this.isAutoDelegation = isAutoDelegation;
         this.receiveAddress = receiveAddress;
         this.amount = amount;

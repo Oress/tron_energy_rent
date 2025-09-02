@@ -102,11 +102,17 @@ app:
   mapdb:
     db-path: ${APP_MAPDB_PATH:cache/nrgyrent.db}
   itrx:
-    auto-delegation-threshold: ${APP_ITRX_AUTO_DELEGATION_THRESHOLD:3900000} # 3.9 TRX
+    auto-delegation-threshold: ${APP_ITRX_AUTO_DELEGATION_THRESHOLD:3000000} # 3 TRX
     base-url: ${APP_ITRX_BASE_URL:"https://nile.itrx.io"} # For mainnet, use https://api.itrx.io
     callback-url: ${APP_ITRX_CALLBACK_URL}
     key: ${APP_ITRX_API_KEY}
     secret: ${APP_ITRX_API_SECRET}
+  trxx:
+    auto-delegation-threshold: ${APP_TRXX_AUTO_DELEGATION_THRESHOLD:2500000} # 2.5 TRX
+    base-url: ${APP_TRXX_BASE_URL:https://trxx.io}
+    callback-url: ${APP_TRXX_CALLBACK_URL}
+    key: ${APP_TRXX_API_KEY:blabla}
+    secret: ${APP_TRXX_API_SECRET:blabla}
   catfee:
     base-url: ${APP_CATFEE_BASE_URL:"https://nile.catfee.io"} # For mainnet, use https://api.catfee.io
     key: ${APP_CATFEE_API_KEY}
