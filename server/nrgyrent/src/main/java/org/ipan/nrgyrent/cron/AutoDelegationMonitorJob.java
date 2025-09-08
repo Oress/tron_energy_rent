@@ -27,7 +27,7 @@ import java.util.List;
 @AllArgsConstructor
 @Slf4j
 public class AutoDelegationMonitorJob {
-    public static final int MAX_IDLE_MINUTES = 24 * 60 - 20;
+    public static final int MAX_IDLE_MINUTES = 48 * 60 - 20;
 
     private final AutoDelegationSessionRepo autoDelegationSessionRepo;
     private final OrderRepo orderRepo;
