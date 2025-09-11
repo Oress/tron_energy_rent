@@ -50,8 +50,8 @@ public class UsdtDepositHelper {
 
         // leave 1 cent for cheaper energy in the future
         BigDecimal amount = BigDecimal.valueOf(depositTransaction.getOriginalAmount())
-                .subtract(new BigDecimal("0.01"))
-                .divide(BigDecimal.valueOf(1_000_000), 2, RoundingMode.DOWN);
+                .divide(BigDecimal.valueOf(1_000_000), 2, RoundingMode.DOWN)
+                .subtract(new BigDecimal("0.01"));
 
         InternalTransferResponse internalTransferResponse = bybitRestClient.internalTransfer("FUND", "UNIFIED", amount, "USDT");
 
@@ -67,7 +67,7 @@ public class UsdtDepositHelper {
         logger.info("Bybit. Successfully placed internal transfer : {}", internalTransferResponse);
 
         // This is bad as f
-        Thread.sleep(1000);
+        Thread.sleep(5000);
 
         PlaceOrderResponse response = bybitRestClient.placeMarketOrderTRXUSDT(amount);
         if (response.getRetCode() != 0) {
@@ -81,7 +81,7 @@ public class UsdtDepositHelper {
         depositTransaction.setStatus(DepositStatus.USDT_MARKET_ORDER_PLACED);
         depositTransactionRepo.save(depositTransaction);
 
-        Thread.sleep(1000);
+        Thread.sleep(5000);
         result = bybitRestClient.getOrderStatus(response.getResult().getOrderId());
         if (!"Filled".equals(result.getOrderStatus())) {
             logger.error("Bybit. Order has unexpected status: {}", result);

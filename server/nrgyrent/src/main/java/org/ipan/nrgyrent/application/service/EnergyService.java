@@ -3,6 +3,7 @@ package org.ipan.nrgyrent.application.service;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.ipan.nrgyrent.catfee.CatfeeService;
 import org.ipan.nrgyrent.domain.events.autotopup.AutoDelegationSessionEventPublisher;
 import org.ipan.nrgyrent.domain.exception.NotEnoughBalanceException;
 import org.ipan.nrgyrent.domain.model.*;
@@ -40,6 +41,7 @@ public class EnergyService {
 
     private final TelegramState telegramState;
     private final ItrxService itrxService;
+    private final CatfeeService catfeeService;
     private final RestClient itrxRestClient;
     private final RestClient trxxRestClient;
     private final OrderService orderService;
@@ -50,7 +52,7 @@ public class EnergyService {
     private final AutoDelegationSessionEventPublisher autoDelegationSessionEventPublisher;
 
     public EnergyService(TelegramState telegramState,
-                         ItrxService itrxService,
+                         ItrxService itrxService, CatfeeService catfeeService,
                          RestClient itrxRestClient,
                          @Qualifier(AppConstants.TRXX_REST_CLIENT) RestClient trxxRestClient,
                          OrderService orderService,
@@ -60,6 +62,7 @@ public class EnergyService {
                          AutoDelegationSessionEventPublisher autoDelegationSessionEventPublisher) {
         this.telegramState = telegramState;
         this.itrxService = itrxService;
+        this.catfeeService = catfeeService;
         this.itrxRestClient = itrxRestClient;
         this.trxxRestClient = trxxRestClient;
         this.orderService = orderService;
@@ -212,6 +215,9 @@ public class EnergyService {
             UUID correlationId = UUID.randomUUID();
             EstimateOrderAmountResponse estimateOrderResponse = itrxService.estimateOrderPrice(energyAmount, duration, receiveAddress);
 
+            // TODO: for testing purpose only, remove later
+//            estimateOrderResponse.setEnergy_amount(AppConstants.ENERGY_65K);
+
             try {
                 var builder = AddOrUpdateOrderCommand.builder()
                         .receiveAddress(receiveAddress)
@@ -222,15 +228,7 @@ public class EnergyService {
                         .itrxFeeSunAmount(estimateOrderResponse.getTotal_price())
                         .correlationId(correlationId.toString());
                 pendingOrder = orderService.createPendingOrder(builder.build());
-                PlaceOrderResponse placeOrderResponse = itrxService.placeOrder(estimateOrderResponse.getEnergy_amount(), duration, receiveAddress,
-                        correlationId);
-
-                if (placeOrderResponse.getErrno() != ITRX_OK_CODE) {
-                    orderService.refundOrder(
-                            AddOrUpdateOrderCommand.builder()
-                                    .correlationId(correlationId.toString())
-                                    .build());
-                }
+                catfeeService.placeOrder(estimateOrderResponse.getEnergy_amount(), duration, receiveAddress, correlationId);
             } catch (Exception e) {
                 logger.error("Error while placing order ", e);
                 if (pendingOrder != null) {

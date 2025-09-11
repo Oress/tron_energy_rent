@@ -38,6 +38,9 @@ public class UsdtDepositOrchestrator {
     @Async(CronJobConfig.USDT_DEPOSIT_EXECUTOR)
     public void continueOrchestrateUsdtDepositWithOrderId(String orderCorrelationId) {
         try {
+            // just in case depositTransaction can be locked.
+            Thread.sleep(5000);
+
             DepositTransaction depositTransaction = depositTransactionRepo.findBySystemOrderCorrelationId(orderCorrelationId);
 
             String txId = usdtDepositHelper.transferUsdtToBybit(depositTransaction);
@@ -48,7 +51,7 @@ public class UsdtDepositOrchestrator {
 
             // skip it for dev, leave it for prod, because bybit testnet does not support nile tests
             if (!configurableEnvironment.matchesProfiles("dev")) {
-                for (int i = 0; i < 20; i++) {
+                for (int i = 0; i < 60; i++) {
                     DepositData depositData = bybitRestClient.getUsdtDeposits(txId);
                     // https://bybit-exchange.github.io/docs/v5/enum#depositstatus
                     if (depositData != null && depositData.getStatus() != null && (depositData.getStatus() == 10012 || depositData.getStatus() == 3)) {

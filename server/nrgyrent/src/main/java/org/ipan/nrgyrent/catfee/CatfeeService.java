@@ -45,6 +45,6 @@ public class CatfeeService implements EnergyProvider {
         );
         eventPublisher.publishBalanceUpdateEvent(EnergyProviderName.CATFEE, data.getBalance());
 
-        return null;
+        return new PlaceOrderResponse();
     }
 }

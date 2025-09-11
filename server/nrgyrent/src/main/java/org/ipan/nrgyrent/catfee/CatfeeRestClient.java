@@ -96,8 +96,8 @@ public class CatfeeRestClient {
         String details = placeOrderResponse.getMsg() != null ? placeOrderResponse.getMsg() : "";
 
         if (details.contains("balance is too lower")) {
-            logger.error("ITRX balance is insufficient: {}", details);
-            throw new ItrxInsufficientFundsException("ITRX balance is insufficient: " + details);
+            logger.error("CATFEE balance is insufficient: {}", details);
+            throw new ItrxInsufficientFundsException("CATFEE balance is insufficient: " + details);
         }
 
         if (placeOrderResponse.getCode() != 0) {

@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
 import org.ipan.nrgyrent.BybitConfig;
 import org.ipan.nrgyrent.bybit.dto.*;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.Mac;
@@ -246,6 +247,7 @@ public class BybitRestClient {
     }
 
     @SneakyThrows
+    @Retryable
     public GetOrderData getOrderStatus(String orderId) {
         String timestamp = String.valueOf(System.currentTimeMillis());
 

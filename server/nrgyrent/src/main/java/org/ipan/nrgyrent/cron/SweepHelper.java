@@ -85,7 +85,7 @@ public class SweepHelper {
                 if (code == null || code.isEmpty()) {
                     logger.info("Sweeping Successful {} sun from {} to coll. wallet {} txid: {}", amountToTransfer, balance.getDepositAddress(), collectionWallet.getWalletAddress(), broadcastResult.get("txid"));
                 } else {
-                    logger.error("Sweeping Successful {} sun from {} to coll. wallet {} error: {}", amountToTransfer, balance.getDepositAddress(), collectionWallet.getWalletAddress(), broadcastResult.get("message"));
+                    logger.error("Sweeping {} sun from {} to coll. wallet {} error: {}", amountToTransfer, balance.getDepositAddress(), collectionWallet.getWalletAddress(), broadcastResult.get("message"));
                 }
             }
         }
