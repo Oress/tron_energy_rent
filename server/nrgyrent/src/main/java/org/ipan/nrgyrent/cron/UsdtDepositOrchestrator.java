@@ -39,7 +39,8 @@ public class UsdtDepositOrchestrator {
     public void continueOrchestrateUsdtDepositWithOrderId(String orderCorrelationId) {
         try {
             // just in case depositTransaction can be locked.
-            Thread.sleep(5000);
+            // and wait for actual energy delegation.
+            Thread.sleep(50000);
 
             DepositTransaction depositTransaction = depositTransactionRepo.findBySystemOrderCorrelationId(orderCorrelationId);
 
