@@ -1231,4 +1231,10 @@
             <column name="energy_provider" type="text" defaultValue="ITRX" />
         </addColumn>
     </changeSet>
+
+    <changeSet id="extend nrg_withdrawal_orders with activation_fee_sun_amount" author="oress">
+        <addColumn tableName="nrg_withdrawal_orders">
+            <column name="activation_fee_sun_amount" type="bigint" />
+        </addColumn>
+    </changeSet>
 </databaseChangeLog>

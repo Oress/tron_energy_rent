@@ -39,6 +39,10 @@ public class WithdrawLabels {
         return getLocalizedMessage("withdraw.success");
     }
 
+    public String successWithActivation() {
+        return getLocalizedMessage("withdraw.success.with_activation");
+    }
+
     public String notEnoughtBalance() {
         return getLocalizedMessage("withdraw.not_enough_balance");
     }

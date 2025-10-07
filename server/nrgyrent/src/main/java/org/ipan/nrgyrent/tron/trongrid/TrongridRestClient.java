@@ -5,6 +5,7 @@ import java.util.*;
 
 import org.ipan.nrgyrent.TrongridConfig;
 import org.ipan.nrgyrent.tron.trongrid.model.*;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -86,6 +87,7 @@ public class TrongridRestClient {
     }
 
 
+    @Retryable
     public TreeMap<String, Object> createTransaction(String from, String to, long amount) {
         String responseStr = "";
         try {
@@ -122,6 +124,7 @@ public class TrongridRestClient {
         return new TreeMap<>();
     }
 
+    @Retryable
     public TreeMap<String, Object> broadcastTransaction(Map<String, Object> transactionData) {
         String responseStr = "";
         try {
@@ -242,6 +245,7 @@ public class TrongridRestClient {
         return result;
     }
 
+    @Retryable
     public TreeMap<String, Object> createAccount(String ownerAddress, String address) {
         String responseStr = "";
         try {
@@ -275,6 +279,7 @@ public class TrongridRestClient {
         return new TreeMap<>();
     }
 
+    @Retryable
     public AccountInfo getAccountInfo(String depositAddress) {
         AccountInfo result = null;
 

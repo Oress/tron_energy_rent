@@ -35,6 +35,7 @@ public class AppConstants {
     public static final Long PRICE_65K = 5_500_000L;
     public static final Long PRICE_131K = 8_600_000L;
 
+    public static final Long WALLET_ACTIVATION_FEE = 1_100_000L;
     public static final Long WITHDRAWAL_FEE = 1_000_000L;
 
     public static final Long MIN_TRANSFER_AMOUNT_USDT = 10_000_000L; // 10 USDT

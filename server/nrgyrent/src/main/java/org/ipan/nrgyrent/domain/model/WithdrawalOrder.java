@@ -46,6 +46,9 @@ public class WithdrawalOrder {
     @Column(name = "fee_sun_amount")
     private Long feeSunAmount;
 
+    @Column(name = "activation_fee_sun_amount")
+    private Long activationFeeSunAmount;
+
     @Column(name = "receive_address")
     private String receiveAddress;
 

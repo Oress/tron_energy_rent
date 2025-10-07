@@ -10,6 +10,7 @@ import org.ipan.nrgyrent.domain.model.WithdrawalOrder;
 import org.ipan.nrgyrent.domain.model.WithdrawalStatus;
 import org.ipan.nrgyrent.domain.model.repository.UserRepo;
 import org.ipan.nrgyrent.domain.model.repository.WithdrawalOrderRepo;
+import org.ipan.nrgyrent.itrx.AppConstants;
 import org.springframework.beans.factory.annotation.Lookup;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,7 +28,7 @@ public class WithdrawalOrderService {
     private final BalanceService balanceService;
 
     @Transactional
-    public WithdrawalOrder createPendingOrder(Long userId, Long amountSun, Long feeAmountSun, String receiveAddress) {
+    public WithdrawalOrder createPendingOrder(Long userId, Long amountSun, Long feeAmountSun, String receiveAddress, Long activationFee) {
         AppUser user = userRepo.findById(userId).orElse(null);
         if (user == null) {
             logger.error("User is not found id: {}", userId);
@@ -40,7 +41,7 @@ public class WithdrawalOrderService {
         }
 
         Balance targetBalance = user.getBalanceToUse();
-        balanceService.subtractSunBalance(targetBalance, amountSun + feeAmountSun);
+        balanceService.subtractSunBalance(targetBalance, amountSun + feeAmountSun + activationFee);
         balanceService.subtractWithdrawLimit(targetBalance, amountSun);
         logger.info("User {} withdrawing {} to {}", userId,  amountSun, receiveAddress);
 
@@ -51,6 +52,7 @@ public class WithdrawalOrderService {
         order.setSunAmount(amountSun);
         order.setFeeSunAmount(feeAmountSun);
         order.setReceiveAddress(receiveAddress);
+        order.setActivationFeeSunAmount(activationFee);
 
         withdrawalOrderRepo.save(order);
         logger.info("Creating withdrawal request id {} user id {} amount {} balance id {} receive wallet {}", order.getId(), userId, amountSun, targetBalance.getId(), receiveAddress);

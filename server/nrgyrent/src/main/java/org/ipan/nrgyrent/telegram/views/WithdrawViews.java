@@ -59,11 +59,11 @@ public class WithdrawViews {
     }
 
     @SneakyThrows
-    public void updWithdrawalSuccessful(UserState userState) {
+    public void updWithdrawalSuccessful(UserState userState, boolean wasActivated) {
         EditMessageText message = EditMessageText
                 .builder()
                 .chatId(userState.getChatId())
-                .text(withdrawLabels.success())
+                .text(wasActivated ? withdrawLabels.successWithActivation() : withdrawLabels.success() )
                 .messageId(userState.getMenuMessageId())
                 .replyMarkup(getOrderRefundedNotificationMarkup())
                 .build();

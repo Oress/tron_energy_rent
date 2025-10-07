@@ -2,18 +2,16 @@ package org.ipan.nrgyrent.telegram.handlers;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.TreeMap;
 
 import org.ipan.nrgyrent.domain.exception.NotManagerException;
-import org.ipan.nrgyrent.domain.model.AppUser;
-import org.ipan.nrgyrent.domain.model.Balance;
-import org.ipan.nrgyrent.domain.model.CollectionWallet;
-import org.ipan.nrgyrent.domain.model.ManagedWallet;
-import org.ipan.nrgyrent.domain.model.WithdrawalOrder;
+import org.ipan.nrgyrent.domain.model.*;
 import org.ipan.nrgyrent.domain.model.repository.CollectionWalletRepo;
 import org.ipan.nrgyrent.domain.model.repository.ManagedWalletRepo;
 import org.ipan.nrgyrent.domain.model.repository.UserRepo;
 import org.ipan.nrgyrent.domain.service.ManagedWalletService;
 import org.ipan.nrgyrent.domain.service.WithdrawalOrderService;
+import org.ipan.nrgyrent.itrx.AppConstants;
 import org.ipan.nrgyrent.telegram.state.TelegramState;
 import org.ipan.nrgyrent.telegram.state.UserState;
 import org.ipan.nrgyrent.telegram.statetransitions.TransitionHandler;
@@ -45,7 +43,11 @@ public class WithdrawalHandlerHelper {
 
         AppUser user = userRepo.findById(userId).get();
 
-        Long totalSubstractSumAmount = amountSun + fee;
+        AccountInfo accountInfo = trongridRestClient.getAccountInfo(toWallet);
+        boolean needsActivation = accountInfo == null;
+        Long activationFee = needsActivation ? AppConstants.WALLET_ACTIVATION_FEE : 0;
+
+        Long totalSubstractSumAmount = amountSun + fee + activationFee;
 
         withdrawBalance = user.getBalanceToUse();
 
@@ -92,7 +94,11 @@ public class WithdrawalHandlerHelper {
 
         WithdrawalOrder withdrawalOrder = null;
         try {
-            withdrawalOrder = withdrawalOrderService.createPendingOrder(userId, amountSun, fee, toWallet);
+            withdrawalOrder = withdrawalOrderService.createPendingOrder(userId, amountSun, fee, toWallet, activationFee);
+
+            if (needsActivation) {
+                tryActivateWallet(toWallet);
+            }
 
             String resultingTxId = tronTransactionHelper.performTransferTransaction(
                     walletToWithdrawFrom,
@@ -103,7 +109,7 @@ public class WithdrawalHandlerHelper {
             withdrawalOrderService.completeOrder(withdrawalOrder.getId(), resultingTxId);
 
             UserState userState = telegramState.getOrCreateUserState(userId);
-             withdrawViews.updWithdrawalSuccessful(userState);
+             withdrawViews.updWithdrawalSuccessful(userState, needsActivation);
             logger.info("User {} has successfully withdrawn {} from {} to {}", userId, amountSun, walletToWithdrawFrom, toWallet);
         } catch (NotManagerException e) {
             logger.error("Member of a group tries to withdraw.", e);
@@ -133,4 +139,15 @@ public class WithdrawalHandlerHelper {
 
         return null;
     }
+
+    public void tryActivateWallet(String address) {
+        CollectionWallet firstByIsActive = collectionWalletRepo.findFirstByIsActive(true);
+        ManagedWallet managedWallet = managedWalletRepo.findById(firstByIsActive.getWalletAddress()).get();
+        TreeMap<String, Object> transaction = trongridRestClient.createAccount(managedWallet.getBase58Address(), address);
+        String txId = (String) transaction.get("txID");
+        String signature = managedWalletService.sign(managedWallet, txId);
+        transaction.put("signature", List.of(signature));
+        TreeMap<String, Object> broadcastTransaction = trongridRestClient.broadcastTransaction(transaction);
+    }
+
 }
