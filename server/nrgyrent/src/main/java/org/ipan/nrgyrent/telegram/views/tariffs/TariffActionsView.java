@@ -29,7 +29,8 @@ public class TariffActionsView {
 
     @SneakyThrows
     public void updMenuToManageTariffActionsMenu(UserState userState, Tariff tariff) {
-        boolean canChange = !tariff.getPredefined() && tariff.getActive();
+//        boolean canChange = !tariff.getPredefined() && tariff.getActive();
+        boolean canChange = tariff.getActive();
 
         EditMessageText message = EditMessageText
                 .builder()

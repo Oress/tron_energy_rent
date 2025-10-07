@@ -59,7 +59,7 @@ public class TariffsSearchHandler {
         TariffSearchState searchState = telegramState.getOrCreateTariffSearchState(userState.getTelegramId());
         telegramState.updateTariffSearchState(userState.getTelegramId(), searchState.withCurrentPage(0).withQuery(""));
 
-        Page<Tariff> nextPage = tariffRepo.findAll(PageRequest.of(0, pageSize).withSort(Sort.by(Sort.Direction.ASC, Tariff_.ID)));
+        Page<Tariff> nextPage = tariffRepo.findAll(PageRequest.of(0, pageSize).withSort(Sort.by(Sort.Direction.ASC, Tariff_.TRANSACTION_TYPE1_AMOUNT_SUN, Tariff_.ID)));
         tariffsSearchView.updMenuToTariffSearchResult(nextPage, userState);
         telegramState.updateUserState(userState.getTelegramId(),
                 userState.withState(States.ADMIN_MANAGE_TARIFFS_SEARCH));
@@ -80,7 +80,8 @@ public class TariffsSearchHandler {
 
             TariffSearchState searchState = telegramState.getOrCreateTariffSearchState(userState.getTelegramId());
             telegramState.updateTariffSearchState(userState.getTelegramId(), searchState.withQuery(queryStr));
-            Page<Tariff> firstPage = tariffRepo.findByLabelContainingIgnoreCaseOrderById(queryStr, PageRequest.of(0, pageSize));
+            Page<Tariff> firstPage = tariffRepo.findByLabelContainingIgnoreCaseOrderById(queryStr, PageRequest.of(0, pageSize)
+                    .withSort(Sort.Direction.ASC, Tariff_.TRANSACTION_TYPE1_AMOUNT_SUN, Tariff_.TRANSACTION_TYPE2_AMOUNT_SUN));
             tariffsSearchView.updMenuToTariffSearchResult(firstPage, userState);
         }
     }
@@ -93,7 +94,8 @@ public class TariffsSearchHandler {
         int pageNumber = searchState.getCurrentPage() + 1;
         String queryStr = searchState.getQuery();
         telegramState.updateTariffSearchState(userState.getTelegramId(), searchState.withCurrentPage(pageNumber));
-        Page<Tariff> nextPage = tariffRepo.findByLabelContainingIgnoreCaseOrderById(queryStr, PageRequest.of(pageNumber, pageSize));
+        Page<Tariff> nextPage = tariffRepo.findByLabelContainingIgnoreCaseOrderById(queryStr, PageRequest.of(pageNumber, pageSize)
+                .withSort(Sort.Direction.ASC, Tariff_.TRANSACTION_TYPE1_AMOUNT_SUN, Tariff_.TRANSACTION_TYPE2_AMOUNT_SUN));
         tariffsSearchView.updMenuToTariffSearchResult(nextPage, userState);
         telegramState.updateUserState(userState.getTelegramId(),
                 userState.withState(States.ADMIN_MANAGE_TARIFFS_SEARCH));
@@ -107,7 +109,8 @@ public class TariffsSearchHandler {
         int pageNumber = searchState.getCurrentPage() - 1;
         String queryStr = searchState.getQuery();
         telegramState.updateTariffSearchState(userState.getTelegramId(), searchState.withCurrentPage(pageNumber));
-        Page<Tariff> prevPage = tariffRepo.findByLabelContainingIgnoreCaseOrderById(queryStr, PageRequest.of(pageNumber, pageSize));
+        Page<Tariff> prevPage = tariffRepo.findByLabelContainingIgnoreCaseOrderById(queryStr, PageRequest.of(pageNumber, pageSize)
+                .withSort(Sort.Direction.ASC, Tariff_.TRANSACTION_TYPE1_AMOUNT_SUN, Tariff_.TRANSACTION_TYPE2_AMOUNT_SUN));
         tariffsSearchView.updMenuToTariffSearchResult(prevPage, userState);
         telegramState.updateUserState(userState.getTelegramId(),
                 userState.withState(States.ADMIN_MANAGE_TARIFFS_SEARCH));

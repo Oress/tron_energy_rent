@@ -14,10 +14,4 @@ public interface TariffRepo extends JpaRepository<Tariff, Long> {
 
     Page<Tariff> findByLabelContainingIgnoreCaseOrderById(String label, PageRequest page);
     Page<Tariff> findByActiveAndLabelContainingIgnoreCaseOrderById(Boolean active, String label, PageRequest page);
-
-    @Query("select t from AppUser u join u.balance b join b.tariff t where u.id = :userId")
-    Tariff findIndividualTariffByUserId(Long userId);
-
-    @Query("select t from AppUser u join u.groupBalance b join b.tariff t where u.id = :userId")
-    Tariff findGroupTariffByUserId(Long userId);
 }

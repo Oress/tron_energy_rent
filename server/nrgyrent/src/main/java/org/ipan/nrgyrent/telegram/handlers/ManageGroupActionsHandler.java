@@ -11,6 +11,7 @@ import org.ipan.nrgyrent.domain.exception.UsersMustBelongToTheSameGroupException
 import org.ipan.nrgyrent.domain.exception.UserNotRegisteredException;
 import org.ipan.nrgyrent.domain.model.AppUser;
 import org.ipan.nrgyrent.domain.model.Tariff;
+import org.ipan.nrgyrent.domain.model.Tariff_;
 import org.ipan.nrgyrent.domain.model.repository.AppUserRepo;
 import org.ipan.nrgyrent.domain.model.repository.TariffRepo;
 import org.ipan.nrgyrent.domain.service.BalanceService;
@@ -33,6 +34,7 @@ import org.ipan.nrgyrent.telegram.views.tariffs.TariffsSearchView;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.UserShared;
@@ -78,7 +80,8 @@ public class ManageGroupActionsHandler {
         TariffSearchState searchState = telegramState.getOrCreateTariffSearchState(userState.getTelegramId());
         telegramState.updateTariffSearchState(userState.getTelegramId(), searchState.withCurrentPage(0).withQuery(""));
 
-        Page<Tariff> nextPage = tariffRepo.findByActiveAndLabelContainingIgnoreCaseOrderById(true, "", PageRequest.of(0, pageSize));
+        Page<Tariff> nextPage = tariffRepo.findByActiveAndLabelContainingIgnoreCaseOrderById(true, "", PageRequest.of(0, pageSize)
+                .withSort(Sort.Direction.ASC, Tariff_.TRANSACTION_TYPE1_AMOUNT_SUN, Tariff_.TRANSACTION_TYPE2_AMOUNT_SUN));
         tariffsSearchView.updMenuToTariffSearchResult(nextPage, userState);
 
         telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.ADMIN_MANAGE_GROUPS_ACTION_CHANGE_TARIFF_SEARCHING));
@@ -92,7 +95,8 @@ public class ManageGroupActionsHandler {
         int pageNumber = searchState.getCurrentPage() + 1;
         String queryStr = searchState.getQuery();
         telegramState.updateTariffSearchState(userState.getTelegramId(), searchState.withCurrentPage(pageNumber));
-        Page<Tariff> nextPage = tariffRepo.findByActiveAndLabelContainingIgnoreCaseOrderById(true, queryStr, PageRequest.of(pageNumber, pageSize));
+        Page<Tariff> nextPage = tariffRepo.findByActiveAndLabelContainingIgnoreCaseOrderById(true, queryStr, PageRequest.of(pageNumber, pageSize)
+                .withSort(Sort.Direction.ASC, Tariff_.TRANSACTION_TYPE1_AMOUNT_SUN, Tariff_.TRANSACTION_TYPE2_AMOUNT_SUN));
         tariffsSearchView.updMenuToTariffSearchResult(nextPage, userState);
     }
 
@@ -104,7 +108,8 @@ public class ManageGroupActionsHandler {
         int pageNumber = searchState.getCurrentPage() - 1;
         String queryStr = searchState.getQuery();
         telegramState.updateTariffSearchState(userState.getTelegramId(), searchState.withCurrentPage(pageNumber));
-        Page<Tariff> prevPage = tariffRepo.findByActiveAndLabelContainingIgnoreCaseOrderById(true, queryStr, PageRequest.of(pageNumber, pageSize));
+        Page<Tariff> prevPage = tariffRepo.findByActiveAndLabelContainingIgnoreCaseOrderById(true, queryStr, PageRequest.of(pageNumber, pageSize)
+                .withSort(Sort.Direction.ASC, Tariff_.TRANSACTION_TYPE1_AMOUNT_SUN, Tariff_.TRANSACTION_TYPE2_AMOUNT_SUN));
         tariffsSearchView.updMenuToTariffSearchResult(prevPage, userState);
     }
 

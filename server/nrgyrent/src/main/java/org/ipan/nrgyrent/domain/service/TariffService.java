@@ -168,6 +168,11 @@ public class TariffService {
             throw new IllegalArgumentException("Tariff not found for deactivation");
         }
 
+        if (tariff.getPredefined()) {
+            logger.error("Tariff is predefined and cannot be deactivated: {}", tariffId);
+            throw new IllegalArgumentException("Tariff is predefined and cannot be deactivated");
+        }
+
         // Deactivate the tariff
         tariff.setActive(false);
 
