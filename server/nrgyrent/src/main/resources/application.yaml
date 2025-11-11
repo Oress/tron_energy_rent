@@ -117,6 +117,10 @@ app:
     base-url: ${APP_CATFEE_BASE_URL:"https://nile.catfee.io"} # For mainnet, use https://api.catfee.io
     key: ${APP_CATFEE_API_KEY}
     secret: ${APP_CATFEE_API_SECRET}
+  netts:
+    base-url: ${APP_NETTS_BASE_URL:https://netts.io}
+    key: ${APP_NETTS_API_KEY}
+    real-ip: ${APP_NETTS_API_IP}
   trongrid:
     qps: 14
     base-url: ${APP_TRONGRID_URL:https://nile.trongrid.io} # For mainnet, use https://api.trongrid.io

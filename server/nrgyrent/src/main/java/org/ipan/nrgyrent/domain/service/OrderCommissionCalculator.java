@@ -84,6 +84,7 @@ public class OrderCommissionCalculator {
                     result = referralProgram.getSubtractAmountTx1Itrx();
                     break;
                 case CATFEE:
+                case NETTS:
                     result = referralProgram.getSubtractAmountTx1Catfee();
                     break;
                 default:
@@ -110,6 +111,7 @@ public class OrderCommissionCalculator {
                     result = referralProgram.getSubtractAmountTx2Itrx();
                     break;
                 case CATFEE:
+                case NETTS:
                     result = referralProgram.getSubtractAmountTx2Catfee();
                     break;
                 default:

@@ -40,6 +40,10 @@ services:
       - APP_CATFEE_API_KEY
       - APP_CATFEE_API_SECRET
 
+      - APP_NETTS_BASE_URL
+      - APP_NETTS_API_KEY
+      - APP_NETTS_API_IP
+
       - APP_TRONGRID_URL
       - APP_TRONGRID_API_KEY
 

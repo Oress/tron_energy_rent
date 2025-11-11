@@ -86,6 +86,11 @@ public class AdminMenuHandler {
         showCurrentEnergyProvider(userState, update);
     }
 
+    @MatchState(forAdmin = true, state = States.ADMIN_VIEW_CURRENT_ENERGY_PROVIDER, callbackData = InlineMenuCallbacks.MANAGE_ENERGY_PROVIDER_CHOOSE_NETTS)
+    public void updateCurrentEnergyProviderToNetts(UserState userState, Update update) {
+        nrgConfigsService.updateCurrentProviderConfig(EnergyProviderName.NETTS);
+        showCurrentEnergyProvider(userState, update);
+    }
 
     @MatchState(forAdmin = true, state = States.ADMIN_MENU, callbackData = InlineMenuCallbacks.MANAGE_AUTO_ENERGY_PROVIDER)
     public void showCurrentAutoEnergyProvider(UserState userState, Update update) {

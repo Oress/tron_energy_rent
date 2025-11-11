@@ -199,6 +199,13 @@ public class AdminViews {
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
+                                        .text("netts.io")
+                                        .callbackData(InlineMenuCallbacks.MANAGE_ENERGY_PROVIDER_CHOOSE_NETTS)
+                                        .build()))
+                .keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
                                         .text(commonLabels.toMainMenu())
                                         .callbackData(InlineMenuCallbacks.TO_MAIN_MENU)
                                         .build()))

@@ -5,6 +5,7 @@ import java.math.BigDecimal;
 public class AppConstants {
     public static final BigDecimal HUNDRED = new BigDecimal(100);
 
+    public static final String PROVIDER_NETTS = "NETTS";
     public static final String PROVIDER_CATFEE = "CATFEE";
     public static final String PROVIDER_ITRX = "ITRX";
 
