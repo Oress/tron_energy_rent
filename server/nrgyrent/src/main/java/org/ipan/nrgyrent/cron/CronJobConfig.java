@@ -31,6 +31,7 @@ public class CronJobConfig {
 
     private final ItrxBalanceMonitorCronJob itrxBalanceMonitorCronJob;
     private final ItrxBalanceMonitorCronJob trxxBalanceMonitorCronJob;
+    private final NettsBalanceMonitorCronJob nettsBalanceMonitorCronJob;
 
     public CronJobConfig(ReferralCommissionHelper referralCommissionHelper,
                          BalanceRepo balanceRepo,
@@ -39,6 +40,7 @@ public class CronJobConfig {
                          BybitBalanceMonitorJob bybitBalanceMonitorJob,
                          AutoDelegationMonitorJob autoDelegationMonitorJob,
                          ItrxBalanceMonitorCronJob itrxBalanceMonitorCronJob,
+                         NettsBalanceMonitorCronJob nettsBalanceMonitorCronJob,
                          @Qualifier(AppConstants.TRXX_MONITOR_JOB) ItrxBalanceMonitorCronJob trxxBalanceMonitorCronJob) {
         this.referralCommissionHelper = referralCommissionHelper;
         this.balanceRepo = balanceRepo;
@@ -48,6 +50,7 @@ public class CronJobConfig {
         this.autoDelegationMonitorJob = autoDelegationMonitorJob;
         this.itrxBalanceMonitorCronJob = itrxBalanceMonitorCronJob;
         this.trxxBalanceMonitorCronJob = trxxBalanceMonitorCronJob;
+        this.nettsBalanceMonitorCronJob = nettsBalanceMonitorCronJob;
     }
 
     @Bean(name = TRON_TRANSACTION_EXECUTOR)
@@ -97,6 +100,11 @@ public class CronJobConfig {
     @Scheduled(fixedDelayString = "${app.alerts.itrx-balance.interval:180}", timeUnit = TimeUnit.SECONDS)
     public void monitorTrxxBalance() {
         trxxBalanceMonitorCronJob.checkBalance();
+    }
+
+    @Scheduled(fixedDelayString = "${app.alerts.itrx-balance.interval:180}", timeUnit = TimeUnit.SECONDS)
+    public void monitorNettsBalance() {
+        nettsBalanceMonitorCronJob.checkBalance();
     }
 
     @Scheduled(fixedRate = 5, timeUnit = TimeUnit.MINUTES)

@@ -239,6 +239,10 @@ public class CommonLabels {
         return getLocalizedMessage("alerts.itrx_balance_low", locale, currentBalance);
     }
 
+    public String alertNettsBalanceLow(Locale locale, String currentBalance) {
+        return getLocalizedMessage("alerts.netts_balance_low", locale, currentBalance);
+    }
+
     public String alertTrxxBalanceLow(Locale locale, String currentBalance) {
         return getLocalizedMessage("alerts.trxx_balance_low", locale, currentBalance);
     }

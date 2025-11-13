@@ -9,6 +9,7 @@ import okhttp3.*;
 import org.ipan.nrgyrent.itrx.ItrxInsufficientFundsException;
 import org.ipan.nrgyrent.netts.dto.NettsPlaceOrderRequest;
 import org.ipan.nrgyrent.netts.dto.NettsPlaceOrderResponse200;
+import org.ipan.nrgyrent.netts.dto.NettsUserInfoResponse200;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.util.UriComponents;
@@ -29,6 +30,29 @@ public class NettsRestClient {
     public String apiKey;
     @Value("${app.netts.real-ip}")
     public String realIp;
+
+    @SneakyThrows
+    public NettsUserInfoResponse200 getStats() {
+        UriComponents uriComponents = UriComponentsBuilder.fromPath("/apiv2/userinfo").build();
+
+        Request request = new Request.Builder()
+                .url(baseUrl + uriComponents)
+                .method("GET", null)
+                .addHeader("X-API-KEY", apiKey)
+                .addHeader("X-Real-IP", realIp)
+                .build();
+        Response response = client.newCall(request).execute();
+        String responseStr = response.body().string();
+        logger.info("NETTS.IO user info: {}", responseStr);
+
+        int responseCode = response.code();
+        if (responseCode != 200) {
+            logger.error("NETTS.IO Error getting user info");
+            throw new RuntimeException("Error getting user info");
+        }
+        NettsUserInfoResponse200 userInfoResponse = gson.fromJson(responseStr, NettsUserInfoResponse200.class);
+        return userInfoResponse;
+    }
 
     // only 1 hour period is supported
     @SneakyThrows

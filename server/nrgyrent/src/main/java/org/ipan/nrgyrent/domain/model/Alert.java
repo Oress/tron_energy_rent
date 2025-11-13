@@ -15,6 +15,7 @@ public class Alert {
     public static final String CATFEE_BALANCE_LOW = "catfee_balance_low";
     public static final String ITRX_BALANCE_LOW = "itrx_balance_low";
     public static final String TRXX_BALANCE_LOW = "trxx_balance_low";
+    public static final String NETTS_BALANCE_LOW = "netts_balance_low";
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "nrg_alerts_seq")

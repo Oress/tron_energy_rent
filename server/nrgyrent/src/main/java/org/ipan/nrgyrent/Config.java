@@ -4,6 +4,7 @@ import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.ipan.nrgyrent.cron.ItrxAlertConfig;
 import org.ipan.nrgyrent.cron.ItrxBalanceMonitorCronJob;
+import org.ipan.nrgyrent.cron.NettsBalanceMonitorCronJob;
 import org.ipan.nrgyrent.domain.model.Alert;
 import org.ipan.nrgyrent.domain.model.repository.AlertRepo;
 import org.ipan.nrgyrent.domain.model.repository.AppUserRepo;
@@ -12,6 +13,7 @@ import org.ipan.nrgyrent.domain.service.AlertService;
 import org.ipan.nrgyrent.domain.service.CollectionWalletService;
 import org.ipan.nrgyrent.itrx.AppConstants;
 import org.ipan.nrgyrent.itrx.RestClient;
+import org.ipan.nrgyrent.netts.NettsRestClient;
 import org.ipan.nrgyrent.telegram.TelegramMessages;
 import org.ipan.nrgyrent.telegram.state.TelegramState;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +35,9 @@ public class Config {
 
     @Autowired
     CollectionWalletService collectionWalletService;
+
+    @Autowired
+    NettsRestClient nettsRestClient;
 
     @Autowired
     ItrxConfig itrxConfig;
@@ -82,6 +87,21 @@ public class Config {
         return new ItrxBalanceMonitorCronJob(
                 new ItrxAlertConfig(AppConstants.ITRX, Alert.ITRX_BALANCE_LOW),
                 itrxRestClient(),
+                telegramMessages,
+                telegramState,
+                userRepo,
+                alertRepo,
+                alertService,
+                itrxBalanceRepository,
+                balanceThreshold
+        );
+    }
+
+    @Bean
+    public NettsBalanceMonitorCronJob nettsBalanceMonitorCronJob() {
+        return new NettsBalanceMonitorCronJob(
+                new ItrxAlertConfig("NETTS.IO", Alert.NETTS_BALANCE_LOW),
+                nettsRestClient,
                 telegramMessages,
                 telegramState,
                 userRepo,
