@@ -47,6 +47,22 @@ public class ItrxService implements EnergyProvider {
             logger.info("Correlation ID: {}", correlationId);
         }
 
+        Double delegatedEnergy = placeOrderResponse.getPay_amount();
+        String txid = placeOrderResponse.getTxid();
+        String source = placeOrderResponse.getSource();
+
+        // There were cases when TRXX sent autodelegation events with 0.0 delegations, e.g:
+        //  TRXX. Received callback: {active_hash=, amount=0, bandwidth_hash=, count_limit=1,
+        //  count_limit_dynamic=0, energy_amount=131000, is_always=true, out_trade_no=null,
+        //  pay_amount=0.0, period=1D, receive_address=****, serial=***, source=count_delegate, status=40, txid=, type=energy
+        if ("count_delegate".equals(source)) {
+            if (delegatedEnergy == null || delegatedEnergy == 0.0 || delegatedEnergy < 0.1 || txid == null) {
+                logger.error("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                logger.error("TRXX SENT WEIRD EVENT {}", placeOrderResponse);
+                return;
+            }
+        }
+
 /*        CompletableFuture<OrderCallbackRequest> futureResponse = correlationResponse.get(correlationId);
         if (futureResponse != null) {
             logger.info("Completing future response for correlation ID: {}", correlationId);
