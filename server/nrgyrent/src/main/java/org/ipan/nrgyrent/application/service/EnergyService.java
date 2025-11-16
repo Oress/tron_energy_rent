@@ -1,13 +1,10 @@
 package org.ipan.nrgyrent.application.service;
 
 import jakarta.transaction.Transactional;
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.ipan.nrgyrent.catfee.CatfeeService;
 import org.ipan.nrgyrent.domain.events.autotopup.AutoDelegationSessionEventPublisher;
-import org.ipan.nrgyrent.domain.exception.NotEnoughBalanceException;
 import org.ipan.nrgyrent.domain.model.*;
-import org.ipan.nrgyrent.domain.model.autodelegation.AutoDelegationEventType;
 import org.ipan.nrgyrent.domain.model.autodelegation.AutoDelegationSession;
 import org.ipan.nrgyrent.domain.model.autodelegation.AutoDelegationSessionStatus;
 import org.ipan.nrgyrent.domain.model.repository.AutoDelegationSessionRepo;
@@ -15,23 +12,17 @@ import org.ipan.nrgyrent.domain.service.AutoDelegationSessionService;
 import org.ipan.nrgyrent.domain.service.OrderService;
 import org.ipan.nrgyrent.domain.service.commands.orders.AddOrUpdateOrderCommand;
 import org.ipan.nrgyrent.itrx.AppConstants;
-import org.ipan.nrgyrent.itrx.InactiveAddressException;
 import org.ipan.nrgyrent.itrx.ItrxService;
 import org.ipan.nrgyrent.itrx.RestClient;
 import org.ipan.nrgyrent.itrx.dto.EstimateOrderAmountResponse;
-import org.ipan.nrgyrent.itrx.dto.PlaceOrderResponse;
+import org.ipan.nrgyrent.netts.NettsService;
 import org.ipan.nrgyrent.telegram.state.TelegramState;
 import org.ipan.nrgyrent.telegram.state.UserState;
 import org.ipan.nrgyrent.telegram.utils.WalletTools;
 import org.ipan.nrgyrent.tron.node.api.FullNodeRestClient;
-import org.ipan.nrgyrent.tron.node.api.dto.AccountResource;
-import org.ipan.nrgyrent.tron.node.events.ContractTypes;
-import org.ipan.nrgyrent.tron.node.events.dto.AddressTransactionEvent;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -41,7 +32,7 @@ public class EnergyService {
 
     private final TelegramState telegramState;
     private final ItrxService itrxService;
-    private final CatfeeService catfeeService;
+    private final NettsService nettsService;
     private final RestClient itrxRestClient;
     private final RestClient trxxRestClient;
     private final OrderService orderService;
@@ -52,7 +43,8 @@ public class EnergyService {
     private final AutoDelegationSessionEventPublisher autoDelegationSessionEventPublisher;
 
     public EnergyService(TelegramState telegramState,
-                         ItrxService itrxService, CatfeeService catfeeService,
+                         ItrxService itrxService,
+                         NettsService nettsService,
                          RestClient itrxRestClient,
                          @Qualifier(AppConstants.TRXX_REST_CLIENT) RestClient trxxRestClient,
                          OrderService orderService,
@@ -62,7 +54,7 @@ public class EnergyService {
                          AutoDelegationSessionEventPublisher autoDelegationSessionEventPublisher) {
         this.telegramState = telegramState;
         this.itrxService = itrxService;
-        this.catfeeService = catfeeService;
+        this.nettsService = nettsService;
         this.itrxRestClient = itrxRestClient;
         this.trxxRestClient = trxxRestClient;
         this.orderService = orderService;
@@ -135,6 +127,7 @@ public class EnergyService {
         deactivateSession(byId, AutoDelegationSessionStatus.STOPPED_INACTIVE_WALLET);
     }
 
+/*
     @Async
     public void tryMakeFirstAutoTopupAsync(Long sessionId) {
         logger.info("AUTO DELEGATION. Initiating first delegation for a sessionId {} ", sessionId);
@@ -146,7 +139,9 @@ public class EnergyService {
             autoDelegationSessionEventPublisher.publishSuccessfulDelegationEvent(sessionId, order.getId());
         }
     }
+*/
 
+/*
     private Order autoDelegate(AutoDelegationSession delegationSession, AccountResource accountResource, AutoDelegationEventType delegationType) {
         Order order = null;
         Integer energyMax = accountResource.getEnergyLimit();
@@ -195,6 +190,7 @@ public class EnergyService {
         }
         return order;
     }
+*/
 
     private AutoDelegationSession deactivateSession(AutoDelegationSession session, AutoDelegationSessionStatus status) {
         AutoDelegationSession removedSession = autoDelegationSessionService.deactivate(session.getId(), status);
@@ -228,7 +224,7 @@ public class EnergyService {
                         .itrxFeeSunAmount(estimateOrderResponse.getTotal_price())
                         .correlationId(correlationId.toString());
                 pendingOrder = orderService.createPendingOrder(builder.build());
-                catfeeService.placeOrder(estimateOrderResponse.getEnergy_amount(), duration, receiveAddress, correlationId);
+                nettsService.placeOrder(estimateOrderResponse.getEnergy_amount(), duration, receiveAddress, correlationId);
             } catch (Exception e) {
                 logger.error("Error while placing order ", e);
                 if (pendingOrder != null) {
@@ -243,6 +239,7 @@ public class EnergyService {
         return pendingOrder;
     }
 
+/*
     public Order tryMakeTransaction(UserState userState, Integer energyAmountPerTx, String duration, String receiveAddress, Integer txAmount,
             Long sunAmountPerTx, Long tariffId, Long autoDelegationSessionId, AutoDelegationEventType delegationEventType) {
         Order pendingOrder = null;
@@ -296,7 +293,9 @@ public class EnergyService {
         }
         return pendingOrder;
     }
+*/
 
+/*
     @Async
     public void processTxEventAsync(AddressTransactionEvent event) {
         String wallet = switch (event.getContractType()) {
@@ -349,4 +348,5 @@ public class EnergyService {
             logger.warn("Unexpected type of tx event, {}", event);
         }
     }
+*/
 }
