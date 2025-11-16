@@ -27,6 +27,7 @@ public class InlineMenuCallbacks {
 
     public static final String SETTINGS = "settings";
     public static final String HISTORY = "history";
+    public static final String DEPOSIT_HISTORY = "deposit_history";
     public static final String MANAGE_GROUP = "manage_group";
     public static final String MANAGE_REFERALS = "manage_referals";
     public static final String WITHDRAW_TRX = "withdraw_trx";
@@ -49,6 +50,10 @@ public class InlineMenuCallbacks {
     public static final String MANAGE_WITHDRAW_TRX = "manage_withdraw_trx";
     public static final String MANAGE_TARIFFS = "manage_tarifs";
     public static final String MANAGE_REFERRAL_PROGRAMS = "manage_ref_programs";
+
+    public static final String DEPOSIT_PREV_PAGE = "deposit_prev_page";
+    public static final String DEPOSIT_NEXT_PAGE = "deposit_next_page";
+    public static final String DEPOSIT_SEARCH = "deposit_search";
 
     public static final String MANAGE_TARIFFS_PREV_PAGE = "manage_tarifs_search_prev_page";
     public static final String MANAGE_TARIFFS_NEXT_PAGE = "manage_tarifs_search_next_page";

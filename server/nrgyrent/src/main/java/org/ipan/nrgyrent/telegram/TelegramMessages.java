@@ -2,8 +2,6 @@ package org.ipan.nrgyrent.telegram;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -576,7 +574,13 @@ public class TelegramMessages {
                                         .text(commonLabels.settingsTxHistory())
                                         .callbackData(InlineMenuCallbacks.HISTORY)
                                         .build()))
-
+                .keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text(commonLabels.settingsTopupHistory())
+                                        .callbackData(InlineMenuCallbacks.DEPOSIT_HISTORY)
+                                        .build()))
                 .keyboardRow(
                         new InlineKeyboardRow(
                                 InlineKeyboardButton

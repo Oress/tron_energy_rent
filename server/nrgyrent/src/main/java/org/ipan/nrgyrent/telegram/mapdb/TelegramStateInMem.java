@@ -36,6 +36,7 @@ public class TelegramStateInMem implements TelegramState {
     private final HTreeMap<Long, TariffEditInMem> tariffEditState;
     private final HTreeMap<Long, AddTariffStateInMem> addTariffStateMap;
     private final HTreeMap<Long, RefProgramSearchStateInMem> refProgramSearchState;
+    private final HTreeMap<Long, DepositSearchStateInMem> depositSearchState;
     private final HTreeMap<Long, RefProgramEditInMem> refProgramEditStateMap;
     private final HTreeMap<Long, AddRefProgramStateInMem> addRefProgramStateMap;
     private final HTreeMap<String, WalletMonitoringStateInMem> walletMonitoringStateMap;
@@ -114,6 +115,10 @@ public class TelegramStateInMem implements TelegramState {
         this.walletMonitoringStateMap = db.hashMap("walletMonitoringStateMap")
                 .keySerializer(Serializer.STRING)
                 .valueSerializer(new GenericSerializer<>(WalletMonitoringStateInMem.class, objectMapper))
+                .createOrOpen();
+        this.depositSearchState = db.hashMap("depositSearchState")
+                .keySerializer(Serializer.LONG)
+                .valueSerializer(new GenericSerializer<>(DepositSearchStateInMem.class, objectMapper))
                 .createOrOpen();
     }
 
@@ -300,7 +305,16 @@ public class TelegramStateInMem implements TelegramState {
     @Override
     public RefProgramSearchState updateRefProgramSearchState(Long userId, RefProgramSearchState groupSearchState) {
         return this.refProgramSearchState.put(userId, RefProgramSearchStateInMem.of(groupSearchState));
+    }
 
+    @Override
+    public DepositSearchState getOrCreateDepositSearchState(Long userId) {
+        return this.depositSearchState.computeIfAbsent(userId, key -> DepositSearchStateInMem.builder().build());
+    }
+
+    @Override
+    public DepositSearchState updateDepositSearchState(Long userId, DepositSearchState groupSearchState) {
+        return this.depositSearchState.put(userId, DepositSearchStateInMem.of(groupSearchState));
     }
 
     @Override

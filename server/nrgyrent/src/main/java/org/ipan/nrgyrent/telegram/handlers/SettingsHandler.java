@@ -42,6 +42,7 @@ public class SettingsHandler {
     @MatchStates({
         @MatchState(state = States.MAIN_MENU, callbackData = InlineMenuCallbacks.SETTINGS),
         @MatchState(state = States.HISTORY, callbackData = InlineMenuCallbacks.GO_BACK),
+        @MatchState(state = States.TOPUP_HISTORY, callbackData = InlineMenuCallbacks.GO_BACK),
         @MatchState(state = States.SETTINGS_CHANGE_LANGUAGE, callbackData = InlineMenuCallbacks.GO_BACK),
         @MatchState(state = States.REFERALS, callbackData = InlineMenuCallbacks.GO_BACK),
     })

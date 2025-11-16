@@ -151,6 +151,10 @@ public class CommonLabels {
         return getLocalizedMessage("settings.change_language");
     }
 
+    public String settingsTopupHistory() {
+        return getLocalizedMessage("settings.topup_history");
+    }
+
     public String settingsDescription() {
         return getLocalizedMessage("settings.description");
     }

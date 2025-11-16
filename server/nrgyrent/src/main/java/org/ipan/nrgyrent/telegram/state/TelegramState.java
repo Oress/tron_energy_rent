@@ -58,6 +58,9 @@ public interface TelegramState {
     RefProgramSearchState getOrCreateRefProgramSearchState(Long userId);
     RefProgramSearchState updateRefProgramSearchState(Long userId, RefProgramSearchState groupSearchState);
 
+    DepositSearchState getOrCreateDepositSearchState(Long userId);
+    DepositSearchState updateDepositSearchState(Long userId, DepositSearchState groupSearchState);
+
     RefProgramEdit getOrCreateRefProgramEdit(Long userId);
     RefProgramEdit updateRefProgramEdit(Long userId, RefProgramEdit tariffEdit);
 
