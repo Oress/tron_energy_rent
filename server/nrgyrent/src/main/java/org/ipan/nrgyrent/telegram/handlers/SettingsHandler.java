@@ -45,6 +45,7 @@ public class SettingsHandler {
         @MatchState(state = States.TOPUP_HISTORY, callbackData = InlineMenuCallbacks.GO_BACK),
         @MatchState(state = States.SETTINGS_CHANGE_LANGUAGE, callbackData = InlineMenuCallbacks.GO_BACK),
         @MatchState(state = States.REFERALS, callbackData = InlineMenuCallbacks.GO_BACK),
+        @MatchState(state = States.DEPOSIT_HISTORY_SEARCHING, callbackData = InlineMenuCallbacks.GO_BACK),
     })
     public void settingsMenu(UserState userState, Update update) {
         AppUser user = userService.getById(userState.getTelegramId());
