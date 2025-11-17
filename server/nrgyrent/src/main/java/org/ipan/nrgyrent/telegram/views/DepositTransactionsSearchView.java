@@ -2,7 +2,7 @@ package org.ipan.nrgyrent.telegram.views;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.ipan.nrgyrent.domain.model.DepositTransaction;
+import org.ipan.nrgyrent.domain.model.repository.DepositHistoryItem;
 import org.ipan.nrgyrent.telegram.InlineMenuCallbacks;
 import org.ipan.nrgyrent.telegram.i18n.CommonLabels;
 import org.ipan.nrgyrent.telegram.state.UserState;
@@ -26,18 +26,18 @@ public class DepositTransactionsSearchView {
     private final TelegramClient tgClient;
     private final CommonLabels commonLabels;
 
-    private String formatTransactionEntry(DepositTransaction tx) {
+    private String formatTransactionEntry(DepositHistoryItem tx) {
         StringBuilder entry = new StringBuilder();
-        if (tx.getBybitUsdtTx() != null) {
-            entry.append(String.format("USDT: %s, ", FormattingTools.formatUsdt(tx.getOriginalAmount())));
+        if (tx.getAmountUsdt() != null) {
+            entry.append(String.format("USDT: %s, ", FormattingTools.formatUsdt(tx.getAmountUsdt())));
         }
-        entry.append(String.format("TRX: %s, ", FormattingTools.formatBalance(tx.getAmount())));
+        entry.append(String.format("TRX: %s, ", FormattingTools.formatBalance(tx.getAmountSun())));
         entry.append(String.format("TX ID: %s, ", tx.getTxId()));
         entry.append(String.format("%s", FormattingTools.formatDateToUtc(Instant.ofEpochMilli(tx.getTimestamp()))));
         return entry.toString();
     }
 
-    public void updMenuToSearchResult(Page<DepositTransaction> page, UserState userState) {
+    public void updMenuToSearchResult(Page<DepositHistoryItem> page, UserState userState) {
         String text;
         if (page.isEmpty()) {
             text = commonLabels.searchNoResults();
@@ -45,7 +45,7 @@ public class DepositTransactionsSearchView {
             StringBuilder content = new StringBuilder(commonLabels.searchResults());
             content.append("\n\n");
             page.getContent().forEach(tx ->
-                    content.append(formatTransactionEntry(tx)).append("\n"));
+                    content.append(formatTransactionEntry(tx)).append("\n\n"));
             text = content.toString();
         }
 
@@ -64,7 +64,7 @@ public class DepositTransactionsSearchView {
     }
 
 
-    private InlineKeyboardMarkup getTariffSearchPageMarkup(Page<DepositTransaction> page) {
+    private InlineKeyboardMarkup getTariffSearchPageMarkup(Page<?> page) {
         InlineKeyboardMarkup.InlineKeyboardMarkupBuilder<?, ?> builder = InlineKeyboardMarkup
                 .builder();
         boolean hasPrev = page.hasPrevious();
