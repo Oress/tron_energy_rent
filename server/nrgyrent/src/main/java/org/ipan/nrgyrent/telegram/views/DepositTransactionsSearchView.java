@@ -29,10 +29,10 @@ public class DepositTransactionsSearchView {
     private String formatTransactionEntry(DepositHistoryItem tx) {
         StringBuilder entry = new StringBuilder();
         if (tx.getAmountUsdt() != null) {
-            entry.append(String.format("USDT: %s, ", FormattingTools.formatUsdt(tx.getAmountUsdt())));
+            entry.append(String.format("USDT: %s \n", FormattingTools.formatUsdt(tx.getAmountUsdt())));
         }
-        entry.append(String.format("TRX: %s, ", FormattingTools.formatBalance(tx.getAmountSun())));
-        entry.append(String.format("TX ID: %s, ", tx.getTxId()));
+        entry.append(String.format("TRX: %s \n", FormattingTools.formatBalance(tx.getAmountSun())));
+        entry.append(String.format("TX ID: %s \n", tx.getTxId()));
         entry.append(String.format("%s", FormattingTools.formatDateToUtc(Instant.ofEpochMilli(tx.getTimestamp()))));
         return entry.toString();
     }
