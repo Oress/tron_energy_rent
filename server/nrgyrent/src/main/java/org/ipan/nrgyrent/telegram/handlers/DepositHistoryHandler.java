@@ -36,7 +36,7 @@ public class DepositHistoryHandler {
                                  DepositTransactionRepo depositTransactionRepo
     ) {
 //        this.pageSize = pageSize;
-        this.pageSize = 2;
+        this.pageSize = 10;
         this.telegramState = telegramState;
         this.depositTransactionsSearchView = depositTransactionsSearchView;
         this.depositTransactionRepo = depositTransactionRepo;

@@ -121,4 +121,8 @@ public class Order {
     public boolean isActivatedWallet() {
         return activationFeeSun != null && activationFeeSun > 0;
     }
+
+    public Long getAmountWithoutActivationFee() {
+        return sunAmount - (activationFeeSun == null ? 0 : activationFeeSun);
+    }
 }

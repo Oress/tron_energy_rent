@@ -153,7 +153,7 @@ public class TelegramMessages {
             return transactionLabels.successIndividualActivated(
                     userState.getLocaleOrDefault(),
                     order.getTxAmount(),
-                    FormattingTools.formatBalance(order.getSunAmount()),
+                    FormattingTools.formatBalance(order.getAmountWithoutActivationFee()),
                     WalletTools.formatTronAddressMd(order.getReceiveAddress()),
                     FormattingTools.formatBalance(order.getBalance().getSunBalance()),
                     formattingTools.formatDtUtc(order.getCreatedAt()),
@@ -163,7 +163,7 @@ public class TelegramMessages {
             return transactionLabels.successIndividual(
                     userState.getLocaleOrDefault(),
                     order.getTxAmount(),
-                    FormattingTools.formatBalance(order.getSunAmount()),
+                    FormattingTools.formatBalance(order.getAmountWithoutActivationFee()),
                     WalletTools.formatTronAddressMd(order.getReceiveAddress()),
                     FormattingTools.formatBalance(order.getBalance().getSunBalance()),
                     formattingTools.formatDtUtc(order.getCreatedAt()),
@@ -176,7 +176,7 @@ public class TelegramMessages {
             return transactionLabels.successGroupActivated(
                     userState.getLocaleOrDefault(),
                     order.getTxAmount(),
-                    FormattingTools.formatBalance(order.getSunAmount()),
+                    FormattingTools.formatBalance(order.getAmountWithoutActivationFee()),
                     WalletTools.formatTronAddressMd(order.getReceiveAddress()),
                     formattingTools.formatDtUtc(order.getCreatedAt()),
                     FormattingTools.formatBalance(order.getActivationFeeSun())
@@ -185,7 +185,7 @@ public class TelegramMessages {
             return transactionLabels.successGroup(
                     userState.getLocaleOrDefault(),
                     order.getTxAmount(),
-                    FormattingTools.formatBalance(order.getSunAmount()),
+                    FormattingTools.formatBalance(order.getAmountWithoutActivationFee()),
                     WalletTools.formatTronAddressMd(order.getReceiveAddress()),
                     formattingTools.formatDtUtc(order.getCreatedAt())
             );
