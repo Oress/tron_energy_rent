@@ -15,6 +15,7 @@ import org.ipan.nrgyrent.telegram.views.DepositTransactionsSearchView;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
 @TransitionHandler
@@ -42,7 +43,7 @@ public class DepositHistoryHandler {
         DepositSearchState searchState = telegramState.getOrCreateDepositSearchState(userState.getTelegramId());
         telegramState.updateDepositSearchState(userState.getTelegramId(), searchState.withCurrentPage(0));
 
-        Page<DepositTransaction> nextPage = depositTransactionRepo.findAllOrderByIdDesc(PageRequest.of(0, pageSize));
+        Page<DepositTransaction> nextPage = depositTransactionRepo.findAll(PageRequest.of(0, pageSize).withSort(Sort.Direction.DESC, "id"));
         depositTransactionsSearchView.updMenuToSearchResult(nextPage, userState);
 
         telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.DEPOSIT_HISTORY_SEARCHING));
@@ -55,7 +56,7 @@ public class DepositHistoryHandler {
         DepositSearchState searchState = telegramState.getOrCreateDepositSearchState(userState.getTelegramId());
         int pageNumber = searchState.getCurrentPage() + 1;
         telegramState.updateDepositSearchState(userState.getTelegramId(), searchState.withCurrentPage(pageNumber));
-        Page<DepositTransaction> nextPage = depositTransactionRepo.findAllOrderByIdDesc(PageRequest.of(pageNumber, pageSize));
+        Page<DepositTransaction> nextPage = depositTransactionRepo.findAll(PageRequest.of(0, pageSize).withSort(Sort.Direction.DESC, "id"));
         depositTransactionsSearchView.updMenuToSearchResult(nextPage, userState);
     }
 
@@ -66,7 +67,7 @@ public class DepositHistoryHandler {
         DepositSearchState searchState = telegramState.getOrCreateDepositSearchState(userState.getTelegramId());
         int pageNumber = searchState.getCurrentPage() - 1;
         telegramState.updateDepositSearchState(userState.getTelegramId(), searchState.withCurrentPage(pageNumber));
-        Page<DepositTransaction> prevPage = depositTransactionRepo.findAllOrderByIdDesc(PageRequest.of(pageNumber, pageSize));
+        Page<DepositTransaction> prevPage = depositTransactionRepo.findAll(PageRequest.of(0, pageSize).withSort(Sort.Direction.DESC, "id"));
         depositTransactionsSearchView.updMenuToSearchResult(prevPage, userState);
     }
 }

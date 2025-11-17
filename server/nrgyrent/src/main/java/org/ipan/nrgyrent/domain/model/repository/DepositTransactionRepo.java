@@ -15,5 +15,5 @@ public interface DepositTransactionRepo extends JpaRepository<DepositTransaction
 
     DepositTransaction findByTxId(String txId);
 
-    Page<DepositTransaction> findAllOrderByIdDesc(Pageable of);
+//    Page<DepositTransaction> findAllOrderById(Pageable of);
 }
