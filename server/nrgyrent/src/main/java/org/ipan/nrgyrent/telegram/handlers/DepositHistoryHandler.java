@@ -67,7 +67,7 @@ public class DepositHistoryHandler {
         DepositSearchState searchState = telegramState.getOrCreateDepositSearchState(userState.getTelegramId());
         int pageNumber = searchState.getCurrentPage() + 1;
         telegramState.updateDepositSearchState(userState.getTelegramId(), searchState.withCurrentPage(pageNumber));
-        Page<DepositHistoryItem> nextPage = depositTransactionRepo.findAllByByBalanceId(balanceToUse.getId(), PageRequest.of(0, pageSize));
+        Page<DepositHistoryItem> nextPage = depositTransactionRepo.findAllByByBalanceId(balanceToUse.getId(), PageRequest.of(pageNumber, pageSize));
         depositTransactionsSearchView.updMenuToSearchResult(nextPage, userState);
     }
 
@@ -81,7 +81,7 @@ public class DepositHistoryHandler {
         DepositSearchState searchState = telegramState.getOrCreateDepositSearchState(userState.getTelegramId());
         int pageNumber = searchState.getCurrentPage() - 1;
         telegramState.updateDepositSearchState(userState.getTelegramId(), searchState.withCurrentPage(pageNumber));
-        Page<DepositHistoryItem> prevPage = depositTransactionRepo.findAllByByBalanceId(balanceToUse.getId(), PageRequest.of(0, pageSize));
+        Page<DepositHistoryItem> prevPage = depositTransactionRepo.findAllByByBalanceId(balanceToUse.getId(), PageRequest.of(pageNumber, pageSize));
         depositTransactionsSearchView.updMenuToSearchResult(prevPage, userState);
     }
 }
