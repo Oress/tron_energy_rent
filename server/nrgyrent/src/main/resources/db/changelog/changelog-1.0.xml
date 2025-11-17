@@ -1237,4 +1237,10 @@
             <column name="activation_fee_sun_amount" type="bigint" />
         </addColumn>
     </changeSet>
+
+    <changeSet id="extend nrg_orders with activation_fee" author="oress">
+        <addColumn tableName="nrg_orders">
+            <column name="activation_fee" type="bigint" defaultValue="0" />
+        </addColumn>
+    </changeSet>
 </databaseChangeLog>

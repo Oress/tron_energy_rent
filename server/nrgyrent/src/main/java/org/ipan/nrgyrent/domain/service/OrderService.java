@@ -49,6 +49,7 @@ public class OrderService {
         Tariff tariff = null;
         Balance targetBalance = null;
         Long totalSunAmount = null;
+        Long activationFee = null;
 
         // Make check only for normal orders
         if (OrderType.USER.equals(command.getType())) {
@@ -80,7 +81,9 @@ public class OrderService {
                 tariff = tariffRepo.getReferenceById(command.getTariffId());
             }
 
-            totalSunAmount = command.getTxAmount() * command.getSunAmountPerTx();
+
+            activationFee = command.isRequireActivation() ? AppConstants.WALLET_ACTIVATION_FEE : 0L;
+            totalSunAmount = command.getTxAmount() * command.getSunAmountPerTx() + activationFee;
 
             targetBalance = user.getBalanceToUse();
             balanceService.subtractSunBalance(targetBalance, totalSunAmount);
@@ -120,6 +123,7 @@ public class OrderService {
         order.setChatId(command.getChatId());
         order.setTariff(tariff);
         order.setType(command.getType());
+        order.setActivationFeeSun(activationFee);
 
         Long autoTopupSessionId = command.getAutoDelegationSessionId();
         if (autoTopupSessionId != null) {

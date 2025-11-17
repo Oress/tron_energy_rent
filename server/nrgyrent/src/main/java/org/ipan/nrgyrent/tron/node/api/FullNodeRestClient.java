@@ -1,7 +1,10 @@
 package org.ipan.nrgyrent.tron.node.api;
 
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.ipan.nrgyrent.FullnodeConfig;
 import org.ipan.nrgyrent.tron.node.api.dto.AccountResource;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -26,6 +29,7 @@ public class FullNodeRestClient {
         return true;
     }
 
+    @Retryable
     public AccountResource getAccountResource(String wallet) {
         AccountResource result = null;
 
@@ -35,14 +39,15 @@ public class FullNodeRestClient {
                 HttpUrl url = HttpUrl.parse(this.fullnodeConfig.getHttpApiUrl())
                     .newBuilder()
                         .addPathSegments("wallet/getaccountresource")
-                        .addQueryParameter("address", wallet)
-                        .addQueryParameter("visible", "true")
                         .build();
+
+                String requestBody = objectMapper.writeValueAsString(new GetAccountResourceResp(wallet, true));
+
                 Request request = new Request.Builder()
                         .url(url)
-                        .get()
-                        .addHeader("Content-Type", "application/json")
+                        .post(okhttp3.RequestBody.create(requestBody, okhttp3.MediaType.parse("application/json")))
                         .build();
+
                 Response response = client.newCall(request).execute();
 
                 responseStr = response.body().string();
@@ -58,5 +63,13 @@ public class FullNodeRestClient {
         }
 
         return result;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    class GetAccountResourceResp {
+        public String address;
+        public boolean visible;
     }
 }

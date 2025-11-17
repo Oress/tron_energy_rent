@@ -33,6 +33,8 @@ import org.ipan.nrgyrent.telegram.statetransitions.UpdateType;
 import org.ipan.nrgyrent.telegram.utils.FormattingTools;
 import org.ipan.nrgyrent.telegram.utils.WalletTools;
 import org.ipan.nrgyrent.telegram.views.TransactionsViews;
+import org.ipan.nrgyrent.tron.node.api.FullNodeRestClient;
+import org.ipan.nrgyrent.tron.node.api.dto.AccountResource;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.message.Message;
@@ -54,6 +56,7 @@ public class TransactionsHandler {
     private final UserWalletRepo userWalletRepo;
     private final TelegramMessages telegramMessages;
     private final FormattingTools formattingTools;
+    private final FullNodeRestClient fullNodeRestClient;
 
     @MatchState(state = States.MAIN_MENU, callbackData = InlineMenuCallbacks.ESTIMATE_TRANSACTION_COST)
     public void estimateTxStart(UserState userState, Update update) {
@@ -320,10 +323,14 @@ public class TransactionsHandler {
 
             Order pendingOrder = null;
             try {//TODO: add provider field to the order table
+                AccountResource accountResource = fullNodeRestClient.getAccountResource(receiveAddress);
+
+                boolean requireActivation = accountResource == null || accountResource.getTotalNetLimit() == null;
                 pendingOrder = orderService.createPendingOrder(
                         AddOrUpdateOrderCommand.builder()
                                 .userId(userState.getTelegramId())
                                 .receiveAddress(receiveAddress)
+                                .requireActivation(requireActivation)
                                 .energyAmountPerTx(energyAmountPerTx)
                                 .txAmount(txAmount)
                                 .tariffId(tariffId)

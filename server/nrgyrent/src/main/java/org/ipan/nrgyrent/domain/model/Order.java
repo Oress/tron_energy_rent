@@ -79,6 +79,9 @@ public class Order {
     @Column(name = "correlation_id")
     private String correlationId;
 
+    @Column(name = "activation_fee")
+    private Long activationFeeSun;
+
     @Column(name = "energy_provider")
     @Enumerated(EnumType.STRING)
     private EnergyProviderName energyProvider;
@@ -113,5 +116,9 @@ public class Order {
 
     public Long getOldBalance() {
         return balance.getSunBalance() + sunAmount;
+    }
+
+    public boolean isActivatedWallet() {
+        return activationFeeSun != null && activationFeeSun > 0;
     }
 }

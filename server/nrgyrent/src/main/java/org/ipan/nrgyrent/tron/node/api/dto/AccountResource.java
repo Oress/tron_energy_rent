@@ -6,4 +6,5 @@ import lombok.Data;
 public class AccountResource {
     private final Integer EnergyUsed;
     private final Integer EnergyLimit;
+    private final Integer TotalNetLimit;
 }

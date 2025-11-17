@@ -87,6 +87,16 @@ public class TransactionLabels {
         return getLocalizedMessage("transactions.success.group", locale, amount, total, receiver, date);
     }
 
+    public String successIndividualActivated(Locale locale, Integer amount, String total,
+                                             String receiver, String balance, String date, String oldBalance, String activationFee) {
+        return getLocalizedMessage("transactions.success.individual.activation", locale, amount, total, receiver, balance, date, oldBalance, activationFee);
+    }
+
+    public String successGroupActivated(Locale locale, Integer amount, String total,
+                               String receiver, String date, String activationFee) {
+        return getLocalizedMessage("transactions.success.group.activation", locale, amount, total, receiver, date, activationFee);
+    }
+
     public String refunded(Locale locale, Integer amount, String total, String receiver) {
         return getLocalizedMessage("transactions.refunded", locale, amount, total, receiver);
     }

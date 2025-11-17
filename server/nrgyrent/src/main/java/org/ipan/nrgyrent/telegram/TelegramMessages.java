@@ -149,25 +149,47 @@ public class TelegramMessages {
     }
 
     private String getSuccessfulTransactionMessage(UserState userState, Order order) {
-        return transactionLabels.successIndividual(
-                userState.getLocaleOrDefault(),
-                order.getTxAmount(),
-                FormattingTools.formatBalance(order.getSunAmount()),
-                WalletTools.formatTronAddressMd(order.getReceiveAddress()),
-                FormattingTools.formatBalance(order.getBalance().getSunBalance()),
-                formattingTools.formatDtUtc(order.getCreatedAt()),
-                FormattingTools.formatBalance(order.getOldBalance())
-        );
+        if (order.isActivatedWallet()) {
+            return transactionLabels.successIndividualActivated(
+                    userState.getLocaleOrDefault(),
+                    order.getTxAmount(),
+                    FormattingTools.formatBalance(order.getSunAmount()),
+                    WalletTools.formatTronAddressMd(order.getReceiveAddress()),
+                    FormattingTools.formatBalance(order.getBalance().getSunBalance()),
+                    formattingTools.formatDtUtc(order.getCreatedAt()),
+                    FormattingTools.formatBalance(order.getOldBalance()),
+                    FormattingTools.formatBalance(order.getActivationFeeSun()));
+        } else {
+            return transactionLabels.successIndividual(
+                    userState.getLocaleOrDefault(),
+                    order.getTxAmount(),
+                    FormattingTools.formatBalance(order.getSunAmount()),
+                    WalletTools.formatTronAddressMd(order.getReceiveAddress()),
+                    FormattingTools.formatBalance(order.getBalance().getSunBalance()),
+                    formattingTools.formatDtUtc(order.getCreatedAt()),
+                    FormattingTools.formatBalance(order.getOldBalance()));
+        }
     }
 
     private String getSuccessfulTransactionMessageGroup(UserState userState, Order order) {
-        return transactionLabels.successGroup(
-                userState.getLocaleOrDefault(),
-                order.getTxAmount(),
-                FormattingTools.formatBalance(order.getSunAmount()),
-                WalletTools.formatTronAddressMd(order.getReceiveAddress()),
-                formattingTools.formatDtUtc(order.getCreatedAt())
-        );
+        if (order.isActivatedWallet()) {
+            return transactionLabels.successGroupActivated(
+                    userState.getLocaleOrDefault(),
+                    order.getTxAmount(),
+                    FormattingTools.formatBalance(order.getSunAmount()),
+                    WalletTools.formatTronAddressMd(order.getReceiveAddress()),
+                    formattingTools.formatDtUtc(order.getCreatedAt()),
+                    FormattingTools.formatBalance(order.getActivationFeeSun())
+            );
+        } else {
+            return transactionLabels.successGroup(
+                    userState.getLocaleOrDefault(),
+                    order.getTxAmount(),
+                    FormattingTools.formatBalance(order.getSunAmount()),
+                    WalletTools.formatTronAddressMd(order.getReceiveAddress()),
+                    formattingTools.formatDtUtc(order.getCreatedAt())
+            );
+        }
     }
 
     private String getFailedTransactionMessage(UserState userState, Order order) {

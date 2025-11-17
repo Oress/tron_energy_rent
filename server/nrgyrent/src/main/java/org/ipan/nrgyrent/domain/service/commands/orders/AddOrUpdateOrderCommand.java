@@ -24,6 +24,7 @@ public class AddOrUpdateOrderCommand {
     private String serial;
     private Long tariffId;
     private OrderType type;
+    private boolean requireActivation;
 
     private Long autoDelegationSessionId;
     private AutoDelegationEventType delegationEventType;
