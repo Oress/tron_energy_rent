@@ -11,6 +11,7 @@ import org.ipan.nrgyrent.netts.dto.NettsPlaceOrderRequest;
 import org.ipan.nrgyrent.netts.dto.NettsPlaceOrderResponse200;
 import org.ipan.nrgyrent.netts.dto.NettsUserInfoResponse200;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -56,6 +57,7 @@ public class NettsRestClient {
 
     // only 1 hour period is supported
     @SneakyThrows
+    @Retryable
     public NettsPlaceOrderResponse200 placeOrder(int energyAmnt, String period, String receiveAddress) {
         UriComponents uriComponents = UriComponentsBuilder.fromPath("/apiv2/order1h").build();
 
