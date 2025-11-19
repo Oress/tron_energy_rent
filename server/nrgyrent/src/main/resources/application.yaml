@@ -61,6 +61,8 @@ spring:
             ms: 10000
 
 app:
+  notification:
+    tggroupid: ${APP_TG_NOTIFICATION_GROUP_ID:-4897300417}
   bybit:
     url-testnet: https://api-testnet.bybit.com
     url-mainnet: https://api.bybit.com

@@ -3,6 +3,7 @@ package org.ipan.nrgyrent.telegram;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 import org.ipan.nrgyrent.domain.model.*;
@@ -274,6 +275,32 @@ public class TelegramMessages {
                 .replyMarkup(getOkNotificationMarkup())
                 .build();
         tgClient.execute(message);
+    }
+
+    @SneakyThrows
+    public void sendAutoDelegationAlertBalanceLowUser(UserState userState, Long currentBalance) {
+        SendMessage message = SendMessage
+                .builder()
+                .chatId(userState.getChatId())
+                .text(commonLabels.autoDelegationAlertBalanceLowUser(userState.getLocaleOrDefault(),
+                        FormattingTools.formatBalance(currentBalance)))
+                .replyMarkup(getOkNotificationMarkup())
+                .build();
+        tgClient.execute(message);
+    }
+
+
+    @Retryable
+    @SneakyThrows
+    public Message sendAutoDelegationAlertBalanceLowAdmin(Long groupId, Long currentBalance, AppUser user) {
+        SendMessage message = SendMessage
+                .builder()
+                .chatId(groupId)
+                .text(commonLabels.autoDelegationAlertBalanceLowAdmin(Locale.of("ru"),
+                        FormattingTools.formatBalance(currentBalance),
+                        FormattingTools.formatUser(user)))
+                .build();
+        return tgClient.execute(message);
     }
 
     @SneakyThrows

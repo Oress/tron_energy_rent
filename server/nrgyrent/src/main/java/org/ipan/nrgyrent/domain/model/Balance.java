@@ -67,6 +67,9 @@ public class Balance {
     @Column(name = "daily_withdrawal_remaining_sun")
     private Long dailyWithdrawalRemainingSun;
 
+    @Column(name = "is_low")
+    private Boolean isLow = Boolean.FALSE;
+
     @Column(name = "is_active")
     private Boolean isActive = Boolean.TRUE;
 
@@ -79,6 +82,10 @@ public class Balance {
 
     public boolean isGroup() {
         return BalanceType.GROUP.equals(type);
+    }
+
+    public boolean getIsLow() {
+        return Boolean.TRUE.equals(isLow);
     }
 
     public Long makeDeposit(Long amount) {

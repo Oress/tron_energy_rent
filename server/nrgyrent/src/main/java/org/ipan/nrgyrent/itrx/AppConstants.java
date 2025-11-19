@@ -20,11 +20,11 @@ public class AppConstants {
     // this is the default value that is going to be added to the BASE_SUBTRACT_AMOUNT_TX1 and BASE_SUBTRACT_AMOUNT_TX2
     // for calculating referral commissions
     public static final Long BASE_SUBTRACT_AMOUNT_SMALL_AMOUNT = 400_000L;
+    public static final Long BALANCE_ALERT_THRESHOLD = 100_000_000L;
 
 
     public static final Long DEFAULT_TARIFF_ID = 1L;
 
-    public static final Long HOUR_MILLIS = 60L * 60 * 1000;
     public static final String DURATION_1H = "1H";
     public static final String TRXX_REST_CLIENT = "trxx_rest_client";
     public static final String TRXX_MONITOR_JOB = "trxx_monitor_job";

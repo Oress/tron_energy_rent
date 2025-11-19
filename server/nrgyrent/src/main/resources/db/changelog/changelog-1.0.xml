@@ -1243,4 +1243,11 @@
             <column name="activation_fee" type="bigint" defaultValue="0" />
         </addColumn>
     </changeSet>
+
+    <changeSet id="extend nrg_balances with is_low" author="oress">
+        <addColumn tableName="nrg_balances">
+            <column name="is_low" type="boolean" defaultValue="false" />
+        </addColumn>
+    </changeSet>
+
 </databaseChangeLog>
