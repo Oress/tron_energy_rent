@@ -52,10 +52,12 @@ public class UsdtDepositOrchestrator {
 
             // skip it for dev, leave it for prod, because bybit testnet does not support nile tests
             if (!configurableEnvironment.matchesProfiles("dev")) {
-                for (int i = 0; i < 60; i++) {
+                for (int i = 0; i < 70; i++) {
                     DepositData depositData = bybitRestClient.getUsdtDeposits(txId);
                     // https://bybit-exchange.github.io/docs/v5/enum#depositstatus
-                    if (depositData != null && depositData.getStatus() != null && (depositData.getStatus() == 10012 || depositData.getStatus() == 3)) {
+                    if (depositData != null && depositData.getStatus() != null
+                            && depositData.getConfirmationsInt() > 30 // bybit # of confirmations should be > 20
+                            && (depositData.getStatus() == 10012 || depositData.getStatus() == 3)) {
                         break;
                     }
                     Thread.sleep(3000);
