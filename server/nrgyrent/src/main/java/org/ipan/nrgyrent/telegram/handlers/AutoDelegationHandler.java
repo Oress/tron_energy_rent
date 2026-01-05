@@ -1,12 +1,10 @@
 package org.ipan.nrgyrent.telegram.handlers;
 
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.ipan.nrgyrent.application.service.EnergyService;
 import org.ipan.nrgyrent.domain.exception.NotEnoughBalanceException;
 import org.ipan.nrgyrent.domain.exception.WalletAlreadyHasActiveSessionException;
 import org.ipan.nrgyrent.domain.model.AppUser;
-import org.ipan.nrgyrent.domain.model.EnergyProviderName;
 import org.ipan.nrgyrent.domain.model.autodelegation.AutoDelegationSession;
 import org.ipan.nrgyrent.domain.model.UserWallet;
 import org.ipan.nrgyrent.domain.model.projections.WalletWithAutoTopupSession;
@@ -16,7 +14,6 @@ import org.ipan.nrgyrent.domain.service.UserWalletService;
 import org.ipan.nrgyrent.itrx.AppConstants;
 import org.ipan.nrgyrent.itrx.InactiveAddressException;
 import org.ipan.nrgyrent.itrx.RestClient;
-import org.ipan.nrgyrent.itrx.dto.CreateDelegatePolicyResponse;
 import org.ipan.nrgyrent.telegram.InlineMenuCallbacks;
 import org.ipan.nrgyrent.telegram.States;
 import org.ipan.nrgyrent.telegram.TelegramMessages;
@@ -27,7 +24,6 @@ import org.ipan.nrgyrent.telegram.statetransitions.MatchStates;
 import org.ipan.nrgyrent.telegram.statetransitions.TransitionHandler;
 import org.ipan.nrgyrent.telegram.statetransitions.UpdateType;
 import org.ipan.nrgyrent.telegram.views.AutoDelegationViews;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.message.Message;
@@ -43,8 +39,6 @@ public class AutoDelegationHandler {
     private final TelegramState telegramState;
     private final AutoDelegationSessionRepo autoDelegationSessionRepo;
     private final EnergyService energyService;
-    private final RestClient itrxRestClient;
-    private final RestClient trxxRestClient;
     private final UserService userService;
     private final UserWalletService userWalletService;
 
@@ -53,8 +47,6 @@ public class AutoDelegationHandler {
                                  TelegramState telegramState,
                                  AutoDelegationSessionRepo autoDelegationSessionRepo,
                                  EnergyService energyService,
-                                 RestClient itrxRestClient,
-                                 @Qualifier(AppConstants.TRXX_REST_CLIENT) RestClient trxxRestClient,
                                  UserService userService,
                                  UserWalletService userWalletService) {
         this.autoDelegationViews = autoDelegationViews;
@@ -62,8 +54,6 @@ public class AutoDelegationHandler {
         this.telegramState = telegramState;
         this.autoDelegationSessionRepo = autoDelegationSessionRepo;
         this.energyService = energyService;
-        this.itrxRestClient = itrxRestClient;
-        this.trxxRestClient = trxxRestClient;
         this.userService = userService;
         this.userWalletService = userWalletService;
     }
@@ -101,18 +91,6 @@ public class AutoDelegationHandler {
                 AutoDelegationSession newSession = null;
                 try {
                     newSession = energyService.startAutoTopupSession(userState, toggleWalletSession.getAddress());
-
-                    CreateDelegatePolicyResponse createDelegatePolicyResponse;
-                    if (newSession.getEnergyProvider() == EnergyProviderName.TRXX) {
-                        createDelegatePolicyResponse = trxxRestClient.createDelegatePolicy(0, toggleWalletSession.getAddress());
-                    } else {
-                        createDelegatePolicyResponse = itrxRestClient.createDelegatePolicy(0, toggleWalletSession.getAddress());
-                    }
-
-                    if (createDelegatePolicyResponse.getErrno() != 0) {
-                        logger.error("Something went wrong when creating a auto delegation session, response {}", createDelegatePolicyResponse);
-                        throw new RuntimeException("Something went wrong when creating a auto delegation session");
-                    }
 
                     autoDelegationViews.autoDelegateSessionCreated(userState, newSession);
                     AppUser user = userService.getById(userState.getTelegramId());

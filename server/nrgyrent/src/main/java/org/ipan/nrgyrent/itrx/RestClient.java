@@ -131,7 +131,7 @@ public class RestClient {
         Map<String, Object> data = Map.of(
                 "times", times,
                 "receive_address", receiveAddress,
-                "unused_times_threshold", "",
+                "unused_times_threshold", "2",
                 "count_bandwidth_limit", false
         );
 

@@ -2,7 +2,6 @@ package org.ipan.nrgyrent.application.service;
 
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
-import org.ipan.nrgyrent.catfee.CatfeeService;
 import org.ipan.nrgyrent.domain.events.autotopup.AutoDelegationSessionEventPublisher;
 import org.ipan.nrgyrent.domain.model.*;
 import org.ipan.nrgyrent.domain.model.autodelegation.AutoDelegationSession;
@@ -14,6 +13,7 @@ import org.ipan.nrgyrent.domain.service.commands.orders.AddOrUpdateOrderCommand;
 import org.ipan.nrgyrent.itrx.AppConstants;
 import org.ipan.nrgyrent.itrx.ItrxService;
 import org.ipan.nrgyrent.itrx.RestClient;
+import org.ipan.nrgyrent.itrx.dto.CreateDelegatePolicyResponse;
 import org.ipan.nrgyrent.itrx.dto.EstimateOrderAmountResponse;
 import org.ipan.nrgyrent.netts.NettsService;
 import org.ipan.nrgyrent.telegram.state.TelegramState;
@@ -77,6 +77,19 @@ public class EnergyService {
                 userState.getChatId(),
                 wallet
         );
+
+        CreateDelegatePolicyResponse createDelegatePolicyResponse;
+        if (newSession.getEnergyProvider() == EnergyProviderName.TRXX) {
+            createDelegatePolicyResponse = trxxRestClient.createDelegatePolicy(0, wallet);
+        } else {
+            createDelegatePolicyResponse = itrxRestClient.createDelegatePolicy(0, wallet);
+        }
+
+        if (createDelegatePolicyResponse.getErrno() != 0) {
+            logger.error("Something went wrong when creating a auto delegation session, response {}", createDelegatePolicyResponse);
+            throw new RuntimeException("Something went wrong when creating a auto delegation session");
+        }
+
         // 2. save session to cache
 //        telegramState.createWalletMonitoringState(newSession.getId(), wallet);
         return newSession;

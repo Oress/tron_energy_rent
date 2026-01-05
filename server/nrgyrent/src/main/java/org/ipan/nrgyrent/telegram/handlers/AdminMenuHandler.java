@@ -5,10 +5,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.ipan.nrgyrent.application.service.EnergyService;
 import org.ipan.nrgyrent.domain.model.CollectionWallet;
 import org.ipan.nrgyrent.domain.model.EnergyProviderName;
 import org.ipan.nrgyrent.domain.model.UserWallet;
+import org.ipan.nrgyrent.domain.model.autodelegation.AutoDelegationSession;
+import org.ipan.nrgyrent.domain.model.repository.AutoDelegationEventRepo;
+import org.ipan.nrgyrent.domain.model.repository.AutoDelegationSessionRepo;
 import org.ipan.nrgyrent.domain.model.repository.CollectionWalletRepo;
+import org.ipan.nrgyrent.domain.service.AutoDelegationSessionService;
 import org.ipan.nrgyrent.domain.service.NrgConfigsService;
 import org.ipan.nrgyrent.domain.service.UserWalletService;
 import org.ipan.nrgyrent.itrx.AppConstants;
@@ -44,6 +49,8 @@ public class AdminMenuHandler {
     private final CollectionWalletRepo collectionWalletRepo;
     private final UserWalletService userWalletService;
     private final AdminMenuHandlerHelper adminMenuHandlerHelper;
+    private final AutoDelegationSessionRepo autoDelegationSessionRepo;
+    private final EnergyService energyService;
 
     private final AdminViews adminViews;
     private final NrgConfigsService nrgConfigsService;
@@ -103,13 +110,54 @@ public class AdminMenuHandler {
 
     @MatchState(forAdmin = true, state = States.ADMIN_VIEW_CURRENT_AUTO_ENERGY_PROVIDER, callbackData = InlineMenuCallbacks.MANAGE_AUTO_ENERGY_PROVIDER_CHOOSE_ITRX)
     public void updateAutoCurrentEnergyProviderToItrx(UserState userState, Update update) {
+        List<AutoDelegationSession> activeSessions = autoDelegationSessionRepo.findByActive(true);
+        for (AutoDelegationSession activeSession : activeSessions) {
+            energyService.deactivateSessionSystemRestart(activeSession.getId());
+            try {
+                Thread.sleep(200);
+            } catch (InterruptedException e) {
+                logger.error("SET ITRX. Could not stop session id: {}, wallet: {}", activeSession.getId(), activeSession.getAddress(), e);
+            }
+        }
+
         nrgConfigsService.updateCurrentAutoProviderConfig(EnergyProviderName.ITRX);
+
+        for (AutoDelegationSession activeSession : activeSessions) {
+            try {
+                UserState us = telegramState.getOrCreateUserState(activeSession.getUser().getTelegramId());
+                energyService.startAutoTopupSession(us, activeSession.getAddress());
+                Thread.sleep(200);
+            } catch (InterruptedException e) {
+                logger.error("SET ITRX. Could not stop session id: {}, wallet: {}", activeSession.getId(), activeSession.getAddress(), e);
+            }
+        }
+
         showCurrentAutoEnergyProvider(userState, update);
     }
 
     @MatchState(forAdmin = true, state = States.ADMIN_VIEW_CURRENT_AUTO_ENERGY_PROVIDER, callbackData = InlineMenuCallbacks.MANAGE_AUTO_ENERGY_PROVIDER_CHOOSE_TRXX)
     public void updateAutoCurrentEnergyProviderToTrxx(UserState userState, Update update) {
+        List<AutoDelegationSession> activeSessions = autoDelegationSessionRepo.findByActive(true);
+        for (AutoDelegationSession activeSession : activeSessions) {
+            energyService.deactivateSessionSystemRestart(activeSession.getId());
+            try {
+                Thread.sleep(200);
+            } catch (InterruptedException e) {
+                logger.error("SET TRXX. Could not stop session id: {}, wallet: {}", activeSession.getId(), activeSession.getAddress(), e);
+            }
+        }
+
         nrgConfigsService.updateCurrentAutoProviderConfig(EnergyProviderName.TRXX);
+
+        for (AutoDelegationSession activeSession : activeSessions) {
+            try {
+                UserState us = telegramState.getOrCreateUserState(activeSession.getUser().getTelegramId());
+                energyService.startAutoTopupSession(us, activeSession.getAddress());
+                Thread.sleep(200);
+            } catch (InterruptedException e) {
+                logger.error("SET TRXX. Could not stop session id: {}, wallet: {}", activeSession.getId(), activeSession.getAddress(), e);
+            }
+        }
         showCurrentAutoEnergyProvider(userState, update);
     }
 
