@@ -95,6 +95,7 @@ public class EnergyService {
         return newSession;
     }
 
+    @Transactional
     public AutoDelegationSession deactivateSessionLowBalance(Long sessionId) {
         logger.info("AUTO DELEGATION. Deactivating auto delegation (low balance) session id {} ", sessionId);
         AutoDelegationSession byId = autoTopupConfigRepo.findById(sessionId).orElseThrow(() -> new IllegalStateException("Session is not found by id"));
@@ -102,6 +103,7 @@ public class EnergyService {
         return byId;
     }
 
+    @Transactional
     public AutoDelegationSession deactivateSessionInactivity(Long sessionId) {
         logger.info("AUTO DELEGATION. Deactivating auto delegation (inactivity) session id {} ", sessionId);
         AutoDelegationSession byId = autoTopupConfigRepo.findById(sessionId).orElseThrow(() -> new IllegalStateException("Session is not found by id"));
@@ -109,6 +111,7 @@ public class EnergyService {
         return byId;
     }
 
+    @Transactional
     public AutoDelegationSession deactivateSessionManually(Long sessionId) {
         logger.info("AUTO DELEGATION. Deactivating auto delegation (manually) session id {} ", sessionId);
         AutoDelegationSession byId = autoTopupConfigRepo.findById(sessionId).orElseThrow(() -> new IllegalStateException("Session is not found by id"));
@@ -116,24 +119,28 @@ public class EnergyService {
         return byId;
     }
 
+    @Transactional
     public void deactivateSessionSystemRestart(Long sessionId) {
         logger.info("AUTO DELEGATION. Deactivating auto delegation (restart) session id {} ", sessionId);
         AutoDelegationSession byId = autoTopupConfigRepo.findById(sessionId).orElseThrow(() -> new IllegalStateException("Session is not found by id"));
         deactivateSession(byId, AutoDelegationSessionStatus.STOPPED_SYSTEM_RESTART);
     }
 
+    @Transactional
     public void deactivateSessionNodeDisconnected(Long sessionId) {
         logger.info("AUTO DELEGATION. Deactivating auto delegation (restart) session id {} ", sessionId);
         AutoDelegationSession byId = autoTopupConfigRepo.findById(sessionId).orElseThrow(() -> new IllegalStateException("Session is not found by id"));
         deactivateSession(byId, AutoDelegationSessionStatus.STOPPED_NODE_DISCONNECTED);
     }
 
+    @Transactional
     public void deactivateSessionInitProblem(Long sessionId) {
         logger.info("AUTO DELEGATION. Deactivating auto delegation (Initialization problem) session id {} ", sessionId);
         AutoDelegationSession byId = autoTopupConfigRepo.findById(sessionId).orElseThrow(() -> new IllegalStateException("Session is not found by id"));
         deactivateSession(byId, AutoDelegationSessionStatus.STOPPED_INIT_PROBLEM);
     }
 
+    @Transactional
     public void deactivateSessionInactiveWallet(Long sessionId) {
         logger.info("AUTO DELEGATION. Deactivating auto delegation (Initialization problem) session id {} ", sessionId);
         AutoDelegationSession byId = autoTopupConfigRepo.findById(sessionId).orElseThrow(() -> new IllegalStateException("Session is not found by id"));
