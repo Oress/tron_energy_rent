@@ -27,43 +27,48 @@ import java.util.List;
 @AllArgsConstructor
 @Slf4j
 public class AutoDelegationMonitorJob {
-    public static final int MAX_IDLE_MINUTES = 48 * 60 - 20;
-
     private final AutoDelegationSessionRepo autoDelegationSessionRepo;
-    private final OrderRepo orderRepo;
     private final EnergyService energyService;
     private final AutoDelegationViews autoDelegationViews;
     private final TelegramState telegramState;
     private final TelegramMessages telegramMessages;
     private final UserWalletService userWalletService;
 
-    // TODO: can be optimized
     public void monitorForInactiveSessions() {
-        List<AutoDelegationSession> allByActive = autoDelegationSessionRepo.findAllByActive(true);
+        try {
+            List<AutoDelegationSession> allByActive = autoDelegationSessionRepo.findAllByActive(true);
 
-        for (AutoDelegationSession session : allByActive) {
-            Order top1ByAutoDelegationSessionIdOrderByCreatedAtDesc = orderRepo.findTop1ByAutoDelegationSessionIdOrderByCreatedAtDesc(session.getId());
+            for (AutoDelegationSession session : allByActive) {
+                // param responsible for auto deactivation is unused_times_threshold
+                // https://develop.itrx.io/api/order-count-policy.html
+                boolean isPaused = energyService.isSessionPausedOnService(session);
+                if (isPaused) {
+                    logger.info("Sesssion was disabled by service. id: {}, service: {}", session.getId(), session.getAddress());
+                    AppUser user = session.getUser();
+                    Long telegramId = user.getTelegramId();
 
-            Instant dtFrom = top1ByAutoDelegationSessionIdOrderByCreatedAtDesc != null
-                    ? top1ByAutoDelegationSessionIdOrderByCreatedAtDesc.getCreatedAt()
-                    : session.getCreatedAt();
-
-            Duration duration = Duration.between(Instant.now(), dtFrom);
-            if (duration.abs().toMinutes() >= MAX_IDLE_MINUTES) {
-                AppUser user = session.getUser();
-                Long telegramId = user.getTelegramId();
-                energyService.deactivateSessionLowBalance(session.getId());
-                UserState userState = telegramState.getOrCreateUserState(telegramId);
-                autoDelegationViews.autoDelegateSessionStoppedInactivity(userState, session);
-                List<UserWallet> userWallets = Collections.emptyList();
-                if (user.getShowWalletsMenu()) {
-                    userWallets = userWalletService.getWallets(user.getTelegramId());
+                    energyService.deactivateSessionInactivity(session.getId());
+                    UserState userState = telegramState.getOrCreateUserState(telegramId);
+                    autoDelegationViews.autoDelegateSessionStoppedInactivity(userState, session);
+                    List<UserWallet> userWallets = Collections.emptyList();
+                    if (user.getShowWalletsMenu()) {
+                        userWallets = userWalletService.getWallets(user.getTelegramId());
+                    }
+                    Message newMenuMsg = telegramMessages.sendUserMainMenuBasedOnRole(userState, userState.getChatId(), user, userWallets);
+                    telegramState.updateUserState(userState.getTelegramId(), userState
+                            .withState(States.MAIN_MENU)
+                            .withMenuMessageId(newMenuMsg.getMessageId()));
+                    logger.info("PROCESSED. Sesssion was disabled by service id: {}, service: {}", session.getId(), session.getAddress());
                 }
-                Message newMenuMsg = telegramMessages.sendUserMainMenuBasedOnRole(userState, userState.getChatId(), user, userWallets);
-                telegramState.updateUserState(userState.getTelegramId(), userState
-                        .withState(States.MAIN_MENU)
-                        .withMenuMessageId(newMenuMsg.getMessageId()));
+
+                try {
+                    Thread.sleep(200);
+                } catch (InterruptedException e) {
+                    logger.error("Could not sleep ");
+                }
             }
+        } catch (Exception e) {
+            logger.error("Something went wrong when monitoring for inactive auto delegation sessions", e);
         }
     }
 }

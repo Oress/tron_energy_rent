@@ -14,6 +14,7 @@ import org.ipan.nrgyrent.itrx.AppConstants;
 import org.ipan.nrgyrent.itrx.ItrxService;
 import org.ipan.nrgyrent.itrx.RestClient;
 import org.ipan.nrgyrent.itrx.dto.CreateDelegatePolicyResponse;
+import org.ipan.nrgyrent.itrx.dto.DelegatePolicyResponse;
 import org.ipan.nrgyrent.itrx.dto.EstimateOrderAmountResponse;
 import org.ipan.nrgyrent.netts.NettsService;
 import org.ipan.nrgyrent.telegram.state.TelegramState;
@@ -257,6 +258,21 @@ public class EnergyService {
             }
         }
         return pendingOrder;
+    }
+
+    public boolean isSessionPausedOnService(AutoDelegationSession session) {
+        DelegatePolicyResponse delegatePolicy;
+        if (session.getEnergyProvider() == EnergyProviderName.TRXX) {
+            delegatePolicy = trxxRestClient.getDelegatePolicy(session.getAddress());
+        } else {
+            delegatePolicy = itrxRestClient.getDelegatePolicy(session.getAddress());
+        }
+
+        if (delegatePolicy == null) {
+            logger.error("delegatePolicy is null");
+            return false;
+        }
+        return Boolean.TRUE.equals(delegatePolicy.getPause());
     }
 
 /*

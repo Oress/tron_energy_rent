@@ -207,6 +207,34 @@ public class RestClient {
         return createDelegatePolicyResponse;
     }
 
+    @SneakyThrows
+    @Retryable
+    public DelegatePolicyResponse getDelegatePolicy(String address) {
+        try {
+            HttpUrl.Builder builder = HttpUrl.parse(baseUrl + "/api/v1/frontend/count-delegate-policy").newBuilder();
+
+            HttpUrl url = builder
+                    .addQueryParameter("receive_address", address)
+                    .build();
+
+            Request request = new Request.Builder()
+                    .url(url)
+                    .get()
+                    .addHeader("API-KEY", apiKey)
+                    .addHeader("Content-Type", "application/json")
+                    .build();
+
+            Response response = client.newCall(request).execute();
+
+            ListDelegatePolicyResponse delegatePolicyResponse = gson.fromJson(response.body().charStream(), ListDelegatePolicyResponse.class);
+            logger.info("Response" + delegatePolicyResponse);
+            return delegatePolicyResponse != null && delegatePolicyResponse.getResults() != null
+                    && !delegatePolicyResponse.getResults().isEmpty() ? delegatePolicyResponse.getResults().get(0) : null;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public ApiUsageResponse getApiStats() {
         try {
             Request request = new Request.Builder()
