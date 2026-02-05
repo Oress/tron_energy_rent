@@ -77,7 +77,12 @@ public class ReferralCommissionHelper {
         AppUser user = userRepo.findByBalanceId(balanceId);
         if (user != null) {
             UserState userState = telegramState.getOrCreateUserState(user.getTelegramId());
-            telegramMessages.sendReferalPaymentNotification(userState, totalSum);
+            // in case someone blocked the bot.
+            try {
+                telegramMessages.sendReferalPaymentNotification(userState, totalSum);
+            } catch (Exception e) {
+                logger.error("Could not send notification to the balance: {}, user id: {}", balanceId, userState.getTelegramId());
+            }
         } else {
             logger.error("Referral commission for balance {} is NOT FOR USER", balanceId);
         }

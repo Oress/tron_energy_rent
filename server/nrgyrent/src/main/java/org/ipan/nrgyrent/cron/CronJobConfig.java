@@ -76,10 +76,9 @@ public class CronJobConfig {
         });
     }
 
-    @Scheduled(cron = "0 0 1 * * *")
-    // @Scheduled(initialDelay = 1, fixedRate = 2, timeUnit = TimeUnit.MINUTES)
+//    @Scheduled(cron = "0 0 1 * * *")
+     @Scheduled(initialDelay = 1, fixedRate = 20, timeUnit = TimeUnit.MINUTES)
     public void scheduleTasks() {
-        balanceRepo.findAllWithPendingReferralCommissions();
         Set<Balance> pendingBalances = balanceRepo.findAllWithPendingReferralCommissions();
 
         for (Balance balance : pendingBalances) {
