@@ -139,7 +139,7 @@ public class TariffService {
     }
 
     @Transactional
-    public Tariff createTariff(String label, Long txType1Amount, Long txType2Amount) {
+    public Tariff createTariff(String label, Long txType1Amount, Long txType2Amount, Long amlCheckPriceSun) {
         if (label.length() < 3) {
             logger.info("Label is too short: {}", label);
             throw new IllegalArgumentException("Label is too short");
@@ -154,9 +154,22 @@ public class TariffService {
         tariff.setLabel(label);
         tariff.setTransactionType1AmountSun(txType1Amount);
         tariff.setTransactionType2AmountSun(txType2Amount);
+        tariff.setAmlCheckPriceSun(amlCheckPriceSun);
 
         tariffRepo.save(tariff);
 
+        return tariff;
+    }
+
+    @Transactional
+    public Tariff changeAmlCheckPrice(Long tariffId, Long priceSun) {
+        logger.info("Changing AML check price for tariff ID {} to {}", tariffId, priceSun);
+        Tariff tariff = tariffRepo.findById(tariffId)
+                .orElseThrow(() -> new IllegalArgumentException("Tariff not found: " + tariffId));
+        if (priceSun < 0) {
+            throw new IllegalArgumentException("AML check price must be non-negative");
+        }
+        tariff.setAmlCheckPriceSun(priceSun);
         return tariff;
     }
 

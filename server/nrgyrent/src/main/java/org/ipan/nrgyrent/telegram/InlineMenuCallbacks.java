@@ -63,6 +63,7 @@ public class InlineMenuCallbacks {
 
     public static final String MANAGE_TARIFFS_ACTION_CHANGE_TX1_AMOUNT = "manage_tarifs_action_change_tx1_amount";
     public static final String MANAGE_TARIFFS_ACTION_CHANGE_TX2_AMOUNT = "manage_tarifs_action_change_tx2_amount";
+    public static final String MANAGE_TARIFFS_ACTION_CHANGE_AML_PRICE = "manage_tarifs_action_change_aml_price";
     public static final String MANAGE_TARIFFS_ACTION_RENAME = "manage_tarifs_action_rename";
     public static final String MANAGE_TARIFFS_ACTION_DEACTIVATE = "manage_tarifs_action_deactivate";
 
@@ -109,6 +110,9 @@ public class InlineMenuCallbacks {
     public static final String MANAGE_USER_ACTION_CHANGE_TARIFF = "manage_user_action_change_tariff";
     public static final String MANAGE_USER_ACTION_CHANGE_REF_PROGRAM = "manage_user_action_change_ref_program";
 
+
+    public static final String AML_CHECK = "aml_check";
+    public static final String AML_HISTORY = "aml_history";
 
     public static final String NTFN_OK = "notification_ok";
 

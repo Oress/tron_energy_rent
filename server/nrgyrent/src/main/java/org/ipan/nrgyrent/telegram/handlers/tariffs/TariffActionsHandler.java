@@ -121,6 +121,36 @@ public class TariffActionsHandler {
         }
     }
 
+    @MatchState(forAdmin = true, state = States.ADMIN_MANAGE_TARIFF_ACTION_PREVIEW, callbackData = InlineMenuCallbacks.MANAGE_TARIFFS_ACTION_CHANGE_AML_PRICE)
+    public void startChangingAmlPrice_prompt(UserState userState, Update update) {
+        tariffsActionsView.promptAmlCheckPrice(userState);
+        telegramState.updateUserState(userState.getTelegramId(),
+                userState.withState(States.ADMIN_MANAGE_TARIFF_ACTION_PROMPT_AML_PRICE));
+    }
+
+    @MatchState(forAdmin = true, state = States.ADMIN_MANAGE_TARIFF_ACTION_PROMPT_AML_PRICE, updateTypes = UpdateType.MESSAGE)
+    public void handleAmlPrice_end(UserState userState, Update update) {
+        Message message = update.getMessage();
+        if (message.hasText()) {
+            String amlPriceTrx = message.getText();
+
+            Long amlCheckPriceSun = null;
+            try {
+                amlCheckPriceSun = parseUtils.parseTrxStrToSunLong(amlPriceTrx);
+            } catch (IllegalArgumentException e) {
+                logger.warn("Invalid TRX amount for AML price: {}", amlPriceTrx);
+                return;
+            }
+
+            TariffEdit openTariff = telegramState.getOrCreateTariffEdit(userState.getTelegramId());
+            tariffService.changeAmlCheckPrice(openTariff.getSelectedTariffId(), amlCheckPriceSun);
+
+            tariffsActionsView.changeTxAmountSuccess(userState);
+            telegramState.updateUserState(userState.getTelegramId(),
+                    userState.withState(States.ADMIN_MANAGE_TARIFF_ACTION_CHANGE_AMOUNT_SUCCESS));
+        }
+    }
+
     @MatchState(forAdmin = true, state = States.ADMIN_MANAGE_TARIFF_ACTION_PREVIEW, callbackData = InlineMenuCallbacks.MANAGE_TARIFFS_ACTION_DEACTIVATE)
     public void handleDeactivate(UserState userState, Update update) {
         tariffsActionsView.confirmDeactivateMsg(userState);

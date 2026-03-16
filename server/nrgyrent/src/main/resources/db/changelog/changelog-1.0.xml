@@ -1250,4 +1250,81 @@
         </addColumn>
     </changeSet>
 
+    <changeSet id="extend nrg_tariffs with aml_check_price_sun" author="oress">
+        <addColumn tableName="nrg_tariffs">
+            <column name="aml_check_price_sun" type="bigint" defaultValue="8000000" />
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="create nrg_aml_verifications_seq" author="oress">
+        <createSequence sequenceName="nrg_aml_verifications_seq"
+                        dataType="bigint"
+                        incrementBy="1"
+                        startValue="1" />
+    </changeSet>
+
+    <changeSet id="create table nrg_aml_verifications" author="oress">
+        <createTable tableName="nrg_aml_verifications">
+            <column name="id" type="bigint">
+                <constraints primaryKey="true" nullable="false" unique="true" />
+            </column>
+            <column name="client_order_id" type="text" />
+            <column name="balance_id" type="bigint" />
+            <column name="tariff_id" type="bigint" />
+            <column name="payment_status" type="text" />
+            <column name="status" type="text" defaultValue="PENDING" />
+            <column name="risk_score" type="decimal(20,6)" />
+            <column name="risk_level" type="text" />
+            <column name="is_sanctioned" type="boolean" />
+            <column name="provider" type="text" />
+            <column name="fee_usdt" type="decimal(20,6)" />
+            <column name="fee_sun" type="bigint" />
+            <column name="paid_sun" type="bigint" />
+            <column name="currency" type="text" />
+            <column name="wallet_address" type="text" />
+            <column name="message" type="text" />
+            <column name="result" type="text" />
+            <column name="created_at" type="timestamp" />
+        </createTable>
+    </changeSet>
+
+    <changeSet id="create fk fk_nrg_aml_verifications_balance_id" author="oress">
+        <addForeignKeyConstraint constraintName="fk_nrg_aml_verifications_balance_id"
+                                 baseTableName="nrg_aml_verifications"
+                                 baseColumnNames="balance_id"
+                                 referencedTableName="nrg_balances"
+                                 referencedColumnNames="id" />
+    </changeSet>
+
+    <changeSet id="add fk fk_nrg_aml_verifications_tariff_id" author="oress">
+        <addForeignKeyConstraint constraintName="fk_nrg_aml_verifications_tariff_id"
+                                 baseTableName="nrg_aml_verifications"
+                                 baseColumnNames="tariff_id"
+                                 referencedTableName="nrg_tariffs"
+                                 referencedColumnNames="id" />
+    </changeSet>
+
+    <changeSet id="create index idx_nrg_aml_verifications_balance_id" author="oress">
+        <createIndex tableName="nrg_aml_verifications" indexName="idx_nrg_aml_verifications_balance_id">
+            <column name="balance_id" />
+        </createIndex>
+    </changeSet>
+    <changeSet id="create index idx_nrg_aml_verifications_tariff_id" author="oress">
+        <createIndex tableName="nrg_aml_verifications" indexName="idx_nrg_aml_verifications_tariff_id">
+            <column name="tariff_id" />
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="create index idx_nrg_aml_verifications_status" author="oress">
+        <createIndex tableName="nrg_aml_verifications" indexName="idx_nrg_aml_verifications_status">
+            <column name="status" />
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="create index idx_nrg_aml_verifications_client_order_id" author="oress">
+        <createIndex tableName="nrg_aml_verifications" indexName="idx_nrg_aml_verifications_client_order_id">
+            <column name="client_order_id" />
+        </createIndex>
+    </changeSet>
+
 </databaseChangeLog>

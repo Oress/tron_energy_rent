@@ -266,6 +266,29 @@ public class TelegramMessages {
     }
 
     @SneakyThrows
+    public void sendAmlReportCompleted(UserState userState, org.ipan.nrgyrent.domain.model.AmlVerification verification) {
+        SendMessage message = SendMessage
+                .builder()
+                .chatId(userState.getChatId())
+                .text(commonLabels.amlReportCompleted(userState.getLocaleOrDefault(), verification))
+                .parseMode("MARKDOWN")
+                .replyMarkup(getOkNotificationMarkup())
+                .build();
+        tgClient.execute(message);
+    }
+
+    @SneakyThrows
+    public void sendAmlReportFailed(UserState userState, org.ipan.nrgyrent.domain.model.AmlVerification verification) {
+        SendMessage message = SendMessage
+                .builder()
+                .chatId(userState.getChatId())
+                .text(commonLabels.amlReportFailed(userState.getLocaleOrDefault(), verification.getWalletAddress()))
+                .replyMarkup(getOkNotificationMarkup())
+                .build();
+        tgClient.execute(message);
+    }
+
+    @SneakyThrows
     public void sendLowItrxBalanceAlert(UserState userState, Long currentBalance) {
         SendMessage message = SendMessage
                 .builder()
@@ -740,7 +763,15 @@ public class TelegramMessages {
         }
 
         if (isAdmin) {
-            builder.keyboardRow(
+            builder
+                .keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text(commonLabels.getAmlCheck())
+                                        .callbackData(InlineMenuCallbacks.AML_CHECK)
+                                        .build()))
+                .keyboardRow(
                     new InlineKeyboardRow(
                             InlineKeyboardButton
                                     .builder()

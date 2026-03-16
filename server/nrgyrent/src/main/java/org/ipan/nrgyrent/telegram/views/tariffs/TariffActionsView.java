@@ -94,6 +94,18 @@ public class TariffActionsView {
     }
 
     @SneakyThrows
+    public void promptAmlCheckPrice(UserState userState) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
+                .text(tariffLabels.promptAmlPrice())
+                .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
+                .build();
+        tgClient.execute(message);
+    }
+
+    @SneakyThrows
     public void promptNewLabel(UserState userState) {
         EditMessageText message = EditMessageText
                 .builder()
@@ -185,6 +197,13 @@ public class TariffActionsView {
                                             .builder()
                                             .text(tariffLabels.menuChangeTx2Amount())
                                             .callbackData(InlineMenuCallbacks.MANAGE_TARIFFS_ACTION_CHANGE_TX2_AMOUNT)
+                                            .build()))
+                    .keyboardRow(
+                            new InlineKeyboardRow(
+                                    InlineKeyboardButton
+                                            .builder()
+                                            .text(tariffLabels.menuChangeAmlPrice())
+                                            .callbackData(InlineMenuCallbacks.MANAGE_TARIFFS_ACTION_CHANGE_AML_PRICE)
                                             .build()))
                 .keyboardRow(
                         new InlineKeyboardRow(

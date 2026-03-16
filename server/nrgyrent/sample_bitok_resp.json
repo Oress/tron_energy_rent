@@ -1,0 +1,115 @@
+{
+  "success": true,
+  "data": {
+    "client_order_id": "A4448368195FE7E",
+    "status": "completed",
+    "address": "T...example...",
+    "provider": "bitok",
+    "report_language": "en",
+    "risk_score": 0.262292,
+    "risk_level": "low",
+    "is_sanctioned": false,
+    "created_at": "2026-03-10 16:44:25",
+    "completed_at": "2026-03-10 16:44:26",
+    "result": {
+      "risk_score": 0.262292,
+      "risk_level": "low",
+      "entity_name": null,
+      "entity_category": null,
+      "exposure": [
+        { "value_share": 0.711, "entity_category": "exchange" },
+        { "value_share": 0.1445, "entity_category": "dust" },
+        { "value_share": 0.0845, "entity_category": "unnamed_service" },
+        { "value_share": 0.0218, "entity_category": "high_risk_exchange" },
+        { "value_share": 0.0113, "entity_category": "gambling" },
+        { "value_share": 0.0081, "entity_category": "enforcement_action" },
+        { "value_share": 0.0042, "entity_category": "custodial_wallet" },
+        { "value_share": 0.0038, "entity_category": "bridge" },
+        { "value_share": 0.0031, "entity_category": "other" },
+        { "value_share": 0.0023, "entity_category": "dex" },
+        { "value_share": 0.0017, "entity_category": "lending" },
+        { "value_share": 0.0014, "entity_category": "payment_service_provider" },
+        { "value_share": 0.0013, "entity_category": "sanctions" },
+        { "value_share": 0.0005, "entity_category": "smart_contract" },
+        { "value_share": 0.0003, "entity_category": "stolen_funds" },
+        { "value_share": 0.0001, "entity_category": "p2p_exchange" },
+        { "value_share": 0.0001, "entity_category": "high_risk_jurisdiction" },
+        { "value_share": 0.0001, "entity_category": "terrorist_financing" },
+        { "value_share": 0.0, "entity_category": "scam" },
+        { "value_share": 0.0, "entity_category": "privacy_protocol" },
+        { "value_share": 0.0, "entity_category": "atm" },
+        { "value_share": 0.0, "entity_category": "mining_pool" },
+        { "value_share": 0.0, "entity_category": "seized_funds" },
+        { "value_share": 0.0, "entity_category": "ransomware" },
+        { "value_share": 0.0, "entity_category": "token_contract" },
+        { "value_share": 0.0, "entity_category": "iaas" },
+        { "value_share": 0.0, "entity_category": "fraud_shop" },
+        { "value_share": 0.0, "entity_category": "illegal_service" },
+        { "value_share": 0.0, "entity_category": "darknet_market" }
+      ],
+      "risks": [
+        {
+          "rule": {
+            "rule_type": "address_exposure",
+            "rule_sub_type": "single_address",
+            "entity_category": "high_risk_exchange",
+            "min_value_share": 0.01,
+            "min_value_in_fiat": null
+          },
+          "proximity": "indirect",
+          "risk_type": "address_exposure",
+          "risk_level": "low",
+          "detected_at": "2026-03-10T17:54:28.387498+03:00",
+          "occurred_at": "2026-03-10T17:53:56.444636+03:00",
+          "value_share": 0.0218,
+          "fiat_currency": "USD",
+          "value_in_fiat": null,
+          "entity_category": "high_risk_exchange"
+        },
+        {
+          "rule": {
+            "rule_type": "address_exposure",
+            "rule_sub_type": "single_address",
+            "entity_category": "gambling",
+            "min_value_share": 0.01,
+            "min_value_in_fiat": null
+          },
+          "proximity": "indirect",
+          "risk_type": "address_exposure",
+          "risk_level": "low",
+          "detected_at": "2026-03-10T17:54:28.387588+03:00",
+          "occurred_at": "2026-03-10T17:53:56.444636+03:00",
+          "value_share": 0.0113,
+          "fiat_currency": "USD",
+          "value_in_fiat": null,
+          "entity_category": "gambling"
+        },
+        {
+          "rule": {
+            "rule_type": "address_exposure",
+            "rule_sub_type": "all",
+            "entity_category": "sanctions",
+            "min_value_share": 0.001,
+            "min_value_in_fiat": null
+          },
+          "proximity": "indirect",
+          "risk_type": "address_exposure",
+          "risk_level": "low",
+          "detected_at": "2026-03-10T17:54:28.387630+03:00",
+          "occurred_at": "2026-03-10T17:53:56.444636+03:00",
+          "value_share": 0.0013,
+          "fiat_currency": "USD",
+          "value_in_fiat": null,
+          "entity_category": "sanctions"
+        }
+      ]
+    },
+    "address_users": [
+      {
+        "sources": ["api_1h_response"],
+        "user_id": 3162
+      }
+    ]
+  },
+  "timestamp": "2026-03-10 15:44:27"
+}

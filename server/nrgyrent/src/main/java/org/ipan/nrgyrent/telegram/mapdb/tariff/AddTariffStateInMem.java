@@ -14,11 +14,15 @@ import lombok.extern.jackson.Jacksonized;
 public class AddTariffStateInMem implements AddTariffState {
     String label;
     Long txType1Amount;
+    Long txType2Amount;
+    Long amlCheckPriceSun;
 
     public static AddTariffStateInMem of(AddTariffState prototype) {
         return AddTariffStateInMem.builder()
                 .label(prototype.getLabel())
                 .txType1Amount(prototype.getTxType1Amount())
+                .txType2Amount(prototype.getTxType2Amount())
+                .amlCheckPriceSun(prototype.getAmlCheckPriceSun())
                 .build();
     }
 }

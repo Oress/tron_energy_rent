@@ -262,4 +262,56 @@ public class CommonLabels {
     public String alertCatfeeBalanceLow(Locale locale, String currentBalance) {
         return getLocalizedMessage("alerts.catfee_balance_low", locale, currentBalance);
     }
+
+    public String getAmlCheck() {
+        return getLocalizedMessage("menu.aml_check");
+    }
+
+    public String amlMenuDescription(Locale locale, String price) {
+        return getLocalizedMessage("aml.menu_description", locale, price);
+    }
+
+    public String amlMenuCheckWallet() {
+        return getLocalizedMessage("aml.menu_check_wallet");
+    }
+
+    public String amlMenuHistory() {
+        return getLocalizedMessage("aml.menu_history");
+    }
+
+    public String amlPromptWallet(Locale locale, String price, String balance) {
+        return getLocalizedMessage("aml.prompt_wallet", locale, price, balance);
+    }
+
+    public String amlInsufficientBalance(Locale locale, String price, String balance) {
+        return getLocalizedMessage("aml.insufficient_balance", locale, price, balance);
+    }
+
+    public String amlRequestReceived(Locale locale, String walletAddress) {
+        return getLocalizedMessage("aml.request_received", locale, walletAddress);
+    }
+
+    public String amlReportCompleted(Locale locale, org.ipan.nrgyrent.domain.model.AmlVerification v) {
+        String riskLevel = v.getRiskLevel() != null ? v.getRiskLevel().name() : "N/A";
+        String riskScore = v.getRiskScore() != null ? String.format("%.2f", v.getRiskScore()) : "N/A";
+        String sanctioned = Boolean.TRUE.equals(v.getSanctioned()) ? "YES" : "NO";
+        return getLocalizedMessage("aml.report_completed", locale,
+                v.getWalletAddress(), riskLevel, riskScore, sanctioned);
+    }
+
+    public String amlReportFailed(Locale locale, String walletAddress) {
+        return getLocalizedMessage("aml.report_failed", locale, walletAddress);
+    }
+
+    public String amlHistoryEmpty(Locale locale) {
+        return getLocalizedMessage("aml.history_empty", locale);
+    }
+
+    public String amlHistoryItem(Locale locale, org.ipan.nrgyrent.domain.model.AmlVerification v) {
+        String status = v.getStatus().name();
+        String riskLevel = v.getRiskLevel() != null ? v.getRiskLevel().name() : "-";
+        String riskScore = v.getRiskScore() != null ? String.format("%.2f", v.getRiskScore()) : "-";
+        return getLocalizedMessage("aml.history_item", locale,
+                v.getWalletAddress(), status, riskLevel, riskScore);
+    }
 }

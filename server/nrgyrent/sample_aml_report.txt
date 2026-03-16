@@ -1,0 +1,25 @@
+Sample AML report:
+
+🛡 AML Compliance Report
+📍 Address: T134684afawfwa
+
+📊 Risk Summary:
+• Risk Score: 26.23%
+• Risk Level: 🟢 LOW • Sanctioned: ❌ No
+
+📈 Fund Exposure:
+Where the money comes from (Top 95%):
+• 🏦 Exchange: 71.10%
+• 🌫 Dust: 14.45%
+• 👤 Unnamed Service: 8.45%
+• ⚠️ High Risk Exchange: 2.18%
+• 🎰 Gambling: 1.13%
+• 📁 Others: 2.69%
+
+⚠️ Identified Risks:
+• High Risk Exchange: Indirect exposure (2.18%)
+• Gambling: Indirect exposure (1.13%)
+• Sanctions: Indirect exposure (0.13%)
+
+🕒 Computed: 2026-03-10 16:44:26
+Data provided by BitOK

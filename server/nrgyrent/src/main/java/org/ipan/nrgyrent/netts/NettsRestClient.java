@@ -6,7 +6,11 @@ import com.google.gson.GsonBuilder;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
+import org.ipan.nrgyrent.domain.model.AmlProvider;
 import org.ipan.nrgyrent.itrx.ItrxInsufficientFundsException;
+import org.ipan.nrgyrent.netts.dto.NettsAmlCreateRequest;
+import org.ipan.nrgyrent.netts.dto.NettsAmlCreateResponse200;
+import org.ipan.nrgyrent.netts.dto.NettsAmlStatusResponse;
 import org.ipan.nrgyrent.netts.dto.NettsPlaceOrderRequest;
 import org.ipan.nrgyrent.netts.dto.NettsPlaceOrderResponse200;
 import org.ipan.nrgyrent.netts.dto.NettsUserInfoResponse200;
@@ -85,6 +89,58 @@ public class NettsRestClient {
         }
         NettsPlaceOrderResponse200 placeOrderResponse = gson.fromJson(responseStr, NettsPlaceOrderResponse200.class);
         return placeOrderResponse;
+    }
+
+    @SneakyThrows
+    public NettsAmlCreateResponse200 createAmlRequest(String walletAddress, AmlProvider provider) {
+        UriComponents uriComponents = UriComponentsBuilder.fromPath("/apiv2/aml").build();
+
+        String providerStr = switch (provider) {
+            case ELLIPTIC -> "elliptic";
+            case null, default -> "bitok";
+        };
+
+        var req = new NettsAmlCreateRequest(walletAddress, "trx", providerStr, false);
+        String jsonBody = gson.toJson(req);
+        RequestBody body = RequestBody.create(jsonBody, mediaType);
+        Request request = new Request.Builder()
+                .url(baseUrl + uriComponents)
+                .method("POST", body)
+                .addHeader("X-API-KEY", apiKey)
+                .addHeader("X-Real-IP", realIp)
+                .build();
+        Response response = client.newCall(request).execute();
+        String responseStr = response.body().string();
+        logger.info("NETTS.IO AML create request: {}", responseStr);
+
+        int responseCode = response.code();
+        if (responseCode != 200) {
+            logger.error("NETTS.IO Error creating AML request, code: {}, body: {}", responseCode, responseStr);
+            throw new RuntimeException("Error creating AML request: " + responseStr);
+        }
+        return gson.fromJson(responseStr, NettsAmlCreateResponse200.class);
+    }
+
+    @SneakyThrows
+    public NettsAmlStatusResponse getAmlStatus(String orderId) {
+        UriComponents uriComponents = UriComponentsBuilder.fromPath("/apiv2/aml/" + orderId).build();
+
+        Request request = new Request.Builder()
+                .url(baseUrl + uriComponents)
+                .method("GET", null)
+                .addHeader("X-API-KEY", apiKey)
+                .addHeader("X-Real-IP", realIp)
+                .build();
+        Response response = client.newCall(request).execute();
+        String responseStr = response.body().string();
+        logger.info("NETTS.IO AML status for order {}: {}", orderId, responseStr);
+
+        int responseCode = response.code();
+        if (responseCode != 200) {
+            logger.error("NETTS.IO Error getting AML status for order {}, code: {}, body: {}", orderId, responseCode, responseStr);
+            throw new RuntimeException("Error getting AML status: " + responseStr);
+        }
+        return gson.fromJson(responseStr, NettsAmlStatusResponse.class);
     }
 }
 

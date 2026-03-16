@@ -39,6 +39,9 @@ public class Tariff {
     @Column(name = "tx_type_2_amount_sun")
     private Long transactionType2AmountSun = AppConstants.PRICE_131K; // default one, Just in case
 
+    @Column(name = "aml_check_price_sun")
+    private Long amlCheckPriceSun;
+
     @Column(name = "is_predefined")
     private Boolean predefined = Boolean.FALSE;
 

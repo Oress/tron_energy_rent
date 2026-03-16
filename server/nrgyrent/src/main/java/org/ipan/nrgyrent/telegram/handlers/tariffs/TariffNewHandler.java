@@ -81,7 +81,7 @@ public class TariffNewHandler {
     }
 
     @MatchState(forAdmin = true, state = States.ADMIN_MANAGE_TARIFF_ADD_PROMPT_TX2_AMOUNT, updateTypes = UpdateType.MESSAGE)
-    public void handleAmountForTxType2_end(UserState userState, Update update) {
+    public void handleAmountForTxType2_promptAmlPrice(UserState userState, Update update) {
         Message message = update.getMessage();
         if (message.hasText()) {
             String tx2AmountTrx = message.getText();
@@ -96,7 +96,34 @@ public class TariffNewHandler {
             }
 
             AddTariffState addTariffState = telegramState.getOrCreateAddTariffState(telegramId);
-            tariffService.createTariff(addTariffState.getLabel(), addTariffState.getTxType1Amount(), txType2Amount);
+            telegramState.updateAddTariffState(telegramId, addTariffState.withTxType2Amount(txType2Amount));
+
+            tariffNewView.promptAmlCheckPrice(userState);
+            telegramState.updateUserState(telegramId, userState.withState(States.ADMIN_MANAGE_TARIFF_ADD_PROMPT_AML_PRICE));
+        }
+    }
+
+    @MatchState(forAdmin = true, state = States.ADMIN_MANAGE_TARIFF_ADD_PROMPT_AML_PRICE, updateTypes = UpdateType.MESSAGE)
+    public void handleAmlPrice_end(UserState userState, Update update) {
+        Message message = update.getMessage();
+        if (message.hasText()) {
+            String amlPriceTrx = message.getText();
+            Long telegramId = userState.getTelegramId();
+
+            Long amlCheckPriceSun = null;
+            try {
+                amlCheckPriceSun = parseUtils.parseTrxStrToSunLong(amlPriceTrx);
+            } catch (IllegalArgumentException e) {
+                logger.warn("Invalid TRX amount for AML price: {}", amlPriceTrx);
+                return;
+            }
+
+            AddTariffState addTariffState = telegramState.getOrCreateAddTariffState(telegramId);
+            tariffService.createTariff(
+                    addTariffState.getLabel(),
+                    addTariffState.getTxType1Amount(),
+                    addTariffState.getTxType2Amount(),
+                    amlCheckPriceSun);
 
             tariffNewView.tariffAddSuccess(userState);
             telegramState.updateUserState(telegramId, userState.withState(States.ADMIN_MANAGE_TARIFF_ACTION_ADD_SUCCESS));
