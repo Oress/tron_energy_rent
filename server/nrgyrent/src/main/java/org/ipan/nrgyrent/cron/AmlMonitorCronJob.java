@@ -62,11 +62,11 @@ public class AmlMonitorCronJob {
             String status = data.getStatus();
 
             if (STATUS_COMPLETED.equalsIgnoreCase(status)) {
-                amlVerificationService.completeVerification(verification.getId(), data);
+                verification = amlVerificationService.completeVerification(verification.getId(), data);
                 notifyUser(verification);
                 logger.info("AML verification completed for wallet: {}, id: {}", verification.getWalletAddress(), verification.getId());
             } else if (STATUS_FAILED.equalsIgnoreCase(status)) {
-                amlVerificationService.refundVerification(verification.getId());
+                verification = amlVerificationService.refundVerification(verification.getId());
                 notifyUserFailed(verification);
                 logger.info("AML verification failed for wallet: {}, id: {}", verification.getWalletAddress(), verification.getId());
             } else if (STATUS_PROCESSING.equalsIgnoreCase(status)) {

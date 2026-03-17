@@ -360,4 +360,16 @@ public class CommonLabels {
         String key = "aml.category." + category.toLowerCase().replace(" ", "_");
         return messageSource.getMessage(key, null, category, locale);
     }
+
+    public String amlRiskLevelName(Locale locale, org.ipan.nrgyrent.domain.model.AmlRiskLevel level) {
+        if (level == null) return "N/A";
+        String key = "aml.risk_level." + level.name().toLowerCase();
+        return messageSource.getMessage(key, null, level.name(), locale);
+    }
+
+    public String amlProximity(Locale locale, String proximity) {
+        if (proximity == null) return "";
+        String key = "aml.proximity." + proximity.toLowerCase();
+        return messageSource.getMessage(key, null, proximity, locale);
+    }
 }

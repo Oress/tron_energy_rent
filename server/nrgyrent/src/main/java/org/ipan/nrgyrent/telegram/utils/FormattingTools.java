@@ -121,11 +121,11 @@ public class FormattingTools {
         sb.append(commonLabels.amlReportAddress(locale)).append(" `").append(v.getWalletAddress()).append("`\n\n");
 
         sb.append(commonLabels.amlReportRiskSummary(locale)).append("\n");
-        String riskScore = v.getRiskScore() != null ? String.format("%.2f%%", v.getRiskScore()) : "N/A";
+        String riskScore = v.getRiskScore() != null ? String.format("%.2f%%", v.getRiskScore() * 100) : "N/A";
         sb.append(commonLabels.amlReportRiskScore(locale, riskScore)).append("\n");
 
         String riskEmoji = riskLevelEmoji(v.getRiskLevel());
-        String riskLevelName = v.getRiskLevel() != null ? v.getRiskLevel().name() : "N/A";
+        String riskLevelName = commonLabels.amlRiskLevelName(locale, v.getRiskLevel());
         sb.append(commonLabels.amlReportRiskLevel(locale, riskEmoji + " " + riskLevelName)).append("\n");
 
         String sanctionedVal = Boolean.TRUE.equals(v.getSanctioned())
@@ -143,7 +143,7 @@ public class FormattingTools {
                     for (BitokResultResponse.Exposure exp : result.getExposure()) {
                         String cat = exp.getEntityCategory() != null ? exp.getEntityCategory() : "Unknown";
                         String catName = commonLabels.amlCategoryName(locale, cat);
-                        String share = exp.getValueShare() != null ? String.format("%.2f%%", exp.getValueShare()) : "N/A";
+                        String share = exp.getValueShare() != null ? String.format("%.2f%%", exp.getValueShare() * 100) : "N/A";
                         sb.append("• ").append(categoryIcon(cat)).append(" ").append(catName).append(": ").append(share).append("\n");
                     }
                 }
@@ -153,8 +153,8 @@ public class FormattingTools {
                     for (BitokResultResponse.Risk risk : result.getRisks()) {
                         String cat = risk.getEntityCategory() != null ? risk.getEntityCategory() : "Unknown";
                         String catName = commonLabels.amlCategoryName(locale, cat);
-                        String proximity = risk.getProximity() != null ? capitalize(risk.getProximity()) + " exposure" : "";
-                        String share = risk.getValueShare() != null ? " (" + String.format("%.2f%%", risk.getValueShare()) + ")" : "";
+                        String proximity = commonLabels.amlProximity(locale, risk.getProximity());
+                        String share = risk.getValueShare() != null ? " (" + String.format("%.2f%%", risk.getValueShare() * 100) + ")" : "";
                         sb.append("• ").append(catName).append(": ").append(proximity).append(share).append("\n");
                     }
                 }
@@ -165,8 +165,8 @@ public class FormattingTools {
         if (v.getCompletedAt() != null) {
             sb.append("\n").append(commonLabels.amlReportComputed(locale, formatDateToUtc(v.getCompletedAt()))).append("\n");
         }
-        String providerName = v.getProvider() != null ? v.getProvider().name() : "BitOK";
-        sb.append(commonLabels.amlReportProvider(locale, providerName));
+//        String providerName = v.getProvider() != null ? v.getProvider().name() : "BitOK";
+//        sb.append(commonLabels.amlReportProvider(locale, providerName));
 
         return sb.toString();
     }
