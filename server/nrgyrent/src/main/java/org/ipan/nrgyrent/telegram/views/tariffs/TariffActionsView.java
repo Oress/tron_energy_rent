@@ -94,12 +94,12 @@ public class TariffActionsView {
     }
 
     @SneakyThrows
-    public void promptAmlCheckPrice(UserState userState) {
+    public void promptAmlPercentage(UserState userState) {
         EditMessageText message = EditMessageText
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
-                .text(tariffLabels.promptAmlPrice())
+                .text(tariffLabels.promptAmlPercentage())
                 .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
         tgClient.execute(message);
@@ -148,8 +148,8 @@ public class TariffActionsView {
     }
 
     private String getBalanceDescription(Tariff tariff) {
-        String amlPrice = tariff.getAmlCheckPriceSun() != null
-                ? FormattingTools.formatBalance(tariff.getAmlCheckPriceSun())
+        String amlPercentage = tariff.getAmlCheckPercentage() != null
+                ? tariff.getAmlCheckPercentage() + "%"
                 : "N/A";
         return tariffLabels.preview(
                 tariff.getLabel(),
@@ -159,7 +159,7 @@ public class TariffActionsView {
                 FormattingTools.formatDateToUtc(tariff.getCreatedAt()),
                 tariff.getActive() ? commonLabels.check() : commonLabels.cross(),
                 tariff.getPredefined() ? commonLabels.defaultTariffWarning() : "",
-                amlPrice);
+                amlPercentage);
     }
 
     private InlineKeyboardMarkup getManageTariffActionsMarkup(Boolean showBackButton, Boolean canChange) {
@@ -206,7 +206,7 @@ public class TariffActionsView {
                             new InlineKeyboardRow(
                                     InlineKeyboardButton
                                             .builder()
-                                            .text(tariffLabels.menuChangeAmlPrice())
+                                            .text(tariffLabels.menuChangeAmlPercentage())
                                             .callbackData(InlineMenuCallbacks.MANAGE_TARIFFS_ACTION_CHANGE_AML_PRICE)
                                             .build()))
                 .keyboardRow(

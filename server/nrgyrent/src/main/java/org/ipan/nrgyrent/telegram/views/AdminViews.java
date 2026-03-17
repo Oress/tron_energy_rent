@@ -4,9 +4,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.ipan.nrgyrent.domain.model.AmlProvider;
 import org.ipan.nrgyrent.domain.model.CollectionWallet;
 import org.ipan.nrgyrent.domain.model.EnergyProviderName;
 import org.ipan.nrgyrent.domain.model.UserWallet;
+import org.ipan.nrgyrent.netts.AmlPriceCache;
 import org.ipan.nrgyrent.itrx.dto.ApiUsageResponse;
 import org.ipan.nrgyrent.telegram.InlineMenuCallbacks;
 import org.ipan.nrgyrent.telegram.i18n.AdminLabels;
@@ -113,6 +115,35 @@ public class AdminViews {
 
     @Retryable
     @SneakyThrows
+    public void currentAmlProvider(UserState userState, AmlProvider currentProvider, AmlPriceCache amlPriceCache) {
+        String ellipticUsdt = "-";
+        String ellipticTrx = "-";
+        String bitokUsdt = "-";
+        String bitokTrx = "-";
+
+        AmlPriceCache.AmlPrice ellipticPrice = amlPriceCache.getPrice(AmlProvider.ELLIPTIC);
+        if (ellipticPrice != null) {
+            ellipticUsdt = ellipticPrice.getPriceUsdt() != null ? String.format("%.4f", ellipticPrice.getPriceUsdt()) : "-";
+            ellipticTrx = ellipticPrice.getPriceTrx() != null ? String.format("%.4f", ellipticPrice.getPriceTrx()) : "-";
+        }
+        AmlPriceCache.AmlPrice bitokPrice = amlPriceCache.getPrice(AmlProvider.BITOK);
+        if (bitokPrice != null) {
+            bitokUsdt = bitokPrice.getPriceUsdt() != null ? String.format("%.4f", bitokPrice.getPriceUsdt()) : "-";
+            bitokTrx = bitokPrice.getPriceTrx() != null ? String.format("%.4f", bitokPrice.getPriceTrx()) : "-";
+        }
+
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
+                .text(adminLabels.currentAmlProvider(currentProvider.name(), ellipticUsdt, ellipticTrx, bitokUsdt, bitokTrx))
+                .replyMarkup(getAmlProvidersReplyMarkup())
+                .build();
+        tgClient.execute(message);
+    }
+
+    @Retryable
+    @SneakyThrows
     public void currentAutoEnergyProvider(UserState userState, EnergyProviderName energyProviderName) {
         EditMessageText message = EditMessageText
                 .builder()
@@ -148,6 +179,38 @@ public class AdminViews {
                 .replyMarkup(getAdminMenuReplyMarkup())
                 .build();
         tgClient.execute(message);
+    }
+
+    private InlineKeyboardMarkup getAmlProvidersReplyMarkup() {
+        return InlineKeyboardMarkup
+                .builder()
+                .keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text("Elliptic")
+                                        .callbackData(InlineMenuCallbacks.MANAGE_AML_PROVIDER_CHOOSE_ELLIPTIC)
+                                        .build()))
+                .keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text("Bitok")
+                                        .callbackData(InlineMenuCallbacks.MANAGE_AML_PROVIDER_CHOOSE_BITOK)
+                                        .build()))
+                .keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text(commonLabels.toMainMenu())
+                                        .callbackData(InlineMenuCallbacks.TO_MAIN_MENU)
+                                        .build(),
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text(commonLabels.goBack())
+                                        .callbackData(InlineMenuCallbacks.GO_BACK)
+                                        .build()))
+                .build();
     }
 
     private InlineKeyboardMarkup getAutoEnergyProvidersReplyMarkup() {
@@ -277,6 +340,13 @@ public class AdminViews {
                                         .builder()
                                         .text(adminLabels.menuRefPrograms())
                                         .callbackData(InlineMenuCallbacks.MANAGE_REFERRAL_PROGRAMS)
+                                        .build()))
+                .keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text(adminLabels.menuAmlProvider())
+                                        .callbackData(InlineMenuCallbacks.MANAGE_AML_PROVIDER)
                                         .build()))
                 .keyboardRow(
                         new InlineKeyboardRow(

@@ -10,8 +10,13 @@ import org.ipan.nrgyrent.domain.exception.NotEnoughBalanceException;
 import org.ipan.nrgyrent.domain.model.*;
 import org.ipan.nrgyrent.domain.model.repository.AmlVerificationRepo;
 import org.ipan.nrgyrent.itrx.Utils;
+import org.ipan.nrgyrent.netts.AmlPriceCache;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Instant;
+
+import com.google.gson.JsonObject;
 import org.ipan.nrgyrent.netts.dto.NettsAmlCreateResponse200;
 import org.ipan.nrgyrent.netts.dto.NettsAmlStatusResponse;
 import org.springframework.beans.factory.annotation.Lookup;
@@ -26,6 +31,7 @@ public class AmlVerificationService {
 
     private final AmlVerificationRepo amlVerificationRepo;
     private final BalanceService balanceService;
+    private final AmlPriceCache amlPriceCache;
 
     /**
      * Creates a pending AML verification, deducting the fee from the user's balance.
@@ -33,7 +39,7 @@ public class AmlVerificationService {
      * and calling {@link #markProcessing(Long, String)} or {@link #refundVerification(Long)} afterwards.
      */
     @Transactional
-    public AmlVerification createPendingVerification(Long userId, String walletAddress, AmlProvider provider) {
+    public AmlVerification createPendingVerification(Long userId, String walletAddress, AmlProvider provider, Long chatId, Integer messageToUpdate) {
         EntityManager em = getEntityManager();
 
         AppUser user = em.find(AppUser.class, userId);
@@ -51,10 +57,17 @@ public class AmlVerificationService {
             throw new IllegalArgumentException("User has no tariff: " + userId);
         }
 
-        Long priceSun = tariff.getAmlCheckPriceSun();
-        if (priceSun == null || priceSun <= 0) {
-            throw new IllegalStateException("AML check price is not configured on tariff id: " + tariff.getId());
+        Integer percentage = tariff.getAmlCheckPercentage();
+        if (percentage == null || percentage <= 0) {
+            throw new IllegalStateException("AML check percentage is not configured on tariff id: " + tariff.getId());
         }
+
+        AmlPriceCache.AmlPrice cachedPrice = amlPriceCache.getPrice(provider);
+        if (cachedPrice == null || cachedPrice.getPriceTrx() == null) {
+            throw new IllegalStateException("AML price is not yet available for provider: " + provider + ". Please try again in a moment.");
+        }
+
+        Long priceSun = computeAmlPriceSun(cachedPrice.getPriceTrx(), percentage);
 
         if (balance.getSunBalance() < priceSun) {
             throw new NotEnoughBalanceException("Not enough balance for AML check. Required: " + priceSun + ", available: " + balance.getSunBalance());
@@ -70,6 +83,8 @@ public class AmlVerificationService {
         verification.setProvider(provider);
         verification.setPaidSun(priceSun);
         verification.setWalletAddress(walletAddress);
+        verification.setChatId(chatId);
+        verification.setMessageToUpdate(messageToUpdate);
 
 
         em.persist(verification);
@@ -110,8 +125,9 @@ public class AmlVerificationService {
         verification.setSanctioned(data.getIsSanctioned());
         verification.setMessage(data.getMessage() != null ? data.getMessage() : null);
 
-        if (data.getResult() != null) {
-            verification.setResult(GSON.toJson(data.getResult()));
+        JsonObject result = data.getResult();
+        if (result != null) {
+            verification.setResult(result.toString());
         }
 
         logger.info("Completed AML verification id: {} wallet: {} riskLevel: {} riskScore: {}",
@@ -159,6 +175,20 @@ public class AmlVerificationService {
             logger.warn("Unknown risk level from AML provider: {}", riskLevel);
             return null;
         }
+    }
+
+    /**
+     * Computes AML price in SUN: providerPriceTrx * percentage / 100, rounded to 1 decimal in TRX, then converted to SUN.
+     */
+    public static Long computeAmlPriceSun(Double providerPriceTrx, Integer percentage) {
+        BigDecimal priceTrx = computeAmlPriceTrx(providerPriceTrx, percentage);
+        return priceTrx.multiply(BigDecimal.valueOf(1_000_000)).longValue();
+    }
+
+    public static BigDecimal computeAmlPriceTrx(Double providerPriceTrx, Integer percentage) {
+        return BigDecimal.valueOf(providerPriceTrx)
+                .multiply(BigDecimal.valueOf(100 + percentage))
+                .divide(BigDecimal.valueOf(100), 1, RoundingMode.HALF_UP);
     }
 
     private AmlProvider parseProvider(String provider) {

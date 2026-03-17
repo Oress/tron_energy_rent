@@ -372,4 +372,8 @@ public class CommonLabels {
         String key = "aml.proximity." + proximity.toLowerCase();
         return messageSource.getMessage(key, null, proximity, locale);
     }
+
+    public String amlReportEllipticRulesHeader(Locale locale) {
+        return getLocalizedMessage("aml.report.elliptic.rules_header", locale);
+    }
 }

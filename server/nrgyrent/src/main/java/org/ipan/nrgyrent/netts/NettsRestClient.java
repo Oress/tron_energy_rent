@@ -10,6 +10,7 @@ import org.ipan.nrgyrent.domain.model.AmlProvider;
 import org.ipan.nrgyrent.itrx.ItrxInsufficientFundsException;
 import org.ipan.nrgyrent.netts.dto.NettsAmlCreateRequest;
 import org.ipan.nrgyrent.netts.dto.NettsAmlCreateResponse200;
+import org.ipan.nrgyrent.netts.dto.NettsAmlPriceResponse;
 import org.ipan.nrgyrent.netts.dto.NettsAmlStatusResponse;
 import org.ipan.nrgyrent.netts.dto.NettsPlaceOrderRequest;
 import org.ipan.nrgyrent.netts.dto.NettsPlaceOrderResponse200;
@@ -120,6 +121,35 @@ public class NettsRestClient {
             throw new RuntimeException("Error creating AML request: " + responseStr);
         }
         return gson.fromJson(responseStr, NettsAmlCreateResponse200.class);
+    }
+
+    @SneakyThrows
+    public NettsAmlPriceResponse getAmlPrice(AmlProvider provider) {
+        String providerStr = switch (provider) {
+            case ELLIPTIC -> "elliptic";
+            case null, default -> "bitok";
+        };
+
+        UriComponents uriComponents = UriComponentsBuilder.fromPath("/apiv2/aml/price")
+                .queryParam("provider", providerStr)
+                .build();
+
+        Request request = new Request.Builder()
+                .url(baseUrl + uriComponents)
+                .method("GET", null)
+                .addHeader("X-API-KEY", apiKey)
+                .addHeader("X-Real-IP", realIp)
+                .build();
+        Response response = client.newCall(request).execute();
+        String responseStr = response.body().string();
+        logger.info("NETTS.IO AML price for provider {}: {}", provider, responseStr);
+
+        int responseCode = response.code();
+        if (responseCode != 200) {
+            logger.error("NETTS.IO Error getting AML price for provider {}, code: {}, body: {}", provider, responseCode, responseStr);
+            throw new RuntimeException("Error getting AML price: " + responseStr);
+        }
+        return gson.fromJson(responseStr, NettsAmlPriceResponse.class);
     }
 
     @SneakyThrows

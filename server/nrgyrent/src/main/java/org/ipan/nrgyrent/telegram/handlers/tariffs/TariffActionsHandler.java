@@ -122,28 +122,32 @@ public class TariffActionsHandler {
     }
 
     @MatchState(forAdmin = true, state = States.ADMIN_MANAGE_TARIFF_ACTION_PREVIEW, callbackData = InlineMenuCallbacks.MANAGE_TARIFFS_ACTION_CHANGE_AML_PRICE)
-    public void startChangingAmlPrice_prompt(UserState userState, Update update) {
-        tariffsActionsView.promptAmlCheckPrice(userState);
+    public void startChangingAmlPercentage_prompt(UserState userState, Update update) {
+        tariffsActionsView.promptAmlPercentage(userState);
         telegramState.updateUserState(userState.getTelegramId(),
                 userState.withState(States.ADMIN_MANAGE_TARIFF_ACTION_PROMPT_AML_PRICE));
     }
 
     @MatchState(forAdmin = true, state = States.ADMIN_MANAGE_TARIFF_ACTION_PROMPT_AML_PRICE, updateTypes = UpdateType.MESSAGE)
-    public void handleAmlPrice_end(UserState userState, Update update) {
+    public void handleAmlPercentage_end(UserState userState, Update update) {
         Message message = update.getMessage();
         if (message.hasText()) {
-            String amlPriceTrx = message.getText();
+            String text = message.getText().trim();
 
-            Long amlCheckPriceSun = null;
+            int percentage;
             try {
-                amlCheckPriceSun = parseUtils.parseTrxStrToSunLong(amlPriceTrx);
-            } catch (IllegalArgumentException e) {
-                logger.warn("Invalid TRX amount for AML price: {}", amlPriceTrx);
+                percentage = Integer.parseInt(text);
+                if (percentage < 0 || percentage > 100) {
+                    logger.warn("AML percentage out of range: {}", percentage);
+                    return;
+                }
+            } catch (NumberFormatException e) {
+                logger.warn("Invalid AML percentage value: {}", text);
                 return;
             }
 
             TariffEdit openTariff = telegramState.getOrCreateTariffEdit(userState.getTelegramId());
-            tariffService.changeAmlCheckPrice(openTariff.getSelectedTariffId(), amlCheckPriceSun);
+            tariffService.changeAmlPercentage(openTariff.getSelectedTariffId(), percentage);
 
             tariffsActionsView.changeTxAmountSuccess(userState);
             telegramState.updateUserState(userState.getTelegramId(),

@@ -1,0 +1,13 @@
+{
+  "success": true,
+  "data": {
+    "provider": "elliptic",
+    "price_usdt": 0.98,
+    "price_trx": 3.43,
+    "trx_rate_usd": 0.285756,
+    "available": true,
+    "user_balance_trx": 314.75,
+    "can_afford": true
+  },
+  "timestamp": "2026-03-10 09:52:05"
+}

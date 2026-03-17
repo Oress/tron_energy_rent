@@ -78,16 +78,16 @@ public class TariffLabels {
         return getLocalizedMessage("tariff.prompt_tx2_amount");
     }
 
-    public String menuChangeAmlPrice() {
-        return getLocalizedMessage("tariff.change_aml_price");
+    public String menuChangeAmlPercentage() {
+        return getLocalizedMessage("tariff.change_aml_percentage");
     }
 
-    public String promptAmlPrice() {
-        return getLocalizedMessage("tariff.prompt_aml_price");
+    public String promptAmlPercentage() {
+        return getLocalizedMessage("tariff.prompt_aml_percentage");
     }
 
-    public String amlPriceChangeSuccess() {
-        return getLocalizedMessage("tariff.aml_price_change_success");
+    public String amlPercentageChangeSuccess() {
+        return getLocalizedMessage("tariff.aml_percentage_change_success");
     }
 
     public String preview(String label, String predef, String amnt1, String amnt2, String createdDt, String isActive, String warning, String amlPrice) {

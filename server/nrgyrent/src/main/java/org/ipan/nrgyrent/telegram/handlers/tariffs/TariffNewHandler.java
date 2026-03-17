@@ -81,7 +81,7 @@ public class TariffNewHandler {
     }
 
     @MatchState(forAdmin = true, state = States.ADMIN_MANAGE_TARIFF_ADD_PROMPT_TX2_AMOUNT, updateTypes = UpdateType.MESSAGE)
-    public void handleAmountForTxType2_promptAmlPrice(UserState userState, Update update) {
+    public void handleAmountForTxType2_promptAmlPercentage(UserState userState, Update update) {
         Message message = update.getMessage();
         if (message.hasText()) {
             String tx2AmountTrx = message.getText();
@@ -98,23 +98,27 @@ public class TariffNewHandler {
             AddTariffState addTariffState = telegramState.getOrCreateAddTariffState(telegramId);
             telegramState.updateAddTariffState(telegramId, addTariffState.withTxType2Amount(txType2Amount));
 
-            tariffNewView.promptAmlCheckPrice(userState);
+            tariffNewView.promptAmlPercentage(userState);
             telegramState.updateUserState(telegramId, userState.withState(States.ADMIN_MANAGE_TARIFF_ADD_PROMPT_AML_PRICE));
         }
     }
 
     @MatchState(forAdmin = true, state = States.ADMIN_MANAGE_TARIFF_ADD_PROMPT_AML_PRICE, updateTypes = UpdateType.MESSAGE)
-    public void handleAmlPrice_end(UserState userState, Update update) {
+    public void handleAmlPercentage_end(UserState userState, Update update) {
         Message message = update.getMessage();
         if (message.hasText()) {
-            String amlPriceTrx = message.getText();
+            String text = message.getText().trim();
             Long telegramId = userState.getTelegramId();
 
-            Long amlCheckPriceSun = null;
+            int percentage;
             try {
-                amlCheckPriceSun = parseUtils.parseTrxStrToSunLong(amlPriceTrx);
-            } catch (IllegalArgumentException e) {
-                logger.warn("Invalid TRX amount for AML price: {}", amlPriceTrx);
+                percentage = Integer.parseInt(text);
+                if (percentage < 0 || percentage > 100) {
+                    logger.warn("AML percentage out of range: {}", percentage);
+                    return;
+                }
+            } catch (NumberFormatException e) {
+                logger.warn("Invalid AML percentage value: {}", text);
                 return;
             }
 
@@ -123,7 +127,7 @@ public class TariffNewHandler {
                     addTariffState.getLabel(),
                     addTariffState.getTxType1Amount(),
                     addTariffState.getTxType2Amount(),
-                    amlCheckPriceSun);
+                    percentage);
 
             tariffNewView.tariffAddSuccess(userState);
             telegramState.updateUserState(telegramId, userState.withState(States.ADMIN_MANAGE_TARIFF_ACTION_ADD_SUCCESS));

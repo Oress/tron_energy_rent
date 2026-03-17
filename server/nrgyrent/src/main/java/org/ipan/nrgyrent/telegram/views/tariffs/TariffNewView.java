@@ -54,12 +54,12 @@ public class TariffNewView {
     }
 
     @SneakyThrows
-    public void promptAmlCheckPrice(UserState userState) {
+    public void promptAmlPercentage(UserState userState) {
         EditMessageText message = EditMessageText
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
-                .text(tariffLabels.promptAmlPrice())
+                .text(tariffLabels.promptAmlPercentage())
                 .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
                 .build();
         tgClient.execute(message);

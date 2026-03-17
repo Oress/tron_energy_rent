@@ -1339,5 +1339,25 @@
         </createIndex>
     </changeSet>
 
+    <changeSet id="default AML_PROVIDER config record" author="oress">
+        <insert tableName="nrg_configs">
+            <column name="id" value="AML_PROVIDER" />
+            <column name="value" value="ELLIPTIC" />
+            <column name="updated_at" valueDate="now()" />
+        </insert>
+    </changeSet>
+
+    <changeSet id="add aml_check_percentage to nrg_tariffs" author="oress">
+        <addColumn tableName="nrg_tariffs">
+            <column name="aml_check_percentage" type="integer" defaultValueNumeric="50" />
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="add chat_id and message_to_update to nrg_aml_verifications" author="oress">
+        <addColumn tableName="nrg_aml_verifications">
+            <column name="chat_id" type="bigint" />
+            <column name="message_to_update" type="bigint" />
+        </addColumn>
+    </changeSet>
 
 </databaseChangeLog>

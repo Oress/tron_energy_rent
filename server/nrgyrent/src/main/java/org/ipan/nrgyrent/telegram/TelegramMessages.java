@@ -113,7 +113,7 @@ public class TelegramMessages {
         }
     }
 
-    @SneakyThrows
+    /*@SneakyThrows
     public void sendTransactionRefundNotification(UserState userState, Order order) {
         EditMessageText message = EditMessageText
                 .builder()
@@ -127,7 +127,7 @@ public class TelegramMessages {
         } catch (Exception e) {
             logger.error("Failed to sendTransactionRefundNotification user: {}", userState, e);
         }
-    }
+    }*/
 
     public void sendTransactionSuccessNotification(UserState userState, Order order) {
         EditMessageText message = EditMessageText
@@ -267,25 +267,50 @@ public class TelegramMessages {
 
     @SneakyThrows
     public void sendAmlReportCompleted(UserState userState, org.ipan.nrgyrent.domain.model.AmlVerification verification) {
-        SendMessage message = SendMessage
-                .builder()
-                .chatId(userState.getChatId())
-                .text(formattingTools.formatAmlReport(verification, userState.getLocaleOrDefault()))
-                .parseMode("MARKDOWN")
-                .replyMarkup(getOkNotificationMarkup())
-                .build();
-        tgClient.execute(message);
+        String text = formattingTools.formatAmlReport(verification, userState.getLocaleOrDefault());
+        if (verification.getChatId() != null && verification.getMessageToUpdate() != null) {
+            EditMessageText message = EditMessageText
+                    .builder()
+                    .chatId(verification.getChatId())
+                    .messageId(verification.getMessageToUpdate())
+                    .text(text)
+                    .parseMode("MARKDOWN")
+                    .replyMarkup(getOkNotificationMarkup())
+                    .build();
+            tgClient.execute(message);
+        } else {
+            SendMessage message = SendMessage
+                    .builder()
+                    .chatId(userState.getChatId())
+                    .text(text)
+                    .parseMode("MARKDOWN")
+                    .replyMarkup(getOkNotificationMarkup())
+                    .build();
+            tgClient.execute(message);
+        }
     }
 
     @SneakyThrows
     public void sendAmlReportFailed(UserState userState, org.ipan.nrgyrent.domain.model.AmlVerification verification) {
-        SendMessage message = SendMessage
-                .builder()
-                .chatId(userState.getChatId())
-                .text(commonLabels.amlReportFailed(userState.getLocaleOrDefault(), verification.getWalletAddress()))
-                .replyMarkup(getOkNotificationMarkup())
-                .build();
-        tgClient.execute(message);
+        String text = commonLabels.amlReportFailed(userState.getLocaleOrDefault(), verification.getWalletAddress());
+        if (verification.getChatId() != null && verification.getMessageToUpdate() != null) {
+            EditMessageText message = EditMessageText
+                    .builder()
+                    .chatId(verification.getChatId())
+                    .messageId(verification.getMessageToUpdate())
+                    .text(text)
+                    .replyMarkup(getOkNotificationMarkup())
+                    .build();
+            tgClient.execute(message);
+        } else {
+            SendMessage message = SendMessage
+                    .builder()
+                    .chatId(userState.getChatId())
+                    .text(text)
+                    .replyMarkup(getOkNotificationMarkup())
+                    .build();
+            tgClient.execute(message);
+        }
     }
 
     @SneakyThrows
@@ -725,6 +750,17 @@ public class TelegramMessages {
                                         .callbackData(InlineMenuCallbacks.AUTOTOPUP)
                                         .build()));
 
+        if (isAdmin) {
+            builder
+                    .keyboardRow(
+                            new InlineKeyboardRow(
+                                    InlineKeyboardButton
+                                            .builder()
+                                            .text(commonLabels.getAmlCheck())
+                                            .callbackData(InlineMenuCallbacks.AML_CHECK)
+                                            .build()));
+        }
+
         if (showWithdrawBtn) {
             builder.keyboardRow(
                     new InlineKeyboardRow(
@@ -775,13 +811,6 @@ public class TelegramMessages {
 
         if (isAdmin) {
             builder
-                .keyboardRow(
-                        new InlineKeyboardRow(
-                                InlineKeyboardButton
-                                        .builder()
-                                        .text(commonLabels.getAmlCheck())
-                                        .callbackData(InlineMenuCallbacks.AML_CHECK)
-                                        .build()))
                 .keyboardRow(
                     new InlineKeyboardRow(
                             InlineKeyboardButton

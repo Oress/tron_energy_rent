@@ -1,5 +1,6 @@
 package org.ipan.nrgyrent.netts.dto;
 
+import com.google.gson.JsonObject;
 import com.google.gson.annotations.SerializedName;
 import lombok.Data;
 import lombok.Getter;
@@ -50,7 +51,7 @@ public class NettsAmlStatusResponse {
         private String message;
 
         @SerializedName("result")
-        private BitokResultResponse result;
+        private JsonObject result;
 /*
         @SerializedName("address_users")
         private List<AddressUser> addressUsers;*/

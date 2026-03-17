@@ -11,6 +11,7 @@ public class AppConstants {
 
     public static final String CONFIG_ENERGY_PROVIDER = "ENERGY_PROVIDER";
     public static final String CONFIG_AUTO_ENERGY_PROVIDER = "AUTO_ENERGY_PROVIDER";
+    public static final String CONFIG_AML_PROVIDER = "AML_PROVIDER";
 
     public static final Long BASE_SUBTRACT_AMOUNT_TX1 = 3_175_000L;
     public static final Long BASE_SUBTRACT_AMOUNT_TX1_AUTO = 3_575_000L;

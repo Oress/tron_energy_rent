@@ -2,6 +2,7 @@ package org.ipan.nrgyrent.domain.service;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.ipan.nrgyrent.domain.model.AmlProvider;
 import org.ipan.nrgyrent.domain.model.EnergyProviderName;
 import org.ipan.nrgyrent.domain.model.NrgConfigs;
 import org.ipan.nrgyrent.domain.model.repository.BalanceRepo;
@@ -43,6 +44,19 @@ public class NrgConfigsService {
         NrgConfigs byId = nrgConfigsRepository.findById(AppConstants.CONFIG_AUTO_ENERGY_PROVIDER).get();
         byId.setValue(value.name());
         balanceRepo.updateAllBalancesForAutoEnergyProvider(value);
+    }
+
+    @Transactional(readOnly = true)
+    public AmlProvider readCurrentAmlProviderConfig() {
+        NrgConfigs byId = nrgConfigsRepository.findById(AppConstants.CONFIG_AML_PROVIDER).get();
+        return AmlProvider.valueOf(byId.getValue());
+    }
+
+    @Transactional
+    public void updateCurrentAmlProviderConfig(AmlProvider value) {
+        logger.info("Updating current AML provider config to: {}", value);
+        NrgConfigs byId = nrgConfigsRepository.findById(AppConstants.CONFIG_AML_PROVIDER).get();
+        byId.setValue(value.name());
     }
 
 }

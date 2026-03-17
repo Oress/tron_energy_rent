@@ -94,4 +94,12 @@ public class AdminLabels {
     public String sweepStatsItem(String address, String amnt) {
         return getLocalizedMessage("admin.sweep_stats.item", address, amnt);
     }
+
+    public String menuAmlProvider() {
+        return getLocalizedMessage("admin.menu_aml_provider");
+    }
+
+    public String currentAmlProvider(String currentProvider, String ellipticUsdt, String ellipticTrx, String bitokUsdt, String bitokTrx) {
+        return getLocalizedMessage("admin.current_aml_provider", currentProvider, ellipticUsdt, ellipticTrx, bitokUsdt, bitokTrx);
+    }
 }

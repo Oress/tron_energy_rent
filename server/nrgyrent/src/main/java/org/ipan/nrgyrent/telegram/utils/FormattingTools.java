@@ -20,6 +20,7 @@ import org.ipan.nrgyrent.domain.model.*;
 import org.ipan.nrgyrent.domain.model.projections.ReferralDto;
 import org.ipan.nrgyrent.domain.service.commands.TgUserId;
 import org.ipan.nrgyrent.netts.dto.BitokResultResponse;
+import org.ipan.nrgyrent.netts.dto.EllipticResultResponse;
 import org.ipan.nrgyrent.telegram.i18n.CommonLabels;
 import org.ipan.nrgyrent.telegram.i18n.RefProgramLabels;
 import org.springframework.beans.factory.annotation.Value;
@@ -98,11 +99,6 @@ public class FormattingTools {
         return sb.toString().trim();
     }
 
-    private static String capitalize(String s) {
-        if (s == null || s.isEmpty()) return s;
-        return Character.toUpperCase(s.charAt(0)) + s.substring(1).toLowerCase();
-    }
-
     public static String formatAmlHistoryItemLabel(AmlVerification v) {
         String addr = v.getWalletAddress();
         String shortAddr = (addr != null && addr.length() > 12)
@@ -117,6 +113,13 @@ public class FormattingTools {
     }
 
     public String formatAmlReport(AmlVerification v, Locale locale) {
+        if (AmlProvider.ELLIPTIC.equals(v.getProvider())) {
+            return formatEllipticAmlReport(v, locale);
+        }
+        return formatBitokAmlReport(v, locale);
+    }
+
+    private String formatBitokAmlReport(AmlVerification v, Locale locale) {
         StringBuilder sb = new StringBuilder();
         sb.append(commonLabels.amlReportHeader(locale)).append("\n");
         sb.append(commonLabels.amlReportAddress(locale)).append(" `").append(v.getWalletAddress()).append("`\n\n");
@@ -166,8 +169,69 @@ public class FormattingTools {
         if (v.getCompletedAt() != null) {
             sb.append("\n").append(commonLabels.amlReportComputed(locale, formatDateToUtc(v.getCompletedAt()))).append("\n");
         }
-//        String providerName = v.getProvider() != null ? v.getProvider().name() : "BitOK";
-//        sb.append(commonLabels.amlReportProvider(locale, providerName));
+
+        return sb.toString();
+    }
+
+    public String formatEllipticAmlReport(AmlVerification v, Locale locale) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(commonLabels.amlReportHeader(locale)).append("\n");
+        sb.append(commonLabels.amlReportAddress(locale)).append(" `").append(v.getWalletAddress()).append("`\n\n");
+
+        sb.append(commonLabels.amlReportRiskSummary(locale)).append("\n");
+        String riskScore = v.getRiskScore() != null ? String.format("%.2f%%", v.getRiskScore() * 100) : "N/A";
+        sb.append(commonLabels.amlReportRiskScore(locale, riskScore)).append("\n");
+
+        String riskEmoji = riskLevelEmoji(v.getRiskLevel());
+        String riskLevelName = commonLabels.amlRiskLevelName(locale, v.getRiskLevel());
+        sb.append(commonLabels.amlReportRiskLevel(locale, riskEmoji + " " + riskLevelName)).append("\n");
+
+        String sanctionedVal = Boolean.TRUE.equals(v.getSanctioned())
+                ? commonLabels.amlReportSanctionedYes(locale)
+                : commonLabels.amlReportSanctionedNo(locale);
+        sb.append(commonLabels.amlReportSanctioned(locale, sanctionedVal)).append("\n");
+
+        if (v.getResult() != null) {
+            try {
+                EllipticResultResponse result = GSON.fromJson(v.getResult(), EllipticResultResponse.class);
+                EllipticResultResponse.EvaluationDetail evalDetail = result.getEvaluationDetail();
+
+                if (evalDetail != null && evalDetail.getSource() != null && !evalDetail.getSource().isEmpty()) {
+                    sb.append("\n").append(commonLabels.amlReportEllipticRulesHeader(locale)).append("\n");
+                    for (EllipticResultResponse.SourceRule rule : evalDetail.getSource()) {
+                        String ruleName = rule.getRuleName() != null ? rule.getRuleName() : "Unknown";
+                        String ruleRiskScore = rule.getRiskScore() != null ? String.format("%.2f%", rule.getRiskScore()) : "N/A";
+                        sb.append("• *").append(ruleName).append("*: ").append(ruleRiskScore).append("\n");
+
+/*
+                        if (rule.getMatchedElements() != null) {
+                            for (EllipticResultResponse.MatchedElement element : rule.getMatchedElements()) {
+                                String cat = element.getCategory() != null ? element.getCategory() : "Unknown";
+                                String catIcon = categoryIcon(cat);
+                                sb.append("  ").append(catIcon).append(" ").append(cat);
+                                if (element.getContributions() != null) {
+                                    for (EllipticResultResponse.Contribution contribution : element.getContributions()) {
+                                        if (contribution.getEntity() != null) {
+                                            String contribPct = contribution.getContributionPercentage() != null
+                                                    ? String.format(" %.2f%%", contribution.getContributionPercentage())
+                                                    : "";
+                                            sb.append(": ").append(contribution.getEntity()).append(contribPct);
+                                        }
+                                    }
+                                }
+                                sb.append("\n");
+                            }
+                        }
+*/
+                    }
+                }
+            } catch (Exception ignored) {
+            }
+        }
+
+        if (v.getCompletedAt() != null) {
+            sb.append("\n").append(commonLabels.amlReportComputed(locale, formatDateToUtc(v.getCompletedAt()))).append("\n");
+        }
 
         return sb.toString();
     }

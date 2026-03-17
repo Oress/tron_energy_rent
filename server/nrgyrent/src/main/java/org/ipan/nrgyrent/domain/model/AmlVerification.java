@@ -92,6 +92,12 @@ public class AmlVerification {
     private String result;
     // End of verificaiton data
 
+    @Column(name = "chat_id")
+    private Long chatId;
+
+    @Column(name = "message_to_update")
+    private Integer messageToUpdate;
+
     @CreationTimestamp
     @Column(name = "created_at")
     private Instant createdAt;

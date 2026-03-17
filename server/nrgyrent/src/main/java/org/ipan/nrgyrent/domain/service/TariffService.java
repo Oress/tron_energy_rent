@@ -139,7 +139,7 @@ public class TariffService {
     }
 
     @Transactional
-    public Tariff createTariff(String label, Long txType1Amount, Long txType2Amount, Long amlCheckPriceSun) {
+    public Tariff createTariff(String label, Long txType1Amount, Long txType2Amount, Integer amlCheckPercentage) {
         if (label.length() < 3) {
             logger.info("Label is too short: {}", label);
             throw new IllegalArgumentException("Label is too short");
@@ -150,11 +150,15 @@ public class TariffService {
             throw new IllegalArgumentException("Transaction amounts must be non-negative");
         }
 
+        if (amlCheckPercentage == null || amlCheckPercentage < 0 || amlCheckPercentage > 100) {
+            throw new IllegalArgumentException("AML check percentage must be between 0 and 100");
+        }
+
         Tariff tariff = new Tariff();
         tariff.setLabel(label);
         tariff.setTransactionType1AmountSun(txType1Amount);
         tariff.setTransactionType2AmountSun(txType2Amount);
-        tariff.setAmlCheckPriceSun(amlCheckPriceSun);
+        tariff.setAmlCheckPercentage(amlCheckPercentage);
 
         tariffRepo.save(tariff);
 
@@ -162,14 +166,14 @@ public class TariffService {
     }
 
     @Transactional
-    public Tariff changeAmlCheckPrice(Long tariffId, Long priceSun) {
-        logger.info("Changing AML check price for tariff ID {} to {}", tariffId, priceSun);
+    public Tariff changeAmlPercentage(Long tariffId, Integer percentage) {
+        logger.info("Changing AML check percentage for tariff ID {} to {}", tariffId, percentage);
         Tariff tariff = tariffRepo.findById(tariffId)
                 .orElseThrow(() -> new IllegalArgumentException("Tariff not found: " + tariffId));
-        if (priceSun < 0) {
-            throw new IllegalArgumentException("AML check price must be non-negative");
+        if (percentage < 0 || percentage > 100) {
+            throw new IllegalArgumentException("AML check percentage must be between 0 and 100");
         }
-        tariff.setAmlCheckPriceSun(priceSun);
+        tariff.setAmlCheckPercentage(percentage);
         return tariff;
     }
 

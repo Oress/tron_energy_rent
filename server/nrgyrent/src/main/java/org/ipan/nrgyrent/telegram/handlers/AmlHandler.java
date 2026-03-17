@@ -7,9 +7,12 @@ import org.ipan.nrgyrent.domain.model.AmlProvider;
 import org.ipan.nrgyrent.domain.model.AmlVerification;
 import org.ipan.nrgyrent.domain.model.AppUser;
 import org.ipan.nrgyrent.domain.model.Balance;
+import org.ipan.nrgyrent.domain.model.Tariff;
 import org.ipan.nrgyrent.domain.model.repository.AmlVerificationRepo;
 import org.ipan.nrgyrent.domain.service.AmlVerificationService;
+import org.ipan.nrgyrent.domain.service.NrgConfigsService;
 import org.ipan.nrgyrent.domain.service.UserService;
+import org.ipan.nrgyrent.netts.AmlPriceCache;
 import org.ipan.nrgyrent.netts.NettsRestClient;
 import org.ipan.nrgyrent.netts.dto.NettsAmlCreateResponse200;
 import org.ipan.nrgyrent.telegram.InlineMenuCallbacks;
@@ -36,6 +39,8 @@ public class AmlHandler {
     private final AmlVerificationService amlVerificationService;
     private final AmlVerificationRepo amlVerificationRepo;
     private final NettsRestClient nettsRestClient;
+    private final NrgConfigsService nrgConfigsService;
+    private final AmlPriceCache amlPriceCache;
     private final AmlViews amlViews;
 
     @MatchStates({
@@ -47,14 +52,18 @@ public class AmlHandler {
     })
     public void openAmlMenu(UserState userState, Update update) {
         AppUser user = userService.getById(userState.getTelegramId());
-        amlViews.showAmlMenu(userState, user.getTariffToUse());
+        AmlProvider provider = nrgConfigsService.readCurrentAmlProviderConfig();
+        String estimatedPrice = computeEstimatedPriceTrx(user.getTariffToUse(), provider);
+        amlViews.showAmlMenu(userState, estimatedPrice);
         telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.AML_MENU));
     }
 
     @MatchState(state = States.AML_MENU, callbackData = InlineMenuCallbacks.AML_CHECK)
     public void promptWalletAddress(UserState userState, Update update) {
         AppUser user = userService.getById(userState.getTelegramId());
-        amlViews.showAmlPromptWallet(userState, user.getBalanceToUse(), user.getTariffToUse());
+        AmlProvider provider = nrgConfigsService.readCurrentAmlProviderConfig();
+        String estimatedPrice = computeEstimatedPriceTrx(user.getTariffToUse(), provider);
+        amlViews.showAmlPromptWallet(userState, user.getBalanceToUse(), estimatedPrice);
         telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.AML_PROMPT_WALLET));
     }
 
@@ -93,18 +102,22 @@ public class AmlHandler {
             return;
         }
 
+        AmlProvider provider = nrgConfigsService.readCurrentAmlProviderConfig();
         AmlVerification verification;
         try {
-            verification = amlVerificationService.createPendingVerification(userState.getTelegramId(), walletAddress, AmlProvider.BITOK);
+            verification = amlVerificationService.createPendingVerification(
+                    userState.getTelegramId(), walletAddress, provider,
+                    userState.getChatId(), userState.getMenuMessageId());
         } catch (NotEnoughBalanceException e) {
             AppUser user = userService.getById(userState.getTelegramId());
-            amlViews.showAmlInsufficientBalance(userState, user.getBalanceToUse(), user.getTariffToUse());
+            String estimatedPrice = computeEstimatedPriceTrx(user.getTariffToUse(), provider);
+            amlViews.showAmlInsufficientBalance(userState, user.getBalanceToUse(), estimatedPrice);
             telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.AML_MENU));
             return;
         }
 
         try {
-            NettsAmlCreateResponse200 response = nettsRestClient.createAmlRequest(walletAddress, AmlProvider.BITOK);
+            NettsAmlCreateResponse200 response = nettsRestClient.createAmlRequest(walletAddress, provider);
             amlVerificationService.markProcessing(verification.getId(), response.getData());
             logger.info("AML request submitted for wallet {} with verification id: {}", walletAddress, verification.getId());
         } catch (Exception e) {
@@ -114,5 +127,16 @@ public class AmlHandler {
 
         amlViews.showAmlRequestReceived(userState, walletAddress);
         telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.AML_SUCCESS));
+    }
+
+    private String computeEstimatedPriceTrx(Tariff tariff, AmlProvider provider) {
+        if (tariff == null || tariff.getAmlCheckPercentage() == null) {
+            return "N/A";
+        }
+        AmlPriceCache.AmlPrice cachedPrice = amlPriceCache.getPrice(provider);
+        if (cachedPrice == null || cachedPrice.getPriceTrx() == null) {
+            return "N/A";
+        }
+        return AmlVerificationService.computeAmlPriceTrx(cachedPrice.getPriceTrx(), tariff.getAmlCheckPercentage()).toPlainString();
     }
 }

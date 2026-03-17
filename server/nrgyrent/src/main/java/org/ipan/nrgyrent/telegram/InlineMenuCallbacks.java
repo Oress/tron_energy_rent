@@ -50,6 +50,9 @@ public class InlineMenuCallbacks {
     public static final String MANAGE_WITHDRAW_TRX = "manage_withdraw_trx";
     public static final String MANAGE_TARIFFS = "manage_tarifs";
     public static final String MANAGE_REFERRAL_PROGRAMS = "manage_ref_programs";
+    public static final String MANAGE_AML_PROVIDER = "manage_aml_provider";
+    public static final String MANAGE_AML_PROVIDER_CHOOSE_ELLIPTIC = "aml_provider_choose_elliptic";
+    public static final String MANAGE_AML_PROVIDER_CHOOSE_BITOK = "aml_provider_choose_bitok";
 
     public static final String DEPOSIT_PREV_PAGE = "deposit_prev_page";
     public static final String DEPOSIT_NEXT_PAGE = "deposit_next_page";

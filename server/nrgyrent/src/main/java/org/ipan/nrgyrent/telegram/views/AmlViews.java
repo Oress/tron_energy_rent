@@ -5,7 +5,6 @@ import java.util.List;
 import org.ipan.nrgyrent.domain.model.AmlVerification;
 import org.ipan.nrgyrent.domain.model.AmlVerificationStatus;
 import org.ipan.nrgyrent.domain.model.Balance;
-import org.ipan.nrgyrent.domain.model.Tariff;
 import org.ipan.nrgyrent.telegram.InlineMenuCallbacks;
 import org.ipan.nrgyrent.telegram.i18n.CommonLabels;
 import org.ipan.nrgyrent.telegram.state.UserState;
@@ -30,10 +29,8 @@ public class AmlViews {
     private final FormattingTools formattingTools;
 
     @SneakyThrows
-    public void showAmlMenu(UserState userState, Tariff tariff) {
-        String price = tariff != null && tariff.getAmlCheckPriceSun() != null
-                ? FormattingTools.formatBalance(tariff.getAmlCheckPriceSun())
-                : "N/A";
+    public void showAmlMenu(UserState userState, String estimatedPriceTrx) {
+        String price = estimatedPriceTrx != null ? estimatedPriceTrx : "N/A";
 
         EditMessageText message = EditMessageText.builder()
                 .chatId(userState.getChatId())
@@ -50,10 +47,8 @@ public class AmlViews {
     }
 
     @SneakyThrows
-    public void showAmlPromptWallet(UserState userState, Balance balance, Tariff tariff) {
-        String price = tariff != null && tariff.getAmlCheckPriceSun() != null
-                ? FormattingTools.formatBalance(tariff.getAmlCheckPriceSun())
-                : "N/A";
+    public void showAmlPromptWallet(UserState userState, Balance balance, String estimatedPriceTrx) {
+        String price = estimatedPriceTrx != null ? estimatedPriceTrx : "N/A";
         String currentBalance = balance != null
                 ? FormattingTools.formatBalance(balance.getSunBalance())
                 : "N/A";
@@ -73,10 +68,8 @@ public class AmlViews {
     }
 
     @SneakyThrows
-    public void showAmlInsufficientBalance(UserState userState, Balance balance, Tariff tariff) {
-        String price = tariff != null && tariff.getAmlCheckPriceSun() != null
-                ? FormattingTools.formatBalance(tariff.getAmlCheckPriceSun())
-                : "N/A";
+    public void showAmlInsufficientBalance(UserState userState, Balance balance, String estimatedPriceTrx) {
+        String price = estimatedPriceTrx != null ? estimatedPriceTrx : "N/A";
         String currentBalance = balance != null
                 ? FormattingTools.formatBalance(balance.getSunBalance())
                 : "N/A";
