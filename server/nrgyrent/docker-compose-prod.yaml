@@ -43,6 +43,7 @@ services:
         required: true
   
   metabase:
+    restart: unless-stopped
     extends:
       file: docker-compose-base.yaml
       service: metabaseservice
