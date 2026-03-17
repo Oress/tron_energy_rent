@@ -77,6 +77,7 @@ public class FormattingTools {
     public static String riskLevelEmoji(AmlRiskLevel level) {
         if (level == null) return "";
         return switch (level) {
+            case NONE -> "⚪";
             case LOW -> "🟢";
             case MEDIUM -> "🟡";
             case HIGH -> "🔴";
