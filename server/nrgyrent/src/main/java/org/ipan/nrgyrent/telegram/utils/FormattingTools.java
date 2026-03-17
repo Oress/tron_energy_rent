@@ -10,11 +10,16 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import org.ipan.nrgyrent.domain.model.*;
 import org.ipan.nrgyrent.domain.model.projections.ReferralDto;
 import org.ipan.nrgyrent.domain.service.commands.TgUserId;
+import org.ipan.nrgyrent.netts.dto.BitokResultResponse;
 import org.ipan.nrgyrent.telegram.i18n.CommonLabels;
 import org.ipan.nrgyrent.telegram.i18n.RefProgramLabels;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,6 +29,147 @@ import org.springframework.stereotype.Component;
 public class FormattingTools {
     private static final DateTimeFormatter utcFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.of("UTC"));
     private static final DecimalFormat df = new DecimalFormat("# ###.###");
+    private static final Gson GSON = new GsonBuilder().create();
+
+    // All known BitOK exposure category identifiers (snake_case from API and display names)
+    private static final Map<String, String> CATEGORY_ICONS = Map.ofEntries(
+            Map.entry("exchange", "🏦"),          Map.entry("Exchange", "🏦"),
+            Map.entry("high_risk_exchange", "⚠️"), Map.entry("High Risk Exchange", "⚠️"),
+            Map.entry("dex", "🔄"),               Map.entry("Dex", "🔄"),
+            Map.entry("p2p_exchange", "🤝"),       Map.entry("P2p Exchange", "🤝"),
+            Map.entry("gambling", "🎰"),           Map.entry("Gambling", "🎰"),
+            Map.entry("sanctions", "🚫"),          Map.entry("Sanctions", "🚫"),
+            Map.entry("stolen_funds", "💸"),       Map.entry("Stolen Funds", "💸"),
+            Map.entry("ransomware", "🔒"),         Map.entry("Ransomware", "🔒"),
+            Map.entry("darknet_market", "🕷"),     Map.entry("Darknet Market", "🕷"),
+            Map.entry("terrorist_financing", "☠️"),Map.entry("Terrorist Financing", "☠️"),
+            Map.entry("scam", "💀"),               Map.entry("Scam", "💀"),
+            Map.entry("fraud_shop", "🏴"),         Map.entry("Fraud Shop", "🏴"),
+            Map.entry("illegal_service", "⛔"),    Map.entry("Illegal Service", "⛔"),
+            Map.entry("enforcement_action", "🏛"), Map.entry("Enforcement Action", "🏛"),
+            Map.entry("seized_funds", "🔐"),       Map.entry("Seized Funds", "🔐"),
+            Map.entry("high_risk_jurisdiction", "🌍"), Map.entry("High Risk Jurisdiction", "🌍"),
+            Map.entry("privacy_protocol", "🔀"),   Map.entry("Privacy Protocol", "🔀"),
+            Map.entry("bridge", "🌉"),             Map.entry("Bridge", "🌉"),
+            Map.entry("lending", "💰"),            Map.entry("Lending", "💰"),
+            Map.entry("smart_contract", "📋"),     Map.entry("Smart Contract", "📋"),
+            Map.entry("token_contract", "🪙"),     Map.entry("Token Contract", "🪙"),
+            Map.entry("payment_service_provider", "💳"), Map.entry("Payment Service Provider", "💳"),
+            Map.entry("custodial_wallet", "👜"),   Map.entry("Custodial Wallet", "👜"),
+            Map.entry("mining_pool", "⛏"),        Map.entry("Mining Pool", "⛏"),
+            Map.entry("atm", "🏧"),               Map.entry("Atm", "🏧"),
+            Map.entry("iaas", "☁️"),              Map.entry("Iaas", "☁️"),
+            Map.entry("dust", "🌫"),              Map.entry("Dust", "🌫"),
+            Map.entry("unnamed_service", "👤"),    Map.entry("Unnamed Service", "👤"),
+            Map.entry("other", "📁"),             Map.entry("Other", "📁"),
+            Map.entry("Others", "📁")
+    );
+
+    public static String categoryIcon(String category) {
+        if (category == null) return "📁";
+        String icon = CATEGORY_ICONS.get(category);
+        if (icon != null) return icon;
+        // Try title-cased version of snake_case (e.g., "high_risk_exchange" → "High Risk Exchange")
+        String titleCased = toTitleCase(category.replace("_", " "));
+        return CATEGORY_ICONS.getOrDefault(titleCased, "📁");
+    }
+
+    public static String riskLevelEmoji(AmlRiskLevel level) {
+        if (level == null) return "";
+        return switch (level) {
+            case LOW -> "🟢";
+            case MEDIUM -> "🟡";
+            case HIGH -> "🔴";
+        };
+    }
+
+    private static String toTitleCase(String s) {
+        if (s == null || s.isEmpty()) return s;
+        String[] words = s.split(" ");
+        StringBuilder sb = new StringBuilder();
+        for (String word : words) {
+            if (!word.isEmpty()) {
+                sb.append(Character.toUpperCase(word.charAt(0)))
+                  .append(word.substring(1).toLowerCase())
+                  .append(" ");
+            }
+        }
+        return sb.toString().trim();
+    }
+
+    private static String capitalize(String s) {
+        if (s == null || s.isEmpty()) return s;
+        return Character.toUpperCase(s.charAt(0)) + s.substring(1).toLowerCase();
+    }
+
+    public static String formatAmlHistoryItemLabel(AmlVerification v) {
+        String addr = v.getWalletAddress();
+        String shortAddr = (addr != null && addr.length() > 12)
+                ? addr.substring(0, 6) + "…" + addr.substring(addr.length() - 4)
+                : (addr != null ? addr : "?");
+        String emoji = riskLevelEmoji(v.getRiskLevel());
+        if (v.getRiskLevel() != null) {
+            return emoji + " " + shortAddr + " [" + v.getRiskLevel().name() + "]";
+        }
+        String status = v.getStatus() != null ? v.getStatus().name() : "?";
+        return shortAddr + " [" + status + "]";
+    }
+
+    public String formatAmlReport(AmlVerification v, Locale locale) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(commonLabels.amlReportHeader(locale)).append("\n");
+        sb.append(commonLabels.amlReportAddress(locale)).append(" `").append(v.getWalletAddress()).append("`\n\n");
+
+        sb.append(commonLabels.amlReportRiskSummary(locale)).append("\n");
+        String riskScore = v.getRiskScore() != null ? String.format("%.2f%%", v.getRiskScore()) : "N/A";
+        sb.append(commonLabels.amlReportRiskScore(locale, riskScore)).append("\n");
+
+        String riskEmoji = riskLevelEmoji(v.getRiskLevel());
+        String riskLevelName = v.getRiskLevel() != null ? v.getRiskLevel().name() : "N/A";
+        sb.append(commonLabels.amlReportRiskLevel(locale, riskEmoji + " " + riskLevelName)).append("\n");
+
+        String sanctionedVal = Boolean.TRUE.equals(v.getSanctioned())
+                ? commonLabels.amlReportSanctionedYes(locale)
+                : commonLabels.amlReportSanctionedNo(locale);
+        sb.append(commonLabels.amlReportSanctioned(locale, sanctionedVal)).append("\n");
+
+        if (v.getResult() != null) {
+            try {
+                BitokResultResponse result = GSON.fromJson(v.getResult(), BitokResultResponse.class);
+
+                if (result.getExposure() != null && !result.getExposure().isEmpty()) {
+                    sb.append("\n").append(commonLabels.amlReportFundExposure(locale)).append("\n");
+                    sb.append(commonLabels.amlReportExposureSource(locale)).append("\n");
+                    for (BitokResultResponse.Exposure exp : result.getExposure()) {
+                        String cat = exp.getEntityCategory() != null ? exp.getEntityCategory() : "Unknown";
+                        String catName = commonLabels.amlCategoryName(locale, cat);
+                        String share = exp.getValueShare() != null ? String.format("%.2f%%", exp.getValueShare()) : "N/A";
+                        sb.append("• ").append(categoryIcon(cat)).append(" ").append(catName).append(": ").append(share).append("\n");
+                    }
+                }
+
+                if (result.getRisks() != null && !result.getRisks().isEmpty()) {
+                    sb.append("\n").append(commonLabels.amlReportRisksHeader(locale)).append("\n");
+                    for (BitokResultResponse.Risk risk : result.getRisks()) {
+                        String cat = risk.getEntityCategory() != null ? risk.getEntityCategory() : "Unknown";
+                        String catName = commonLabels.amlCategoryName(locale, cat);
+                        String proximity = risk.getProximity() != null ? capitalize(risk.getProximity()) + " exposure" : "";
+                        String share = risk.getValueShare() != null ? " (" + String.format("%.2f%%", risk.getValueShare()) + ")" : "";
+                        sb.append("• ").append(catName).append(": ").append(proximity).append(share).append("\n");
+                    }
+                }
+            } catch (Exception ignored) {
+            }
+        }
+
+        if (v.getCompletedAt() != null) {
+            sb.append("\n").append(commonLabels.amlReportComputed(locale, formatDateToUtc(v.getCompletedAt()))).append("\n");
+        }
+        String providerName = v.getProvider() != null ? v.getProvider().name() : "BitOK";
+        sb.append(commonLabels.amlReportProvider(locale, providerName));
+
+        return sb.toString();
+    }
 
     private final CommonLabels commonLabels;
     private final RefProgramLabels refProgramLabels;

@@ -270,7 +270,7 @@ public class TelegramMessages {
         SendMessage message = SendMessage
                 .builder()
                 .chatId(userState.getChatId())
-                .text(commonLabels.amlReportCompleted(userState.getLocaleOrDefault(), verification))
+                .text(formattingTools.formatAmlReport(verification, userState.getLocaleOrDefault()))
                 .parseMode("MARKDOWN")
                 .replyMarkup(getOkNotificationMarkup())
                 .build();
@@ -528,6 +528,17 @@ public class TelegramMessages {
                 .replyMarkup(getMainMenuReplyMarkup(userState.isManager(), true, tariff, showWithdrawBtn, userWallets))
                 .build();
         tgClient.execute(message);
+    }
+
+    @SneakyThrows
+    public void sendRequestReceivedNotification(UserState userState, String walletAddress) {
+        SendMessage sendMessage = SendMessage.builder()
+                .chatId(userState.getChatId())
+                .text(commonLabels.amlRequestReceived(userState.getLocaleOrDefault(), walletAddress))
+                .parseMode("MARKDOWN")
+                .replyMarkup(getOkNotificationMarkup())
+                .build();
+        tgClient.execute(sendMessage);
     }
 
     private String getMainMenuMessage(UserState userState, AppUser user, Tariff tariff) {

@@ -92,6 +92,7 @@ public class NettsRestClient {
     }
 
     @SneakyThrows
+    @Retryable
     public NettsAmlCreateResponse200 createAmlRequest(String walletAddress, AmlProvider provider) {
         UriComponents uriComponents = UriComponentsBuilder.fromPath("/apiv2/aml").build();
 

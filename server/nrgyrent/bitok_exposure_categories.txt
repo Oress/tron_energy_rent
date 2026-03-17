@@ -1,0 +1,29 @@
+exchange	Centralized exchanges (Binance, Coinbase, etc.)
+high_risk_exchange	Exchanges with weak KYC/AML policies
+dex	Decentralized exchanges
+p2p_exchange	Peer-to-peer trading platforms
+gambling	Gambling and betting services
+sanctions	OFAC/EU sanctioned entities
+stolen_funds	Known stolen cryptocurrency
+ransomware	Ransomware-related addresses
+darknet_market	Darknet marketplace activity
+terrorist_financing	Terrorist financing related
+scam	Known scam addresses
+fraud_shop	Fraud-related services
+illegal_service	Other illegal services
+enforcement_action	Law enforcement related
+seized_funds	Funds seized by authorities
+high_risk_jurisdiction	High-risk geographic jurisdictions
+privacy_protocol	Mixers, tumblers, privacy coins
+bridge	Cross-chain bridge protocols
+lending	DeFi lending protocols
+smart_contract	Smart contract interactions
+token_contract	Token contract activity
+payment_service_provider	Payment processors
+custodial_wallet	Custodial wallet services
+mining_pool	Mining pool payouts
+atm	Crypto ATM transactions
+iaas	Infrastructure-as-a-Service
+dust	Dust transactions (very small amounts)
+unnamed_service	Unidentified services
+other	Uncategorized activity

@@ -1327,4 +1327,17 @@
         </createIndex>
     </changeSet>
 
+    <changeSet id="add completed_at to nrg_aml_verifications" author="oress">
+        <addColumn tableName="nrg_aml_verifications">
+            <column name="completed_at" type="timestamp" />
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="create index idx_nrg_aml_verifications_payment_status" author="oress">
+        <createIndex tableName="nrg_aml_verifications" indexName="idx_nrg_aml_verifications_payment_status">
+            <column name="payment_status" />
+        </createIndex>
+    </changeSet>
+
+
 </databaseChangeLog>

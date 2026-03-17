@@ -148,6 +148,9 @@ public class TariffActionsView {
     }
 
     private String getBalanceDescription(Tariff tariff) {
+        String amlPrice = tariff.getAmlCheckPriceSun() != null
+                ? FormattingTools.formatBalance(tariff.getAmlCheckPriceSun())
+                : "N/A";
         return tariffLabels.preview(
                 tariff.getLabel(),
                 tariff.getPredefined() ? commonLabels.yes() : commonLabels.no(),
@@ -155,7 +158,8 @@ public class TariffActionsView {
                 FormattingTools.formatBalance(tariff.getTransactionType2AmountSun()),
                 FormattingTools.formatDateToUtc(tariff.getCreatedAt()),
                 tariff.getActive() ? commonLabels.check() : commonLabels.cross(),
-                tariff.getPredefined() ? commonLabels.defaultTariffWarning() : "");
+                tariff.getPredefined() ? commonLabels.defaultTariffWarning() : "",
+                amlPrice);
     }
 
     private InlineKeyboardMarkup getManageTariffActionsMarkup(Boolean showBackButton, Boolean canChange) {

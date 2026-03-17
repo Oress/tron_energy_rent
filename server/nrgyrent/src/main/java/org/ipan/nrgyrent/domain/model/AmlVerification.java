@@ -95,4 +95,7 @@ public class AmlVerification {
     @CreationTimestamp
     @Column(name = "created_at")
     private Instant createdAt;
+
+    @Column(name = "completed_at")
+    private Instant completedAt;
 }

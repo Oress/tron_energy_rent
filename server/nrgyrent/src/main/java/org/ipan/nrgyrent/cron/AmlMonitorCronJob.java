@@ -3,7 +3,7 @@ package org.ipan.nrgyrent.cron;
 import java.util.List;
 
 import org.ipan.nrgyrent.domain.model.AmlVerification;
-import org.ipan.nrgyrent.domain.model.AmlVerificationStatus;
+import org.ipan.nrgyrent.domain.model.AmlVerificationPaymentStatus;
 import org.ipan.nrgyrent.domain.model.AppUser;
 import org.ipan.nrgyrent.domain.model.repository.AmlVerificationRepo;
 import org.ipan.nrgyrent.domain.model.repository.AppUserRepo;
@@ -35,7 +35,7 @@ public class AmlMonitorCronJob {
 
     public void monitorPendingRequests() {
         try {
-            List<AmlVerification> processing = amlVerificationRepo.findAllByStatus(AmlVerificationStatus.PROCESSING);
+            List<AmlVerification> processing = amlVerificationRepo.findAllByPaymentStatus(AmlVerificationPaymentStatus.PENDING);
             for (AmlVerification v : processing) {
                 processVerification(v);
             }
@@ -70,7 +70,7 @@ public class AmlMonitorCronJob {
                 notifyUserFailed(verification);
                 logger.info("AML verification failed for wallet: {}, id: {}", verification.getWalletAddress(), verification.getId());
             } else if (STATUS_PROCESSING.equalsIgnoreCase(status)) {
-                logger.debug("AML verification still processing: id: {}", verification.getId());
+                logger.info("AML verification still processing: id: {}", verification.getId());
             }
         } catch (Exception e) {
             logger.error("Error processing AML verification id: {}, wallet: {}", verification.getId(), verification.getWalletAddress(), e);

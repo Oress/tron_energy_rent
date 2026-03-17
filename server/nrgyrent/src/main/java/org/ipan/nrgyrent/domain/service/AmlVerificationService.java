@@ -9,6 +9,10 @@ import org.apache.commons.lang3.NotImplementedException;
 import org.ipan.nrgyrent.domain.exception.NotEnoughBalanceException;
 import org.ipan.nrgyrent.domain.model.*;
 import org.ipan.nrgyrent.domain.model.repository.AmlVerificationRepo;
+import org.ipan.nrgyrent.itrx.Utils;
+
+import java.time.Instant;
+import org.ipan.nrgyrent.netts.dto.NettsAmlCreateResponse200;
 import org.ipan.nrgyrent.netts.dto.NettsAmlStatusResponse;
 import org.springframework.beans.factory.annotation.Lookup;
 import org.springframework.stereotype.Service;
@@ -76,11 +80,15 @@ public class AmlVerificationService {
     }
 
     @Transactional
-    public AmlVerification markProcessing(Long verificationId, String clientOrderId) {
+    public AmlVerification markProcessing(Long verificationId, NettsAmlCreateResponse200.DataResponse data) {
         AmlVerification verification = amlVerificationRepo.findById(verificationId)
                 .orElseThrow(() -> new IllegalArgumentException("AML verification not found: " + verificationId));
-        verification.setClientOrderId(clientOrderId);
-        verification.setStatus(AmlVerificationStatus.PROCESSING);
+
+        verification.setClientOrderId(data.getClientOrderId());
+        verification.setStatus(AmlVerificationStatus.fromString(data.getStatus()));
+        verification.setMessage(data.getMessage());
+        verification.setFeeSun(Utils.trxToSun(data.getPrice_trx()));
+        verification.setFeeUsdt(data.getPrice_usdt());
         return verification;
     }
 
@@ -94,11 +102,12 @@ public class AmlVerificationService {
             return verification;
         }
 
+        verification.setPaymentStatus(AmlVerificationPaymentStatus.COMPLETED);
         verification.setStatus(AmlVerificationStatus.COMPLETED);
+        verification.setCompletedAt(Instant.now());
         verification.setRiskScore(data.getRiskScore());
         verification.setRiskLevel(parseRiskLevel(data.getRiskLevel()));
         verification.setSanctioned(data.getIsSanctioned());
-        verification.setProvider(parseProvider(data.getProvider()));
         verification.setMessage(data.getMessage() != null ? data.getMessage() : null);
 
         if (data.getResult() != null) {
@@ -138,10 +147,6 @@ public class AmlVerificationService {
         }
 
         verification.setPaymentStatus(AmlVerificationPaymentStatus.REFUNDED);
-
-        if (!AmlVerificationStatus.COMPLETED.equals(verification.getStatus())) {
-            verification.setStatus(AmlVerificationStatus.FAILED);
-        }
 
         return verification;
     }

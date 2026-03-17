@@ -3,6 +3,7 @@ package org.ipan.nrgyrent.telegram.views;
 import java.util.List;
 
 import org.ipan.nrgyrent.domain.model.AmlVerification;
+import org.ipan.nrgyrent.domain.model.AmlVerificationStatus;
 import org.ipan.nrgyrent.domain.model.Balance;
 import org.ipan.nrgyrent.domain.model.Tariff;
 import org.ipan.nrgyrent.telegram.InlineMenuCallbacks;
@@ -26,6 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 public class AmlViews {
     private final TelegramClient tgClient;
     private final CommonLabels commonLabels;
+    private final FormattingTools formattingTools;
 
     @SneakyThrows
     public void showAmlMenu(UserState userState, Tariff tariff) {
@@ -94,27 +96,67 @@ public class AmlViews {
     }
 
     @SneakyThrows
-    public void showAmlHistory(UserState userState, List<AmlVerification> history) {
-        StringBuilder sb = new StringBuilder();
-        if (history.isEmpty()) {
-            sb.append(commonLabels.amlHistoryEmpty(userState.getLocaleOrDefault()));
-        } else {
-            for (AmlVerification v : history) {
-                sb.append(commonLabels.amlHistoryItem(userState.getLocaleOrDefault(), v)).append("\n\n");
-            }
-        }
-
+    public void showAmlRequestReceived(UserState userState, String walletAddress) {
         EditMessageText message = EditMessageText.builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
-                .text(sb.toString().trim())
+                .text(commonLabels.amlRequestReceived(userState.getLocaleOrDefault(), walletAddress))
                 .parseMode("MARKDOWN")
                 .replyMarkup(amlHistoryMarkup())
                 .build();
         try {
             tgClient.execute(message);
         } catch (Exception e) {
+            logger.error("Failed to showAmlRequestReceived user: {}", userState, e);
+        }
+    }
+
+    @SneakyThrows
+    public void showAmlHistory(UserState userState, List<AmlVerification> history) {
+        String text;
+        InlineKeyboardMarkup markup;
+        if (history.isEmpty()) {
+            text = commonLabels.amlHistoryEmpty(userState.getLocaleOrDefault());
+            markup = amlHistoryMarkup();
+        } else {
+            text = commonLabels.amlHistoryHeader(userState.getLocaleOrDefault());
+            markup = amlHistoryItemsMarkup(history);
+        }
+
+        EditMessageText message = EditMessageText.builder()
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
+                .text(text)
+                .parseMode("MARKDOWN")
+                .replyMarkup(markup)
+                .build();
+        try {
+            tgClient.execute(message);
+        } catch (Exception e) {
             logger.error("Failed to showAmlHistory user: {}", userState, e);
+        }
+    }
+
+    @SneakyThrows
+    public void showAmlVerificationReport(UserState userState, AmlVerification v) {
+        String text;
+        if (AmlVerificationStatus.COMPLETED.equals(v.getStatus())) {
+            text = formattingTools.formatAmlReport(v, userState.getLocaleOrDefault());
+        } else {
+            text = commonLabels.amlReportFailed(userState.getLocaleOrDefault(), v.getWalletAddress());
+        }
+
+        EditMessageText message = EditMessageText.builder()
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
+                .text(text)
+                .parseMode("MARKDOWN")
+                .replyMarkup(amlHistoryMarkup())
+                .build();
+        try {
+            tgClient.execute(message);
+        } catch (Exception e) {
+            logger.error("Failed to showAmlVerificationReport user: {}", userState, e);
         }
     }
 
@@ -136,6 +178,27 @@ public class AmlViews {
                                 .callbackData(InlineMenuCallbacks.TO_MAIN_MENU)
                                 .build()))
                 .build();
+    }
+
+    private InlineKeyboardMarkup amlHistoryItemsMarkup(List<AmlVerification> history) {
+        InlineKeyboardMarkup.InlineKeyboardMarkupBuilder builder = InlineKeyboardMarkup.builder();
+        for (AmlVerification v : history) {
+            builder.keyboardRow(new InlineKeyboardRow(
+                    InlineKeyboardButton.builder()
+                            .text(FormattingTools.formatAmlHistoryItemLabel(v))
+                            .callbackData(InlineMenuCallbacks.getAmlViewItemCallback(v.getId()))
+                            .build()));
+        }
+        builder.keyboardRow(new InlineKeyboardRow(
+                InlineKeyboardButton.builder()
+                        .text(commonLabels.toMainMenu())
+                        .callbackData(InlineMenuCallbacks.TO_MAIN_MENU)
+                        .build(),
+                InlineKeyboardButton.builder()
+                        .text(commonLabels.goBack())
+                        .callbackData(InlineMenuCallbacks.GO_BACK)
+                        .build()));
+        return builder.build();
     }
 
     private InlineKeyboardMarkup amlHistoryMarkup() {

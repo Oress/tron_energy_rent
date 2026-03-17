@@ -114,6 +114,17 @@ public class InlineMenuCallbacks {
     public static final String AML_CHECK = "aml_check";
     public static final String AML_HISTORY = "aml_history";
 
+    private static final String AML_VIEW_ITEM = "/aml_view/";
+    public static String getAmlViewItemCallback(Long id) {
+        return AML_VIEW_ITEM + id;
+    }
+    public static Long getAmlViewItemId(String data) {
+        if (data != null && data.startsWith(AML_VIEW_ITEM)) {
+            return Long.parseLong(data.substring(AML_VIEW_ITEM.length()));
+        }
+        return null;
+    }
+
     public static final String NTFN_OK = "notification_ok";
 
     public static final String CONFIRM_YES = "confirm_yes";

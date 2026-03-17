@@ -291,14 +291,6 @@ public class CommonLabels {
         return getLocalizedMessage("aml.request_received", locale, walletAddress);
     }
 
-    public String amlReportCompleted(Locale locale, org.ipan.nrgyrent.domain.model.AmlVerification v) {
-        String riskLevel = v.getRiskLevel() != null ? v.getRiskLevel().name() : "N/A";
-        String riskScore = v.getRiskScore() != null ? String.format("%.2f", v.getRiskScore()) : "N/A";
-        String sanctioned = Boolean.TRUE.equals(v.getSanctioned()) ? "YES" : "NO";
-        return getLocalizedMessage("aml.report_completed", locale,
-                v.getWalletAddress(), riskLevel, riskScore, sanctioned);
-    }
-
     public String amlReportFailed(Locale locale, String walletAddress) {
         return getLocalizedMessage("aml.report_failed", locale, walletAddress);
     }
@@ -307,11 +299,65 @@ public class CommonLabels {
         return getLocalizedMessage("aml.history_empty", locale);
     }
 
-    public String amlHistoryItem(Locale locale, org.ipan.nrgyrent.domain.model.AmlVerification v) {
-        String status = v.getStatus().name();
-        String riskLevel = v.getRiskLevel() != null ? v.getRiskLevel().name() : "-";
-        String riskScore = v.getRiskScore() != null ? String.format("%.2f", v.getRiskScore()) : "-";
-        return getLocalizedMessage("aml.history_item", locale,
-                v.getWalletAddress(), status, riskLevel, riskScore);
+    public String amlHistoryHeader(Locale locale) {
+        return getLocalizedMessage("aml.history.header", locale);
+    }
+
+    public String amlReportHeader(Locale locale) {
+        return getLocalizedMessage("aml.report.header", locale);
+    }
+
+    public String amlReportAddress(Locale locale) {
+        return getLocalizedMessage("aml.report.address", locale);
+    }
+
+    public String amlReportRiskSummary(Locale locale) {
+        return getLocalizedMessage("aml.report.risk_summary", locale);
+    }
+
+    public String amlReportRiskScore(Locale locale, String score) {
+        return getLocalizedMessage("aml.report.risk_score", locale, score);
+    }
+
+    public String amlReportRiskLevel(Locale locale, String level) {
+        return getLocalizedMessage("aml.report.risk_level", locale, level);
+    }
+
+    public String amlReportSanctioned(Locale locale, String value) {
+        return getLocalizedMessage("aml.report.sanctioned", locale, value);
+    }
+
+    public String amlReportSanctionedYes(Locale locale) {
+        return getLocalizedMessage("aml.report.sanctioned_yes", locale);
+    }
+
+    public String amlReportSanctionedNo(Locale locale) {
+        return getLocalizedMessage("aml.report.sanctioned_no", locale);
+    }
+
+    public String amlReportFundExposure(Locale locale) {
+        return getLocalizedMessage("aml.report.fund_exposure", locale);
+    }
+
+    public String amlReportExposureSource(Locale locale) {
+        return getLocalizedMessage("aml.report.exposure_source", locale);
+    }
+
+    public String amlReportRisksHeader(Locale locale) {
+        return getLocalizedMessage("aml.report.risks_header", locale);
+    }
+
+    public String amlReportComputed(Locale locale, String dateTime) {
+        return getLocalizedMessage("aml.report.computed", locale, dateTime);
+    }
+
+    public String amlReportProvider(Locale locale, String providerName) {
+        return getLocalizedMessage("aml.report.provider", locale, providerName);
+    }
+
+    public String amlCategoryName(Locale locale, String category) {
+        if (category == null) return "Unknown";
+        String key = "aml.category." + category.toLowerCase().replace(" ", "_");
+        return messageSource.getMessage(key, null, category, locale);
     }
 }

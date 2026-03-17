@@ -162,4 +162,6 @@ public enum States {
     AML_MENU,
     AML_PROMPT_WALLET,
     AML_HISTORY,
+    AML_ITEM_PREVIEW,
+    AML_SUCCESS,
 }

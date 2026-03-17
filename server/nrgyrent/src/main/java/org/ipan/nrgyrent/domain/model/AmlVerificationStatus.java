@@ -5,5 +5,14 @@ public enum AmlVerificationStatus {
     PROCESSING,
     COMPLETED,
     FAILED,
-    SKIPPED
+    SKIPPED;
+
+    public static AmlVerificationStatus fromString(String status) {
+        for (AmlVerificationStatus value : AmlVerificationStatus.values()) {
+            if (value.name().equalsIgnoreCase(status)) {
+                return value;
+            }
+        }
+        throw new IllegalArgumentException("Invalid AmlVerificationStatus: " + status);
+    }
 }
