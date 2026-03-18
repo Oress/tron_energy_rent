@@ -1360,4 +1360,12 @@
         </addColumn>
     </changeSet>
 
+    <changeSet id="add match_provider_price to nrg_tariffs" author="oress">
+        <addColumn tableName="nrg_tariffs">
+            <column name="match_provider_price" type="boolean" defaultValueBoolean="false">
+                <constraints nullable="false" />
+            </column>
+        </addColumn>
+    </changeSet>
+
 </databaseChangeLog>

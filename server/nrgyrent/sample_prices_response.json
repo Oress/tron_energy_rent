@@ -1,0 +1,180 @@
+{
+  "success": true,
+  "version": "2.1",
+  "timestamp": "2026-03-18T22:40:00Z",
+  "data": {
+    "trx_rate_usd": 0.304141,
+    "units_meta": {
+      "sun": {
+        "base": "trx",
+        "multiplier": 1000000
+      },
+      "trx": {
+        "base": "trx",
+        "multiplier": 1
+      },
+      "usdt": {
+        "base": "usdt",
+        "multiplier": 1
+      }
+    },
+    "services": {
+      "energy_1h": {
+        "unit": "sun",
+        "pricing_type": "periodic",
+        "description": "1-hour energy delegation",
+        "cache_ttl": 30,
+        "current_period": "peak",
+        "periods": [
+          {
+            "id": "drop_00",
+            "label": "Drop 00h",
+            "start": "00:00",
+            "end": "01:00",
+            "is_current": false,
+            "price": 34,
+            "tiers": null
+          },
+          {
+            "id": "off_peak",
+            "label": "Off-peak",
+            "start": "01:00",
+            "end": "11:00",
+            "is_current": false,
+            "price": 27,
+            "tiers": null
+          },
+          {
+            "id": "ramp_11",
+            "label": "Ramp 11h",
+            "start": "11:00",
+            "end": "12:00",
+            "is_current": false,
+            "price": 30,
+            "tiers": null
+          },
+          {
+            "id": "ramp_12",
+            "label": "Ramp 12h",
+            "start": "12:00",
+            "end": "13:00",
+            "is_current": false,
+            "price": 30,
+            "tiers": null
+          },
+          {
+            "id": "ramp_13",
+            "label": "Ramp 13h",
+            "start": "13:00",
+            "end": "14:00",
+            "is_current": false,
+            "price": 32,
+            "tiers": null
+          },
+          {
+            "id": "peak",
+            "label": "Peak",
+            "start": "14:00",
+            "end": "00:00",
+            "is_current": true,
+            "price": 36,
+            "tiers": null
+          }
+        ]
+      },
+      "energy_5m": {
+        "unit": "sun",
+        "pricing_type": "periodic",
+        "description": "5-minute energy delegation",
+        "cache_ttl": 30,
+        "current_period": "peak",
+        "periods": [
+          {
+            "id": "drop_00",
+            "label": "Drop 00h",
+            "start": "00:00",
+            "end": "01:00",
+            "is_current": false,
+            "price": 32,
+            "tiers": null
+          },
+          {
+            "id": "off_peak",
+            "label": "Off-peak",
+            "start": "01:00",
+            "end": "11:00",
+            "is_current": false,
+            "price": 25,
+            "tiers": null
+          },
+          {
+            "id": "ramp_11",
+            "label": "Ramp 11h",
+            "start": "11:00",
+            "end": "12:00",
+            "is_current": false,
+            "price": 28,
+            "tiers": null
+          },
+          {
+            "id": "ramp_12",
+            "label": "Ramp 12h",
+            "start": "12:00",
+            "end": "13:00",
+            "is_current": false,
+            "price": 28,
+            "tiers": null
+          },
+          {
+            "id": "ramp_13",
+            "label": "Ramp 13h",
+            "start": "13:00",
+            "end": "14:00",
+            "is_current": false,
+            "price": 30,
+            "tiers": null
+          },
+          {
+            "id": "peak",
+            "label": "Peak",
+            "start": "14:00",
+            "end": "00:00",
+            "is_current": true,
+            "price": 34,
+            "tiers": null
+          }
+        ]
+      },
+      "host": {
+        "unit": "trx",
+        "pricing_type": "flat_rates",
+        "description": "Host energy delegation",
+        "cache_ttl": 60,
+        "rates": {
+          "standard_65k": 3.39,
+          "standard_131k_initial": 6.426,
+          "frequent_65k": 3.39,
+          "frequent_131k": 6.426
+        }
+      },
+      "aml": {
+        "unit": "usdt",
+        "pricing_type": "provider_based",
+        "description": "AML address check",
+        "cache_ttl": 60,
+        "providers": {
+          "bitok": {
+            "price": 0.5,
+            "price_trx": 1.64,
+            "available": true
+          },
+          "elliptic": {
+            "price": 0.98,
+            "price_trx": 3.22,
+            "available": true
+          }
+        }
+      }
+    }
+  }
+}

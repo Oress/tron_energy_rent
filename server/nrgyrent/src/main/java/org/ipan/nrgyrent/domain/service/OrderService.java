@@ -83,7 +83,15 @@ public class OrderService {
 
 
             activationFee = command.isRequireActivation() ? AppConstants.WALLET_ACTIVATION_FEE : 0L;
-            totalSunAmount = command.getTxAmount() * command.getSunAmountPerTx() + activationFee;
+
+            Long price = command.getTxAmount() * command.getSunAmountPerTx();
+            Long energyProviderFee = command.getItrxFeeSunAmount();
+            if (Boolean.TRUE.equals(tariff.getMatchProviderPrice()) && energyProviderFee != null) {
+                price = energyProviderFee;
+                logger.info("matchProviderPrice=true: overriding energyProviderFee from {} to {} (energyPerTx={})",
+                        command.getSunAmountPerTx(), energyProviderFee, command.getEnergyAmountPerTx());
+            }
+            totalSunAmount = price + activationFee;
 
             targetBalance = user.getBalanceToUse();
             balanceService.subtractSunBalance(targetBalance, totalSunAmount);

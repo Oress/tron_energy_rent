@@ -57,8 +57,9 @@ public class AmlVerificationService {
             throw new IllegalArgumentException("User has no tariff: " + userId);
         }
 
-        Integer percentage = tariff.getAmlCheckPercentage();
-        if (percentage == null || percentage <= 0) {
+        boolean matchProviderPrice = Boolean.TRUE.equals(tariff.getMatchProviderPrice());
+        Integer percentage = matchProviderPrice ? 0 : tariff.getAmlCheckPercentage();
+        if (!matchProviderPrice && (percentage == null || percentage <= 0)) {
             throw new IllegalStateException("AML check percentage is not configured on tariff id: " + tariff.getId());
         }
 
@@ -177,9 +178,6 @@ public class AmlVerificationService {
         }
     }
 
-    /**
-     * Computes AML price in SUN: providerPriceTrx * percentage / 100, rounded to 1 decimal in TRX, then converted to SUN.
-     */
     public static Long computeAmlPriceSun(Double providerPriceTrx, Integer percentage) {
         BigDecimal priceTrx = computeAmlPriceTrx(providerPriceTrx, percentage);
         return priceTrx.multiply(BigDecimal.valueOf(1_000_000)).longValue();

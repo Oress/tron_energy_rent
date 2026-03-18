@@ -48,6 +48,9 @@ public class Tariff {
     @Column(name = "is_active")
     private Boolean active = Boolean.TRUE;
 
+    @Column(name = "match_provider_price")
+    private Boolean matchProviderPrice = Boolean.FALSE;
+
     @CreationTimestamp
     @Column(name = "created_at")
     private Instant createdAt;

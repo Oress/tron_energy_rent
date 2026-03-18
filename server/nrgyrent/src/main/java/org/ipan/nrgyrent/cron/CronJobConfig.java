@@ -36,6 +36,7 @@ public class CronJobConfig {
     private final AutoDelegationLowBalanceMonitorJob autoDelegationLowBalanceMonitorJob;
     private final AmlMonitorCronJob amlMonitorCronJob;
     private final AmlPriceMonitorCronJob amlPriceMonitorCronJob;
+    private final NettsPriceMonitorCronJob nettsPriceMonitorCronJob;
 
     public CronJobConfig(ReferralCommissionHelper referralCommissionHelper,
                          BalanceRepo balanceRepo,
@@ -48,6 +49,7 @@ public class CronJobConfig {
                          AutoDelegationLowBalanceMonitorJob autoDelegationLowBalanceMonitorJob,
                          AmlMonitorCronJob amlMonitorCronJob,
                          AmlPriceMonitorCronJob amlPriceMonitorCronJob,
+                         NettsPriceMonitorCronJob nettsPriceMonitorCronJob,
                          @Qualifier(AppConstants.TRXX_MONITOR_JOB) ItrxBalanceMonitorCronJob trxxBalanceMonitorCronJob) {
         this.referralCommissionHelper = referralCommissionHelper;
         this.balanceRepo = balanceRepo;
@@ -61,6 +63,7 @@ public class CronJobConfig {
         this.autoDelegationLowBalanceMonitorJob = autoDelegationLowBalanceMonitorJob;
         this.amlMonitorCronJob = amlMonitorCronJob;
         this.amlPriceMonitorCronJob = amlPriceMonitorCronJob;
+        this.nettsPriceMonitorCronJob = nettsPriceMonitorCronJob;
     }
 
     @Bean(name = TRON_TRANSACTION_EXECUTOR)
@@ -139,5 +142,10 @@ public class CronJobConfig {
     @Scheduled(fixedRate = 10, timeUnit = TimeUnit.MINUTES)
     public void refreshAmlPrices() {
         amlPriceMonitorCronJob.refreshPrices();
+    }
+
+    @Scheduled(fixedRate = 10, timeUnit = TimeUnit.MINUTES)
+    public void refreshNettsPrices() {
+        nettsPriceMonitorCronJob.refreshPrices();
     }
 }

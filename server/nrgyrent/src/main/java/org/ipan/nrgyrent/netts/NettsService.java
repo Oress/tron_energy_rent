@@ -20,10 +20,21 @@ import java.util.UUID;
 public class NettsService implements EnergyProvider {
     private final OrderEventPublisher eventPublisher;
     private final NettsRestClient restClient;
+    private final NettsPriceCache priceCache;
 
     @Override
     public EstimateOrderAmountResponse estimateOrderPrice(Integer energyAmount, String duration, String receiveAddress) {
-        return new EstimateOrderAmountResponse();
+        EstimateOrderAmountResponse resp = new EstimateOrderAmountResponse();
+
+        NettsPriceCache.EnergyPrice energy1hPrice = priceCache.getEnergy1hPrice();
+        if (energy1hPrice == null) {
+            logger.error("Netts energy price not found");
+            return resp;
+        }
+        Long priceSun = energy1hPrice.getPriceSun() * energyAmount;
+        resp.setEnergy_amount(energyAmount);
+        resp.setTotal_price(priceSun);
+        return resp;
     }
 
     @Override

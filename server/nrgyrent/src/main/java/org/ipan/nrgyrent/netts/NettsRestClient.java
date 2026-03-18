@@ -14,6 +14,7 @@ import org.ipan.nrgyrent.netts.dto.NettsAmlPriceResponse;
 import org.ipan.nrgyrent.netts.dto.NettsAmlStatusResponse;
 import org.ipan.nrgyrent.netts.dto.NettsPlaceOrderRequest;
 import org.ipan.nrgyrent.netts.dto.NettsPlaceOrderResponse200;
+import org.ipan.nrgyrent.netts.dto.NettsPricingResponse;
 import org.ipan.nrgyrent.netts.dto.NettsUserInfoResponse200;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.retry.annotation.Retryable;
@@ -121,6 +122,28 @@ public class NettsRestClient {
             throw new RuntimeException("Error creating AML request: " + responseStr);
         }
         return gson.fromJson(responseStr, NettsAmlCreateResponse200.class);
+    }
+
+    @SneakyThrows
+    public NettsPricingResponse getPricing() {
+        UriComponents uriComponents = UriComponentsBuilder.fromPath("/apiv2/pricing").build();
+
+        Request request = new Request.Builder()
+                .url(baseUrl + uriComponents)
+                .method("GET", null)
+                .addHeader("X-API-KEY", apiKey)
+                .addHeader("X-Real-IP", realIp)
+                .build();
+        Response response = client.newCall(request).execute();
+        String responseStr = response.body().string();
+        logger.info("NETTS.IO pricing: {}", responseStr);
+
+        int responseCode = response.code();
+        if (responseCode != 200) {
+            logger.error("NETTS.IO Error getting pricing, code: {}, body: {}", responseCode, responseStr);
+            throw new RuntimeException("Error getting pricing: " + responseStr);
+        }
+        return gson.fromJson(responseStr, NettsPricingResponse.class);
     }
 
     @SneakyThrows
