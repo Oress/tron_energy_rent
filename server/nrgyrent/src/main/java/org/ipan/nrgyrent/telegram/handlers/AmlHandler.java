@@ -3,20 +3,18 @@ package org.ipan.nrgyrent.telegram.handlers;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.ipan.nrgyrent.domain.exception.NotEnoughBalanceException;
-import org.ipan.nrgyrent.domain.model.AmlProvider;
-import org.ipan.nrgyrent.domain.model.AmlVerification;
-import org.ipan.nrgyrent.domain.model.AppUser;
-import org.ipan.nrgyrent.domain.model.Balance;
-import org.ipan.nrgyrent.domain.model.Tariff;
+import org.ipan.nrgyrent.domain.model.*;
 import org.ipan.nrgyrent.domain.model.repository.AmlVerificationRepo;
 import org.ipan.nrgyrent.domain.service.AmlVerificationService;
 import org.ipan.nrgyrent.domain.service.NrgConfigsService;
 import org.ipan.nrgyrent.domain.service.UserService;
+import org.ipan.nrgyrent.domain.service.UserWalletService;
 import org.ipan.nrgyrent.netts.AmlPriceCache;
 import org.ipan.nrgyrent.netts.NettsRestClient;
 import org.ipan.nrgyrent.netts.dto.NettsAmlCreateResponse200;
 import org.ipan.nrgyrent.telegram.InlineMenuCallbacks;
 import org.ipan.nrgyrent.telegram.States;
+import org.ipan.nrgyrent.telegram.TelegramMessages;
 import org.ipan.nrgyrent.telegram.state.TelegramState;
 import org.ipan.nrgyrent.telegram.state.UserState;
 import org.ipan.nrgyrent.telegram.statetransitions.MatchState;
@@ -28,6 +26,7 @@ import org.ipan.nrgyrent.telegram.views.AmlViews;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.message.Message;
 
+import java.util.Collections;
 import java.util.List;
 
 @AllArgsConstructor
@@ -42,6 +41,8 @@ public class AmlHandler {
     private final NrgConfigsService nrgConfigsService;
     private final AmlPriceCache amlPriceCache;
     private final AmlViews amlViews;
+    private final TelegramMessages telegramMessages;
+    private final UserWalletService userWalletService;
 
     @MatchStates({
             @MatchState(state = States.MAIN_MENU, callbackData = InlineMenuCallbacks.AML_CHECK),
@@ -102,31 +103,42 @@ public class AmlHandler {
             return;
         }
 
+        AppUser user = userService.getById(userState.getTelegramId());
         AmlProvider provider = nrgConfigsService.readCurrentAmlProviderConfig();
-        AmlVerification verification;
+        AmlVerification verification = null;
         try {
             verification = amlVerificationService.createPendingVerification(
                     userState.getTelegramId(), walletAddress, provider,
                     userState.getChatId(), userState.getMenuMessageId());
+
+            amlViews.showAmlRequestReceived(userState, walletAddress);
+
+            List<UserWallet> userWallets = Collections.emptyList();
+            if (user.getShowWalletsMenu()) {
+                userWallets = userWalletService.getWallets(user.getTelegramId());
+            }
+
+            Message newMenuMsg = telegramMessages.sendUserMainMenuBasedOnRole(userState, userState.getChatId(), user, userWallets);
+            telegramState.updateUserState(userState.getTelegramId(), userState
+                    .withState(States.MAIN_MENU)
+                    .withChatId(newMenuMsg.getChatId())
+                    .withMenuMessageId(newMenuMsg.getMessageId()));
+
+
+            String reportLanguage = user.getLanguageCode();
+            NettsAmlCreateResponse200 response = nettsRestClient.createAmlRequest(walletAddress, provider, reportLanguage);
+            amlVerificationService.markProcessing(verification.getId(), response.getData());
+            logger.info("AML request submitted for wallet {} with verification id: {}", walletAddress, verification.getId());
         } catch (NotEnoughBalanceException e) {
-            AppUser user = userService.getById(userState.getTelegramId());
             String estimatedPrice = computeEstimatedPriceTrx(user.getTariffToUse(), provider);
             amlViews.showAmlInsufficientBalance(userState, user.getBalanceToUse(), estimatedPrice);
             telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.AML_MENU));
-            return;
-        }
-
-        try {
-            NettsAmlCreateResponse200 response = nettsRestClient.createAmlRequest(walletAddress, provider);
-            amlVerificationService.markProcessing(verification.getId(), response.getData());
-            logger.info("AML request submitted for wallet {} with verification id: {}", walletAddress, verification.getId());
         } catch (Exception e) {
             logger.error("Failed to submit AML request for wallet {}: {}", walletAddress, e.getMessage());
-            amlVerificationService.refundVerification(verification.getId());
+            if (verification != null) {
+                amlVerificationService.refundVerification(verification.getId());
+            }
         }
-
-        amlViews.showAmlRequestReceived(userState, walletAddress);
-        telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.AML_SUCCESS));
     }
 
     private String computeEstimatedPriceTrx(Tariff tariff, AmlProvider provider) {

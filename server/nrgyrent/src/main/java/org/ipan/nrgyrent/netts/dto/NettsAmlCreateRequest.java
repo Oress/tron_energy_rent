@@ -10,4 +10,5 @@ public class NettsAmlCreateRequest {
     private String network;
     private String provider;
     private Boolean wait;
+    private String report_language;
 }

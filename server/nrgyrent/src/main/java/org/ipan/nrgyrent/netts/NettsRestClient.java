@@ -95,7 +95,8 @@ public class NettsRestClient {
 
     @SneakyThrows
     @Retryable
-    public NettsAmlCreateResponse200 createAmlRequest(String walletAddress, AmlProvider provider) {
+    public NettsAmlCreateResponse200 createAmlRequest(String walletAddress, AmlProvider provider, String reportLanguage) {
+        logger.info("Creating AML request with walletAddress: {}, provider: {}, reportLanguage: {}", walletAddress, provider, reportLanguage);
         UriComponents uriComponents = UriComponentsBuilder.fromPath("/apiv2/aml").build();
 
         String providerStr = switch (provider) {
@@ -103,7 +104,8 @@ public class NettsRestClient {
             case null, default -> "bitok";
         };
 
-        var req = new NettsAmlCreateRequest(walletAddress, "trx", providerStr, false);
+        // Will it handle uk?
+        var req = new NettsAmlCreateRequest(walletAddress, "trx", providerStr, false, reportLanguage);
         String jsonBody = gson.toJson(req);
         RequestBody body = RequestBody.create(jsonBody, mediaType);
         Request request = new Request.Builder()

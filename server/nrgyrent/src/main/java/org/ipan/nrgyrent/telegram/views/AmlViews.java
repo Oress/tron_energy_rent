@@ -95,7 +95,7 @@ public class AmlViews {
                 .messageId(userState.getMenuMessageId())
                 .text(commonLabels.amlRequestReceived(userState.getLocaleOrDefault(), walletAddress))
                 .parseMode("MARKDOWN")
-                .replyMarkup(amlHistoryMarkup())
+//                .replyMarkup(amlHistoryMarkup())
                 .build();
         try {
             tgClient.execute(message);

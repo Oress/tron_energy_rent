@@ -27,8 +27,6 @@ import org.springframework.transaction.annotation.Transactional;
 @AllArgsConstructor
 @Slf4j
 public class AmlVerificationService {
-    private static final Gson GSON = new GsonBuilder().disableHtmlEscaping().create();
-
     private final AmlVerificationRepo amlVerificationRepo;
     private final BalanceService balanceService;
     private final AmlPriceCache amlPriceCache;
