@@ -298,8 +298,9 @@ public class TelegramMessages {
                     .builder()
                     .chatId(verification.getChatId())
                     .messageId(verification.getMessageToUpdate())
+                    .parseMode("MARKDOWN")
                     .text(text)
-                    .replyMarkup(getOkNotificationMarkup())
+//                    .replyMarkup(getOkNotificationMarkup())
                     .build();
             tgClient.execute(message);
         } else {
@@ -307,7 +308,8 @@ public class TelegramMessages {
                     .builder()
                     .chatId(userState.getChatId())
                     .text(text)
-                    .replyMarkup(getOkNotificationMarkup())
+                    .parseMode("MARKDOWN")
+//                    .replyMarkup(getOkNotificationMarkup())
                     .build();
             tgClient.execute(message);
         }
