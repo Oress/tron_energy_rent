@@ -185,7 +185,7 @@ public class AmlVerificationService {
     public static BigDecimal computeAmlPriceTrx(Double providerPriceTrx, Integer percentage) {
         return BigDecimal.valueOf(providerPriceTrx)
                 .multiply(BigDecimal.valueOf(100 + percentage))
-                .divide(BigDecimal.valueOf(100), 6, RoundingMode.HALF_UP);
+                .divide(BigDecimal.valueOf(100), 1, RoundingMode.UP);
     }
 
     private AmlProvider parseProvider(String provider) {
