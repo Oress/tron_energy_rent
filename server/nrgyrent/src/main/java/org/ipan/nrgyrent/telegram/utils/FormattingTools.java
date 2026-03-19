@@ -203,8 +203,7 @@ public class FormattingTools {
                     sb.append("\n").append(commonLabels.amlReportEllipticRulesHeader(locale)).append("\n");
                     for (EllipticResultResponse.SourceRule rule : evalDetail.getSource()) {
                         String ruleName = rule.getRuleName() != null ? rule.getRuleName() : "Unknown";
-                        String ruleRiskScore = rule.getRiskScore() != null ? String.format("%.2f%", rule.getRiskScore()) : "N/A";
-                        sb.append("• *").append(ruleName).append("*: ").append(ruleRiskScore).append("\n");
+                        sb.append("• *").append(ruleName).append("*: ").append("\n");
 
 /*
                         if (rule.getMatchedElements() != null) {
@@ -228,7 +227,8 @@ public class FormattingTools {
 */
                     }
                 }
-            } catch (Exception ignored) {
+            } catch (Exception e) {
+                logger.error("exception when formating eliptic", e);
             }
         }
 
