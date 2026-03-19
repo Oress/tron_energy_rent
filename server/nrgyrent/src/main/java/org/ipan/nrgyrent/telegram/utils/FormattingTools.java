@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import lombok.extern.slf4j.Slf4j;
 import org.ipan.nrgyrent.domain.model.*;
 import org.ipan.nrgyrent.domain.model.projections.ReferralDto;
 import org.ipan.nrgyrent.domain.service.commands.TgUserId;
@@ -26,6 +27,7 @@ import org.ipan.nrgyrent.telegram.i18n.RefProgramLabels;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
 public class FormattingTools {
     private static final DateTimeFormatter utcFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.of("UTC"));
@@ -196,6 +198,7 @@ public class FormattingTools {
                 EllipticResultResponse result = GSON.fromJson(v.getResult(), EllipticResultResponse.class);
                 EllipticResultResponse.EvaluationDetail evalDetail = result.getEvaluationDetail();
 
+                logger.info("{}", evalDetail.getSource());
                 if (evalDetail != null && evalDetail.getSource() != null && !evalDetail.getSource().isEmpty()) {
                     sb.append("\n").append(commonLabels.amlReportEllipticRulesHeader(locale)).append("\n");
                     for (EllipticResultResponse.SourceRule rule : evalDetail.getSource()) {
