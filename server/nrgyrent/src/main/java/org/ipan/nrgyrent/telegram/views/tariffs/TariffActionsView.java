@@ -36,7 +36,7 @@ public class TariffActionsView {
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
-                .text(getBalanceDescription(tariff))
+                .text(getTariffDescription(tariff))
                 .replyMarkup(getManageTariffActionsMarkup(true, canChange))
                 .build();
         tgClient.execute(message);
@@ -147,7 +147,7 @@ public class TariffActionsView {
                 .build();
     }
 
-    private String getBalanceDescription(Tariff tariff) {
+    private String getTariffDescription(Tariff tariff) {
         String amlPercentage = tariff.getAmlCheckPercentage() != null
                 ? tariff.getAmlCheckPercentage() + "%"
                 : "N/A";
@@ -159,7 +159,8 @@ public class TariffActionsView {
                 FormattingTools.formatDateToUtc(tariff.getCreatedAt()),
                 tariff.getActive() ? commonLabels.check() : commonLabels.cross(),
                 tariff.getPredefined() ? commonLabels.defaultTariffWarning() : "",
-                amlPercentage);
+                amlPercentage,
+                Boolean.TRUE.equals(tariff.getMatchProviderPrice()) ? commonLabels.check() : commonLabels.cross());
     }
 
     private InlineKeyboardMarkup getManageTariffActionsMarkup(Boolean showBackButton, Boolean canChange) {

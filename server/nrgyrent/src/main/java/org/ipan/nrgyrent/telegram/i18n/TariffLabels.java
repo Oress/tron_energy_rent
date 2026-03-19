@@ -90,7 +90,7 @@ public class TariffLabels {
         return getLocalizedMessage("tariff.aml_percentage_change_success");
     }
 
-    public String preview(String label, String predef, String amnt1, String amnt2, String createdDt, String isActive, String warning, String amlPrice) {
-        return getLocalizedMessage("tariff.preview", label, predef, amnt1, amnt2, createdDt, isActive, warning, amlPrice);
+    public String preview(String label, String predef, String amnt1, String amnt2, String createdDt, String isActive, String warning, String amlPrice, String matchProviderPrice) {
+        return getLocalizedMessage("tariff.preview", label, predef, amnt1, amnt2, createdDt, isActive, warning, amlPrice, matchProviderPrice);
     }
 }
