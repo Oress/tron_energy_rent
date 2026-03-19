@@ -203,7 +203,7 @@ public class FormattingTools {
                     sb.append("\n").append(commonLabels.amlReportEllipticRulesHeader(locale)).append("\n");
                     for (EllipticResultResponse.SourceRule rule : evalDetail.getSource()) {
                         String ruleName = rule.getRuleName() != null ? rule.getRuleName() : "Unknown";
-                        sb.append("• *").append(ruleName).append("*: ").append("\n");
+                        sb.append("• *").append(ruleName).append("* ").append("\n");
 
 /*
                         if (rule.getMatchedElements() != null) {
