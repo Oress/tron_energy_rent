@@ -113,7 +113,7 @@ public class AmlViews {
             markup = amlHistoryMarkup();
         } else {
             text = commonLabels.amlHistoryHeader(userState.getLocaleOrDefault());
-            markup = amlHistoryItemsMarkup(history);
+            markup = amlHistoryItemsMarkup(history, userState.getLocaleOrDefault());
         }
 
         EditMessageText message = EditMessageText.builder()
@@ -173,12 +173,12 @@ public class AmlViews {
                 .build();
     }
 
-    private InlineKeyboardMarkup amlHistoryItemsMarkup(List<AmlVerification> history) {
+    private InlineKeyboardMarkup amlHistoryItemsMarkup(List<AmlVerification> history, java.util.Locale locale) {
         InlineKeyboardMarkup.InlineKeyboardMarkupBuilder builder = InlineKeyboardMarkup.builder();
         for (AmlVerification v : history) {
             builder.keyboardRow(new InlineKeyboardRow(
                     InlineKeyboardButton.builder()
-                            .text(FormattingTools.formatAmlHistoryItemLabel(v))
+                            .text(formattingTools.formatAmlHistoryItemLabel(v, locale))
                             .callbackData(InlineMenuCallbacks.getAmlViewItemCallback(v.getId()))
                             .build()));
         }

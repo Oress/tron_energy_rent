@@ -101,16 +101,16 @@ public class FormattingTools {
         return sb.toString().trim();
     }
 
-    public static String formatAmlHistoryItemLabel(AmlVerification v) {
+    public String formatAmlHistoryItemLabel(AmlVerification v, Locale locale) {
         String addr = v.getWalletAddress();
         String shortAddr = (addr != null && addr.length() > 12)
                 ? addr.substring(0, 6) + "…" + addr.substring(addr.length() - 4)
                 : (addr != null ? addr : "?");
         String emoji = riskLevelEmoji(v.getRiskLevel());
         if (v.getRiskLevel() != null) {
-            return emoji + " " + shortAddr + " [" + v.getRiskLevel().name() + "]";
+            return emoji + " " + shortAddr + " [" + commonLabels.amlRiskLevelName(locale, v.getRiskLevel()) + "]";
         }
-        String status = v.getStatus() != null ? v.getStatus().name() : "?";
+        String status = commonLabels.amlPaymentStatusName(locale, v.getPaymentStatus());
         return shortAddr + " [" + status + "]";
     }
 

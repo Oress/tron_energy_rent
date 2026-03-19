@@ -367,6 +367,12 @@ public class CommonLabels {
         return messageSource.getMessage(key, null, level.name(), locale);
     }
 
+    public String amlPaymentStatusName(Locale locale, org.ipan.nrgyrent.domain.model.AmlVerificationPaymentStatus status) {
+        if (status == null) return "?";
+        String key = "aml.payment_status." + status.name().toLowerCase();
+        return messageSource.getMessage(key, null, status.name(), locale);
+    }
+
     public String amlProximity(Locale locale, String proximity) {
         if (proximity == null) return "";
         String key = "aml.proximity." + proximity.toLowerCase();
