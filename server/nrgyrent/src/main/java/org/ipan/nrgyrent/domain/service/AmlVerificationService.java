@@ -76,6 +76,7 @@ public class AmlVerificationService {
 
         AmlVerification verification = new AmlVerification();
         verification.setBalance(balance);
+        verification.setUser(user);
         verification.setTariff(tariff);
         verification.setPaymentStatus(AmlVerificationPaymentStatus.PENDING);
 

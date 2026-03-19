@@ -2,19 +2,9 @@ package org.ipan.nrgyrent.domain.model;
 
 import java.time.Instant;
 
+import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.SequenceGenerator;
-import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -41,6 +31,10 @@ public class AmlVerification {
     @JoinColumn(name = "tariff_id")
     @ManyToOne
     private Tariff tariff;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id", referencedColumnName = "telegram_id", foreignKey = @ForeignKey(name = "fk_nrg_orders_user_id"))
+    private AppUser user;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "payment_status")

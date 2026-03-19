@@ -1,70 +1,70 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <databaseChangeLog
-    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
 
     <!-- This table stores the information about wallets themselfs pub and pri keys -->
     <changeSet id="create table nrg_managed_wallets" author="oress">
         <createTable tableName="nrg_managed_wallets">
             <column name="base58_address" type="text">
-                <constraints primaryKey="true" nullable="false" unique="true" />
+                <constraints primaryKey="true" nullable="false" unique="true"/>
             </column>
 
-            <column name="private_key_enc" type="bytea" />
+            <column name="private_key_enc" type="bytea"/>
 
-            <column name="created_at" type="TIMESTAMP" />
+            <column name="created_at" type="TIMESTAMP"/>
         </createTable>
 
         <createIndex indexName="idx_nrg_managed_wallets_base58_address"
-            tableName="nrg_managed_wallets">
-            <column name="base58_address" />
+                     tableName="nrg_managed_wallets">
+            <column name="base58_address"/>
         </createIndex>
     </changeSet>
 
     <changeSet id="create table nrg_balances" author="oress">
         <createSequence sequenceName="nrg_balance_seq"
-            dataType="bigint"
-            incrementBy="1"
-            startValue="1" />
+                        dataType="bigint"
+                        incrementBy="1"
+                        startValue="1"/>
 
         <createTable tableName="nrg_balances">
             <column name="id" type="bigint">
-                <constraints primaryKey="true" nullable="false" unique="true" />
+                <constraints primaryKey="true" nullable="false" unique="true"/>
             </column>
             <column name="deposit_address" type="text">
-                <constraints nullable="true" />
+                <constraints nullable="true"/>
             </column>
-            <column name="manager_id" type="bigint" />
+            <column name="manager_id" type="bigint"/>
             <column name="type" type="text" defaultValue="INDIVIDUAL">
-                <constraints nullable="true" />
+                <constraints nullable="true"/>
             </column>
-            <column name="label" type="text" />
+            <column name="label" type="text"/>
             <column name="sun_balance" type="bigint" defaultValueNumeric="0">
-                <constraints nullable="false" />
+                <constraints nullable="false"/>
             </column>
-            <column name="last_tx_id" type="text" />
-            <column name="last_tx_timestamp" type="bigint" />
+            <column name="last_tx_id" type="text"/>
+            <column name="last_tx_timestamp" type="bigint"/>
 
-            <column name="is_active" type="boolean" />
+            <column name="is_active" type="boolean"/>
 
-            <column name="created_at" type="TIMESTAMP" />
+            <column name="created_at" type="TIMESTAMP"/>
 
-            <column name="version" type="bigint" />
+            <column name="version" type="bigint"/>
         </createTable>
 
         <addForeignKeyConstraint constraintName="fk_nrg_balances_deposit_address"
-            baseTableName="nrg_balances"
-            baseColumnNames="deposit_address"
-            referencedTableName="nrg_managed_wallets"
-            referencedColumnNames="base58_address" />
+                                 baseTableName="nrg_balances"
+                                 baseColumnNames="deposit_address"
+                                 referencedTableName="nrg_managed_wallets"
+                                 referencedColumnNames="base58_address"/>
 
         <createIndex indexName="idx_nrg_balances_deposit_address" tableName="nrg_balances">
-            <column name="deposit_address" />
+            <column name="deposit_address"/>
         </createIndex>
 
         <createIndex indexName="idx_nrg_balances_manager_id" tableName="nrg_balances">
-            <column name="manager_id" />
+            <column name="manager_id"/>
         </createIndex>
     </changeSet>
 
@@ -72,127 +72,127 @@
     <changeSet id="create table nrg_users" author="oress">
         <createTable tableName="nrg_users">
             <column name="telegram_id" type="bigint">
-                <constraints primaryKey="true" nullable="true" unique="true" />
+                <constraints primaryKey="true" nullable="true" unique="true"/>
             </column>
 
-            <column name="telegram_username" type="text" />
-            <column name="telegram_first_name" type="text" />
+            <column name="telegram_username" type="text"/>
+            <column name="telegram_first_name" type="text"/>
 
             <column name="role" type="text" defaultValue="user">
-                <constraints nullable="false" />
+                <constraints nullable="false"/>
             </column>
 
-            <column name="balance_id" type="bigint" />
-            <column name="group_balance_id" type="bigint" />
+            <column name="balance_id" type="bigint"/>
+            <column name="group_balance_id" type="bigint"/>
 
             <column name="disabled" type="boolean" defaultValue="false">
-                <constraints nullable="false" />
+                <constraints nullable="false"/>
             </column>
-            <column name="disabled_reason" type="text" />
+            <column name="disabled_reason" type="text"/>
 
-            <column name="created_at" type="TIMESTAMP" />
-            <column name="updated_at" type="TIMESTAMP" />
+            <column name="created_at" type="TIMESTAMP"/>
+            <column name="updated_at" type="TIMESTAMP"/>
         </createTable>
 
         <addForeignKeyConstraint constraintName="fk_nrg_users_balance_id"
-            baseTableName="nrg_users"
-            baseColumnNames="balance_id"
-            referencedTableName="nrg_balances"
-            referencedColumnNames="id" />
+                                 baseTableName="nrg_users"
+                                 baseColumnNames="balance_id"
+                                 referencedTableName="nrg_balances"
+                                 referencedColumnNames="id"/>
 
         <addForeignKeyConstraint constraintName="fk_nrg_users_group_balance_id"
-            baseTableName="nrg_users"
-            baseColumnNames="group_balance_id"
-            referencedTableName="nrg_balances"
-            onDelete="SET NULL"
-            referencedColumnNames="id" />
+                                 baseTableName="nrg_users"
+                                 baseColumnNames="group_balance_id"
+                                 referencedTableName="nrg_balances"
+                                 onDelete="SET NULL"
+                                 referencedColumnNames="id"/>
 
         <createIndex indexName="idx_nrg_users_balance_id" tableName="nrg_users">
-            <column name="balance_id" />
+            <column name="balance_id"/>
         </createIndex>
 
         <createIndex indexName="idx_nrg_users_group_balance_id" tableName="nrg_users">
-            <column name="group_balance_id" />
+            <column name="group_balance_id"/>
         </createIndex>
     </changeSet>
 
     <changeSet id="add foreign key constraint to nrg_balances" author="oress">
         <addForeignKeyConstraint constraintName="fk_nrg_balances_manager_id"
-            baseTableName="nrg_balances"
-            baseColumnNames="manager_id"
-            referencedTableName="nrg_users"
-            referencedColumnNames="telegram_id" />
+                                 baseTableName="nrg_balances"
+                                 baseColumnNames="manager_id"
+                                 referencedTableName="nrg_users"
+                                 referencedColumnNames="telegram_id"/>
     </changeSet>
 
     <!-- This table stores the information about user preferred wallets(i.e. where to send energy) -->
     <changeSet id="create table nrg_user_wallets" author="oress">
         <createSequence sequenceName="ngr_user_wallet_seq"
-            dataType="bigint"
-            incrementBy="1"
-            startValue="1" />
+                        dataType="bigint"
+                        incrementBy="1"
+                        startValue="1"/>
 
         <createTable tableName="nrg_user_wallets">
             <column name="id" type="bigint">
-                <constraints primaryKey="true" nullable="true" unique="true" />
+                <constraints primaryKey="true" nullable="true" unique="true"/>
             </column>
 
-            <column name="user_id" type="bigint" />
-            <column name="label" type="text" />
-            <column name="address" type="text" />
-            <column name="created_at" type="TIMESTAMP" />
+            <column name="user_id" type="bigint"/>
+            <column name="label" type="text"/>
+            <column name="address" type="text"/>
+            <column name="created_at" type="TIMESTAMP"/>
         </createTable>
 
         <addForeignKeyConstraint constraintName="fk_nrg_user_wallets_user_id"
-            baseTableName="nrg_user_wallets"
-            baseColumnNames="user_id"
-            referencedTableName="nrg_users"
-            referencedColumnNames="telegram_id" />
+                                 baseTableName="nrg_user_wallets"
+                                 baseColumnNames="user_id"
+                                 referencedTableName="nrg_users"
+                                 referencedColumnNames="telegram_id"/>
 
         <createIndex indexName="idx_nrg_user_wallets_balance_id" tableName="nrg_user_wallets">
-            <column name="user_id" />
+            <column name="user_id"/>
         </createIndex>
     </changeSet>
 
     <!-- This table stores the information about orders and their state -->
     <changeSet id="create table nrg_orders" author="oress">
         <createSequence sequenceName="nrg_order_seq"
-            dataType="bigint"
-            incrementBy="1"
-            startValue="1" />
+                        dataType="bigint"
+                        incrementBy="1"
+                        startValue="1"/>
 
         <createTable tableName="nrg_orders">
             <column name="id" type="bigint">
-                <constraints primaryKey="true" nullable="true" unique="true" />
+                <constraints primaryKey="true" nullable="true" unique="true"/>
             </column>
 
-            <column name="user_id" type="bigint" />
-            <column name="balance_id" type="bigint" />
-            <column name="sun_amount" type="bigint" />
-            <column name="itrx_fee_sun_amount" type="bigint" />
-            <column name="energy_amount" type="int" />
-            <column name="receive_address" type="text" />
-            <column name="duration" type="text" />
-            <column name="correlation_id" type="text" />
-            <column name="serial" type="text" />
-            <column name="order_status" type="text" />
-            <column name="itrx_status" type="int" />
-            <column name="tx_id" type="text" />
+            <column name="user_id" type="bigint"/>
+            <column name="balance_id" type="bigint"/>
+            <column name="sun_amount" type="bigint"/>
+            <column name="itrx_fee_sun_amount" type="bigint"/>
+            <column name="energy_amount" type="int"/>
+            <column name="receive_address" type="text"/>
+            <column name="duration" type="text"/>
+            <column name="correlation_id" type="text"/>
+            <column name="serial" type="text"/>
+            <column name="order_status" type="text"/>
+            <column name="itrx_status" type="int"/>
+            <column name="tx_id" type="text"/>
 
-            <column name="created_at" type="TIMESTAMP" />
-            <column name="updated_at" type="TIMESTAMP" />
+            <column name="created_at" type="TIMESTAMP"/>
+            <column name="updated_at" type="TIMESTAMP"/>
         </createTable>
 
         <addForeignKeyConstraint constraintName="fk_nrg_orders_user_id"
-            baseTableName="nrg_orders"
-            baseColumnNames="user_id"
-            referencedTableName="nrg_users"
-            referencedColumnNames="telegram_id" />
+                                 baseTableName="nrg_orders"
+                                 baseColumnNames="user_id"
+                                 referencedTableName="nrg_users"
+                                 referencedColumnNames="telegram_id"/>
 
         <addForeignKeyConstraint constraintName="fk_nrg_orders_balance_id"
-            baseTableName="nrg_orders"
-            baseColumnNames="balance_id"
-            referencedTableName="nrg_balances"
-            referencedColumnNames="id" />
+                                 baseTableName="nrg_orders"
+                                 baseColumnNames="balance_id"
+                                 referencedTableName="nrg_balances"
+                                 referencedColumnNames="id"/>
 
         <createIndex tableName="nrg_orders" indexName="idx_nrg_orders_user_id">
             <column name="user_id"></column>
@@ -214,45 +214,45 @@
     <!-- This table stores the information about user trx withdrawals -->
     <changeSet id="create table nrg_withdrawal_orders" author="oress">
         <createSequence sequenceName="nrg_withdrawal_orders_seq"
-            dataType="bigint"
-            incrementBy="1"
-            startValue="1" />
+                        dataType="bigint"
+                        incrementBy="1"
+                        startValue="1"/>
 
         <createTable tableName="nrg_withdrawal_orders">
             <column name="id" type="bigint">
-                <constraints primaryKey="true" nullable="true" unique="true" />
+                <constraints primaryKey="true" nullable="true" unique="true"/>
             </column>
 
-            <column name="user_id" type="bigint" />
-            <column name="balance_id" type="bigint" />
-            <column name="sun_amount" type="bigint" />
-            <column name="fee_sun_amount" type="bigint" />
-            <column name="receive_address" type="text" />
-            <column name="status" type="text" />
-            <column name="tx_id" type="text" />
+            <column name="user_id" type="bigint"/>
+            <column name="balance_id" type="bigint"/>
+            <column name="sun_amount" type="bigint"/>
+            <column name="fee_sun_amount" type="bigint"/>
+            <column name="receive_address" type="text"/>
+            <column name="status" type="text"/>
+            <column name="tx_id" type="text"/>
 
-            <column name="created_at" type="TIMESTAMP" />
-            <column name="updated_at" type="TIMESTAMP" />
+            <column name="created_at" type="TIMESTAMP"/>
+            <column name="updated_at" type="TIMESTAMP"/>
         </createTable>
 
         <addForeignKeyConstraint constraintName="fk_nrg_withdrawal_orders_user_id"
-            baseTableName="nrg_withdrawal_orders"
-            baseColumnNames="user_id"
-            referencedTableName="nrg_users"
-            referencedColumnNames="telegram_id" />
+                                 baseTableName="nrg_withdrawal_orders"
+                                 baseColumnNames="user_id"
+                                 referencedTableName="nrg_users"
+                                 referencedColumnNames="telegram_id"/>
 
         <addForeignKeyConstraint constraintName="fk_nrg_withdrawal_orders_balance_id"
-            baseTableName="nrg_withdrawal_orders"
-            baseColumnNames="balance_id"
-            referencedTableName="nrg_balances"
-            referencedColumnNames="id" />
+                                 baseTableName="nrg_withdrawal_orders"
+                                 baseColumnNames="balance_id"
+                                 referencedTableName="nrg_balances"
+                                 referencedColumnNames="id"/>
 
         <createIndex tableName="nrg_withdrawal_orders" indexName="idx_nrg_withdrawal_orders_user_id">
             <column name="user_id"></column>
         </createIndex>
 
         <createIndex tableName="nrg_withdrawal_orders"
-            indexName="idx_nrg_withdrawal_orders_balance_id">
+                     indexName="idx_nrg_withdrawal_orders_balance_id">
             <column name="balance_id"></column>
         </createIndex>
     </changeSet>
@@ -260,306 +260,306 @@
     <!-- This table stores the information about deposits -->
     <changeSet id="create table nrg_deposit_transactions" author="oress">
         <createSequence sequenceName="nrg_deposit_transactions_seq"
-            dataType="bigint"
-            incrementBy="1"
-            startValue="1" />
+                        dataType="bigint"
+                        incrementBy="1"
+                        startValue="1"/>
 
         <createTable tableName="nrg_deposit_transactions">
             <column name="id" type="bigint">
-                <constraints primaryKey="true" nullable="false" unique="true" />
+                <constraints primaryKey="true" nullable="false" unique="true"/>
             </column>
 
             <column name="wallet_to" type="text">
-                <constraints nullable="false" />
+                <constraints nullable="false"/>
             </column>
             <column name="wallet_from" type="text">
-                <constraints nullable="false" />
+                <constraints nullable="false"/>
             </column>
             <column name="amount" type="bigint">
-                <constraints nullable="false" />
+                <constraints nullable="false"/>
             </column>
             <column name="tx_id" type="text">
-                <constraints nullable="false" unique="true" />
+                <constraints nullable="false" unique="true"/>
             </column>
-            <column name="timestamp" type="bigint" />
+            <column name="timestamp" type="bigint"/>
         </createTable>
 
         <addForeignKeyConstraint constraintName="fk_nrg_deposit_transactions_wallet_to"
-            baseTableName="nrg_deposit_transactions"
-            baseColumnNames="wallet_to"
-            referencedTableName="nrg_managed_wallets"
-            referencedColumnNames="base58_address" />
+                                 baseTableName="nrg_deposit_transactions"
+                                 baseColumnNames="wallet_to"
+                                 referencedTableName="nrg_managed_wallets"
+                                 referencedColumnNames="base58_address"/>
 
         <createIndex tableName="nrg_deposit_transactions"
-            indexName="idx_nrg_deposit_transactions_wallet_to">
+                     indexName="idx_nrg_deposit_transactions_wallet_to">
             <column name="wallet_to"></column>
         </createIndex>
     </changeSet>
 
     <changeSet id="create table nrg_manual_balance_changes" author="oress">
         <createSequence sequenceName="nrg_manual_balance_changes_seq"
-            dataType="bigint"
-            incrementBy="1"
-            startValue="1" />
+                        dataType="bigint"
+                        incrementBy="1"
+                        startValue="1"/>
 
         <createTable tableName="nrg_manual_balance_changes">
             <column name="id" type="bigint">
-                <constraints primaryKey="true" nullable="false" unique="true" />
+                <constraints primaryKey="true" nullable="false" unique="true"/>
             </column>
             <column name="balance_id" type="bigint">
-                <constraints nullable="false" />
+                <constraints nullable="false"/>
             </column>
             <column name="amount_from" type="bigint">
-                <constraints nullable="false" />
+                <constraints nullable="false"/>
             </column>
             <column name="amount_to" type="bigint">
-                <constraints nullable="false" />
+                <constraints nullable="false"/>
             </column>
             <column name="changed_by" type="bigint">
-                <constraints nullable="false" />
+                <constraints nullable="false"/>
             </column>
             <column name="created_at" type="TIMESTAMP">
-                <constraints nullable="false" />
+                <constraints nullable="false"/>
             </column>
         </createTable>
 
         <addForeignKeyConstraint constraintName="fk_nrg_manual_balance_changes_balance_id"
-            baseTableName="nrg_manual_balance_changes"
-            baseColumnNames="balance_id"
-            referencedTableName="nrg_balances"
-            referencedColumnNames="id" />
+                                 baseTableName="nrg_manual_balance_changes"
+                                 baseColumnNames="balance_id"
+                                 referencedTableName="nrg_balances"
+                                 referencedColumnNames="id"/>
 
         <addForeignKeyConstraint constraintName="fk_nrg_manual_balance_changes_changed_by"
-            baseTableName="nrg_manual_balance_changes"
-            baseColumnNames="changed_by"
-            referencedTableName="nrg_users"
-            referencedColumnNames="telegram_id" />
+                                 baseTableName="nrg_manual_balance_changes"
+                                 baseColumnNames="changed_by"
+                                 referencedTableName="nrg_users"
+                                 referencedColumnNames="telegram_id"/>
 
 
         <createIndex indexName="idx_nrg_manual_balance_changes_balance_id"
-            tableName="nrg_manual_balance_changes">
-            <column name="balance_id" />
+                     tableName="nrg_manual_balance_changes">
+            <column name="balance_id"/>
         </createIndex>
 
         <createIndex indexName="idx_nrg_manual_balance_changes_changed_by"
-            tableName="nrg_manual_balance_changes">
-            <column name="changed_by" />
+                     tableName="nrg_manual_balance_changes">
+            <column name="changed_by"/>
         </createIndex>
     </changeSet>
 
 
     <changeSet id="create table nrg_collection_wallets" author="oress">
         <createSequence sequenceName="nrg_collection_wallets_seq"
-            dataType="bigint"
-            incrementBy="1"
-            startValue="1" />
+                        dataType="bigint"
+                        incrementBy="1"
+                        startValue="1"/>
 
         <createTable tableName="nrg_collection_wallets">
             <column name="id" type="bigint" autoIncrement="true">
-                <constraints primaryKey="true" nullable="false" unique="true" />
+                <constraints primaryKey="true" nullable="false" unique="true"/>
             </column>
             <column name="wallet_address" type="text">
-                <constraints nullable="false" unique="true" />
+                <constraints nullable="false" unique="true"/>
             </column>
-            <column name="is_active" type="boolean" />
-            <column name="deactivated_at" type="timestamp" />
+            <column name="is_active" type="boolean"/>
+            <column name="deactivated_at" type="timestamp"/>
 
-            <column name="created_at" type="timestamp" />
+            <column name="created_at" type="timestamp"/>
         </createTable>
 
         <createIndex indexName="idx_nrg_collection_wallets_base58_address"
-            tableName="nrg_collection_wallets">
-            <column name="wallet_address" />
+                     tableName="nrg_collection_wallets">
+            <column name="wallet_address"/>
         </createIndex>
     </changeSet>
 
     <changeSet id="create table nrg_sweep_actions" author="oress">
         <createSequence sequenceName="nrg_sweep_actions_seq"
-            dataType="bigint"
-            incrementBy="1"
-            startValue="1" />
+                        dataType="bigint"
+                        incrementBy="1"
+                        startValue="1"/>
 
         <createTable tableName="nrg_sweep_actions">
             <column name="id" type="bigint" autoIncrement="true">
-                <constraints primaryKey="true" nullable="false" unique="true" />
+                <constraints primaryKey="true" nullable="false" unique="true"/>
             </column>
             <column name="collection_wallet_id" type="bigint">
-                <constraints nullable="false" />
+                <constraints nullable="false"/>
             </column>
             <column name="target_address" type="text">
-                <constraints nullable="false" />
+                <constraints nullable="false"/>
             </column>
             <column name="amount" type="bigint">
-                <constraints nullable="false" />
+                <constraints nullable="false"/>
             </column>
             <column name="tx_id" type="text">
-                <constraints nullable="true" unique="true" />
+                <constraints nullable="true" unique="true"/>
             </column>
             <column name="status" type="text" defaultValue="PENDING">
-                <constraints nullable="false" />
+                <constraints nullable="false"/>
             </column>
             <column name="created_at" type="timestamp">
-                <constraints nullable="false" />
+                <constraints nullable="false"/>
             </column>
-            <column name="completed_at" type="timestamp" />
+            <column name="completed_at" type="timestamp"/>
         </createTable>
 
         <addForeignKeyConstraint constraintName="fk_nrg_sweep_actions_collection_wallet_id"
-            baseTableName="nrg_sweep_actions"
-            baseColumnNames="collection_wallet_id"
-            referencedTableName="nrg_collection_wallets"
-            referencedColumnNames="id" />
+                                 baseTableName="nrg_sweep_actions"
+                                 baseColumnNames="collection_wallet_id"
+                                 referencedTableName="nrg_collection_wallets"
+                                 referencedColumnNames="id"/>
 
         <createIndex indexName="idx_nrg_sweep_actions_collection_wallet_id"
-            tableName="nrg_sweep_actions">
-            <column name="collection_wallet_id" />
+                     tableName="nrg_sweep_actions">
+            <column name="collection_wallet_id"/>
         </createIndex>
     </changeSet>
 
     <changeSet id="create table nrg_tariffs" author="oress">
         <createSequence sequenceName="nrg_tariffs_seq"
-            dataType="bigint"
-            incrementBy="1"
-            startValue="2" />
+                        dataType="bigint"
+                        incrementBy="1"
+                        startValue="2"/>
 
         <createTable tableName="nrg_tariffs">
             <column name="id" type="bigint" autoIncrement="true">
-                <constraints primaryKey="true" nullable="false" unique="true" />
+                <constraints primaryKey="true" nullable="false" unique="true"/>
             </column>
 
             <column name="label" type="text">
-                <constraints nullable="false" />
+                <constraints nullable="false"/>
             </column>
 
             <column name="tx_type_1_amount_sun" type="bigint">
-                <constraints nullable="false" />
+                <constraints nullable="false"/>
             </column>
 
             <column name="tx_type_2_amount_sun" type="bigint">
-                <constraints nullable="false" />
+                <constraints nullable="false"/>
             </column>
 
             <column name="is_active" type="boolean" defaultValue="true">
-                <constraints nullable="false" />
+                <constraints nullable="false"/>
             </column>
 
             <column name="is_predefined" type="boolean" defaultValue="false">
-                <constraints nullable="false" />
+                <constraints nullable="false"/>
             </column>
 
             <column name="created_at" type="timestamp">
-                <constraints nullable="false" />
+                <constraints nullable="false"/>
             </column>
 
             <column name="updated_at" type="timestamp">
-                <constraints nullable="false" />
+                <constraints nullable="false"/>
             </column>
         </createTable>
     </changeSet>
 
     <changeSet id="create default tariff" author="oress">
         <insert tableName="nrg_tariffs">
-            <column name="id" valueNumeric="${defaultTariffId}" />
-            <column name="label" value="${defaultTariffLabel}" />
-            <column name="tx_type_1_amount_sun" valueNumeric="${txType1Amount}" />
-            <column name="tx_type_2_amount_sun" valueNumeric="${txType2Amount}" />
-            <column name="is_active" valueBoolean="true" />
-            <column name="is_predefined" valueBoolean="true" />
-            <column name="created_at" valueDate="now()" />
-            <column name="updated_at" valueDate="now()" />
+            <column name="id" valueNumeric="${defaultTariffId}"/>
+            <column name="label" value="${defaultTariffLabel}"/>
+            <column name="tx_type_1_amount_sun" valueNumeric="${txType1Amount}"/>
+            <column name="tx_type_2_amount_sun" valueNumeric="${txType2Amount}"/>
+            <column name="is_active" valueBoolean="true"/>
+            <column name="is_predefined" valueBoolean="true"/>
+            <column name="created_at" valueDate="now()"/>
+            <column name="updated_at" valueDate="now()"/>
         </insert>
     </changeSet>
 
     <changeSet id="extend nrg_balances with tariff_id" author="oress">
         <addColumn tableName="nrg_balances">
-            <column name="tariff_id" type="bigint" defaultValue="${defaultTariffId}" />
+            <column name="tariff_id" type="bigint" defaultValue="${defaultTariffId}"/>
         </addColumn>
     </changeSet>
 
     <changeSet id="add fk to nrg_balances to nrg_tariffs" author="oress">
         <addForeignKeyConstraint constraintName="fk_nrg_balances_tariff_id"
-            baseTableName="nrg_balances"
-            baseColumnNames="tariff_id"
-            referencedTableName="nrg_tariffs"
-            referencedColumnNames="id" />
+                                 baseTableName="nrg_balances"
+                                 baseColumnNames="tariff_id"
+                                 referencedTableName="nrg_tariffs"
+                                 referencedColumnNames="id"/>
     </changeSet>
 
     <changeSet id="add index to nrg_balances for tariff_id" author="oress">
         <createIndex indexName="idx_nrg_balances_tariff_id" tableName="nrg_balances">
-            <column name="tariff_id" />
+            <column name="tariff_id"/>
         </createIndex>
     </changeSet>
 
     <changeSet id="extend nrg_orders with tariff_id" author="oress">
         <addColumn tableName="nrg_orders">
-            <column name="tariff_id" type="bigint" defaultValue="${defaultTariffId}" />
+            <column name="tariff_id" type="bigint" defaultValue="${defaultTariffId}"/>
         </addColumn>
     </changeSet>
 
     <changeSet id="add fk nrg_orders to nrg_tariffs" author="oress">
         <addForeignKeyConstraint constraintName="fk_nrg_orders_tariff_id"
-            baseTableName="nrg_orders"
-            baseColumnNames="tariff_id"
-            referencedTableName="nrg_tariffs"
-            referencedColumnNames="id" />
+                                 baseTableName="nrg_orders"
+                                 baseColumnNames="tariff_id"
+                                 referencedTableName="nrg_tariffs"
+                                 referencedColumnNames="id"/>
     </changeSet>
 
     <changeSet id="add index to nrg_orders for tariff_id" author="oress">
         <createIndex indexName="idx_nrg_orders_tariff_id" tableName="nrg_orders">
-            <column name="tariff_id" />
+            <column name="tariff_id"/>
         </createIndex>
     </changeSet>
 
     <changeSet id="extend nrg_orders with tx_amount" author="oress">
         <addColumn tableName="nrg_orders">
-            <column name="tx_amount" type="int" defaultValue="1" />
+            <column name="tx_amount" type="int" defaultValue="1"/>
         </addColumn>
     </changeSet>
 
     <changeSet id="extend nrg_orders with chat_id, message_to_update" author="oress">
         <addColumn tableName="nrg_orders">
-            <column name="chat_id" type="bigint" defaultValue="1" />
-            <column name="message_to_update" type="bigint" defaultValue="1" />
+            <column name="chat_id" type="bigint" defaultValue="1"/>
+            <column name="message_to_update" type="bigint" defaultValue="1"/>
         </addColumn>
     </changeSet>
 
     <changeSet id="add index idx_nrg_orders_serial" author="oress">
         <createIndex indexName="idx_nrg_orders_serial" tableName="nrg_orders">
-            <column name="serial" />
+            <column name="serial"/>
         </createIndex>
     </changeSet>
 
     <changeSet id="add index idx_nrg_orders_created_at" author="oress">
         <createIndex indexName="idx_nrg_orders_created_at" tableName="nrg_orders">
-            <column name="created_at" />
+            <column name="created_at"/>
         </createIndex>
     </changeSet>
 
     <changeSet id="extend nrg_users with language_code" author="oress">
         <addColumn tableName="nrg_users">
-            <column name="language_code" type="text" defaultValue="ru" />
+            <column name="language_code" type="text" defaultValue="ru"/>
         </addColumn>
     </changeSet>
 
     <!-- Referal program setups -->
     <changeSet id="create table nrg_referral_programs" author="oress">
         <createSequence sequenceName="nrg_referral_programs_seq"
-                    dataType="bigint"
-                    incrementBy="1"
-                    startValue="1" />
+                        dataType="bigint"
+                        incrementBy="1"
+                        startValue="1"/>
 
         <createTable tableName="nrg_referral_programs">
             <column name="id" type="bigint">
-                <constraints primaryKey="true" nullable="false" unique="true" />
+                <constraints primaryKey="true" nullable="false" unique="true"/>
             </column>
             <column name="label" type="text">
-                <constraints nullable="false" />
+                <constraints nullable="false"/>
             </column>
             <column name="percentage" type="int">
-                <constraints nullable="false" />
+                <constraints nullable="false"/>
             </column>
             <column name="created_at" type="TIMESTAMP">
-                <constraints nullable="false" />
+                <constraints nullable="false"/>
             </column>
         </createTable>
     </changeSet>
@@ -567,53 +567,54 @@
     <!-- Instances of referral programs (per balance) -->
     <changeSet id="create table nrg_balance_referral_programs" author="oress">
         <createSequence sequenceName="nrg_balance_referral_programs_seq"
-                    dataType="bigint"
-                    incrementBy="1"
-                    startValue="1" />
+                        dataType="bigint"
+                        incrementBy="1"
+                        startValue="1"/>
 
         <createTable tableName="nrg_balance_referral_programs">
             <column name="id" type="bigint">
-                <constraints primaryKey="true" nullable="false" unique="true" />
+                <constraints primaryKey="true" nullable="false" unique="true"/>
             </column>
             <column name="link" type="text">
-                <constraints nullable="false" unique="true" />
+                <constraints nullable="false" unique="true"/>
             </column>
             <column name="balance_id" type="bigint">
-                <constraints nullable="false" />
+                <constraints nullable="false"/>
             </column>
             <column name="ref_prog_id" type="bigint">
-                <constraints nullable="false" />
+                <constraints nullable="false"/>
             </column>
             <column name="created_at" type="TIMESTAMP">
-                <constraints nullable="false" />
+                <constraints nullable="false"/>
             </column>
         </createTable>
     </changeSet>
 
     <changeSet id="create fk_nrg_balance_referral_programs_ref_prog_id" author="oress">
         <addForeignKeyConstraint constraintName="fk_nrg_balance_referral_programs_ref_prog_id"
-            baseTableName="nrg_balance_referral_programs"
-            baseColumnNames="ref_prog_id"
-            referencedTableName="nrg_referral_programs"
-            referencedColumnNames="id" />
+                                 baseTableName="nrg_balance_referral_programs"
+                                 baseColumnNames="ref_prog_id"
+                                 referencedTableName="nrg_referral_programs"
+                                 referencedColumnNames="id"/>
     </changeSet>
 
     <changeSet id="create fk_nrg_balance_referral_programs_balance_id" author="oress">
         <addForeignKeyConstraint constraintName="fk_nrg_balance_referral_programs_balance_id"
-            baseTableName="nrg_balance_referral_programs"
-            baseColumnNames="balance_id"
-            referencedTableName="nrg_balances"
-            referencedColumnNames="id" />
+                                 baseTableName="nrg_balance_referral_programs"
+                                 baseColumnNames="balance_id"
+                                 referencedTableName="nrg_balances"
+                                 referencedColumnNames="id"/>
     </changeSet>
 
-<!--     <changeSet id="add idx_nrg_balance_referral_programs_link" author="oress">
-        <createIndex tableName="nrg_balance_referral_programs" indexName="idx_nrg_balance_referral_programs_link">
-            <column name="link"></column>
-        </createIndex>
-    </changeSet> -->
+    <!--     <changeSet id="add idx_nrg_balance_referral_programs_link" author="oress">
+            <createIndex tableName="nrg_balance_referral_programs" indexName="idx_nrg_balance_referral_programs_link">
+                <column name="link"></column>
+            </createIndex>
+        </changeSet> -->
 
     <changeSet id="add idx_nrg_balance_referral_programs_ref_prog_id" author="oress">
-        <createIndex tableName="nrg_balance_referral_programs" indexName="idx_nrg_balance_referral_programs_ref_prog_id">
+        <createIndex tableName="nrg_balance_referral_programs"
+                     indexName="idx_nrg_balance_referral_programs_ref_prog_id">
             <column name="ref_prog_id"></column>
         </createIndex>
     </changeSet>
@@ -627,67 +628,68 @@
     <!-- Referral program commission deposits -->
     <changeSet id="create table nrg_referral_commission_deposits" author="oress">
         <createSequence sequenceName="nrg_referral_commission_deposits_seq"
-                    dataType="bigint"
-                    incrementBy="1"
-                    startValue="1" />
+                        dataType="bigint"
+                        incrementBy="1"
+                        startValue="1"/>
 
         <createTable tableName="nrg_referral_commission_deposits">
             <column name="id" type="bigint">
-                <constraints primaryKey="true" nullable="false" unique="true" />
+                <constraints primaryKey="true" nullable="false" unique="true"/>
             </column>
             <column name="amount_sun" type="bigint">
-                <constraints nullable="false" />
+                <constraints nullable="false"/>
             </column>
             <column name="to_balance_id" type="bigint">
-                <constraints nullable="false" />
+                <constraints nullable="false"/>
             </column>
-            <column name="created_at" type="TIMESTAMP" />
+            <column name="created_at" type="TIMESTAMP"/>
         </createTable>
     </changeSet>
 
     <changeSet id="create fk_nrg_referral_commission_deposits_to_balance_id" author="oress">
         <addForeignKeyConstraint constraintName="fk_nrg_referral_commission_deposits_to_balance_id"
-            baseTableName="nrg_referral_commission_deposits"
-            baseColumnNames="to_balance_id"
-            referencedTableName="nrg_balances"
-            referencedColumnNames="id" />
+                                 baseTableName="nrg_referral_commission_deposits"
+                                 baseColumnNames="to_balance_id"
+                                 referencedTableName="nrg_balances"
+                                 referencedColumnNames="id"/>
     </changeSet>
 
     <changeSet id="add idx_nrg_referral_commission_deposits_to_balance_id" author="oress">
-        <createIndex tableName="nrg_referral_commission_deposits" indexName="idx_nrg_referral_commission_deposits_to_balance_id">
-            <column name="to_balance_id" />
+        <createIndex tableName="nrg_referral_commission_deposits"
+                     indexName="idx_nrg_referral_commission_deposits_to_balance_id">
+            <column name="to_balance_id"/>
         </createIndex>
     </changeSet>
 
     <!-- Referral program commissions -->
     <changeSet id="create table nrg_referral_commissions" author="oress">
         <createSequence sequenceName="nrg_referral_commissions_seq"
-                    dataType="bigint"
-                    incrementBy="1"
-                    startValue="1" />
+                        dataType="bigint"
+                        incrementBy="1"
+                        startValue="1"/>
 
         <createTable tableName="nrg_referral_commissions">
             <column name="id" type="bigint">
-                <constraints primaryKey="true" nullable="false" unique="true" />
+                <constraints primaryKey="true" nullable="false" unique="true"/>
             </column>
             <column name="order_id" type="bigint">
-                <constraints nullable="false" />
+                <constraints nullable="false"/>
             </column>
             <column name="ref_prog_id" type="bigint">
-                <constraints nullable="false" />
+                <constraints nullable="false"/>
             </column>
             <column name="percentage" type="int">
-                <constraints nullable="false" />
+                <constraints nullable="false"/>
             </column>
             <column name="bal_ref_prog_id" type="bigint">
-                <constraints nullable="false" />
+                <constraints nullable="false"/>
             </column>
             <column name="amount_sun" type="bigint">
-                <constraints nullable="false" />
+                <constraints nullable="false"/>
             </column>
-            <column name="deposit_id" type="bigint" />
+            <column name="deposit_id" type="bigint"/>
             <column name="status" type="text">
-                <constraints nullable="false" />
+                <constraints nullable="false"/>
             </column>
         </createTable>
     </changeSet>
@@ -695,156 +697,161 @@
     <!-- deposit_id -->
     <changeSet id="create fk_nrg_referral_commissions_deposit_id" author="oress">
         <addForeignKeyConstraint constraintName="fk_nrg_referral_commissions_deposit_id"
-            baseTableName="nrg_referral_commissions"
-            baseColumnNames="deposit_id"
-            referencedTableName="nrg_referral_commission_deposits"
-            referencedColumnNames="id" />
+                                 baseTableName="nrg_referral_commissions"
+                                 baseColumnNames="deposit_id"
+                                 referencedTableName="nrg_referral_commission_deposits"
+                                 referencedColumnNames="id"/>
     </changeSet>
 
     <changeSet id="add idx_nrg_referral_commissions_deposit_id" author="oress">
         <createIndex tableName="nrg_referral_commissions" indexName="idx_nrg_referral_commissions_deposit_id">
-            <column name="deposit_id" />
+            <column name="deposit_id"/>
         </createIndex>
     </changeSet>
     <!-- deposit_id -->
 
     <changeSet id="create fk_nrg_referral_commissions_ref_prog_id" author="oress">
         <addForeignKeyConstraint constraintName="fk_nrg_referral_commissions_ref_prog_id"
-            baseTableName="nrg_referral_commissions"
-            baseColumnNames="ref_prog_id"
-            referencedTableName="nrg_referral_programs"
-            referencedColumnNames="id" />
+                                 baseTableName="nrg_referral_commissions"
+                                 baseColumnNames="ref_prog_id"
+                                 referencedTableName="nrg_referral_programs"
+                                 referencedColumnNames="id"/>
     </changeSet>
 
     <changeSet id="create fk_nrg_referral_commissions_order_id" author="oress">
         <addForeignKeyConstraint constraintName="fk_nrg_referral_commissions_order_id"
-            baseTableName="nrg_referral_commissions"
-            baseColumnNames="order_id"
-            referencedTableName="nrg_orders"
-            referencedColumnNames="id" />
+                                 baseTableName="nrg_referral_commissions"
+                                 baseColumnNames="order_id"
+                                 referencedTableName="nrg_orders"
+                                 referencedColumnNames="id"/>
     </changeSet>
 
     <changeSet id="create fk_nrg_referral_commissions_bal_ref_prog_id" author="oress">
         <addForeignKeyConstraint constraintName="fk_nrg_referral_commissions_bal_ref_prog_id"
-            baseTableName="nrg_referral_commissions"
-            baseColumnNames="bal_ref_prog_id"
-            referencedTableName="nrg_balance_referral_programs"
-            referencedColumnNames="id" />
+                                 baseTableName="nrg_referral_commissions"
+                                 baseColumnNames="bal_ref_prog_id"
+                                 referencedTableName="nrg_balance_referral_programs"
+                                 referencedColumnNames="id"/>
     </changeSet>
 
     <changeSet id="add idx_nrg_referral_commissions_ref_prog_id" author="oress">
         <createIndex tableName="nrg_referral_commissions" indexName="idx_nrg_referral_commissions_ref_prog_id">
-            <column name="ref_prog_id" />
+            <column name="ref_prog_id"/>
         </createIndex>
     </changeSet>
 
     <changeSet id="add idx_nrg_referral_commissions_order_id" author="oress">
         <createIndex tableName="nrg_referral_commissions" indexName="idx_nrg_referral_commissions_order_id">
-            <column name="order_id" />
+            <column name="order_id"/>
         </createIndex>
     </changeSet>
 
     <changeSet id="add idx_nrg_referral_commissions_bal_ref_prog_id" author="oress">
         <createIndex tableName="nrg_referral_commissions" indexName="idx_nrg_referral_commissions_bal_ref_prog_id">
-            <column name="bal_ref_prog_id" />
+            <column name="bal_ref_prog_id"/>
         </createIndex>
     </changeSet>
 
     <changeSet id="add idx_nrg_referral_commissions_status" author="oress">
         <createIndex tableName="nrg_referral_commissions" indexName="idx_nrg_referral_commissions_status">
-            <column name="status" />
+            <column name="status"/>
         </createIndex>
     </changeSet>
 
     <changeSet id="extend nrg_users with bal_ref_prog_id" author="oress">
         <addColumn tableName="nrg_users">
-            <column name="bal_ref_prog_id" type="bigint" />
+            <column name="bal_ref_prog_id" type="bigint"/>
         </addColumn>
     </changeSet>
 
     <changeSet id="create fk_nrg_users" author="oress">
         <addForeignKeyConstraint constraintName="fk_nrg_users_bal_ref_prog_id"
-            baseTableName="nrg_users"
-            baseColumnNames="bal_ref_prog_id"
-            referencedTableName="nrg_balance_referral_programs"
-            referencedColumnNames="id" 
-            onDelete="SET NULL"
-            />
+                                 baseTableName="nrg_users"
+                                 baseColumnNames="bal_ref_prog_id"
+                                 referencedTableName="nrg_balance_referral_programs"
+                                 referencedColumnNames="id"
+                                 onDelete="SET NULL"
+        />
     </changeSet>
 
     <changeSet id="add idx_nrg_users_bal_ref_prog_id" author="oress">
         <createIndex tableName="nrg_users" indexName="idx_nrg_users_bal_ref_prog_id">
-            <column name="bal_ref_prog_id" />
+            <column name="bal_ref_prog_id"/>
         </createIndex>
     </changeSet>
-    
+
     <changeSet id="extend nrg_collection_wallets with balance_on_chain, balance_last_checked" author="oress">
         <addColumn tableName="nrg_collection_wallets">
-            <column name="balance_on_chain" type="bigint" />
-            <column name="balance_last_checked" type="timestamp" />
+            <column name="balance_on_chain" type="bigint"/>
+            <column name="balance_last_checked" type="timestamp"/>
         </addColumn>
     </changeSet>
 
     <changeSet id="extend nrg_referral_programs with predefined" author="oress">
         <addColumn tableName="nrg_referral_programs">
             <column name="is_predefined" type="boolean" defaultValue="false">
-                <constraints nullable="false" />
+                <constraints nullable="false"/>
             </column>
         </addColumn>
     </changeSet>
 
     <changeSet id="create default ref. program" author="oress">
         <insert tableName="nrg_referral_programs">
-            <column name="id" valueNumeric="${defaultRefProgramId}" />
-            <column name="label" value="${defaultRefProgramLabel}" />
-            <column name="percentage" valueNumeric="${defaultRefProgramPercentage}" />
-            <column name="is_predefined" valueBoolean="true" />
-            <column name="created_at" valueDate="now()" />
+            <column name="id" valueNumeric="${defaultRefProgramId}"/>
+            <column name="label" value="${defaultRefProgramLabel}"/>
+            <column name="percentage" valueNumeric="${defaultRefProgramPercentage}"/>
+            <column name="is_predefined" valueBoolean="true"/>
+            <column name="created_at" valueDate="now()"/>
         </insert>
     </changeSet>
 
     <changeSet id="create ref. programs for users w/o one" author="oress">
         <sql>
             INSERT INTO nrg_balance_referral_programs (id, link, balance_id, ref_prog_id, created_at)
-            SELECT nextval('nrg_balance_referral_programs_seq'), u.telegram_id::text, u.balance_id, ${defaultRefProgramId}, now()
-            FROM nrg_users u left join nrg_balance_referral_programs brp on u.balance_id = brp.balance_id
-            WHERE brp.id is NULL and u.group_balance_id is NULL;
+            SELECT nextval('nrg_balance_referral_programs_seq'),
+                   u.telegram_id::text, u.balance_id,
+                   ${defaultRefProgramId},
+                   now()
+            FROM nrg_users u
+                     left join nrg_balance_referral_programs brp on u.balance_id = brp.balance_id
+            WHERE brp.id is NULL
+              and u.group_balance_id is NULL;
         </sql>
     </changeSet>
 
     <changeSet id="extend nrg_users with show_wallets_in_menu" author="oress">
         <addColumn tableName="nrg_users">
             <column name="show_wallets_in_menu" type="boolean" defaultValue="false">
-                <constraints nullable="false" />
+                <constraints nullable="false"/>
             </column>
         </addColumn>
     </changeSet>
 
     <changeSet id="drop fk_nrg_referral_commissions_bal_ref_prog_id" author="oress">
         <dropForeignKeyConstraint
-            baseTableName="nrg_referral_commissions"
-            constraintName="fk_nrg_referral_commissions_bal_ref_prog_id"/>
+                baseTableName="nrg_referral_commissions"
+                constraintName="fk_nrg_referral_commissions_bal_ref_prog_id"/>
     </changeSet>
 
     <changeSet id="recreate fk_nrg_referral_commissions_bal_ref_prog_id with onDelete null" author="oress">
         <addForeignKeyConstraint constraintName="fk_nrg_referral_commissions_bal_ref_prog_id"
-            baseTableName="nrg_referral_commissions"
-            baseColumnNames="bal_ref_prog_id"
-            referencedTableName="nrg_balance_referral_programs"
-            referencedColumnNames="id" 
-            onDelete="SET NULL"/>
+                                 baseTableName="nrg_referral_commissions"
+                                 baseColumnNames="bal_ref_prog_id"
+                                 referencedTableName="nrg_balance_referral_programs"
+                                 referencedColumnNames="id"
+                                 onDelete="SET NULL"/>
     </changeSet>
 
     <changeSet id="drop null constraint for nrg_referral_commissions bal_ref_prog_id" author="yourname">
         <dropNotNullConstraint tableName="nrg_referral_commissions"
-            columnName="bal_ref_prog_id"
-            columnDataType="bigint"/>
+                               columnName="bal_ref_prog_id"
+                               columnDataType="bigint"/>
     </changeSet>
 
     <changeSet id="extend nrg_referral_programs with calc_type" author="oress">
         <addColumn tableName="nrg_referral_programs">
             <column name="calc_type" type="text" defaultValue="PERCENT_FROM_PROFIT">
-                <constraints nullable="false" />
+                <constraints nullable="false"/>
             </column>
         </addColumn>
     </changeSet>
@@ -852,179 +859,181 @@
     <changeSet id="extend nrg_referral_commissions with calc_type" author="oress">
         <addColumn tableName="nrg_referral_commissions">
             <column name="calc_type" type="text" defaultValue="PERCENT_FROM_PROFIT">
-                <constraints nullable="false" />
+                <constraints nullable="false"/>
             </column>
         </addColumn>
     </changeSet>
 
     <changeSet id="change calc_type for default ref. program" author="oress">
         <sql>
-            update nrg_referral_programs set calc_type = 'PERCENT_FROM_REVENUE' where id = ${defaultRefProgramId}
+            update nrg_referral_programs
+            set calc_type = 'PERCENT_FROM_REVENUE'
+            where id = ${defaultRefProgramId}
         </sql>
     </changeSet>
 
     <changeSet id="create table nrg_autodelegation_sessions" author="oress">
         <createSequence sequenceName="nrg_autodelegation_sessions_seq"
-                    dataType="bigint"
-                    incrementBy="1"
-                    startValue="1" />
+                        dataType="bigint"
+                        incrementBy="1"
+                        startValue="1"/>
 
         <createTable tableName="nrg_autodelegation_sessions">
             <column name="id" type="bigint">
-                <constraints primaryKey="true" nullable="false" unique="true" />
+                <constraints primaryKey="true" nullable="false" unique="true"/>
             </column>
             <column name="address" type="text">
-                <constraints nullable="false" />
+                <constraints nullable="false"/>
             </column>
 
-            <column name="user_id" type="bigint" >
-                <constraints nullable="false" />
+            <column name="user_id" type="bigint">
+                <constraints nullable="false"/>
             </column>
 
-            <column name="message_to_update" type="bigint" />
-            <column name="chat_id" type="bigint" />
+            <column name="message_to_update" type="bigint"/>
+            <column name="chat_id" type="bigint"/>
 
-            <column name="last_sc_invocation_ts" type="bigint" />
+            <column name="last_sc_invocation_ts" type="bigint"/>
 
             <column name="status" type="text">
-                <constraints nullable="false" />
+                <constraints nullable="false"/>
             </column>
             <column name="is_active" type="boolean">
-                <constraints nullable="false" />
+                <constraints nullable="false"/>
             </column>
-            <column name="created_at" type="TIMESTAMP" />
+            <column name="created_at" type="TIMESTAMP"/>
         </createTable>
     </changeSet>
 
     <changeSet id="create index idx_nrg_autodelegation_sessions_address" author="oress">
         <createIndex indexName="idx_nrg_autodelegation_sessions_address" tableName="nrg_autodelegation_sessions">
-            <column name="address" />
+            <column name="address"/>
         </createIndex>
     </changeSet>
 
     <changeSet id="create index idx_nrg_autodelegation_sessions_is_active" author="oress">
         <createIndex indexName="idx_nrg_autodelegation_sessions_is_active" tableName="nrg_autodelegation_sessions">
-            <column name="is_active" />
+            <column name="is_active"/>
         </createIndex>
     </changeSet>
 
     <changeSet id="create index idx_nrg_autodelegation_sessions_user_id" author="oress">
         <createIndex indexName="idx_nrg_autodelegation_sessions_user_id" tableName="nrg_autodelegation_sessions">
-            <column name="user_id" />
+            <column name="user_id"/>
         </createIndex>
     </changeSet>
 
     <changeSet id="create fk fk_nrg_autodelegation_sessions_user_id" author="oress">
         <addForeignKeyConstraint constraintName="fk_nrg_autodelegation_sessions_user_id"
-            baseTableName="nrg_autodelegation_sessions"
-            baseColumnNames="user_id"
-            referencedTableName="nrg_users"
-            referencedColumnNames="telegram_id" />
+                                 baseTableName="nrg_autodelegation_sessions"
+                                 baseColumnNames="user_id"
+                                 referencedTableName="nrg_users"
+                                 referencedColumnNames="telegram_id"/>
     </changeSet>
 
     <changeSet id="create table nrg_autodelegation_events" author="oress">
         <createSequence sequenceName="nrg_autodelegation_events_seq"
-                    dataType="bigint"
-                    incrementBy="1"
-                    startValue="1" />
+                        dataType="bigint"
+                        incrementBy="1"
+                        startValue="1"/>
 
         <createTable tableName="nrg_autodelegation_events">
             <column name="id" type="bigint">
-                <constraints primaryKey="true" nullable="false" unique="true" />
+                <constraints primaryKey="true" nullable="false" unique="true"/>
             </column>
             <column name="session_id" type="bigint">
-                <constraints nullable="false" />
+                <constraints nullable="false"/>
             </column>
-            <column name="type" type="text" />
-            <column name="order_id" type="bigint" />
-            <column name="timestamp" type="bigint" />
+            <column name="type" type="text"/>
+            <column name="order_id" type="bigint"/>
+            <column name="timestamp" type="bigint"/>
         </createTable>
     </changeSet>
 
     <changeSet id="create index idx_nrg_autodelegation_events_session_id" author="oress">
         <createIndex indexName="idx_nrg_autodelegation_events_session_id" tableName="nrg_autodelegation_events">
-            <column name="session_id" />
+            <column name="session_id"/>
         </createIndex>
     </changeSet>
 
     <changeSet id="create index idx_nrg_autodelegation_events_order_id" author="oress">
         <createIndex indexName="idx_nrg_autodelegation_events_order_id" tableName="nrg_autodelegation_events">
-            <column name="order_id" />
+            <column name="order_id"/>
         </createIndex>
     </changeSet>
 
     <changeSet id="create fk fk_nrg_autodelegation_events_session_id" author="oress">
         <addForeignKeyConstraint constraintName="fk_nrg_autodelegation_events_session_id"
-            baseTableName="nrg_autodelegation_events"
-            baseColumnNames="session_id"
-            referencedTableName="nrg_autodelegation_sessions"
-            referencedColumnNames="id"
-            onDelete="CASCADE"/>
+                                 baseTableName="nrg_autodelegation_events"
+                                 baseColumnNames="session_id"
+                                 referencedTableName="nrg_autodelegation_sessions"
+                                 referencedColumnNames="id"
+                                 onDelete="CASCADE"/>
     </changeSet>
 
     <changeSet id="create fk fk_nrg_autodelegation_events_order_id" author="oress">
         <addForeignKeyConstraint constraintName="fk_nrg_autodelegation_events_order_id"
-            baseTableName="nrg_autodelegation_events"
-            baseColumnNames="order_id"
-            referencedTableName="nrg_orders"
-            referencedColumnNames="id" />
+                                 baseTableName="nrg_autodelegation_events"
+                                 baseColumnNames="order_id"
+                                 referencedTableName="nrg_orders"
+                                 referencedColumnNames="id"/>
     </changeSet>
 
     <changeSet id="create nrg_alerts_seq" author="oress">
         <createSequence sequenceName="nrg_alerts_seq"
                         dataType="bigint"
                         incrementBy="1"
-                        startValue="1" />
+                        startValue="1"/>
     </changeSet>
 
     <changeSet id="create table nrg_alerts" author="oress">
         <createTable tableName="nrg_alerts">
             <column name="id" type="bigint">
-                <constraints primaryKey="true" nullable="false" unique="true" />
+                <constraints primaryKey="true" nullable="false" unique="true"/>
             </column>
 
             <column name="name" type="text">
-                <constraints nullable="false" />
+                <constraints nullable="false"/>
             </column>
 
-            <column name="status" type="text" />
-            <column name="trigger_value" type="text" />
-            <column name="resolved_at" type="timestamp" />
-            <column name="triggered_at" type="timestamp" />
+            <column name="status" type="text"/>
+            <column name="trigger_value" type="text"/>
+            <column name="resolved_at" type="timestamp"/>
+            <column name="triggered_at" type="timestamp"/>
         </createTable>
     </changeSet>
 
     <changeSet id="create index idx_nrg_alerts_name" author="oress">
         <createIndex indexName="idx_nrg_alerts_name" tableName="nrg_alerts">
-            <column name="name" />
+            <column name="name"/>
         </createIndex>
     </changeSet>
 
     <changeSet id="create index idx_nrg_alerts_status" author="oress">
         <createIndex indexName="idx_nrg_alerts_status" tableName="nrg_alerts">
-            <column name="status" />
+            <column name="status"/>
         </createIndex>
     </changeSet>
 
     <changeSet id="add daily withdrawal limits to nrg_balances" author="oress">
         <addColumn tableName="nrg_balances">
-            <column name="daily_withdrawal_limit_sun" type="bigint" defaultValue="${defaultBalanceDailyLimit}" />
-            <column name="daily_withdrawal_remaining_sun" type="bigint" defaultValue="${defaultBalanceDailyLimit}" />
+            <column name="daily_withdrawal_limit_sun" type="bigint" defaultValue="${defaultBalanceDailyLimit}"/>
+            <column name="daily_withdrawal_remaining_sun" type="bigint" defaultValue="${defaultBalanceDailyLimit}"/>
         </addColumn>
     </changeSet>
 
     <changeSet id="add type to nrg_deposit_transactions" author="oress">
         <addColumn tableName="nrg_deposit_transactions">
-            <column name="order_id" type="bigint" />
-            <column name="status" type="text" defaultValue="COMPLETED" />
-            <column name="usdt_to_trx_rate" type="decimal(20,6)" />
-            <column name="type" type="text" defaultValue="TRX" />
-            <column name="original_amount" type="bigint" />
-            <column name="bybit_usdt_tx" type="text" />
-            <column name="bybit_transfer_id" type="text" />
-            <column name="bybit_order_id" type="text" />
-            <column name="bybit_fee_sun" type="bigint" />
-            <column name="activation_fee_sun" type="bigint" />
+            <column name="order_id" type="bigint"/>
+            <column name="status" type="text" defaultValue="COMPLETED"/>
+            <column name="usdt_to_trx_rate" type="decimal(20,6)"/>
+            <column name="type" type="text" defaultValue="TRX"/>
+            <column name="original_amount" type="bigint"/>
+            <column name="bybit_usdt_tx" type="text"/>
+            <column name="bybit_transfer_id" type="text"/>
+            <column name="bybit_order_id" type="text"/>
+            <column name="bybit_fee_sun" type="bigint"/>
+            <column name="activation_fee_sun" type="bigint"/>
         </addColumn>
     </changeSet>
 
@@ -1032,24 +1041,24 @@
         <addForeignKeyConstraint baseTableName="nrg_deposit_transactions" baseColumnNames="order_id"
                                  constraintName="fk_nrg_deposit_transactions_order_id"
                                  referencedTableName="nrg_orders"
-                                 referencedColumnNames="id" />
+                                 referencedColumnNames="id"/>
     </changeSet>
 
     <changeSet id="add idx_nrg_deposit_transactions_order_id" author="oress">
         <createIndex tableName="nrg_deposit_transactions" indexName="idx_nrg_deposit_transactions_order_id">
-            <column name="order_id" />
+            <column name="order_id"/>
         </createIndex>
     </changeSet>
 
     <changeSet id="add last_trc20_tx_id and last_trc20_tx_timestamp to nrg_balances" author="oress">
         <addColumn tableName="nrg_balances">
-            <column name="last_trc20_tx_id" type="text" />
-            <column name="last_trc20_tx_timestamp" type="bigint" />
+            <column name="last_trc20_tx_id" type="text"/>
+            <column name="last_trc20_tx_timestamp" type="bigint"/>
         </addColumn>
     </changeSet>
 
     <changeSet id="drop not null amount nrg_deposit_transactions" author="oress">
-        <dropNotNullConstraint tableName="nrg_deposit_transactions" columnName="amount" />
+        <dropNotNullConstraint tableName="nrg_deposit_transactions" columnName="amount"/>
     </changeSet>
 
     <changeSet id="add type nrg_orders" author="oress">
@@ -1061,26 +1070,26 @@
     <changeSet id="create table nrg_bybit_balance" author="oress">
         <createTable tableName="nrg_bybit_balance">
             <column name="coin" type="text">
-                <constraints primaryKey="true" nullable="false" unique="true" />
+                <constraints primaryKey="true" nullable="false" unique="true"/>
             </column>
-            <column name="balance" type="decimal(20,6)" />
-            <column name="updated_at" type="timestamp" />
+            <column name="balance" type="decimal(20,6)"/>
+            <column name="updated_at" type="timestamp"/>
         </createTable>
     </changeSet>
 
     <changeSet id="create table nrg_itrx_balance" author="oress">
         <createTable tableName="nrg_itrx_balance">
             <column name="id" type="text">
-                <constraints primaryKey="true" nullable="false" unique="true" />
+                <constraints primaryKey="true" nullable="false" unique="true"/>
             </column>
-            <column name="balance" type="bigint" />
-            <column name="updated_at" type="timestamp" />
+            <column name="balance" type="bigint"/>
+            <column name="updated_at" type="timestamp"/>
         </createTable>
     </changeSet>
 
     <changeSet id="extend nrg_orders with autodelegate_session_id" author="oress">
         <addColumn tableName="nrg_orders">
-            <column name="autodelegate_session_id" type="bigint" />
+            <column name="autodelegate_session_id" type="bigint"/>
         </addColumn>
     </changeSet>
 
@@ -1089,49 +1098,49 @@
                                  baseTableName="nrg_orders"
                                  baseColumnNames="autodelegate_session_id"
                                  referencedTableName="nrg_autodelegation_sessions"
-                                 referencedColumnNames="id" />
+                                 referencedColumnNames="id"/>
     </changeSet>
 
     <changeSet id="add idx_nrg_orders_autodelegate_session_id" author="oress">
         <createIndex tableName="nrg_orders" indexName="idx_nrg_orders_autodelegate_session_id">
-            <column name="autodelegate_session_id" />
+            <column name="autodelegate_session_id"/>
         </createIndex>
     </changeSet>
 
     <changeSet id="extend nrg_referral_programs with subtract_amount" author="oress">
         <addColumn tableName="nrg_referral_programs">
-            <column name="subtract_amount" type="bigint" defaultValue="3175000" />
+            <column name="subtract_amount" type="bigint" defaultValue="3175000"/>
         </addColumn>
     </changeSet>
 
     <changeSet id="extend nrg_orders with ref_program_profit_remainder" author="oress">
         <addColumn tableName="nrg_orders">
-            <column name="ref_program_profit_remainder" type="bigint" />
+            <column name="ref_program_profit_remainder" type="bigint"/>
         </addColumn>
     </changeSet>
 
     <changeSet id="add idx_nrg_deposit_transactions_tx_id" author="oress">
         <createIndex indexName="idx_nrg_deposit_transactions_tx_id" tableName="nrg_deposit_transactions">
-            <column name="tx_id" />
+            <column name="tx_id"/>
         </createIndex>
     </changeSet>
 
     <changeSet id="extend nrg_balances with column bal_ref_prog_id" author="oress">
         <addColumn tableName="nrg_balances">
-            <column name="bal_ref_prog_id" type="bigint" />
+            <column name="bal_ref_prog_id" type="bigint"/>
         </addColumn>
     </changeSet>
 
     <changeSet id="add idx_nrg_balances_bal_ref_prog_id" author="oress">
         <createIndex tableName="nrg_balances" indexName="idx_nrg_balances_bal_ref_prog_id">
-            <column name="bal_ref_prog_id" />
+            <column name="bal_ref_prog_id"/>
         </createIndex>
     </changeSet>
 
     <changeSet id="migrate users.bal_ref_prog_id to nrg_balances.bal_ref_prog_id" author="oress">
         <sql>
-            UPDATE nrg_balances b SET bal_ref_prog_id = u.bal_ref_prog_id
-            FROM nrg_users u
+            UPDATE nrg_balances b
+            SET bal_ref_prog_id = u.bal_ref_prog_id FROM nrg_users u
             WHERE b.id = u.balance_id AND u.bal_ref_prog_id IS NOT NULL;
         </sql>
     </changeSet>
@@ -1148,111 +1157,117 @@
 
     <changeSet id="extend nrg_referral_programs with subtract_amount_tx2" author="oress">
         <addColumn tableName="nrg_referral_programs">
-            <column name="subtract_amount_tx2" type="bigint" defaultValue="6350000" />
+            <column name="subtract_amount_tx2" type="bigint" defaultValue="6350000"/>
         </addColumn>
     </changeSet>
 
     <changeSet id="extend nrg_balances with energy_provider" author="oress">
         <addColumn tableName="nrg_balances">
-            <column name="energy_provider" type="text" defaultValue="ITRX" />
+            <column name="energy_provider" type="text" defaultValue="ITRX"/>
         </addColumn>
     </changeSet>
 
     <changeSet id="create table nrg_configs" author="oress">
         <createTable tableName="nrg_configs">
             <column name="id" type="text">
-                <constraints primaryKey="true" nullable="false" unique="true" />
+                <constraints primaryKey="true" nullable="false" unique="true"/>
             </column>
-            <column name="value" type="text" />
-            <column name="updated_at" type="timestamp" />
+            <column name="value" type="text"/>
+            <column name="updated_at" type="timestamp"/>
         </createTable>
     </changeSet>
 
     <changeSet id="default ENERGY_PROVIDER config record" author="oress">
         <insert tableName="nrg_configs">
-            <column name="id" value="ENERGY_PROVIDER" />
-            <column name="value" value="ITRX" />
-            <column name="updated_at" valueDate="now()" />
+            <column name="id" value="ENERGY_PROVIDER"/>
+            <column name="value" value="ITRX"/>
+            <column name="updated_at" valueDate="now()"/>
         </insert>
     </changeSet>
 
     <changeSet id="extend nrg_orders with energy_provider" author="oress">
         <addColumn tableName="nrg_orders">
-            <column name="energy_provider" type="text" />
+            <column name="energy_provider" type="text"/>
         </addColumn>
     </changeSet>
 
     <changeSet id="extend nrg_referral_programs with provider specific amounts" author="oress">
         <addColumn tableName="nrg_referral_programs">
-            <column name="subtract_amount_tx1_catfee" type="bigint" defaultValue="3175000" />
-            <column name="subtract_amount_tx2_catfee" type="bigint" defaultValue="6350000" />
+            <column name="subtract_amount_tx1_catfee" type="bigint" defaultValue="3175000"/>
+            <column name="subtract_amount_tx2_catfee" type="bigint" defaultValue="6350000"/>
 
             <!-- Autodelegation -->
-            <column name="subtract_amount_tx1_auto_itrx" type="bigint" defaultValue="3575000" />
-            <column name="subtract_amount_tx2_auto_itrx" type="bigint" defaultValue="6750000" />
+            <column name="subtract_amount_tx1_auto_itrx" type="bigint" defaultValue="3575000"/>
+            <column name="subtract_amount_tx2_auto_itrx" type="bigint" defaultValue="6750000"/>
         </addColumn>
     </changeSet>
 
     <changeSet id="extend nrg_referral_programs with subtract_amount_use_provider_amount" author="oress">
         <addColumn tableName="nrg_referral_programs">
-            <column name="subtract_amount_use_provider_amount" type="boolean" defaultValue="false" />
+            <column name="subtract_amount_use_provider_amount" type="boolean" defaultValue="false"/>
         </addColumn>
     </changeSet>
 
     <changeSet id="update default tariff prices" author="oress">
         <sql>
-            update nrg_tariffs set tx_type_1_amount_sun = ${txType1AmountV2}, tx_type_2_amount_sun = ${txType2AmountV2} where id = ${defaultTariffId};
+            update nrg_tariffs
+            set tx_type_1_amount_sun = ${txType1AmountV2},
+                tx_type_2_amount_sun = ${txType2AmountV2}
+            where id = ${defaultTariffId};
         </sql>
     </changeSet>
 
     <changeSet id="update default tariff prices v3" author="oress">
         <sql>
-            update nrg_tariffs set tx_type_1_amount_sun = ${txType1AmountV3}, tx_type_2_amount_sun = ${txType2AmountV3} where id = ${defaultTariffId};
+            update nrg_tariffs
+            set tx_type_1_amount_sun = ${txType1AmountV3},
+                tx_type_2_amount_sun = ${txType2AmountV3}
+            where id = ${defaultTariffId};
         </sql>
     </changeSet>
 
     <changeSet id="extend nrg_balances with auto_energy_provider" author="oress">
         <addColumn tableName="nrg_balances">
-            <column name="auto_energy_provider" type="text" defaultValue="ITRX" />
+            <column name="auto_energy_provider" type="text" defaultValue="ITRX"/>
         </addColumn>
     </changeSet>
 
     <changeSet id="default AUTO_ENERGY_PROVIDER config record" author="oress">
         <insert tableName="nrg_configs">
-            <column name="id" value="AUTO_ENERGY_PROVIDER" />
-            <column name="value" value="ITRX" />
-            <column name="updated_at" valueDate="now()" />
+            <column name="id" value="AUTO_ENERGY_PROVIDER"/>
+            <column name="value" value="ITRX"/>
+            <column name="updated_at" valueDate="now()"/>
         </insert>
     </changeSet>
 
 
     <changeSet id="extend nrg_autodelegation_sessions with auto_energy_provider" author="oress">
         <addColumn tableName="nrg_autodelegation_sessions">
-            <column name="energy_provider" type="text" defaultValue="ITRX" />
+            <column name="energy_provider" type="text" defaultValue="ITRX"/>
         </addColumn>
     </changeSet>
 
     <changeSet id="extend nrg_withdrawal_orders with activation_fee_sun_amount" author="oress">
         <addColumn tableName="nrg_withdrawal_orders">
-            <column name="activation_fee_sun_amount" type="bigint" />
+            <column name="activation_fee_sun_amount" type="bigint"/>
         </addColumn>
     </changeSet>
 
     <changeSet id="extend nrg_orders with activation_fee" author="oress">
         <addColumn tableName="nrg_orders">
-            <column name="activation_fee" type="bigint" defaultValue="0" />
+            <column name="activation_fee" type="bigint" defaultValue="0"/>
         </addColumn>
     </changeSet>
 
     <changeSet id="extend nrg_balances with is_low" author="oress">
         <addColumn tableName="nrg_balances">
-            <column name="is_low" type="boolean" defaultValue="false" />
+            <column name="is_low" type="boolean" defaultValue="false"/>
         </addColumn>
     </changeSet>
 
     <changeSet id="extend nrg_tariffs with aml_check_price_sun" author="oress">
         <addColumn tableName="nrg_tariffs">
-            <column name="aml_check_price_sun" type="bigint" defaultValue="8000000" />
+            <column name="aml_check_price_sun" type="bigint" defaultValue="8000000"/>
         </addColumn>
     </changeSet>
 
@@ -1260,31 +1275,31 @@
         <createSequence sequenceName="nrg_aml_verifications_seq"
                         dataType="bigint"
                         incrementBy="1"
-                        startValue="1" />
+                        startValue="1"/>
     </changeSet>
 
     <changeSet id="create table nrg_aml_verifications" author="oress">
         <createTable tableName="nrg_aml_verifications">
             <column name="id" type="bigint">
-                <constraints primaryKey="true" nullable="false" unique="true" />
+                <constraints primaryKey="true" nullable="false" unique="true"/>
             </column>
-            <column name="client_order_id" type="text" />
-            <column name="balance_id" type="bigint" />
-            <column name="tariff_id" type="bigint" />
-            <column name="payment_status" type="text" />
-            <column name="status" type="text" defaultValue="PENDING" />
-            <column name="risk_score" type="decimal(20,6)" />
-            <column name="risk_level" type="text" />
-            <column name="is_sanctioned" type="boolean" />
-            <column name="provider" type="text" />
-            <column name="fee_usdt" type="decimal(20,6)" />
-            <column name="fee_sun" type="bigint" />
-            <column name="paid_sun" type="bigint" />
-            <column name="currency" type="text" />
-            <column name="wallet_address" type="text" />
-            <column name="message" type="text" />
-            <column name="result" type="text" />
-            <column name="created_at" type="timestamp" />
+            <column name="client_order_id" type="text"/>
+            <column name="balance_id" type="bigint"/>
+            <column name="tariff_id" type="bigint"/>
+            <column name="payment_status" type="text"/>
+            <column name="status" type="text" defaultValue="PENDING"/>
+            <column name="risk_score" type="decimal(20,6)"/>
+            <column name="risk_level" type="text"/>
+            <column name="is_sanctioned" type="boolean"/>
+            <column name="provider" type="text"/>
+            <column name="fee_usdt" type="decimal(20,6)"/>
+            <column name="fee_sun" type="bigint"/>
+            <column name="paid_sun" type="bigint"/>
+            <column name="currency" type="text"/>
+            <column name="wallet_address" type="text"/>
+            <column name="message" type="text"/>
+            <column name="result" type="text"/>
+            <column name="created_at" type="timestamp"/>
         </createTable>
     </changeSet>
 
@@ -1293,7 +1308,7 @@
                                  baseTableName="nrg_aml_verifications"
                                  baseColumnNames="balance_id"
                                  referencedTableName="nrg_balances"
-                                 referencedColumnNames="id" />
+                                 referencedColumnNames="id"/>
     </changeSet>
 
     <changeSet id="add fk fk_nrg_aml_verifications_tariff_id" author="oress">
@@ -1301,71 +1316,92 @@
                                  baseTableName="nrg_aml_verifications"
                                  baseColumnNames="tariff_id"
                                  referencedTableName="nrg_tariffs"
-                                 referencedColumnNames="id" />
+                                 referencedColumnNames="id"/>
     </changeSet>
 
     <changeSet id="create index idx_nrg_aml_verifications_balance_id" author="oress">
         <createIndex tableName="nrg_aml_verifications" indexName="idx_nrg_aml_verifications_balance_id">
-            <column name="balance_id" />
+            <column name="balance_id"/>
         </createIndex>
     </changeSet>
     <changeSet id="create index idx_nrg_aml_verifications_tariff_id" author="oress">
         <createIndex tableName="nrg_aml_verifications" indexName="idx_nrg_aml_verifications_tariff_id">
-            <column name="tariff_id" />
+            <column name="tariff_id"/>
         </createIndex>
     </changeSet>
 
     <changeSet id="create index idx_nrg_aml_verifications_status" author="oress">
         <createIndex tableName="nrg_aml_verifications" indexName="idx_nrg_aml_verifications_status">
-            <column name="status" />
+            <column name="status"/>
         </createIndex>
     </changeSet>
 
     <changeSet id="create index idx_nrg_aml_verifications_client_order_id" author="oress">
         <createIndex tableName="nrg_aml_verifications" indexName="idx_nrg_aml_verifications_client_order_id">
-            <column name="client_order_id" />
+            <column name="client_order_id"/>
         </createIndex>
     </changeSet>
 
     <changeSet id="add completed_at to nrg_aml_verifications" author="oress">
         <addColumn tableName="nrg_aml_verifications">
-            <column name="completed_at" type="timestamp" />
+            <column name="completed_at" type="timestamp"/>
         </addColumn>
     </changeSet>
 
     <changeSet id="create index idx_nrg_aml_verifications_payment_status" author="oress">
         <createIndex tableName="nrg_aml_verifications" indexName="idx_nrg_aml_verifications_payment_status">
-            <column name="payment_status" />
+            <column name="payment_status"/>
         </createIndex>
     </changeSet>
 
     <changeSet id="default AML_PROVIDER config record" author="oress">
         <insert tableName="nrg_configs">
-            <column name="id" value="AML_PROVIDER" />
-            <column name="value" value="ELLIPTIC" />
-            <column name="updated_at" valueDate="now()" />
+            <column name="id" value="AML_PROVIDER"/>
+            <column name="value" value="ELLIPTIC"/>
+            <column name="updated_at" valueDate="now()"/>
         </insert>
     </changeSet>
 
     <changeSet id="add aml_check_percentage to nrg_tariffs" author="oress">
         <addColumn tableName="nrg_tariffs">
-            <column name="aml_check_percentage" type="integer" defaultValueNumeric="50" />
+            <column name="aml_check_percentage" type="integer" defaultValueNumeric="50"/>
         </addColumn>
     </changeSet>
 
     <changeSet id="add chat_id and message_to_update to nrg_aml_verifications" author="oress">
         <addColumn tableName="nrg_aml_verifications">
-            <column name="chat_id" type="bigint" />
-            <column name="message_to_update" type="bigint" />
+            <column name="chat_id" type="bigint"/>
+            <column name="message_to_update" type="bigint"/>
         </addColumn>
     </changeSet>
 
     <changeSet id="add match_provider_price to nrg_tariffs" author="oress">
         <addColumn tableName="nrg_tariffs">
             <column name="match_provider_price" type="boolean" defaultValueBoolean="false">
-                <constraints nullable="false" />
+                <constraints nullable="false"/>
             </column>
         </addColumn>
+    </changeSet>
+
+
+    <changeSet id="add user_id to nrg_aml_verifications" author="oress">
+        <addColumn tableName="nrg_aml_verifications">
+            <column name="user_id" type="bigint"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="create fk fk_nrg_aml_verifications_user_id" author="oress">
+        <addForeignKeyConstraint constraintName="fk_nrg_aml_verifications_user_id"
+                                 baseTableName="nrg_aml_verifications"
+                                 baseColumnNames="user_id"
+                                 referencedTableName="nrg_users"
+                                 referencedColumnNames="telegram_id"/>
+    </changeSet>
+
+    <changeSet id="create idx idx_nrg_aml_verifications_user_id" author="oress">
+        <createIndex tableName="nrg_aml_verifications" indexName="idx_nrg_aml_verifications_user_id">
+            <column name="user_id"/>
+        </createIndex>
     </changeSet>
 
 </databaseChangeLog>

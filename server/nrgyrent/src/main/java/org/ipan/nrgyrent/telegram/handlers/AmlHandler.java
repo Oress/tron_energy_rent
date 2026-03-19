@@ -72,7 +72,7 @@ public class AmlHandler {
     public void showHistory(UserState userState, Update update) {
         AppUser user = userService.getById(userState.getTelegramId());
         Balance balance = user.getBalanceToUse();
-        List<AmlVerification> history = amlVerificationRepo.findAllByBalanceIdOrderByCreatedAtDesc(balance.getId());
+        List<AmlVerification> history = amlVerificationRepo.findTop15ByBalanceIdOrderByCreatedAtDesc(balance.getId());
         amlViews.showAmlHistory(userState, history);
         telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.AML_HISTORY));
     }

@@ -10,5 +10,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface AmlVerificationRepo extends JpaRepository<AmlVerification, Long> {
     List<AmlVerification> findAllByPaymentStatus(AmlVerificationPaymentStatus paymentStatus);
-    List<AmlVerification> findAllByBalanceIdOrderByCreatedAtDesc(Long balanceId);
+    List<AmlVerification> findTop15ByBalanceIdOrderByCreatedAtDesc(Long balanceId);
 }
