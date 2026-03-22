@@ -750,18 +750,14 @@ public class TelegramMessages {
                                         .builder()
                                         .text(commonLabels.getAutoDelegation())
                                         .callbackData(InlineMenuCallbacks.AUTOTOPUP)
+                                        .build()))
+                .keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text(commonLabels.getAmlCheck())
+                                        .callbackData(InlineMenuCallbacks.AML_CHECK)
                                         .build()));
-
-        if (isAdmin) {
-            builder
-                    .keyboardRow(
-                            new InlineKeyboardRow(
-                                    InlineKeyboardButton
-                                            .builder()
-                                            .text(commonLabels.getAmlCheck())
-                                            .callbackData(InlineMenuCallbacks.AML_CHECK)
-                                            .build()));
-        }
 
         if (showWithdrawBtn) {
             builder.keyboardRow(

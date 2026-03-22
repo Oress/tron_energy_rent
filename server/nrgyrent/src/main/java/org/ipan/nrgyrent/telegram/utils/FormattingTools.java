@@ -181,7 +181,7 @@ public class FormattingTools {
         sb.append(commonLabels.amlReportAddress(locale)).append(" `").append(v.getWalletAddress()).append("`\n\n");
 
         sb.append(commonLabels.amlReportRiskSummary(locale)).append("\n");
-        String riskScore = v.getRiskScore() != null ? String.format("%.2f%%", v.getRiskScore() * 100) : "N/A";
+        String riskScore = v.getRiskScore() != null ? String.format("%.2f%%", v.getRiskScore() * 10) : "N/A";
         sb.append(commonLabels.amlReportRiskScore(locale, riskScore)).append("\n");
 
         String riskEmoji = riskLevelEmoji(v.getRiskLevel());
