@@ -87,13 +87,30 @@ public class TelegramMessages {
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
                 .text(commonLabels.settingsDescription())
-                .replyMarkup(settingsMenuMarkup(user.getShowWalletsMenu()))
+                .replyMarkup(settingsMenuMarkup(user.getShowWalletsMenu(), user.getAmlProvider()))
                 .parseMode("MARKDOWN")
                 .build();
         try {
             tgClient.execute(message);
         } catch (Exception e) {
             logger.error("Failed to updateMsgToSettings user: {}", userState, e);
+        }
+    }
+
+    @SneakyThrows
+    public void updateMsgToAmlProviderSelect(UserState userState, AmlProvider currentProvider) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
+                .text(commonLabels.settingsAmlProviderDescription())
+                .replyMarkup(amlProviderSelectMarkup(currentProvider))
+                .parseMode("MARKDOWN")
+                .build();
+        try {
+            tgClient.execute(message);
+        } catch (Exception e) {
+            logger.error("Failed to updateMsgToAmlProviderSelect user: {}", userState, e);
         }
     }
 
@@ -648,7 +665,7 @@ public class TelegramMessages {
                 .build();
     }
 
-    private InlineKeyboardMarkup settingsMenuMarkup(Boolean showWalletsInMenuEnabled) {
+    private InlineKeyboardMarkup settingsMenuMarkup(Boolean showWalletsInMenuEnabled, AmlProvider amlProvider) {
         var builder = InlineKeyboardMarkup.builder();
 
         if (showWalletsInMenuEnabled) {
@@ -697,6 +714,13 @@ public class TelegramMessages {
                                         .builder()
                                         .text(commonLabels.settingsChangeLanguage())
                                         .callbackData(InlineMenuCallbacks.CHANGE_LANGUAGE)
+                                        .build()))
+                .keyboardRow(
+                        new InlineKeyboardRow(
+                                InlineKeyboardButton
+                                        .builder()
+                                        .text(commonLabels.settingsAmlProvider(amlProvider))
+                                        .callbackData(InlineMenuCallbacks.SETTINGS_AML_PROVIDER)
                                         .build()));
                 builder.keyboardRow(
                         new InlineKeyboardRow(
@@ -706,6 +730,30 @@ public class TelegramMessages {
                                         .callbackData(InlineMenuCallbacks.TO_MAIN_MENU)
                                         .build()));
         return builder.build();
+    }
+
+    private InlineKeyboardMarkup amlProviderSelectMarkup(AmlProvider currentProvider) {
+        return InlineKeyboardMarkup.builder()
+                .keyboardRow(new InlineKeyboardRow(
+                        InlineKeyboardButton.builder()
+                                .text(commonLabels.settingsAmlProviderOption(AmlProvider.ELLIPTIC, currentProvider))
+                                .callbackData(InlineMenuCallbacks.SETTINGS_AML_PROVIDER_ELLIPTIC)
+                                .build()))
+                .keyboardRow(new InlineKeyboardRow(
+                        InlineKeyboardButton.builder()
+                                .text(commonLabels.settingsAmlProviderOption(AmlProvider.BITOK, currentProvider))
+                                .callbackData(InlineMenuCallbacks.SETTINGS_AML_PROVIDER_BITOK)
+                                .build()))
+                .keyboardRow(new InlineKeyboardRow(
+                        InlineKeyboardButton.builder()
+                                .text(commonLabels.toMainMenu())
+                                .callbackData(InlineMenuCallbacks.TO_MAIN_MENU)
+                                .build(),
+                        InlineKeyboardButton.builder()
+                                .text(commonLabels.goBack())
+                                .callbackData(InlineMenuCallbacks.GO_BACK)
+                                .build()))
+                .build();
     }
 
     private InlineKeyboardMarkup getMainMenuReplyMarkup(Boolean isManager, Boolean isAdmin, Tariff tariff,

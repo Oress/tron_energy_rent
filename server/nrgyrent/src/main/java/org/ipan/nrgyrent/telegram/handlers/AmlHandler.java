@@ -6,7 +6,6 @@ import org.ipan.nrgyrent.domain.exception.NotEnoughBalanceException;
 import org.ipan.nrgyrent.domain.model.*;
 import org.ipan.nrgyrent.domain.model.repository.AmlVerificationRepo;
 import org.ipan.nrgyrent.domain.service.AmlVerificationService;
-import org.ipan.nrgyrent.domain.service.NrgConfigsService;
 import org.ipan.nrgyrent.domain.service.UserService;
 import org.ipan.nrgyrent.domain.service.UserWalletService;
 import org.ipan.nrgyrent.netts.AmlPriceCache;
@@ -38,7 +37,6 @@ public class AmlHandler {
     private final AmlVerificationService amlVerificationService;
     private final AmlVerificationRepo amlVerificationRepo;
     private final NettsRestClient nettsRestClient;
-    private final NrgConfigsService nrgConfigsService;
     private final AmlPriceCache amlPriceCache;
     private final AmlViews amlViews;
     private final TelegramMessages telegramMessages;
@@ -53,7 +51,7 @@ public class AmlHandler {
     })
     public void openAmlMenu(UserState userState, Update update) {
         AppUser user = userService.getById(userState.getTelegramId());
-        AmlProvider provider = nrgConfigsService.readCurrentAmlProviderConfig();
+        AmlProvider provider = user.getAmlProvider();
         String estimatedPrice = computeEstimatedPriceTrx(user.getTariffToUse(), provider);
         amlViews.showAmlMenu(userState, estimatedPrice);
         telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.AML_MENU));
@@ -62,7 +60,7 @@ public class AmlHandler {
     @MatchState(state = States.AML_MENU, callbackData = InlineMenuCallbacks.AML_CHECK)
     public void promptWalletAddress(UserState userState, Update update) {
         AppUser user = userService.getById(userState.getTelegramId());
-        AmlProvider provider = nrgConfigsService.readCurrentAmlProviderConfig();
+        AmlProvider provider = user.getAmlProvider();
         String estimatedPrice = computeEstimatedPriceTrx(user.getTariffToUse(), provider);
         amlViews.showAmlPromptWallet(userState, user.getBalanceToUse(), estimatedPrice);
         telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.AML_PROMPT_WALLET));
@@ -104,7 +102,7 @@ public class AmlHandler {
         }
 
         AppUser user = userService.getById(userState.getTelegramId());
-        AmlProvider provider = nrgConfigsService.readCurrentAmlProviderConfig();
+        AmlProvider provider = user.getAmlProvider();
         AmlVerification verification = null;
         try {
             verification = amlVerificationService.createPendingVerification(

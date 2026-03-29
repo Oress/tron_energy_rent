@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.ipan.nrgyrent.LiquibaseParameters;
+import org.ipan.nrgyrent.domain.model.AmlProvider;
 import org.ipan.nrgyrent.domain.model.AppUser;
 import org.ipan.nrgyrent.domain.model.Balance;
 import org.ipan.nrgyrent.domain.model.repository.BalanceReferralProgramRepo;
@@ -27,6 +28,7 @@ public class UserService {
     private final BalanceReferralProgramRepo balanceReferralProgramRepo;
     private final ReferalProgramService referalProgramService;
     private final LiquibaseParameters liquibaseParameters;
+    private final NrgConfigsService nrgConfigsService;
 
     @Transactional
     public AppUser setShowWalletOption(Long userId, Boolean value) {
@@ -48,6 +50,15 @@ public class UserService {
         Balance individualDepositBalance = balanceService.createIndividualBalance(appUser, command);
 
         appUser.setBalance(individualDepositBalance);
+
+        try {
+            AmlProvider defaultAmlProvider = nrgConfigsService.readCurrentAmlProviderConfig();
+            appUser.setAmlProvider(defaultAmlProvider != null ? defaultAmlProvider : AmlProvider.ELLIPTIC);
+        } catch (Exception e) {
+            logger.warn("Could not read admin AML provider config for new user {}, defaulting to ELLIPTIC", command.getTelegramId());
+            appUser.setAmlProvider(AmlProvider.ELLIPTIC);
+        }
+
         userRepo.save(appUser);
 
         // create default ref. program
@@ -62,6 +73,13 @@ public class UserService {
 
         updateModelFromCommand(command, appUser);
 
+        return appUser;
+    }
+
+    @Transactional
+    public AppUser setAmlProvider(Long userId, AmlProvider provider) {
+        AppUser appUser = userRepo.findById(userId).orElse(null);
+        appUser.setAmlProvider(provider);
         return appUser;
     }
 

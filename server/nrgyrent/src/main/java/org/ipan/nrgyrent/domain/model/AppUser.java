@@ -58,6 +58,10 @@ public class AppUser {
     @Column(name = "language_code")
     private String languageCode;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "aml_provider")
+    private AmlProvider amlProvider = AmlProvider.ELLIPTIC;
+
     @Column(name = "disabled_reason")
     private String disabledReason;
 

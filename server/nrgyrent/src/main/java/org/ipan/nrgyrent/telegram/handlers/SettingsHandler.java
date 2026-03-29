@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
+import org.ipan.nrgyrent.domain.model.AmlProvider;
 import org.ipan.nrgyrent.domain.model.AppUser;
 import org.ipan.nrgyrent.domain.model.BalanceReferralProgram;
 import org.ipan.nrgyrent.domain.model.projections.ReferralDto;
@@ -46,6 +47,7 @@ public class SettingsHandler {
         @MatchState(state = States.SETTINGS_CHANGE_LANGUAGE, callbackData = InlineMenuCallbacks.GO_BACK),
         @MatchState(state = States.REFERALS, callbackData = InlineMenuCallbacks.GO_BACK),
         @MatchState(state = States.DEPOSIT_HISTORY_SEARCHING, callbackData = InlineMenuCallbacks.GO_BACK),
+        @MatchState(state = States.SETTINGS_AML_PROVIDER, callbackData = InlineMenuCallbacks.GO_BACK),
     })
     public void settingsMenu(UserState userState, Update update) {
         AppUser user = userService.getById(userState.getTelegramId());
@@ -92,6 +94,25 @@ public class SettingsHandler {
             : orderRepo.findAllTransactions(userState.getTelegramId(), 10);
         historyViews.updMenuToHistoryMenu(page.reversed(), update.getCallbackQuery());
         telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.HISTORY));
+    }
+
+    @MatchState(state = States.SETTINGS, callbackData = InlineMenuCallbacks.SETTINGS_AML_PROVIDER)
+    public void showAmlProviderSelect(UserState userState, Update update) {
+        AppUser user = userService.getById(userState.getTelegramId());
+        telegramMessages.updateMsgToAmlProviderSelect(userState, user.getAmlProvider());
+        telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.SETTINGS_AML_PROVIDER));
+    }
+
+    @MatchStates({
+        @MatchState(state = States.SETTINGS_AML_PROVIDER, callbackData = InlineMenuCallbacks.SETTINGS_AML_PROVIDER_ELLIPTIC),
+        @MatchState(state = States.SETTINGS_AML_PROVIDER, callbackData = InlineMenuCallbacks.SETTINGS_AML_PROVIDER_BITOK),
+    })
+    public void handleAmlProviderSelect(UserState userState, Update update) {
+        String data = update.getCallbackQuery().getData();
+        AmlProvider provider = InlineMenuCallbacks.SETTINGS_AML_PROVIDER_ELLIPTIC.equals(data) ? AmlProvider.ELLIPTIC : AmlProvider.BITOK;
+        userService.setAmlProvider(userState.getTelegramId(), provider);
+        telegramMessages.updateMsgToAmlProviderSelect(userState, provider);
+        telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.SETTINGS_AML_PROVIDER));
     }
 
     @MatchState(state = States.SETTINGS, callbackData = InlineMenuCallbacks.MANAGE_REFERALS)

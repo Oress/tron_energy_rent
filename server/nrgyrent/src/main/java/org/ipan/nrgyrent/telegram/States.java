@@ -165,4 +165,6 @@ public enum States {
     AML_HISTORY,
     AML_ITEM_PREVIEW,
     AML_SUCCESS,
+
+    SETTINGS_AML_PROVIDER,
 }

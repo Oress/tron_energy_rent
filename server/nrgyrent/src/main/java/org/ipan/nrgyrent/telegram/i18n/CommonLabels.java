@@ -2,6 +2,7 @@ package org.ipan.nrgyrent.telegram.i18n;
 
 import java.util.Locale;
 
+import org.ipan.nrgyrent.domain.model.AmlProvider;
 import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Component;
 
@@ -165,6 +166,21 @@ public class CommonLabels {
 
     public String settingsShowWalletsDisabled() {
         return getLocalizedMessage("settings.show_wallets_in_menu.disabled");
+    }
+
+    public String settingsAmlProvider(AmlProvider currentProvider) {
+        return getLocalizedMessage("settings.aml_provider", currentProvider.name());
+    }
+
+    public String settingsAmlProviderDescription() {
+        return getLocalizedMessage("settings.aml_provider.description");
+    }
+
+    public String settingsAmlProviderOption(AmlProvider option, AmlProvider currentProvider) {
+        String key = option == currentProvider
+                ? "settings.aml_provider.option.selected"
+                : "settings.aml_provider.option";
+        return getLocalizedMessage(key, option.name());
     }
 
     public String somethingWentWrong() {
