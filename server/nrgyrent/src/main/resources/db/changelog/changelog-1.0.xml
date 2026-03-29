@@ -1397,4 +1397,10 @@
         </addColumn>
     </changeSet>
 
+    <changeSet id="add balance_before_sun to nrg_aml_verifications" author="oress">
+        <addColumn tableName="nrg_aml_verifications">
+            <column name="balance_before_sun" type="bigint"/>
+        </addColumn>
+    </changeSet>
+
 </databaseChangeLog>

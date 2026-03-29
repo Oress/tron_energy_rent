@@ -351,6 +351,18 @@ public class CommonLabels {
         return getLocalizedMessage("aml.report.sanctioned_no", locale);
     }
 
+    public String amlReportPaymentSummary(Locale locale) {
+        return getLocalizedMessage("aml.report.payment_summary", locale);
+    }
+
+    public String amlReportSpent(Locale locale, String amount) {
+        return getLocalizedMessage("aml.report.spent", locale, amount);
+    }
+
+    public String amlReportBalanceChange(Locale locale, String before, String after) {
+        return getLocalizedMessage("aml.report.balance_change", locale, before, after);
+    }
+
     public String amlReportFundExposure(Locale locale) {
         return getLocalizedMessage("aml.report.fund_exposure", locale);
     }

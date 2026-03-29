@@ -139,6 +139,8 @@ public class FormattingTools {
                 : commonLabels.amlReportSanctionedNo(locale);
         sb.append(commonLabels.amlReportSanctioned(locale, sanctionedVal)).append("\n");
 
+        appendPaymentSummary(sb, v, locale);
+
         if (v.getResult() != null) {
             try {
                 BitokResultResponse result = GSON.fromJson(v.getResult(), BitokResultResponse.class);
@@ -192,6 +194,8 @@ public class FormattingTools {
                 ? commonLabels.amlReportSanctionedYes(locale)
                 : commonLabels.amlReportSanctionedNo(locale);
         sb.append(commonLabels.amlReportSanctioned(locale, sanctionedVal)).append("\n");
+
+        appendPaymentSummary(sb, v, locale);
 
         if (v.getResult() != null) {
             try {
@@ -326,6 +330,19 @@ public class FormattingTools {
 
     public static String formatUsdt(Long usdt) {
         return df.format(BigDecimal.valueOf(usdt).divide(BigDecimal.valueOf(1_000_000D)).setScale(2, RoundingMode.DOWN));
+    }
+
+    private void appendPaymentSummary(StringBuilder sb, AmlVerification v, Locale locale) {
+        if (v.getPaidSun() == null) return;
+        Long beforeSun = v.getBalanceBeforeSun();
+        Long spentSun = v.getPaidSun();
+        sb.append("\n").append(commonLabels.amlReportPaymentSummary(locale)).append("\n");
+        sb.append(commonLabels.amlReportSpent(locale, formatBalance(spentSun) + " TRX")).append("\n");
+        if (beforeSun != null) {
+            sb.append(commonLabels.amlReportBalanceChange(locale,
+                    formatBalance(beforeSun) + " TRX",
+                    formatBalance(beforeSun - spentSun) + " TRX")).append("\n");
+        }
     }
 
     public static String formatBalance(Long balanceSun) {

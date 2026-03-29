@@ -52,6 +52,9 @@ public class AmlVerification {
     @Column(name = "paid_sun")
     private Long paidSun;
 
+    @Column(name = "balance_before_sun")
+    private Long balanceBeforeSun;
+
     // Netts currency
     @Column(name = "currency")
     private String currency;

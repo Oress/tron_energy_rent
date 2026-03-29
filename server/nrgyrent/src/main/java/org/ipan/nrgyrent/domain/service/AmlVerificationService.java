@@ -72,6 +72,7 @@ public class AmlVerificationService {
             throw new NotEnoughBalanceException("Not enough balance for AML check. Required: " + priceSun + ", available: " + balance.getSunBalance());
         }
 
+        Long balanceBeforeSun = balance.getSunBalance();
         balanceService.subtractSunBalance(balance, priceSun);
 
         AmlVerification verification = new AmlVerification();
@@ -82,6 +83,7 @@ public class AmlVerificationService {
 
         verification.setProvider(provider);
         verification.setPaidSun(priceSun);
+        verification.setBalanceBeforeSun(balanceBeforeSun);
         verification.setWalletAddress(walletAddress);
         verification.setChatId(chatId);
         verification.setMessageToUpdate(messageToUpdate);
