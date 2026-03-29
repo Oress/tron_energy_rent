@@ -139,7 +139,6 @@ public class FormattingTools {
                 : commonLabels.amlReportSanctionedNo(locale);
         sb.append(commonLabels.amlReportSanctioned(locale, sanctionedVal)).append("\n");
 
-        appendPaymentSummary(sb, v, locale);
 
         if (v.getResult() != null) {
             try {
@@ -174,6 +173,8 @@ public class FormattingTools {
             sb.append("\n").append(commonLabels.amlReportComputed(locale, formatDateToUtc(v.getCompletedAt()))).append("\n");
         }
 
+        appendPaymentSummary(sb, v, locale);
+
         return sb.toString();
     }
 
@@ -194,8 +195,6 @@ public class FormattingTools {
                 ? commonLabels.amlReportSanctionedYes(locale)
                 : commonLabels.amlReportSanctionedNo(locale);
         sb.append(commonLabels.amlReportSanctioned(locale, sanctionedVal)).append("\n");
-
-        appendPaymentSummary(sb, v, locale);
 
         if (v.getResult() != null) {
             try {
@@ -239,6 +238,8 @@ public class FormattingTools {
         if (v.getCompletedAt() != null) {
             sb.append("\n").append(commonLabels.amlReportComputed(locale, formatDateToUtc(v.getCompletedAt()))).append("\n");
         }
+
+        appendPaymentSummary(sb, v, locale);
 
         return sb.toString();
     }
