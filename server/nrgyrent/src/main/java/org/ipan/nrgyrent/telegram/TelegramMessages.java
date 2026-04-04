@@ -87,7 +87,7 @@ public class TelegramMessages {
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
                 .text(commonLabels.settingsDescription())
-                .replyMarkup(settingsMenuMarkup(user.getShowWalletsMenu(), user.getAmlProvider()))
+                .replyMarkup(settingsMenuMarkup(user.getShowWalletsMenu()))
                 .parseMode("MARKDOWN")
                 .build();
         try {
@@ -665,7 +665,7 @@ public class TelegramMessages {
                 .build();
     }
 
-    private InlineKeyboardMarkup settingsMenuMarkup(Boolean showWalletsInMenuEnabled, AmlProvider amlProvider) {
+    private InlineKeyboardMarkup settingsMenuMarkup(Boolean showWalletsInMenuEnabled) {
         var builder = InlineKeyboardMarkup.builder();
 
         if (showWalletsInMenuEnabled) {
@@ -714,13 +714,6 @@ public class TelegramMessages {
                                         .builder()
                                         .text(commonLabels.settingsChangeLanguage())
                                         .callbackData(InlineMenuCallbacks.CHANGE_LANGUAGE)
-                                        .build()))
-                .keyboardRow(
-                        new InlineKeyboardRow(
-                                InlineKeyboardButton
-                                        .builder()
-                                        .text(commonLabels.settingsAmlProvider(amlProvider))
-                                        .callbackData(InlineMenuCallbacks.SETTINGS_AML_PROVIDER)
                                         .build()));
                 builder.keyboardRow(
                         new InlineKeyboardRow(

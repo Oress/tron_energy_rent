@@ -2,6 +2,7 @@ package org.ipan.nrgyrent.telegram.views;
 
 import java.util.List;
 
+import org.ipan.nrgyrent.domain.model.AmlProvider;
 import org.ipan.nrgyrent.domain.model.AmlVerification;
 import org.ipan.nrgyrent.domain.model.AmlVerificationStatus;
 import org.ipan.nrgyrent.domain.model.Balance;
@@ -29,7 +30,7 @@ public class AmlViews {
     private final FormattingTools formattingTools;
 
     @SneakyThrows
-    public void showAmlMenu(UserState userState, String estimatedPriceTrx) {
+    public void showAmlMenu(UserState userState, String estimatedPriceTrx, AmlProvider provider) {
         String price = estimatedPriceTrx != null ? estimatedPriceTrx : "N/A";
 
         EditMessageText message = EditMessageText.builder()
@@ -37,7 +38,7 @@ public class AmlViews {
                 .messageId(userState.getMenuMessageId())
                 .text(commonLabels.amlMenuDescription(userState.getLocaleOrDefault(), price))
                 .parseMode("MARKDOWN")
-                .replyMarkup(amlMenuMarkup())
+                .replyMarkup(amlMenuMarkup(provider))
                 .build();
         try {
             tgClient.execute(message);
@@ -153,7 +154,7 @@ public class AmlViews {
         }
     }
 
-    private InlineKeyboardMarkup amlMenuMarkup() {
+    private InlineKeyboardMarkup amlMenuMarkup(AmlProvider provider) {
         return InlineKeyboardMarkup.builder()
                 .keyboardRow(new InlineKeyboardRow(
                         InlineKeyboardButton.builder()
@@ -164,6 +165,11 @@ public class AmlViews {
                         InlineKeyboardButton.builder()
                                 .text(commonLabels.amlMenuHistory())
                                 .callbackData(InlineMenuCallbacks.AML_HISTORY)
+                                .build()))
+                .keyboardRow(new InlineKeyboardRow(
+                        InlineKeyboardButton.builder()
+                                .text(commonLabels.settingsAmlProvider(provider))
+                                .callbackData(InlineMenuCallbacks.SETTINGS_AML_PROVIDER)
                                 .build()))
                 .keyboardRow(new InlineKeyboardRow(
                         InlineKeyboardButton.builder()

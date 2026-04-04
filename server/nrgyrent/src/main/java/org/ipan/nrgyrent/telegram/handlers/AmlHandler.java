@@ -47,14 +47,34 @@ public class AmlHandler {
             @MatchState(state = States.AML_HISTORY, callbackData = InlineMenuCallbacks.GO_BACK),
             @MatchState(state = States.AML_ITEM_PREVIEW, callbackData = InlineMenuCallbacks.GO_BACK),
             @MatchState(state = States.AML_PROMPT_WALLET, callbackData = InlineMenuCallbacks.GO_BACK),
-            @MatchState(state = States.AML_SUCCESS, callbackData = InlineMenuCallbacks.GO_BACK)
+            @MatchState(state = States.AML_SUCCESS, callbackData = InlineMenuCallbacks.GO_BACK),
+            @MatchState(state = States.SETTINGS_AML_PROVIDER, callbackData = InlineMenuCallbacks.GO_BACK)
     })
     public void openAmlMenu(UserState userState, Update update) {
         AppUser user = userService.getById(userState.getTelegramId());
         AmlProvider provider = user.getAmlProvider();
         String estimatedPrice = computeEstimatedPriceTrx(user.getTariffToUse(), provider);
-        amlViews.showAmlMenu(userState, estimatedPrice);
+        amlViews.showAmlMenu(userState, estimatedPrice, provider);
         telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.AML_MENU));
+    }
+
+    @MatchState(state = States.AML_MENU, callbackData = InlineMenuCallbacks.SETTINGS_AML_PROVIDER)
+    public void showAmlProviderSelect(UserState userState, Update update) {
+        AppUser user = userService.getById(userState.getTelegramId());
+        telegramMessages.updateMsgToAmlProviderSelect(userState, user.getAmlProvider());
+        telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.SETTINGS_AML_PROVIDER));
+    }
+
+    @MatchStates({
+            @MatchState(state = States.SETTINGS_AML_PROVIDER, callbackData = InlineMenuCallbacks.SETTINGS_AML_PROVIDER_ELLIPTIC),
+            @MatchState(state = States.SETTINGS_AML_PROVIDER, callbackData = InlineMenuCallbacks.SETTINGS_AML_PROVIDER_BITOK),
+    })
+    public void handleAmlProviderSelect(UserState userState, Update update) {
+        String data = update.getCallbackQuery().getData();
+        AmlProvider provider = InlineMenuCallbacks.SETTINGS_AML_PROVIDER_ELLIPTIC.equals(data) ? AmlProvider.ELLIPTIC : AmlProvider.BITOK;
+        userService.setAmlProvider(userState.getTelegramId(), provider);
+        telegramMessages.updateMsgToAmlProviderSelect(userState, provider);
+        telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.SETTINGS_AML_PROVIDER));
     }
 
     @MatchState(state = States.AML_MENU, callbackData = InlineMenuCallbacks.AML_CHECK)
