@@ -2,10 +2,7 @@ package org.ipan.nrgyrent.telegram.views;
 
 import java.util.List;
 
-import org.ipan.nrgyrent.domain.model.AmlProvider;
-import org.ipan.nrgyrent.domain.model.AmlVerification;
-import org.ipan.nrgyrent.domain.model.AmlVerificationStatus;
-import org.ipan.nrgyrent.domain.model.Balance;
+import org.ipan.nrgyrent.domain.model.*;
 import org.ipan.nrgyrent.telegram.InlineMenuCallbacks;
 import org.ipan.nrgyrent.telegram.i18n.CommonLabels;
 import org.ipan.nrgyrent.telegram.state.UserState;
@@ -38,7 +35,7 @@ public class AmlViews {
                 .messageId(userState.getMenuMessageId())
                 .text(commonLabels.amlMenuDescription(userState.getLocaleOrDefault(), price))
                 .parseMode("MARKDOWN")
-                .replyMarkup(amlMenuMarkup(provider))
+                .replyMarkup(amlMenuMarkup(provider, UserRole.ADMIN.equals(userState.getRole())))
                 .build();
         try {
             tgClient.execute(message);
@@ -154,8 +151,9 @@ public class AmlViews {
         }
     }
 
-    private InlineKeyboardMarkup amlMenuMarkup(AmlProvider provider) {
-        return InlineKeyboardMarkup.builder()
+    private InlineKeyboardMarkup amlMenuMarkup(AmlProvider provider, boolean isAdmin) {
+        InlineKeyboardMarkup.InlineKeyboardMarkupBuilder<?, ?> builder = InlineKeyboardMarkup.builder();
+        builder
                 .keyboardRow(new InlineKeyboardRow(
                         InlineKeyboardButton.builder()
                                 .text(commonLabels.amlMenuCheckWallet())
@@ -165,8 +163,17 @@ public class AmlViews {
                         InlineKeyboardButton.builder()
                                 .text(commonLabels.amlMenuHistory())
                                 .callbackData(InlineMenuCallbacks.AML_HISTORY)
-                                .build()))
-                .keyboardRow(new InlineKeyboardRow(
+                                .build()));
+
+        if (isAdmin) {
+            builder
+                    .keyboardRow(new InlineKeyboardRow(
+                            InlineKeyboardButton.builder()
+                                    .text(commonLabels.autoAmlButton())
+                                    .callbackData(InlineMenuCallbacks.AUTO_AML)
+                                    .build()));
+        }
+        return builder.keyboardRow(new InlineKeyboardRow(
                         InlineKeyboardButton.builder()
                                 .text(commonLabels.settingsAmlProvider(provider))
                                 .callbackData(InlineMenuCallbacks.SETTINGS_AML_PROVIDER)

@@ -117,6 +117,8 @@ public class InlineMenuCallbacks {
     public static final String AML_CHECK = "aml_check";
     public static final String AML_HISTORY = "aml_history";
 
+    public static final String AUTO_AML = "auto_aml";
+
     public static final String SETTINGS_AML_PROVIDER = "settings_aml_provider";
     public static final String SETTINGS_AML_PROVIDER_ELLIPTIC = "settings_aml_provider_elliptic";
     public static final String SETTINGS_AML_PROVIDER_BITOK = "settings_aml_provider_bitok";
@@ -193,6 +195,31 @@ public class InlineMenuCallbacks {
                 payload = gson.fromJson(payloadStr, ToggleWalletSessionPayload.class);
             } catch (Exception e) {
                 logger.error("Cannot extract payload for ToggleWalletSessionPayload ", e);
+            }
+        }
+        return payload;
+    }
+
+    private static final String TOGGLE_AUTO_AML = "/taaml/";
+    public static String createToggleAutoAmlCallback(String address, Long sessionId) {
+        ToggleWalletSessionPayload payload;
+        if (sessionId != null) {
+            payload = new ToggleWalletSessionPayload(sessionId);
+        } else {
+            payload = new ToggleWalletSessionPayload(address);
+        }
+        return TOGGLE_AUTO_AML + gson.toJson(payload);
+    }
+
+    public static ToggleWalletSessionPayload getToggleAutoAmlSession(String data) {
+        ToggleWalletSessionPayload payload = null;
+        if (data.startsWith(TOGGLE_AUTO_AML)) {
+            String payloadStr = data.split(TOGGLE_AUTO_AML)[1];
+
+            try {
+                payload = gson.fromJson(payloadStr, ToggleWalletSessionPayload.class);
+            } catch (Exception e) {
+                logger.error("Cannot extract payload for ToggleAutoAmlSession ", e);
             }
         }
         return payload;

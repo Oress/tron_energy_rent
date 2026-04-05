@@ -291,6 +291,10 @@ public class CommonLabels {
         return getLocalizedMessage("aml.menu_check_wallet");
     }
 
+    public String autoAmlButton() {
+        return getLocalizedMessage("aml.menu_auto_aml");
+    }
+
     public String amlMenuHistory() {
         return getLocalizedMessage("aml.menu_history");
     }

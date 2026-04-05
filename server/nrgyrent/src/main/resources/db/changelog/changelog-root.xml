@@ -7,5 +7,6 @@
     <!-- It is a best practice to specify only one type of change per changeset.  -->
     <!-- Doing so avoids failed auto-commit statements that can leave the database in an unexpected state. -->
     <include file="./db/changelog/changelog-1.0.xml" />
+    <include file="/db/changelog/changelog-1.1.xml" />
 
 </databaseChangeLog>

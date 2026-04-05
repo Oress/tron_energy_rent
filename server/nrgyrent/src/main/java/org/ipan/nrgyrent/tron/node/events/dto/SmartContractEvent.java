@@ -29,6 +29,13 @@ public class SmartContractEvent {
     private Map<String, Object> topicMap;
     private Map<String, Object> dataMap;
 
+    public String getFromAddress() {
+        if (topicMap != null && topicMap.containsKey("from")) {
+            return topicMap.get("from").toString();
+        }
+        return null;
+    }
+
     public String getToAddress() {
         if (topicMap != null && topicMap.containsKey("to")) {
             return topicMap.get("to").toString();

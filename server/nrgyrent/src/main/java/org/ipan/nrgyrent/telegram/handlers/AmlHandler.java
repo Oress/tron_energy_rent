@@ -48,7 +48,8 @@ public class AmlHandler {
             @MatchState(state = States.AML_ITEM_PREVIEW, callbackData = InlineMenuCallbacks.GO_BACK),
             @MatchState(state = States.AML_PROMPT_WALLET, callbackData = InlineMenuCallbacks.GO_BACK),
             @MatchState(state = States.AML_SUCCESS, callbackData = InlineMenuCallbacks.GO_BACK),
-            @MatchState(state = States.SETTINGS_AML_PROVIDER, callbackData = InlineMenuCallbacks.GO_BACK)
+            @MatchState(state = States.SETTINGS_AML_PROVIDER, callbackData = InlineMenuCallbacks.GO_BACK),
+            @MatchState(state = States.AUTO_AML_MENU, callbackData = InlineMenuCallbacks.GO_BACK)
     })
     public void openAmlMenu(UserState userState, Update update) {
         AppUser user = userService.getById(userState.getTelegramId());
