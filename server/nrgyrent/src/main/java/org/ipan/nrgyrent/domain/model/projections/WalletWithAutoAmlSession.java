@@ -9,5 +9,6 @@ public class WalletWithAutoAmlSession {
     String walletAddress;
     String walletLabel;
     Long activeSessionId;
-    Long thresholdUsdt;
+    Long thresholdSun;
 }
+

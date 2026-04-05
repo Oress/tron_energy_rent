@@ -20,7 +20,7 @@ public interface AutoAmlSessionRepo extends JpaRepository<AutoAmlSession, Long> 
                 coalesce(uv.address, s.address),
                 uv.label,
                 s.id,
-                s.threshold_usdt
+                s.threshold_sun
             from nrg_user_wallets uv
                 full join nrg_auto_aml_sessions s
                     on uv.address = s.address
