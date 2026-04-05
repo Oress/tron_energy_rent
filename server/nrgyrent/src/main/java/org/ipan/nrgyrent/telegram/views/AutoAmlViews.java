@@ -170,8 +170,8 @@ public class AutoAmlViews {
         String prefix = walletSession.getActiveSessionId() == null
                 ? commonLabels.redCircle()
                 : commonLabels.greenCircle();
-        if (walletSession.getActiveSessionId() != null && walletSession.getThresholdUsdt() != null) {
-            return prefix + " " + secondPart + " (>=" + FormattingTools.formatUsdt(walletSession.getThresholdUsdt()) + " USDT)";
+        if (walletSession.getActiveSessionId() != null && walletSession.getThresholdSun() != null) {
+            return prefix + " " + secondPart + " (>=" + FormattingTools.formatUsdt(walletSession.getThresholdSun()) + " USDT)";
         }
         return prefix + " " + secondPart;
     }
