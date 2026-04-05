@@ -112,7 +112,7 @@ public class AutoAmlHandler {
         Long thresholdSun;
         try {
             thresholdSun = parseUtils.parseTrxStrToSunLong(input);
-            if (thresholdSun <= 0) {
+            if (thresholdSun < 1_000_000) {
                 autoAmlViews.showInvalidThreshold(userState);
                 return;
             }

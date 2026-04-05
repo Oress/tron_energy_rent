@@ -104,7 +104,7 @@ public class AutoAmlService {
         try {
             verification = amlVerificationService.createPendingVerification(
                     userId, senderAddress, provider,
-                    session.getChatId(), session.getMessageToUpdate());
+                    session.getChatId(), userState.getMenuMessageId());
 
             amlViews.showAmlRequestReceived(userState, senderAddress);
 
