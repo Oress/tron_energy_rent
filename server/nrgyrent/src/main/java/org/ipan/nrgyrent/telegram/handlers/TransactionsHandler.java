@@ -323,9 +323,9 @@ public class TransactionsHandler {
 
             Order pendingOrder = null;
             try {//TODO: add provider field to the order table
-//                AccountResource accountResource = fullNodeRestClient.getAccountResource(receiveAddress);
+                AccountResource accountResource = fullNodeRestClient.getAccountResource(receiveAddress);
 
-                boolean requireActivation = false; // accountResource == null || accountResource.getTotalNetLimit() == null;
+                boolean requireActivation = accountResource == null || accountResource.getTotalNetLimit() == null;
                 pendingOrder = orderService.createPendingOrder(
                         AddOrUpdateOrderCommand.builder()
                                 .userId(userState.getTelegramId())

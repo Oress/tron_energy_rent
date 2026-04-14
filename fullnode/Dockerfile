@@ -1,4 +1,6 @@
-FROM openjdk:8-jdk
+FROM amazoncorretto:8
+
+RUN yum install -y git
 
 RUN git clone https://github.com/tronprotocol/event-plugin.git
 RUN git clone https://github.com/tronprotocol/java-tron.git
