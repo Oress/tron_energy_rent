@@ -165,14 +165,12 @@ public class AmlViews {
                                 .callbackData(InlineMenuCallbacks.AML_HISTORY)
                                 .build()));
 
-        if (isAdmin) {
             builder
                     .keyboardRow(new InlineKeyboardRow(
                             InlineKeyboardButton.builder()
                                     .text(commonLabels.autoAmlButton())
                                     .callbackData(InlineMenuCallbacks.AUTO_AML)
                                     .build()));
-        }
         return builder.keyboardRow(new InlineKeyboardRow(
                         InlineKeyboardButton.builder()
                                 .text(commonLabels.settingsAmlProvider(provider))
