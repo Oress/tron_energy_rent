@@ -28,7 +28,7 @@ public interface AutoDelegationSessionRepo extends JpaRepository<AutoDelegationS
 //    @Query("select s from AutoDelegationSession s join s.events e join e.order o where o.id = :orderId")
 //    AutoDelegationSession findSessionByOrderId(Long orderId);
 
-    AutoDelegationSession findByUserTelegramIdAndActive(Long userId, Boolean active);
+    boolean existsByUserTelegramIdAndActive(Long userId, Boolean active);
 
     List<AutoDelegationSession> findAllByActive(Boolean active);
 }

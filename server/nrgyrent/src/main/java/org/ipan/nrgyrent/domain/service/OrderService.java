@@ -8,7 +8,6 @@ import org.apache.commons.lang3.NotImplementedException;
 import org.ipan.nrgyrent.domain.exception.AutodelegateReserveExceededException;
 import org.ipan.nrgyrent.domain.exception.OrderAlreadyExistsException;
 import org.ipan.nrgyrent.domain.model.*;
-import org.ipan.nrgyrent.domain.model.autodelegation.AutoDelegationSession;
 import org.ipan.nrgyrent.domain.model.repository.AutoDelegationSessionRepo;
 import org.ipan.nrgyrent.domain.model.repository.OrderRepo;
 import org.ipan.nrgyrent.domain.model.repository.ReferralCommissionRepo;
@@ -97,8 +96,8 @@ public class OrderService {
             balanceService.subtractSunBalance(targetBalance, totalSunAmount);
 
             if (command.getAutoDelegationSessionId() == null) {
-                AutoDelegationSession session = autoDelegationSessionRepo.findByUserTelegramIdAndActive(user.getTelegramId(), true);
-                if (session != null) {
+                boolean hasActiveSession = autoDelegationSessionRepo.existsByUserTelegramIdAndActive(user.getTelegramId(), true);
+                if (hasActiveSession) {
                     // user has active autodelegate session
                     // We need to keep some as a reserve which is transactionType2 cost
                     if (targetBalance.getSunBalance() < tariff.getMaxAutodelegateFee()) {
