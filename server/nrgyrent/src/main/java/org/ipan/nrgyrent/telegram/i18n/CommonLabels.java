@@ -267,6 +267,10 @@ public class CommonLabels {
         return getLocalizedMessage("alerts.auto_delegation_low_balance.admin", locale, currentBalance, user);
     }
 
+    public String usdtTopupDisabledAdmin(Locale locale, String depositId, String usdt, String walletFrom, String walletTo, String txId) {
+        return getLocalizedMessage("alerts.usdt_topup_disabled.admin", locale, depositId, usdt, walletFrom, walletTo, txId);
+    }
+
     public String alertNettsBalanceLow(Locale locale, String currentBalance) {
         return getLocalizedMessage("alerts.netts_balance_low", locale, currentBalance);
     }

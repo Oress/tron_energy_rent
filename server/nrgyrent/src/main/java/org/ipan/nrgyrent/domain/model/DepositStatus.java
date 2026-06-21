@@ -4,6 +4,7 @@ public enum DepositStatus {
     COMPLETED,
 
     USDT_ACKNOWLEDGED,
+    USDT_TOPUP_DISABLED, // user sent USDT while topup is disabled; on hold for manual handling
     USDT_ENERGY_RENTED,
     USDT_ENERGY_RENT_FAILED,
     USDT_TRANSFERRED_TO_BYBIT,

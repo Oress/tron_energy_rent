@@ -359,6 +359,23 @@ public class TelegramMessages {
 
     @Retryable
     @SneakyThrows
+    public Message sendUsdtTopupDisabledAdmin(Long groupId, DepositTransaction depositTransaction) {
+        SendMessage message = SendMessage
+                .builder()
+                .chatId(groupId)
+                .text(commonLabels.usdtTopupDisabledAdmin(Locale.of("ru"),
+                        String.valueOf(depositTransaction.getId()),
+                        FormattingTools.formatUsdt(depositTransaction.getOriginalAmount()),
+                        depositTransaction.getWalletFrom(),
+                        depositTransaction.getWalletTo(),
+                        depositTransaction.getTxId()))
+                .parseMode("MARKDOWN")
+                .build();
+        return tgClient.execute(message);
+    }
+
+    @Retryable
+    @SneakyThrows
     public Message sendAutoDelegationAlertBalanceLowAdmin(Long groupId, Long currentBalance, AppUser user) {
         SendMessage message = SendMessage
                 .builder()

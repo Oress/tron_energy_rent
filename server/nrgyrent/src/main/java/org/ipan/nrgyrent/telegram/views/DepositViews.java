@@ -1,5 +1,6 @@
 package org.ipan.nrgyrent.telegram.views;
 
+import org.ipan.nrgyrent.UsdtDepositConfig;
 import org.ipan.nrgyrent.domain.model.AppUser;
 import org.ipan.nrgyrent.domain.model.Balance;
 import org.ipan.nrgyrent.telegram.i18n.DepositLabels;
@@ -19,16 +20,22 @@ public class DepositViews {
     private final CommonViews commonViews;
     private final TelegramClient tgClient;
     private final DepositLabels depositLabels;
+    private final UsdtDepositConfig usdtDepositConfig;
 
     @Retryable
     @SneakyThrows
     public void updMenuToDepositsMenu(UserState userState, AppUser user) {
         Balance personalBalance = user.getBalance();
         Balance groupBalance = user.getGroupBalance();
+        boolean usdtEnabled = usdtDepositConfig.isEnabled();
 
         String text = groupBalance != null
-            ? getGroupDepositMenuText(groupBalance.getDepositAddress(), groupBalance.getSunBalance())
-            : getPersonalDepositMenuText(personalBalance.getDepositAddress(), personalBalance.getSunBalance());
+            ? getGroupDepositMenuText(groupBalance.getDepositAddress(), groupBalance.getSunBalance(), usdtEnabled)
+            : getPersonalDepositMenuText(personalBalance.getDepositAddress(), personalBalance.getSunBalance(), usdtEnabled);
+
+        if (!usdtEnabled) {
+            text = depositLabels.usdtDisabledWarning() + "\n\n" + text;
+        }
 
         EditMessageText message = EditMessageText
                 .builder()
@@ -41,11 +48,17 @@ public class DepositViews {
         tgClient.execute(message);
     }
 
-    public String getGroupDepositMenuText(String groupDepositAddress, Long groupSunBalance) {
-        return depositLabels.depositGroup(groupDepositAddress, FormattingTools.formatBalance(groupSunBalance));
+    public String getGroupDepositMenuText(String groupDepositAddress, Long groupSunBalance, boolean usdtEnabled) {
+        String trx = FormattingTools.formatBalance(groupSunBalance);
+        return usdtEnabled
+                ? depositLabels.depositGroup(groupDepositAddress, trx)
+                : depositLabels.depositGroupTrxOnly(groupDepositAddress, trx);
     }
 
-    public String getPersonalDepositMenuText(String depositAddress, Long sunBalance) {
-        return depositLabels.depositPersonal(depositAddress, FormattingTools.formatBalance(sunBalance));
+    public String getPersonalDepositMenuText(String depositAddress, Long sunBalance, boolean usdtEnabled) {
+        String trx = FormattingTools.formatBalance(sunBalance);
+        return usdtEnabled
+                ? depositLabels.depositPersonal(depositAddress, trx)
+                : depositLabels.depositPersonalTrxOnly(depositAddress, trx);
     }
 }

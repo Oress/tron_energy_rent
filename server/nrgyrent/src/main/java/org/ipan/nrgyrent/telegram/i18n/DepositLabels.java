@@ -26,4 +26,16 @@ public class DepositLabels {
         return getLocalizedMessage("deposits.manage_personal", address, trx);
     }
 
+    public String depositGroupTrxOnly(String address, String trx) {
+        return getLocalizedMessage("deposits.manage_group_trx_only", address, trx);
+    }
+
+    public String depositPersonalTrxOnly(String address, String trx) {
+        return getLocalizedMessage("deposits.manage_personal_trx_only", address, trx);
+    }
+
+    public String usdtDisabledWarning() {
+        return getLocalizedMessage("deposits.usdt_disabled_warning");
+    }
+
 }

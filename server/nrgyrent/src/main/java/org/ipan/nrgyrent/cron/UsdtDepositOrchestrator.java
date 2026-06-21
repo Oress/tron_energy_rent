@@ -1,26 +1,46 @@
 package org.ipan.nrgyrent.cron;
 
-import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.ipan.nrgyrent.UsdtDepositConfig;
 import org.ipan.nrgyrent.bybit.BybitRestClient;
 import org.ipan.nrgyrent.bybit.dto.DepositData;
 import org.ipan.nrgyrent.domain.model.DepositStatus;
 import org.ipan.nrgyrent.domain.model.DepositTransaction;
 import org.ipan.nrgyrent.domain.model.DepositType;
 import org.ipan.nrgyrent.domain.model.repository.DepositTransactionRepo;
+import org.ipan.nrgyrent.telegram.TelegramMessages;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 @Slf4j
-@AllArgsConstructor
 @Component
 public class UsdtDepositOrchestrator {
-    private UsdtDepositHelper usdtDepositHelper;
-    private DepositTransactionRepo depositTransactionRepo;
-    private BybitRestClient bybitRestClient;
-    private ConfigurableEnvironment configurableEnvironment;
+    private final UsdtDepositHelper usdtDepositHelper;
+    private final DepositTransactionRepo depositTransactionRepo;
+    private final BybitRestClient bybitRestClient;
+    private final ConfigurableEnvironment configurableEnvironment;
+    private final UsdtDepositConfig usdtDepositConfig;
+    private final TelegramMessages telegramMessages;
+    private final Long tgGroupId;
+
+    public UsdtDepositOrchestrator(UsdtDepositHelper usdtDepositHelper,
+                                   DepositTransactionRepo depositTransactionRepo,
+                                   BybitRestClient bybitRestClient,
+                                   ConfigurableEnvironment configurableEnvironment,
+                                   UsdtDepositConfig usdtDepositConfig,
+                                   TelegramMessages telegramMessages,
+                                   @Value("${app.notification.tggroupid}") Long tgGroupId) {
+        this.usdtDepositHelper = usdtDepositHelper;
+        this.depositTransactionRepo = depositTransactionRepo;
+        this.bybitRestClient = bybitRestClient;
+        this.configurableEnvironment = configurableEnvironment;
+        this.usdtDepositConfig = usdtDepositConfig;
+        this.telegramMessages = telegramMessages;
+        this.tgGroupId = tgGroupId;
+    }
 
     @SneakyThrows
     public void startOrchestrateUsdtDeposit(Long depositTransactionId) {
@@ -30,6 +50,17 @@ public class UsdtDepositOrchestrator {
             logger.error("Deposit transaction type is not USDT: {}", depositTransaction.getType());
             return;
         }
+
+        // USDT topup disabled: record on hold, alert admins, do not start the Bybit exchange flow
+        if (!usdtDepositConfig.isEnabled()) {
+            logger.warn("USDT topup is disabled. Putting deposit on hold: id: {} txId: {}",
+                    depositTransaction.getId(), depositTransaction.getTxId());
+            depositTransaction.setStatus(DepositStatus.USDT_TOPUP_DISABLED);
+            depositTransactionRepo.save(depositTransaction);
+            telegramMessages.sendUsdtTopupDisabledAdmin(tgGroupId, depositTransaction);
+            return;
+        }
+
         usdtDepositHelper.tryActivateWallet(depositTransaction);
         Thread.sleep(2000);
         usdtDepositHelper.rentEnergyForUsdtTransfer(depositTransaction);

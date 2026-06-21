@@ -81,6 +81,9 @@ app:
     username: ${APP_BOT_USERNAME:tron_energy_rent_dev_bot}
   sweeping:
     min-amount-sun: 10000
+  deposit:
+    usdt:
+      enabled: ${APP_USDT_TOPUP_ENABLED:true}
   rounding:
     scale: ${APP_ROUNDING_SCALE:3}
   pagination:
