@@ -33,10 +33,6 @@ public class DepositViews {
             ? getGroupDepositMenuText(groupBalance.getDepositAddress(), groupBalance.getSunBalance(), usdtEnabled)
             : getPersonalDepositMenuText(personalBalance.getDepositAddress(), personalBalance.getSunBalance(), usdtEnabled);
 
-        if (!usdtEnabled) {
-            text = depositLabels.usdtDisabledWarning() + "\n\n" + text;
-        }
-
         EditMessageText message = EditMessageText
                 .builder()
                 .chatId(userState.getChatId())

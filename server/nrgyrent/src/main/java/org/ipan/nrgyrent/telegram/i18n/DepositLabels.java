@@ -34,8 +34,4 @@ public class DepositLabels {
         return getLocalizedMessage("deposits.manage_personal_trx_only", address, trx);
     }
 
-    public String usdtDisabledWarning() {
-        return getLocalizedMessage("deposits.usdt_disabled_warning");
-    }
-
 }
