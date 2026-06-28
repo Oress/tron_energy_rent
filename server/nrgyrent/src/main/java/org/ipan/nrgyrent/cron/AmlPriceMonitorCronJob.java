@@ -18,6 +18,10 @@ public class AmlPriceMonitorCronJob {
 
     public void refreshPrices() {
         for (AmlProvider provider : AmlProvider.values()) {
+            // ELLIPTIC_AND_BITOK is a combined selection, not a real provider with its own price.
+            if (provider == AmlProvider.ELLIPTIC_AND_BITOK) {
+                continue;
+            }
             try {
                 NettsAmlPriceResponse response = nettsRestClient.getAmlPrice(provider);
                 if (response != null && response.isSuccess() && response.getData() != null) {

@@ -135,7 +135,8 @@ public class AmlViews {
         if (AmlVerificationStatus.COMPLETED.equals(v.getStatus())) {
             text = formattingTools.formatAmlReport(v, userState.getLocaleOrDefault());
         } else {
-            text = commonLabels.amlReportFailed(userState.getLocaleOrDefault(), v.getWalletAddress());
+            String providerName = v.getProvider() != null ? v.getProvider().getDisplayName() : "";
+            text = commonLabels.amlReportFailed(userState.getLocaleOrDefault(), v.getWalletAddress(), providerName);
         }
 
         EditMessageText message = EditMessageText.builder()

@@ -3,18 +3,13 @@ package org.ipan.nrgyrent.application.service;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.ipan.nrgyrent.domain.exception.NotEnoughBalanceException;
-import org.ipan.nrgyrent.domain.model.AmlProvider;
-import org.ipan.nrgyrent.domain.model.AmlVerification;
 import org.ipan.nrgyrent.domain.model.AppUser;
 import org.ipan.nrgyrent.domain.model.UserWallet;
 import org.ipan.nrgyrent.domain.model.autoaml.AutoAmlSession;
 import org.ipan.nrgyrent.domain.model.autoaml.AutoAmlSessionDeactivationReason;
 import org.ipan.nrgyrent.domain.model.repository.AutoAmlSessionRepo;
-import org.ipan.nrgyrent.domain.service.AmlVerificationService;
 import org.ipan.nrgyrent.domain.service.UserService;
 import org.ipan.nrgyrent.domain.service.UserWalletService;
-import org.ipan.nrgyrent.netts.NettsRestClient;
-import org.ipan.nrgyrent.netts.dto.NettsAmlCreateResponse200;
 import org.ipan.nrgyrent.telegram.States;
 import org.ipan.nrgyrent.telegram.TelegramMessages;
 import org.ipan.nrgyrent.telegram.state.TelegramState;
@@ -37,8 +32,7 @@ import java.util.List;
 public class AutoAmlService {
     private final AutoAmlSessionRepo autoAmlSessionRepo;
     private final AutoAmlWatchlist autoAmlWatchlist;
-    private final AmlVerificationService amlVerificationService;
-    private final NettsRestClient nettsRestClient;
+    private final AmlCheckSubmitter amlCheckSubmitter;
     private final UserService userService;
     private final AutoAmlViews autoAmlViews;
     private final AmlViews amlViews;
@@ -94,17 +88,17 @@ public class AutoAmlService {
 
         Long userId = session.getUser().getTelegramId();
         AppUser user = userService.getById(userId);
-        AmlProvider provider = user.getAmlProvider();
 
         logger.info("Auto-AML triggered for session {} sender {} amount {} USDT",
                 sessionId, senderAddress, FormattingTools.formatUsdt(amountSun));
         UserState userState = telegramState.getOrCreateUserState(userId);
 
-        AmlVerification verification = null;
         try {
-            verification = amlVerificationService.createPendingVerification(
-                    userId, senderAddress, provider,
-                    session.getChatId(), userState.getMenuMessageId());
+            int submitted = amlCheckSubmitter.submitChecks(
+                    user, senderAddress, session.getChatId(), userState.getMenuMessageId());
+            if (submitted == 0) {
+                return;
+            }
 
             amlViews.showAmlRequestReceived(userState, senderAddress);
 
@@ -119,11 +113,7 @@ public class AutoAmlService {
                     .withChatId(newMenuMsg.getChatId())
                     .withMenuMessageId(newMenuMsg.getMessageId()));
 
-            String reportLanguage = user.getLanguageCode();
-            NettsAmlCreateResponse200 response = nettsRestClient.createAmlRequest(senderAddress, provider, reportLanguage);
-            amlVerificationService.markProcessing(verification.getId(), response.getData());
-
-            logger.info("Auto-AML check submitted for sender {} verification id: {}", senderAddress, verification.getId());
+            logger.info("Auto-AML check submitted for sender {} session {}", senderAddress, sessionId);
         } catch (NotEnoughBalanceException e) {
             logger.warn("Auto-AML session {} stopped due to insufficient balance for user {}: {}",
                     sessionId, userId, e.getMessage());
@@ -131,9 +121,6 @@ public class AutoAmlService {
             autoAmlViews.showSessionStoppedLowBalance(userState, deactivated);
         } catch (Exception e) {
             logger.error("Auto-AML check failed for sender {} session {}: {}", senderAddress, sessionId, e.getMessage());
-            if (verification != null) {
-                amlVerificationService.refundVerification(verification.getId());
-            }
         }
     }
 }

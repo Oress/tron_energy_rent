@@ -136,7 +136,7 @@ public class AdminViews {
                 .builder()
                 .chatId(userState.getChatId())
                 .messageId(userState.getMenuMessageId())
-                .text(adminLabels.currentAmlProvider(currentProvider.name(), ellipticUsdt, ellipticTrx, bitokUsdt, bitokTrx))
+                .text(adminLabels.currentAmlProvider(currentProvider.getDisplayName(), ellipticUsdt, ellipticTrx, bitokUsdt, bitokTrx))
                 .replyMarkup(getAmlProvidersReplyMarkup())
                 .build();
         tgClient.execute(message);

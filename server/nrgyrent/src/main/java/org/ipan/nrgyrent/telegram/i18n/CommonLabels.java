@@ -169,7 +169,7 @@ public class CommonLabels {
     }
 
     public String settingsAmlProvider(AmlProvider currentProvider) {
-        return getLocalizedMessage("settings.aml_provider", currentProvider.name());
+        return getLocalizedMessage("settings.aml_provider", currentProvider.getDisplayName());
     }
 
     public String settingsAmlProviderDescription() {
@@ -180,7 +180,7 @@ public class CommonLabels {
         String key = option == currentProvider
                 ? "settings.aml_provider.option.selected"
                 : "settings.aml_provider.option";
-        return getLocalizedMessage(key, option.name());
+        return getLocalizedMessage(key, option.getDisplayName());
     }
 
     public String somethingWentWrong() {
@@ -315,8 +315,8 @@ public class CommonLabels {
         return getLocalizedMessage("aml.request_received", locale, walletAddress);
     }
 
-    public String amlReportFailed(Locale locale, String walletAddress) {
-        return getLocalizedMessage("aml.report_failed", locale, walletAddress);
+    public String amlReportFailed(Locale locale, String walletAddress, String providerName) {
+        return getLocalizedMessage("aml.report_failed", locale, walletAddress, providerName);
     }
 
     public String amlHistoryEmpty(Locale locale) {
@@ -327,8 +327,8 @@ public class CommonLabels {
         return getLocalizedMessage("aml.history.header", locale);
     }
 
-    public String amlReportHeader(Locale locale) {
-        return getLocalizedMessage("aml.report.header", locale);
+    public String amlReportHeader(Locale locale, String providerName) {
+        return getLocalizedMessage("aml.report.header", locale, providerName);
     }
 
     public String amlReportAddress(Locale locale) {

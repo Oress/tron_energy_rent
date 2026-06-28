@@ -121,9 +121,13 @@ public class FormattingTools {
         return formatBitokAmlReport(v, locale);
     }
 
+    private static String amlProviderName(AmlVerification v) {
+        return v.getProvider() != null ? v.getProvider().getDisplayName() : "";
+    }
+
     private String formatBitokAmlReport(AmlVerification v, Locale locale) {
         StringBuilder sb = new StringBuilder();
-        sb.append(commonLabels.amlReportHeader(locale)).append("\n");
+        sb.append(commonLabels.amlReportHeader(locale, amlProviderName(v))).append("\n");
         sb.append(commonLabels.amlReportAddress(locale)).append(" `").append(v.getWalletAddress()).append("`\n\n");
 
         sb.append(commonLabels.amlReportRiskSummary(locale)).append("\n");
@@ -180,7 +184,7 @@ public class FormattingTools {
 
     public String formatEllipticAmlReport(AmlVerification v, Locale locale) {
         StringBuilder sb = new StringBuilder();
-        sb.append(commonLabels.amlReportHeader(locale)).append("\n");
+        sb.append(commonLabels.amlReportHeader(locale, amlProviderName(v))).append("\n");
         sb.append(commonLabels.amlReportAddress(locale)).append(" `").append(v.getWalletAddress()).append("`\n\n");
 
         sb.append(commonLabels.amlReportRiskSummary(locale)).append("\n");

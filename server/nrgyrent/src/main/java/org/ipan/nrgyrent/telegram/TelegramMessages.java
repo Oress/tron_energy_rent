@@ -309,7 +309,8 @@ public class TelegramMessages {
 
     @SneakyThrows
     public void sendAmlReportFailed(UserState userState, org.ipan.nrgyrent.domain.model.AmlVerification verification) {
-        String text = commonLabels.amlReportFailed(userState.getLocaleOrDefault(), verification.getWalletAddress());
+        String providerName = verification.getProvider() != null ? verification.getProvider().getDisplayName() : "";
+        String text = commonLabels.amlReportFailed(userState.getLocaleOrDefault(), verification.getWalletAddress(), providerName);
         if (verification.getChatId() != null && verification.getMessageToUpdate() != null) {
             EditMessageText message = EditMessageText
                     .builder()
@@ -753,6 +754,11 @@ public class TelegramMessages {
                         InlineKeyboardButton.builder()
                                 .text(commonLabels.settingsAmlProviderOption(AmlProvider.BITOK, currentProvider))
                                 .callbackData(InlineMenuCallbacks.SETTINGS_AML_PROVIDER_BITOK)
+                                .build()))
+                .keyboardRow(new InlineKeyboardRow(
+                        InlineKeyboardButton.builder()
+                                .text(commonLabels.settingsAmlProviderOption(AmlProvider.ELLIPTIC_AND_BITOK, currentProvider))
+                                .callbackData(InlineMenuCallbacks.SETTINGS_AML_PROVIDER_BOTH)
                                 .build()))
                 .keyboardRow(new InlineKeyboardRow(
                         InlineKeyboardButton.builder()

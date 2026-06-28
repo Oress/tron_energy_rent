@@ -122,6 +122,7 @@ public class InlineMenuCallbacks {
     public static final String SETTINGS_AML_PROVIDER = "settings_aml_provider";
     public static final String SETTINGS_AML_PROVIDER_ELLIPTIC = "settings_aml_provider_elliptic";
     public static final String SETTINGS_AML_PROVIDER_BITOK = "settings_aml_provider_bitok";
+    public static final String SETTINGS_AML_PROVIDER_BOTH = "settings_aml_provider_both";
 
     private static final String AML_VIEW_ITEM = "/aml_view/";
     public static String getAmlViewItemCallback(Long id) {
