@@ -35,3 +35,6 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### JetBrains HTTP Client secrets ###
+http-client.private.env.json

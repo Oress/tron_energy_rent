@@ -1,0 +1,91 @@
+### Bybit V5 API scratchpad
+#
+# Signing is handled by the pre-request scripts in ./bybit-sign.js, which reproduce
+# BybitRestClient.genGetSign / genPostSign:
+#   X-BAPI-SIGN = HMAC_SHA256(apiSecret, timestamp + apiKey + recvWindow + payload)
+#
+# Setup: pick an environment (mainnet/testnet) and put your credentials in
+# http-client.private.env.json -> bybitApiKey / bybitApiSecret.
+
+### GET - query account coin balance
+< {%
+    import {signGet} from 'bybit-sign.js';
+    request.variables.set("queryString", "accountType=FUND&coin=USDT");
+    signGet(request, crypto, request.variables.get("queryString"));
+%}
+GET {{baseUrl}}/v5/asset/transfer/query-account-coin-balance?{{queryString}}
+X-BAPI-API-KEY: {{apiKey}}
+X-BAPI-TIMESTAMP: {{timestamp}}
+X-BAPI-SIGN: {{sign}}
+X-BAPI-RECV-WINDOW: {{recvWindow}}
+Content-Type: application/json
+
+### GET - realtime order status
+< {%
+    import {signGet} from 'bybit-sign.js';
+    request.variables.set("queryString", "category=spot&orderId=REPLACE_ME");
+    signGet(request, crypto, request.variables.get("queryString"));
+%}
+GET {{baseUrl}}/v5/order/realtime?{{queryString}}
+X-BAPI-API-KEY: {{apiKey}}
+X-BAPI-TIMESTAMP: {{timestamp}}
+X-BAPI-SIGN: {{sign}}
+X-BAPI-RECV-WINDOW: {{recvWindow}}
+Content-Type: application/json
+
+### GET - USDT deposit record
+< {%
+    import {signGet} from 'bybit-sign.js';
+    request.variables.set("queryString", "coin=USDT");
+    signGet(request, crypto, request.variables.get("queryString"));
+%}
+GET {{baseUrl}}/v5/asset/deposit/query-record?{{queryString}}
+X-BAPI-API-KEY: {{apiKey}}
+X-BAPI-TIMESTAMP: {{timestamp}}
+X-BAPI-SIGN: {{sign}}
+X-BAPI-RECV-WINDOW: {{recvWindow}}
+Content-Type: application/json
+
+### POST - internal transfer (FUND -> UNIFIED)
+< {%
+    import {signPost, uuid} from 'bybit-sign.js';
+    signPost(request, crypto, {
+        transferId: uuid(),
+        fromAccountType: "FUND",
+        toAccountType: "UNIFIED",
+        amount: "1",
+        coin: "USDT"
+    });
+%}
+POST {{baseUrl}}/v5/asset/transfer/inter-transfer
+X-BAPI-API-KEY: {{apiKey}}
+X-BAPI-TIMESTAMP: {{timestamp}}
+X-BAPI-SIGN: {{sign}}
+X-BAPI-SIGN-TYPE: 2
+X-BAPI-RECV-WINDOW: {{recvWindow}}
+Content-Type: application/json
+
+{{requestBody}}
+
+### POST - place market order TRXUSDT (Buy)
+< {%
+    import {signPost} from 'bybit-sign.js';
+    signPost(request, crypto, {
+        category: "spot",
+        symbol: "TRXUSDT",
+        orderType: "Market",
+        side: "Buy",
+        qty: "1"
+    });
+%}
+POST {{baseUrl}}/v5/order/create
+X-BAPI-API-KEY: {{apiKey}}
+X-BAPI-TIMESTAMP: {{timestamp}}
+X-BAPI-SIGN: {{sign}}
+X-BAPI-SIGN-TYPE: 2
+X-BAPI-RECV-WINDOW: {{recvWindow}}
+Content-Type: application/json
+
+{{requestBody}}
+
+###
