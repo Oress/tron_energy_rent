@@ -46,8 +46,8 @@ public class AutoDelegateLabels {
         return getLocalizedMessage("autodelegate.session_status_msg", locale, s, statusText, s1);
     }
 
-    public String transactionSuccess(Locale locale, String amount, String receiveAddress) {
-        return getLocalizedMessage("autodelegate.transactions.success", locale, amount, receiveAddress);
+    public String transactionSuccess(Locale locale, String amount, String receiveAddress, String date, String balanceBefore, String balanceAfter) {
+        return getLocalizedMessage("autodelegate.transactions.success", locale, amount, receiveAddress, date, balanceBefore, balanceAfter);
     }
 
     public String eventSessionStopped(Locale localeOrDefault) {

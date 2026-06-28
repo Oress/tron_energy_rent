@@ -184,7 +184,10 @@ public class AutoDelegationViews {
         String label = autoDelegateLabels.transactionSuccess(
                 userState.getLocaleOrDefault(),
                 FormattingTools.formatBalance(order.getSunAmount()),
-                WalletTools.formatTronAddress(order.getReceiveAddress()));
+                WalletTools.formatTronAddress(order.getReceiveAddress()),
+                FormattingTools.formatDtUtc(order.getUpdatedAt()),
+                FormattingTools.formatBalance(order.getOldBalance()),
+                FormattingTools.formatBalance(order.getBalance().getSunBalance()));
 
         EditMessageText message = EditMessageText
                 .builder()
