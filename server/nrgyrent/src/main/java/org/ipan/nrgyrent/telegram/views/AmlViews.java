@@ -7,6 +7,7 @@ import org.ipan.nrgyrent.telegram.InlineMenuCallbacks;
 import org.ipan.nrgyrent.telegram.i18n.CommonLabels;
 import org.ipan.nrgyrent.telegram.state.UserState;
 import org.ipan.nrgyrent.telegram.utils.FormattingTools;
+import org.ipan.nrgyrent.telegram.utils.WalletTools;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
@@ -27,7 +28,7 @@ public class AmlViews {
     private final FormattingTools formattingTools;
 
     @SneakyThrows
-    public void showAmlMenu(UserState userState, String estimatedPriceTrx, AmlProvider provider) {
+    public void showAmlMenu(UserState userState, String estimatedPriceTrx, AmlProvider provider, List<UserWallet> wallets) {
         String price = estimatedPriceTrx != null ? estimatedPriceTrx : "N/A";
 
         EditMessageText message = EditMessageText.builder()
@@ -35,7 +36,7 @@ public class AmlViews {
                 .messageId(userState.getMenuMessageId())
                 .text(commonLabels.amlMenuDescription(userState.getLocaleOrDefault(), price))
                 .parseMode("MARKDOWN")
-                .replyMarkup(amlMenuMarkup(provider, UserRole.ADMIN.equals(userState.getRole())))
+                .replyMarkup(amlMenuMarkup(provider, UserRole.ADMIN.equals(userState.getRole()), wallets))
                 .build();
         try {
             tgClient.execute(message);
@@ -151,7 +152,7 @@ public class AmlViews {
         }
     }
 
-    private InlineKeyboardMarkup amlMenuMarkup(AmlProvider provider, boolean isAdmin) {
+    private InlineKeyboardMarkup amlMenuMarkup(AmlProvider provider, boolean isAdmin, List<UserWallet> wallets) {
         InlineKeyboardMarkup.InlineKeyboardMarkupBuilder<?, ?> builder = InlineKeyboardMarkup.builder();
         builder
                 .keyboardRow(new InlineKeyboardRow(
@@ -171,12 +172,24 @@ public class AmlViews {
                                     .text(commonLabels.autoAmlButton())
                                     .callbackData(InlineMenuCallbacks.AUTO_AML)
                                     .build()));
-        return builder.keyboardRow(new InlineKeyboardRow(
+
+        builder.keyboardRow(new InlineKeyboardRow(
                         InlineKeyboardButton.builder()
                                 .text(commonLabels.settingsAmlProvider(provider))
                                 .callbackData(InlineMenuCallbacks.SETTINGS_AML_PROVIDER)
-                                .build()))
-                .keyboardRow(new InlineKeyboardRow(
+                                .build()));
+
+        if (wallets != null) {
+            for (UserWallet wallet : wallets) {
+                builder.keyboardRow(new InlineKeyboardRow(
+                        InlineKeyboardButton.builder()
+                                .text(WalletTools.formatTronAddressAndLabel(wallet.getAddress(), wallet.getLabel()))
+                                .callbackData(InlineMenuCallbacks.getAmlCheckWalletCallback(wallet.getId()))
+                                .build()));
+            }
+        }
+
+        return builder.keyboardRow(new InlineKeyboardRow(
                         InlineKeyboardButton.builder()
                                 .text(commonLabels.toMainMenu())
                                 .callbackData(InlineMenuCallbacks.TO_MAIN_MENU)

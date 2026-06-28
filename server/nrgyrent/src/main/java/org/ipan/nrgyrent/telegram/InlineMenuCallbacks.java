@@ -154,6 +154,18 @@ public class InlineMenuCallbacks {
         return walletId;
     }
 
+    private static final String AML_CHECK_WALLET = "/aml_check_wallet/";
+    public static String getAmlCheckWalletCallback(Long userWalletId) {
+        return AML_CHECK_WALLET + userWalletId;
+    }
+
+    public static Long getWalletIdForAmlCheck(String data) {
+        if (data != null && data.startsWith(AML_CHECK_WALLET)) {
+            return Long.parseLong(data.substring(AML_CHECK_WALLET.length()));
+        }
+        return null;
+    }
+
 
     private static final String TOGGLE_REF_PROGRAM_SEBES = "/rp_sebes/";
     public static String createToggleRefProgramSebesCallback(Long refProgramId) {

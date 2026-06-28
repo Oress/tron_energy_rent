@@ -55,7 +55,11 @@ public class AmlHandler {
         AppUser user = userService.getById(userState.getTelegramId());
         AmlProvider provider = user.getAmlProvider();
         String estimatedPrice = computeEstimatedPriceTrx(user.getTariffToUse(), provider);
-        amlViews.showAmlMenu(userState, estimatedPrice, provider);
+        List<UserWallet> userWallets = Collections.emptyList();
+        if (user.getShowWalletsMenu()) {
+            userWallets = userWalletService.getWallets(user.getTelegramId());
+        }
+        amlViews.showAmlMenu(userState, estimatedPrice, provider, userWallets);
         telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.AML_MENU));
     }
 
@@ -123,6 +127,32 @@ public class AmlHandler {
         }
 
         AppUser user = userService.getById(userState.getTelegramId());
+        submitAmlCheck(userState, user, walletAddress);
+    }
+
+    @MatchState(state = States.AML_MENU, updateTypes = UpdateType.CALLBACK_QUERY)
+    public void checkSavedWallet(UserState userState, Update update) {
+        String data = update.getCallbackQuery().getData();
+        Long walletId = InlineMenuCallbacks.getWalletIdForAmlCheck(data);
+        if (walletId == null) {
+            return;
+        }
+
+        AppUser user = userService.getById(userState.getTelegramId());
+        String walletAddress = userWalletService.getWallets(user.getTelegramId()).stream()
+                .filter(w -> w.getId().equals(walletId))
+                .map(UserWallet::getAddress)
+                .findFirst()
+                .orElse(null);
+        if (walletAddress == null) {
+            logger.warn("Wallet {} not found for AML check user: {}", walletId, userState.getTelegramId());
+            return;
+        }
+
+        submitAmlCheck(userState, user, walletAddress);
+    }
+
+    private void submitAmlCheck(UserState userState, AppUser user, String walletAddress) {
         AmlProvider provider = user.getAmlProvider();
         AmlVerification verification = null;
         try {
