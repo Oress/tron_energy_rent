@@ -28,7 +28,7 @@ public class AmlViews {
     private final FormattingTools formattingTools;
 
     @SneakyThrows
-    public void showAmlMenu(UserState userState, String estimatedPriceTrx, AmlProvider provider, List<UserWallet> wallets) {
+    public void showAmlMenu(UserState userState, String estimatedPriceTrx, AmlProvider provider) {
         String price = estimatedPriceTrx != null ? estimatedPriceTrx : "N/A";
 
         EditMessageText message = EditMessageText.builder()
@@ -36,7 +36,7 @@ public class AmlViews {
                 .messageId(userState.getMenuMessageId())
                 .text(commonLabels.amlMenuDescription(userState.getLocaleOrDefault(), price))
                 .parseMode("MARKDOWN")
-                .replyMarkup(amlMenuMarkup(provider, UserRole.ADMIN.equals(userState.getRole()), wallets))
+                .replyMarkup(amlMenuMarkup(provider, UserRole.ADMIN.equals(userState.getRole())))
                 .build();
         try {
             tgClient.execute(message);
@@ -46,7 +46,7 @@ public class AmlViews {
     }
 
     @SneakyThrows
-    public void showAmlPromptWallet(UserState userState, Balance balance, String estimatedPriceTrx) {
+    public void showAmlPromptWallet(UserState userState, Balance balance, String estimatedPriceTrx, List<UserWallet> wallets) {
         String price = estimatedPriceTrx != null ? estimatedPriceTrx : "N/A";
         String currentBalance = balance != null
                 ? FormattingTools.formatBalance(balance.getSunBalance())
@@ -57,7 +57,7 @@ public class AmlViews {
                 .messageId(userState.getMenuMessageId())
                 .text(commonLabels.amlPromptWallet(userState.getLocaleOrDefault(), price, currentBalance))
                 .parseMode("MARKDOWN")
-                .replyMarkup(amlHistoryMarkup())
+                .replyMarkup(amlPromptWalletMarkup(wallets))
                 .build();
         try {
             tgClient.execute(message);
@@ -153,7 +153,7 @@ public class AmlViews {
         }
     }
 
-    private InlineKeyboardMarkup amlMenuMarkup(AmlProvider provider, boolean isAdmin, List<UserWallet> wallets) {
+    private InlineKeyboardMarkup amlMenuMarkup(AmlProvider provider, boolean isAdmin) {
         InlineKeyboardMarkup.InlineKeyboardMarkupBuilder<?, ?> builder = InlineKeyboardMarkup.builder();
         builder
                 .keyboardRow(new InlineKeyboardRow(
@@ -174,23 +174,12 @@ public class AmlViews {
                                     .callbackData(InlineMenuCallbacks.AUTO_AML)
                                     .build()));
 
-        builder.keyboardRow(new InlineKeyboardRow(
+        return builder.keyboardRow(new InlineKeyboardRow(
                         InlineKeyboardButton.builder()
                                 .text(commonLabels.settingsAmlProvider(provider))
                                 .callbackData(InlineMenuCallbacks.SETTINGS_AML_PROVIDER)
-                                .build()));
-
-        if (wallets != null) {
-            for (UserWallet wallet : wallets) {
-                builder.keyboardRow(new InlineKeyboardRow(
-                        InlineKeyboardButton.builder()
-                                .text(WalletTools.formatTronAddressAndLabel(wallet.getAddress(), wallet.getLabel()))
-                                .callbackData(InlineMenuCallbacks.getAmlCheckWalletCallback(wallet.getId()))
-                                .build()));
-            }
-        }
-
-        return builder.keyboardRow(new InlineKeyboardRow(
+                                .build()))
+                .keyboardRow(new InlineKeyboardRow(
                         InlineKeyboardButton.builder()
                                 .text(commonLabels.toMainMenu())
                                 .callbackData(InlineMenuCallbacks.TO_MAIN_MENU)
@@ -217,6 +206,29 @@ public class AmlViews {
                         .callbackData(InlineMenuCallbacks.GO_BACK)
                         .build()));
         return builder.build();
+    }
+
+    private InlineKeyboardMarkup amlPromptWalletMarkup(List<UserWallet> wallets) {
+        InlineKeyboardMarkup.InlineKeyboardMarkupBuilder<?, ?> builder = InlineKeyboardMarkup.builder();
+        if (wallets != null) {
+            for (UserWallet wallet : wallets) {
+                builder.keyboardRow(new InlineKeyboardRow(
+                        InlineKeyboardButton.builder()
+                                .text(WalletTools.formatTronAddressAndLabel(wallet.getAddress(), wallet.getLabel()))
+                                .callbackData(InlineMenuCallbacks.getAmlCheckWalletCallback(wallet.getId()))
+                                .build()));
+            }
+        }
+        return builder.keyboardRow(new InlineKeyboardRow(
+                        InlineKeyboardButton.builder()
+                                .text(commonLabels.toMainMenu())
+                                .callbackData(InlineMenuCallbacks.TO_MAIN_MENU)
+                                .build(),
+                        InlineKeyboardButton.builder()
+                                .text(commonLabels.goBack())
+                                .callbackData(InlineMenuCallbacks.GO_BACK)
+                                .build()))
+                .build();
     }
 
     private InlineKeyboardMarkup amlHistoryMarkup() {

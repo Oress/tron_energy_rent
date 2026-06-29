@@ -54,11 +54,7 @@ public class AmlHandler {
         AppUser user = userService.getById(userState.getTelegramId());
         AmlProvider provider = user.getAmlProvider();
         String estimatedPrice = computeEstimatedPriceTrx(user.getTariffToUse(), provider);
-        List<UserWallet> userWallets = Collections.emptyList();
-        if (user.getShowWalletsMenu()) {
-            userWallets = userWalletService.getWallets(user.getTelegramId());
-        }
-        amlViews.showAmlMenu(userState, estimatedPrice, provider, userWallets);
+        amlViews.showAmlMenu(userState, estimatedPrice, provider);
         telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.AML_MENU));
     }
 
@@ -94,7 +90,11 @@ public class AmlHandler {
         AppUser user = userService.getById(userState.getTelegramId());
         AmlProvider provider = user.getAmlProvider();
         String estimatedPrice = computeEstimatedPriceTrx(user.getTariffToUse(), provider);
-        amlViews.showAmlPromptWallet(userState, user.getBalanceToUse(), estimatedPrice);
+        List<UserWallet> userWallets = Collections.emptyList();
+        if (user.getShowWalletsMenu()) {
+            userWallets = userWalletService.getWallets(user.getTelegramId());
+        }
+        amlViews.showAmlPromptWallet(userState, user.getBalanceToUse(), estimatedPrice, userWallets);
         telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.AML_PROMPT_WALLET));
     }
 
@@ -137,7 +137,7 @@ public class AmlHandler {
         submitAmlCheck(userState, user, walletAddress);
     }
 
-    @MatchState(state = States.AML_MENU, updateTypes = UpdateType.CALLBACK_QUERY)
+    @MatchState(state = States.AML_PROMPT_WALLET, updateTypes = UpdateType.CALLBACK_QUERY)
     public void checkSavedWallet(UserState userState, Update update) {
         String data = update.getCallbackQuery().getData();
         Long walletId = InlineMenuCallbacks.getWalletIdForAmlCheck(data);
