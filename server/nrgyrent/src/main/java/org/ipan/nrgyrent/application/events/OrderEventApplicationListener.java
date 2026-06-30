@@ -12,6 +12,7 @@ import org.ipan.nrgyrent.domain.model.repository.OrderRepo;
 import org.ipan.nrgyrent.domain.service.UserWalletService;
 import org.ipan.nrgyrent.telegram.States;
 import org.ipan.nrgyrent.telegram.TelegramMessages;
+import org.ipan.nrgyrent.telegram.i18n.TgUserLocaleHolder;
 import org.ipan.nrgyrent.telegram.state.TelegramState;
 import org.ipan.nrgyrent.telegram.state.UserState;
 import org.ipan.nrgyrent.telegram.views.AutoDelegationViews;
@@ -25,6 +26,7 @@ import org.telegram.telegrambots.meta.api.objects.message.Message;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
 @Component
 @AllArgsConstructor
@@ -53,6 +55,9 @@ public class OrderEventApplicationListener {
         AppUser user = order.getUser();
         if (event.getIsAutoDelegation()) {
             UserState userState = telegramState.getOrCreateUserState(user.getTelegramId());
+            // because it's happening async, and current tread might not have the correct locale, we need to update it here
+            TgUserLocaleHolder.setUserLocale(Locale.of(userState.getLanguageCode()));
+
             autoDelegationViews.sendAutoDelegationTransactionNotification(userState, order);
 
             Balance balance = order.getBalance();
