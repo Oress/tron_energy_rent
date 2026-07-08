@@ -22,6 +22,7 @@ public interface AutoDelegationSessionRepo extends JpaRepository<AutoDelegationS
             from nrg_user_wallets uv
                 full join nrg_autodelegation_sessions s on uv.address = s.address and s.is_active = true
             where (uv.user_id is null or uv.user_id = :userId) and (s.is_active = true or s.is_active is null)
+            order by coalesce(uv.created_at, s.created_at)
     """)
     List<WalletWithAutoTopupSession> findActiveSessionsWithWalletInfo(Long userId);
 
