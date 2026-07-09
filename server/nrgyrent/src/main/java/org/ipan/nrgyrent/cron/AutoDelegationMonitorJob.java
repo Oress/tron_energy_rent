@@ -10,6 +10,7 @@ import org.ipan.nrgyrent.domain.model.repository.OrderRepo;
 import org.ipan.nrgyrent.domain.service.UserWalletService;
 import org.ipan.nrgyrent.telegram.States;
 import org.ipan.nrgyrent.telegram.TelegramMessages;
+import org.ipan.nrgyrent.telegram.i18n.TgUserLocaleHolder;
 import org.ipan.nrgyrent.telegram.state.TelegramState;
 import org.ipan.nrgyrent.telegram.state.UserState;
 import org.ipan.nrgyrent.telegram.views.AutoDelegationViews;
@@ -21,6 +22,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
 @Configuration
 @EnableScheduling
@@ -49,6 +51,8 @@ public class AutoDelegationMonitorJob {
 
                     energyService.deactivateSessionInactivity(session.getId());
                     UserState userState = telegramState.getOrCreateUserState(telegramId);
+                    TgUserLocaleHolder.setUserLocale(Locale.of(userState.getLanguageCode()));
+
                     autoDelegationViews.autoDelegateSessionStoppedInactivity(userState, session);
                     List<UserWallet> userWallets = Collections.emptyList();
                     if (user.getShowWalletsMenu()) {

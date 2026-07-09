@@ -90,56 +90,56 @@ public class CommonLabels {
     }
 
     // MAIN MENU START
-    public String getTxType1(String amount) {
-        return getLocalizedMessage("menu.tx_type1", amount);
+    public String getTxType1(Locale locale, String amount) {
+        return getLocalizedMessage("menu.tx_type1", locale, amount);
     }
 
-    public String getTxType2(String amount) {
-        return getLocalizedMessage("menu.tx_type2", amount);
+    public String getTxType2(Locale locale, String amount) {
+        return getLocalizedMessage("menu.tx_type2", locale, amount);
     }
 
-    public String getTxCustomAmnt(String amount) {
-        return getLocalizedMessage("menu.tx_custom_amnt", amount);
+    public String getTxCustomAmnt(Locale locale, String amount) {
+        return getLocalizedMessage("menu.tx_custom_amnt", locale, amount);
     }
 
-    public String getEstimateTxCost() {
-        return getLocalizedMessage("menu.estimate_tx_cost");
+    public String getEstimateTxCost(Locale locale) {
+        return getLocalizedMessage("menu.estimate_tx_cost", locale);
     }
 
-    public String getAutoDelegation() {
-        return getLocalizedMessage("menu.auto_delegation");
+    public String getAutoDelegation(Locale locale) {
+        return getLocalizedMessage("menu.auto_delegation", locale);
     }
 
-    public String getMenuManageGroup() {
-        return getLocalizedMessage("menu.manage_group");
+    public String getMenuManageGroup(Locale locale) {
+        return getLocalizedMessage("menu.manage_group", locale);
     }
 
     public String getMenuManageReferals() {
         return getLocalizedMessage("menu.manage_referals");
     }
 
-    public String getMenuWithdraw() {
-        return getLocalizedMessage("menu.withdraw_trx");
+    public String getMenuWithdraw(Locale locale) {
+        return getLocalizedMessage("menu.withdraw_trx", locale);
     }
 
-    public String getMenuDeposit() {
-        return getLocalizedMessage("menu.deposit");
+    public String getMenuDeposit(Locale locale) {
+        return getLocalizedMessage("menu.deposit", locale);
     }
 
-    public String getMenuAdminMenu() {
-        return getLocalizedMessage("menu.admin_menu");
+    public String getMenuAdminMenu(Locale locale) {
+        return getLocalizedMessage("menu.admin_menu", locale);
     }
 
     public String getMenuTxHistory() {
         return getLocalizedMessage("menu.transactions_history");
     }
 
-    public String menuSettings() {
-        return getLocalizedMessage("menu.settings");
+    public String menuSettings(Locale locale) {
+        return getLocalizedMessage("menu.settings", locale);
     }
 
-    public String getMenuWallets() {
-        return getLocalizedMessage("menu.wallets");
+    public String getMenuWallets(Locale locale) {
+        return getLocalizedMessage("menu.wallets", locale);
     }
 
     // END MAIN MENU
@@ -283,8 +283,8 @@ public class CommonLabels {
         return getLocalizedMessage("alerts.catfee_balance_low", locale, currentBalance);
     }
 
-    public String getAmlCheck() {
-        return getLocalizedMessage("menu.aml_check");
+    public String getAmlCheck(Locale locale) {
+        return getLocalizedMessage("menu.aml_check", locale);
     }
 
     public String amlMenuDescription(Locale locale, String price) {

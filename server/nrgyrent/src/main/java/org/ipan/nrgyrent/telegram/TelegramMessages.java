@@ -499,7 +499,7 @@ public class TelegramMessages {
                 .builder()
                 .chatId(chatId)
                 .text(getMainMenuMessage(userState, user, tariff))
-                .replyMarkup(getMainMenuReplyMarkup(userState.isManager(), false, tariff, showWithdrawBtn, wallets))
+                .replyMarkup(getMainMenuReplyMarkup(userState, false, tariff, showWithdrawBtn, wallets))
                 .linkPreviewOptions(LinkPreviewOptions.builder().isDisabled(true).build())
                 .parseMode("MARKDOWN")
                 .build();
@@ -517,7 +517,7 @@ public class TelegramMessages {
                 .chatId(chatId)
                 .linkPreviewOptions(LinkPreviewOptions.builder().isDisabled(true).build())
                 .text(getMainMenuMessage(userState, user, tariff))
-                .replyMarkup(getMainMenuReplyMarkup(userState.isManager(), true, tariff, showWithdrawBtn, wallets))
+                .replyMarkup(getMainMenuReplyMarkup(userState, true, tariff, showWithdrawBtn, wallets))
                 .parseMode("MARKDOWN")
                 .build();
         return tgClient.execute(message);
@@ -570,7 +570,7 @@ public class TelegramMessages {
                 .text(getMainMenuMessage(userState, user, tariff))
                 .linkPreviewOptions(LinkPreviewOptions.builder().isDisabled(true).build())
                 .parseMode("MARKDOWN")
-                .replyMarkup(getMainMenuReplyMarkup(userState.isManager(), false, tariff, showWithdrawBtn, wallets))
+                .replyMarkup(getMainMenuReplyMarkup(userState, false, tariff, showWithdrawBtn, wallets))
                 .build();
         tgClient.execute(message);
     }
@@ -587,7 +587,7 @@ public class TelegramMessages {
                 .text(getMainMenuMessage(userState, user, tariff))
                 .parseMode("MARKDOWN")
                 .linkPreviewOptions(LinkPreviewOptions.builder().isDisabled(true).build())
-                .replyMarkup(getMainMenuReplyMarkup(userState.isManager(), true, tariff, showWithdrawBtn, userWallets))
+                .replyMarkup(getMainMenuReplyMarkup(userState, true, tariff, showWithdrawBtn, userWallets))
                 .build();
         tgClient.execute(message);
     }
@@ -772,15 +772,16 @@ public class TelegramMessages {
                 .build();
     }
 
-    private InlineKeyboardMarkup getMainMenuReplyMarkup(Boolean isManager, Boolean isAdmin, Tariff tariff,
+    private InlineKeyboardMarkup getMainMenuReplyMarkup(UserState userState, Boolean isAdmin, Tariff tariff,
             boolean showWithdrawBtn, List<UserWallet> wallets) {
+        Locale locale = userState.getLocaleOrDefault();
         var builder = InlineKeyboardMarkup
                 .builder()
                 .keyboardRow(
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(commonLabels.getTxType1(
+                                        .text(commonLabels.getTxType1(locale,
                                                 FormattingTools.formatBalance(tariff.getTransactionType1AmountSun())))
                                         .callbackData(InlineMenuCallbacks.TRANSACTION_65k)
                                         .build()))
@@ -788,7 +789,7 @@ public class TelegramMessages {
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(commonLabels.getTxType2(
+                                        .text(commonLabels.getTxType2(locale,
                                                 FormattingTools.formatBalance(tariff.getTransactionType2AmountSun())))
                                         .callbackData(InlineMenuCallbacks.TRANSACTION_131k)
                                         .build()))
@@ -796,7 +797,7 @@ public class TelegramMessages {
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(commonLabels.getTxCustomAmnt(
+                                        .text(commonLabels.getTxCustomAmnt(locale,
                                                 FormattingTools.formatBalance(tariff.getTransactionType1AmountSun())))
                                         .callbackData(InlineMenuCallbacks.CUSTOM_TRANSACTION_AMOUNT)
                                         .build()))
@@ -804,7 +805,7 @@ public class TelegramMessages {
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(commonLabels.getEstimateTxCost())
+                                        .text(commonLabels.getEstimateTxCost(locale))
                                         .callbackData(InlineMenuCallbacks.ESTIMATE_TRANSACTION_COST)
                                         .build()));
             builder
@@ -812,14 +813,14 @@ public class TelegramMessages {
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(commonLabels.getAutoDelegation())
+                                        .text(commonLabels.getAutoDelegation(locale))
                                         .callbackData(InlineMenuCallbacks.AUTOTOPUP)
                                         .build()))
                 .keyboardRow(
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(commonLabels.getAmlCheck())
+                                        .text(commonLabels.getAmlCheck(locale))
                                         .callbackData(InlineMenuCallbacks.AML_CHECK)
                                         .build()));
 
@@ -828,12 +829,12 @@ public class TelegramMessages {
                     new InlineKeyboardRow(
                             InlineKeyboardButton
                                     .builder()
-                                    .text(commonLabels.getMenuDeposit())
+                                    .text(commonLabels.getMenuDeposit(locale))
                                     .callbackData(InlineMenuCallbacks.DEPOSIT)
                                     .build(),
                             InlineKeyboardButton
                                     .builder()
-                                    .text(commonLabels.getMenuWithdraw())
+                                    .text(commonLabels.getMenuWithdraw(locale))
                                     .callbackData(InlineMenuCallbacks.WITHDRAW_TRX)
                                     .build()));
         } else {
@@ -841,7 +842,7 @@ public class TelegramMessages {
                     new InlineKeyboardRow(
                             InlineKeyboardButton
                                     .builder()
-                                    .text(commonLabels.getMenuDeposit())
+                                    .text(commonLabels.getMenuDeposit(locale))
                                     .callbackData(InlineMenuCallbacks.DEPOSIT)
                                     .build()));
         }
@@ -850,23 +851,23 @@ public class TelegramMessages {
                 new InlineKeyboardRow(
                         InlineKeyboardButton
                                 .builder()
-                                .text(commonLabels.menuSettings())
+                                .text(commonLabels.menuSettings(locale))
                                 .callbackData(InlineMenuCallbacks.SETTINGS)
                                 .build()))
                 .keyboardRow(
                         new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
-                                        .text(commonLabels.getMenuWallets())
+                                        .text(commonLabels.getMenuWallets(locale))
                                         .callbackData(InlineMenuCallbacks.WALLETS)
                                         .build()));
 
-        if (isManager) {
+        if (userState.isManager()) {
             builder.keyboardRow(
                     new InlineKeyboardRow(
                             InlineKeyboardButton
                                     .builder()
-                                    .text(commonLabels.getMenuManageGroup())
+                                    .text(commonLabels.getMenuManageGroup(locale))
                                     .callbackData(InlineMenuCallbacks.MANAGE_GROUP)
                                     .build()));
         }
@@ -877,7 +878,7 @@ public class TelegramMessages {
                     new InlineKeyboardRow(
                             InlineKeyboardButton
                                     .builder()
-                                    .text(commonLabels.getMenuAdminMenu())
+                                    .text(commonLabels.getMenuAdminMenu(locale))
                                     .callbackData(InlineMenuCallbacks.ADMIN_MENU)
                                     .build()));
         }
