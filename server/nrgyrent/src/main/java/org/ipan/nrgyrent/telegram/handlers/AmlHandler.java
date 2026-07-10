@@ -90,10 +90,7 @@ public class AmlHandler {
         AppUser user = userService.getById(userState.getTelegramId());
         AmlProvider provider = user.getAmlProvider();
         String estimatedPrice = computeEstimatedPriceTrx(user.getTariffToUse(), provider);
-        List<UserWallet> userWallets = Collections.emptyList();
-        if (user.getShowWalletsMenu()) {
-            userWallets = userWalletService.getWallets(user.getTelegramId());
-        }
+        List<UserWallet> userWallets = userWalletService.getWallets(user.getTelegramId());
         amlViews.showAmlPromptWallet(userState, user.getBalanceToUse(), estimatedPrice, userWallets);
         telegramState.updateUserState(userState.getTelegramId(), userState.withState(States.AML_PROMPT_WALLET));
     }
