@@ -1,0 +1,24 @@
+{
+  "$schema": "node_modules/@openapitools/openapi-generator-cli/config.schema.json",
+  "spaces": 2,
+  "generator-cli": {
+    "version": "7.24.0",
+    "generators": {
+      "nrgyrent-api": {
+        "generatorName": "typescript-angular",
+        "inputSpec": "openapi/nrgyrent-api.yaml",
+        "output": "src/app/core/api",
+        "additionalProperties": {
+          "ngVersion": "19.0.0",
+          "apiModulePrefix": "Nrg",
+          "configurationPrefix": "Nrg",
+          "fileNaming": "kebab-case",
+          "modelFileSuffix": ".model",
+          "indexFile": true,
+          "supportsES6": true,
+          "withInterfaces": true
+        }
+      }
+    }
+  }
+}

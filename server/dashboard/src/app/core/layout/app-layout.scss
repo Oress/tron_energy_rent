@@ -1,0 +1,153 @@
+/* Mobile-first layout: base styles target phones, larger screens enhance below.
+   PrimeNG runs with theme: 'none', so overlay positioning/colors come from Tailwind. */
+
+@reference "tailwindcss";
+
+.layout {
+  @apply flex min-h-dvh;
+}
+
+/* Desktop sidebar: hidden on mobile by default. */
+.sidebar {
+  @apply hidden;
+}
+
+.brand {
+  @apply text-lg font-bold px-2 pb-4;
+}
+
+/* Top bar — hamburger + brand on mobile. */
+.topbar {
+  @apply sticky top-0 z-30 flex items-center gap-3 px-4 py-3 bg-white border-b border-gray-200;
+  padding-top: calc(0.75rem + env(safe-area-inset-top));
+}
+
+.topbar-brand {
+  @apply font-bold;
+}
+
+.topbar-version {
+  @apply ml-auto text-xs text-gray-500;
+}
+
+.content {
+  @apply flex flex-col flex-1 min-w-0;
+}
+
+.main {
+  @apply flex-1 p-4;
+  padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+}
+
+/* Off-canvas drawer content (mobile). */
+.drawer-content {
+  @apply flex flex-col h-full;
+}
+
+.drawer-footer {
+  @apply mt-auto px-2 pt-4 text-xs text-gray-500;
+}
+
+.muted {
+  @apply opacity-60;
+}
+
+/* Nav menu (shared by drawer and sidebar) — PrimeNG Menu structural classes. */
+.nav-menu {
+  @apply w-full border-0 bg-transparent;
+}
+
+::ng-deep .nav-menu .p-menu-list {
+  @apply flex flex-col gap-1 m-0 p-0 list-none;
+}
+
+::ng-deep .nav-menu .p-menu-item-link {
+  @apply flex items-center gap-3 no-underline px-3 py-2.5 rounded-lg text-gray-700 min-h-11 transition-colors;
+}
+
+::ng-deep .nav-menu .p-menu-item-link:hover {
+  @apply bg-gray-100;
+}
+
+::ng-deep .nav-menu .router-link-active {
+  @apply bg-blue-600 text-white;
+}
+
+/* Hamburger button. */
+::ng-deep .menu-button.p-button {
+  @apply p-2.5 rounded-full text-gray-700 hover:bg-gray-100 hover:text-gray-900;
+}
+
+::ng-deep .menu-button .p-button-icon {
+  @apply text-xl;
+}
+
+/* Drawer overlay + surface (positioning must be provided — theme: 'none'). */
+::ng-deep .p-drawer-mask {
+  @apply fixed inset-0 bg-black/40 z-40;
+}
+
+::ng-deep .nav-drawer {
+  @apply fixed top-0 left-0 h-full z-50 bg-white shadow-2xl p-4;
+}
+
+/* Toasts — bottom center on mobile, same on desktop. */
+::ng-deep .p-toast {
+  @apply fixed bottom-4 left-1/2 -translate-x-1/2 z-[60] flex flex-col gap-2 w-[min(92vw,24rem)];
+}
+
+::ng-deep .p-toast-message {
+  @apply w-full;
+}
+
+::ng-deep .p-toast-message-content {
+  @apply flex items-start gap-3 p-4 rounded-xl border bg-white shadow-lg;
+}
+
+::ng-deep .p-toast-message-error .p-toast-message-content {
+  @apply border-red-200 bg-red-50;
+}
+
+::ng-deep .p-toast-message-icon {
+  @apply text-red-500 text-lg leading-5;
+}
+
+::ng-deep .p-toast-message-text {
+  @apply flex-1 min-w-0;
+}
+
+::ng-deep .p-toast-summary {
+  @apply font-semibold text-gray-900;
+}
+
+::ng-deep .p-toast-detail {
+  @apply text-sm text-gray-600 break-words;
+}
+
+::ng-deep .p-toast-close-button {
+  @apply ml-1 text-gray-400 hover:text-gray-600 cursor-pointer border-0 bg-transparent;
+}
+
+/* Desktop: persistent sidebar instead of hamburger. */
+@media (min-width: 992px) {
+  .menu-button {
+    @apply hidden;
+  }
+
+  .sidebar {
+    @apply flex flex-col sticky top-0 h-dvh w-60 shrink-0 px-3 py-4 bg-white border-r border-gray-200;
+    padding-top: calc(1rem + env(safe-area-inset-top));
+  }
+
+  .sidebar-footer {
+    @apply mt-auto px-2 text-xs text-gray-500;
+  }
+
+  .topbar {
+    padding-top: 0.75rem;
+  }
+
+  .main {
+    @apply p-6;
+  }
+}

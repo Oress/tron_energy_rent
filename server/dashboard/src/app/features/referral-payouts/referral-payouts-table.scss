@@ -1,0 +1,13 @@
+@reference "tailwindcss";
+
+.report-section {
+  @apply mb-8;
+}
+
+.report-title {
+  @apply text-lg font-bold mb-3;
+}
+
+.num {
+  @apply text-right tabular-nums;
+}

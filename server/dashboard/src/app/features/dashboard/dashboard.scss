@@ -1,0 +1,5 @@
+@reference "tailwindcss";
+
+.build-info {
+  @apply mt-8 text-xs text-gray-500;
+}
