@@ -110,8 +110,11 @@ public class DashboardController {
     }
 
     @GetMapping("/statistics/overall")
-    public OverallStatisticsDto getOverallStatistics() {
-        return dashboardQueryService.getOverallStatistics();
+    public OverallStatisticsDto getOverallStatistics(@RequestParam(required = false)
+                                                     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
+                                                     @RequestParam(required = false)
+                                                     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo) {
+        return dashboardQueryService.getOverallStatistics(dateFrom, dateTo);
     }
 
     @GetMapping("/filter/users")

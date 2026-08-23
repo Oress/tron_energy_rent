@@ -427,6 +427,21 @@ paths:
       tags: [Statistics]
       operationId: getOverallStatistics
       summary: Overall statistics (Блок "Общая статистика")
+      parameters:
+        - name: dateFrom
+          in: query
+          required: false
+          description: Global filter — period start (inclusive, local date)
+          schema:
+            type: string
+            format: date
+        - name: dateTo
+          in: query
+          required: false
+          description: Global filter — period end (inclusive, local date)
+          schema:
+            type: string
+            format: date
       responses:
         '200':
           description: OK

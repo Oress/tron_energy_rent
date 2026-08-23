@@ -1,5 +1,6 @@
 package org.ipan.nrgyrent.dashboard;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -200,8 +201,75 @@ public class DashboardQueryService {
             rs.getString("status"),
             rs.getString("transaction"));
 
+    /**
+     * Блок "Общая статистика" — adapted from the Metabase query. One row of metrics;
+     * period-limited subqueries use the global filter's dateFrom/dateTo (inclusive,
+     * Turkey time). "Новое Поле" is computed as in Metabase:
+     * sweep + bybit*1e6 + catfee + itrx + trxx + netts − user balances − pending payouts.
+     */
+    private static final String STATISTICS_SQL = """
+            with filtered_changes as (
+                select * from nrg_manual_balance_changes c where 1 = 1%s
+            )
+            select t.*,
+                (t."sweep_wallets_balance" + t."bybit_balance" * 1000000
+                 + t."catfee_balance" + t."itrx_balance" + t."trxx_balance" + t."netts_balance"
+                 - t."users_balance_sum" - coalesce(t."pending_referral_payouts", 0)) as "new_field"
+            from (
+                select
+                    (select coalesce(sum(o.paid_sun - o.fee_sun), 0)
+                     from nrg_aml_verifications o
+                     where o.payment_status = 'COMPLETED'%s) as "aml_profit_period",
+                    (select coalesce(sum(o.sun_amount - o.itrx_fee_sun_amount), 0)
+                        - coalesce(sum(c.amount_sun), 0)
+                        + coalesce((select sum(mc.amount_from - mc.amount_to) from filtered_changes mc), 0)
+                     from nrg_orders o
+                        left join nrg_referral_commissions c on o.id = c.order_id
+                     where o.order_status = 'COMPLETED'%s) as "profit_period",
+                    (select sum(o.itrx_fee_sun_amount)
+                     from nrg_orders o
+                     where o.order_status = 'COMPLETED'%s) as "providers_commission_period",
+                    (select sum(d.amount_sun)
+                     from nrg_referral_commission_deposits d
+                     where 1 = 1%s) as "referral_payouts_period",
+                    (select sum(o.ref_program_profit_remainder)
+                     from nrg_orders o
+                     where o.order_status = 'COMPLETED'%s) as "referral_programs_remainder",
+                    (select sum(b.sun_balance) from nrg_balances b where b.is_active = true) as "users_balance_sum",
+                    (select sum(d.amount) from nrg_deposit_transactions d) as "deposits_sum",
+                    (select sum(w.balance_on_chain) from nrg_collection_wallets w) as "sweep_wallets_balance",
+                    (select bbit.balance from nrg_bybit_balance bbit where bbit.coin = 'TRX') as "bybit_balance",
+                    (select ib.balance from nrg_itrx_balance ib where ib.id = 'ITRX') as "itrx_balance",
+                    (select sum(rc.amount_sun) from nrg_referral_commissions rc where rc.status = 'PENDING') as "pending_referral_payouts",
+                    (select ib.balance from nrg_itrx_balance ib where ib.id = 'CATFEE') as "catfee_balance",
+                    (select ib.balance from nrg_itrx_balance ib where ib.id = 'TRXX') as "trxx_balance",
+                    (select ib.balance from nrg_itrx_balance ib where ib.id = 'NETTS.IO') as "netts_balance"
+            ) t
+            """;
+
+    private static final RowMapper<OverallStatisticsDto> STATISTICS_ROW_MAPPER = (rs, rowNum) -> new OverallStatisticsDto(
+            rs.getBigDecimal("profit_period"),
+            rs.getBigDecimal("bybit_balance"),
+            rs.getBigDecimal("aml_profit_period"),
+            rs.getBigDecimal("pending_referral_payouts"),
+            rs.getBigDecimal("itrx_balance"),
+            rs.getBigDecimal("catfee_balance"),
+            rs.getBigDecimal("trxx_balance"),
+            rs.getBigDecimal("netts_balance"),
+            rs.getBigDecimal("sweep_wallets_balance"),
+            rs.getBigDecimal("users_balance_sum"),
+            rs.getBigDecimal("referral_payouts_period"),
+            rs.getBigDecimal("referral_programs_remainder"),
+            rs.getBigDecimal("deposits_sum"),
+            rs.getBigDecimal("providers_commission_period"),
+            toPlainString(rs.getBigDecimal("new_field")));
+
     private static Long toLong(Integer value) {
         return value == null ? null : value.longValue();
+    }
+
+    private static String toPlainString(BigDecimal value) {
+        return value == null ? null : value.toPlainString();
     }
 
     /**
@@ -424,16 +492,34 @@ public class DashboardQueryService {
     }
 
     /**
-     * Блок "Общая статистика" — single row of metrics.
-     * Expected result columns (in order): profit_period, bybit_balance, aml_profit_period,
-     * pending_referral_payouts, itrx_balance, catfee_balance, trxx_balance, netts_balance,
-     * sweep_wallets_balance, users_balance_sum, referral_payouts_period,
-     * referral_programs_remainder, deposits_sum, providers_commission_period, new_field.
+     * Блок "Общая статистика" (adapted from the Metabase query).
+     * dateFrom/dateTo (inclusive) limit the "(за период)" metrics in Turkey time;
+     * the non-period metrics (balances, deposits sum, pending payouts) are not filtered.
      */
-    public OverallStatisticsDto getOverallStatistics() {
-        // TODO: implement queries (plain SQL with parameters, e.g. JdbcTemplate).
-        // For now returns an empty DTO so the endpoint/FE contract can be verified.
-        return OverallStatisticsDto.empty();
+    public OverallStatisticsDto getOverallStatistics(LocalDate dateFrom, LocalDate dateTo) {
+        StringBuilder changesFilter = new StringBuilder();
+        StringBuilder amlFilter = new StringBuilder();
+        StringBuilder ordersFilter = new StringBuilder();
+        StringBuilder refDepositsFilter = new StringBuilder();
+        MapSqlParameterSource params = new MapSqlParameterSource();
+        if (dateFrom != null) {
+            changesFilter.append(" and ((c.created_at at time zone 'UTC') at time zone 'Turkey')::date >= :dateFrom");
+            amlFilter.append(" and ((o.created_at at time zone 'UTC') at time zone 'Turkey')::date >= :dateFrom");
+            ordersFilter.append(" and ((o.created_at at time zone 'UTC') at time zone 'Turkey')::date >= :dateFrom");
+            refDepositsFilter.append(" and ((d.created_at at time zone 'UTC') at time zone 'Turkey')::date >= :dateFrom");
+            params.addValue("dateFrom", dateFrom);
+        }
+        if (dateTo != null) {
+            changesFilter.append(" and ((c.created_at at time zone 'UTC') at time zone 'Turkey')::date <= :dateTo");
+            amlFilter.append(" and ((o.created_at at time zone 'UTC') at time zone 'Turkey')::date <= :dateTo");
+            ordersFilter.append(" and ((o.created_at at time zone 'UTC') at time zone 'Turkey')::date <= :dateTo");
+            refDepositsFilter.append(" and ((d.created_at at time zone 'UTC') at time zone 'Turkey')::date <= :dateTo");
+            params.addValue("dateTo", dateTo);
+        }
+
+        String sql = STATISTICS_SQL.formatted(changesFilter, amlFilter, ordersFilter,
+                ordersFilter, refDepositsFilter, ordersFilter);
+        return jdbc.queryForObject(sql, params, STATISTICS_ROW_MAPPER);
     }
 
     /**

@@ -1,7 +1,8 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, effect, inject, OnInit, signal } from '@angular/core';
 
 import { OverallStatisticsDto, StatisticsService } from '../../core/api';
 import { FormatUsdtPipe } from '../../shared/pipes/format-usdt.pipe';
+import { DashboardFilterService } from '../../core/services/dashboard-filter.service';
 
 interface StatItem {
   label: string;
@@ -11,6 +12,7 @@ interface StatItem {
 /**
  * Блок "Общая статистика" — label/value metrics from GET /api/v1/statistics/overall,
  * rendered as a two-column list on desktop, single column on phones.
+ * Reacts to the global filter's date range.
  */
 @Component({
   selector: 'app-overall-statistics',
@@ -20,6 +22,7 @@ interface StatItem {
 })
 export class OverallStatisticsComponent implements OnInit {
   private readonly statisticsService = inject(StatisticsService);
+  private readonly filterService = inject(DashboardFilterService);
 
   readonly data = signal<OverallStatisticsDto | null>(null);
   readonly loading = signal(true);
@@ -46,10 +49,22 @@ export class OverallStatisticsComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    this.statisticsService.getOverallStatistics().subscribe({
-      next: (res) => this.data.set(res),
-      error: () => this.data.set(null),
-      complete: () => this.loading.set(false),
+    // Reload whenever the global dashboard filter is applied/reset.
+    effect(() => {
+      this.filterService.version();
+      this.load();
     });
+  }
+
+  load(): void {
+    const f = this.filterService.filter();
+    this.loading.set(true);
+    this.statisticsService
+      .getOverallStatistics(f.dateFrom ?? undefined, f.dateTo ?? undefined)
+      .subscribe({
+        next: (res) => this.data.set(res),
+        error: () => this.data.set(null),
+        complete: () => this.loading.set(false),
+      });
   }
 }
