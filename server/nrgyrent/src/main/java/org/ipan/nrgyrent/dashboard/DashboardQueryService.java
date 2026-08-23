@@ -90,6 +90,73 @@ public class DashboardQueryService {
             rs.getString("order_number"),
             rs.getString("transaction"));
 
+    /**
+     * SELECT part of the "Прибыль по пользователям" report — adapted from the Metabase
+     * query. Aggregates per balance: completed orders + referral commissions + manual
+     * balance changes (the latter two filtered by the period via CTEs).
+     */
+    private static final String USER_PROFIT_SELECT = """
+            select
+                ((b.created_at at time zone 'UTC') at time zone 'Turkey')        as "joined_at",
+                ref_u.telegram_username                                           as "referral",
+                case when b.type = 'GROUP' then 'Груповой' else 'Личный' end     as "balance_type",
+                coalesce(b.label, nrg_users.telegram_username)                    as "group_login",
+                nrg_users.telegram_first_name                                     as "name",
+                coalesce(sum(o.sun_amount) - sum(o.itrx_fee_sun_amount)
+                    - coalesce(sum(c.amount_sun), 0)
+                    + coalesce((select sum(mc.amount_from - mc.amount_to)
+                                from filtered_changes mc where mc.balance_id = b.id), 0), 0) as "profit",
+                b.sun_balance                                                     as "available_balance",
+                sum(o.sun_amount)                                                 as "income",
+                sum(o.itrx_fee_sun_amount)                                        as "itrx_commission",
+                coalesce(sum(c.amount_sun), 0)                                    as "referral_deductions",
+                coalesce((select sum(mc.amount_from - mc.amount_to)
+                          from filtered_changes mc where mc.balance_id = b.id), 0) as "manual_adjustments",
+                t.label                                                           as "tariff"
+            from nrg_balances b
+                left join nrg_users on b.id = nrg_users.balance_id
+                left join nrg_balance_referral_programs brp on brp.id = b.bal_ref_prog_id
+                left join nrg_balances ref_b on brp.balance_id = ref_b.id
+                left join nrg_users ref_u on ref_u.balance_id = ref_b.id
+                left join filtered_orders o on o.balance_id = b.id
+                left join nrg_referral_commissions c on o.id = c.order_id
+                left join nrg_tariffs t on b.tariff_id = t.id
+            """;
+
+    private static final String USER_PROFIT_GROUP_BY = """
+            group by b.id,
+                b.type,
+                coalesce(b.label, nrg_users.telegram_username),
+                nrg_users.telegram_first_name,
+                b.sun_balance,
+                b.created_at,
+                t.label,
+                ref_u.telegram_username,
+                coalesce((select sum(mc.amount_from - mc.amount_to)
+                          from filtered_changes mc where mc.balance_id = b.id), 0)
+            """;
+
+    private static final String USER_PROFIT_ORDER_BY = """
+            order by coalesce(sum(o.sun_amount) - sum(o.itrx_fee_sun_amount)
+                - coalesce(sum(c.amount_sun), 0)
+                + coalesce((select sum(mc.amount_from - mc.amount_to)
+                            from filtered_changes mc where mc.balance_id = b.id), 0), 0) desc
+            """;
+
+    private static final RowMapper<UserProfitRowDto> USER_PROFIT_ROW_MAPPER = (rs, rowNum) -> new UserProfitRowDto(
+            rs.getObject("joined_at", LocalDateTime.class),
+            rs.getString("referral"),
+            rs.getString("balance_type"),
+            rs.getString("group_login"),
+            rs.getString("name"),
+            rs.getBigDecimal("profit"),
+            rs.getString("tariff"),
+            rs.getBigDecimal("available_balance"),
+            rs.getBigDecimal("income"),
+            rs.getBigDecimal("itrx_commission"),
+            rs.getBigDecimal("referral_deductions"),
+            rs.getBigDecimal("manual_adjustments"));
+
     private static Long toLong(Integer value) {
         return value == null ? null : value.longValue();
     }
@@ -139,22 +206,61 @@ public class DashboardQueryService {
     }
 
     /**
-     * "Прибыль по пользователям" report.
-     * Expected result columns (in order): joined_at, referral, balance_type,
-     * group_login, name, profit, tariff, available_balance, income, itrx_commission,
-     * referral_deductions, manual_adjustments.
-     * Filter: user/group by id, period on the joined_at column.
+     * "Прибыль по пользователям" report (adapted from the Metabase query).
+     * Global filter:
+     * - userId: row belongs to the user owning the balance ({@code nrg_users.telegram_id});
+     * - groupId: id of a GROUP-type balance — matches the group balance itself and the
+     *   individual balances of users attached to it ({@code nrg_users.group_balance_id});
+     * - dateFrom/dateTo: inclusive, applied to completed orders and manual balance changes
+     *   (in Turkey time). Balances are always listed; only the aggregates are period-limited.
      */
     public PageDto<UserProfitRowDto> getUserProfitPage(int page, int size,
                                                        Long userId, Long groupId,
                                                        LocalDate dateFrom, LocalDate dateTo) {
         int boundedSize = Math.min(Math.max(size, 1), MAX_PAGE_SIZE);
-        // TODO: implement queries (plain SQL with parameters, e.g. JdbcTemplate).
-        //  Same global-filter WHERE clauses as getOrdersPage.
-        //  1) SELECT ... LIMIT :size OFFSET :page*:size  -> List<UserProfitRowDto>
-        //  2) SELECT COUNT(*) -> totalElements
-        List<UserProfitRowDto> rows = List.of();
-        return new PageDto<>(rows, page, boundedSize, rows.size());
+        MapSqlParameterSource params = new MapSqlParameterSource();
+
+        StringBuilder changesFilter = new StringBuilder();
+        StringBuilder ordersFilter = new StringBuilder();
+        if (dateFrom != null) {
+            changesFilter.append(" and ((c.created_at at time zone 'UTC') at time zone 'Turkey')::date >= :dateFrom");
+            ordersFilter.append(" and ((o.created_at at time zone 'UTC') at time zone 'Turkey')::date >= :dateFrom");
+            params.addValue("dateFrom", dateFrom);
+        }
+        if (dateTo != null) {
+            changesFilter.append(" and ((c.created_at at time zone 'UTC') at time zone 'Turkey')::date <= :dateTo");
+            ordersFilter.append(" and ((o.created_at at time zone 'UTC') at time zone 'Turkey')::date <= :dateTo");
+            params.addValue("dateTo", dateTo);
+        }
+
+        StringBuilder where = new StringBuilder(" where 1 = 1");
+        if (userId != null) {
+            where.append(" and nrg_users.telegram_id = :userId");
+            params.addValue("userId", userId);
+        }
+        if (groupId != null) {
+            where.append(" and (b.id = :groupId or nrg_users.group_balance_id = :groupId)");
+            params.addValue("groupId", groupId);
+        }
+
+        String ctes = "with filtered_changes as ("
+                + " select * from nrg_manual_balance_changes c where 1 = 1" + changesFilter + "),"
+                + " filtered_orders as ("
+                + " select * from nrg_orders o where o.order_status = 'COMPLETED'" + ordersFilter + ")";
+
+        Long totalElements = jdbc.queryForObject(
+                "select count(*) from nrg_balances b"
+                        + " left join nrg_users on b.id = nrg_users.balance_id" + where,
+                params, Long.class);
+
+        params.addValue("limit", boundedSize);
+        params.addValue("offset", (long) Math.max(page, 0) * boundedSize);
+        List<UserProfitRowDto> rows = jdbc.query(
+                ctes + USER_PROFIT_SELECT + where + USER_PROFIT_GROUP_BY
+                        + USER_PROFIT_ORDER_BY + " limit :limit offset :offset",
+                params, USER_PROFIT_ROW_MAPPER);
+
+        return new PageDto<>(rows, page, boundedSize, totalElements == null ? 0 : totalElements);
     }
 
     /**
