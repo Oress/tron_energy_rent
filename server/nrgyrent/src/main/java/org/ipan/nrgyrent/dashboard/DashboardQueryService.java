@@ -157,6 +157,49 @@ public class DashboardQueryService {
             rs.getBigDecimal("referral_deductions"),
             rs.getBigDecimal("manual_adjustments"));
 
+    /**
+     * SELECT part of the "Депозиты" report — adapted from the Metabase query.
+     * nrg_deposit_transactions.timestamp stores epoch milliseconds (UTC).
+     */
+    private static final String DEPOSITS_SELECT = """
+            select
+                d.id                                                          as "id",
+                ((to_timestamp(d.timestamp::bigint / 1000)) at time zone 'Turkey') as "date",
+                d.amount                                                      as "trx",
+                d.original_amount                                             as "usdt",
+                case when b.type = 'GROUP' then 'Груповой' else 'Личный' end as "balance_type",
+                coalesce(b.label, nrg_users.telegram_username)                as "group_login",
+                nrg_users.telegram_first_name                                 as "name",
+                (coalesce(d.activation_fee_sun, 0) > 0)                       as "account_activated",
+                d.wallet_to                                                   as "deposit_wallet",
+                d.wallet_from                                                 as "sender",
+                d.status                                                      as "status",
+                d.tx_id                                                       as "transaction"
+            from nrg_deposit_transactions d
+                join nrg_balances b on d.wallet_to = b.deposit_address
+                left join nrg_users on b.id = nrg_users.balance_id
+            """;
+
+    private static final String DEPOSITS_FROM_JOINS = """
+            from nrg_deposit_transactions d
+                join nrg_balances b on d.wallet_to = b.deposit_address
+                left join nrg_users on b.id = nrg_users.balance_id
+            """;
+
+    private static final RowMapper<DepositRowDto> DEPOSITS_ROW_MAPPER = (rs, rowNum) -> new DepositRowDto(
+            rs.getLong("id"),
+            rs.getObject("date", LocalDateTime.class),
+            rs.getBigDecimal("trx"),
+            rs.getBigDecimal("usdt"),
+            rs.getString("balance_type"),
+            rs.getString("group_login"),
+            rs.getString("name"),
+            rs.getBoolean("account_activated"),
+            rs.getString("deposit_wallet"),
+            rs.getString("sender"),
+            rs.getString("status"),
+            rs.getString("transaction"));
+
     private static Long toLong(Integer value) {
         return value == null ? null : value.longValue();
     }
@@ -264,21 +307,47 @@ public class DashboardQueryService {
     }
 
     /**
-     * "Депозиты" report.
-     * Expected result columns (in order): id, date, trx, usdt, balance_type,
-     * group_login, name, account_activated, deposit_wallet, sender, status, transaction.
-     * Filter: user/group by id, period on the date column.
+     * "Депозиты" report (adapted from the Metabase query).
+     * Global filter:
+     * - userId: deposit belongs to the user owning the balance ({@code nrg_users.telegram_id});
+     * - groupId: id of a GROUP-type balance — matches deposits on the group balance itself
+     *   and on balances of users attached to it ({@code nrg_users.group_balance_id});
+     * - dateFrom/dateTo: inclusive, applied to the deposit date in Turkey time.
      */
     public PageDto<DepositRowDto> getDepositsPage(int page, int size,
                                                   Long userId, Long groupId,
                                                   LocalDate dateFrom, LocalDate dateTo) {
         int boundedSize = Math.min(Math.max(size, 1), MAX_PAGE_SIZE);
-        // TODO: implement queries (plain SQL with parameters, e.g. JdbcTemplate).
-        //  Same global-filter WHERE clauses as getOrdersPage.
-        //  1) SELECT ... LIMIT :size OFFSET :page*:size  -> List<DepositRowDto>
-        //  2) SELECT COUNT(*) -> totalElements
-        List<DepositRowDto> rows = List.of();
-        return new PageDto<>(rows, page, boundedSize, rows.size());
+        MapSqlParameterSource params = new MapSqlParameterSource();
+
+        StringBuilder where = new StringBuilder(" where 1 = 1");
+        if (userId != null) {
+            where.append(" and nrg_users.telegram_id = :userId");
+            params.addValue("userId", userId);
+        }
+        if (groupId != null) {
+            where.append(" and (b.id = :groupId or nrg_users.group_balance_id = :groupId)");
+            params.addValue("groupId", groupId);
+        }
+        if (dateFrom != null) {
+            where.append(" and ((to_timestamp(d.timestamp::bigint / 1000)) at time zone 'Turkey')::date >= :dateFrom");
+            params.addValue("dateFrom", dateFrom);
+        }
+        if (dateTo != null) {
+            where.append(" and ((to_timestamp(d.timestamp::bigint / 1000)) at time zone 'Turkey')::date <= :dateTo");
+            params.addValue("dateTo", dateTo);
+        }
+
+        Long totalElements = jdbc.queryForObject(
+                "select count(*) " + DEPOSITS_FROM_JOINS + where, params, Long.class);
+
+        params.addValue("limit", boundedSize);
+        params.addValue("offset", (long) Math.max(page, 0) * boundedSize);
+        List<DepositRowDto> rows = jdbc.query(
+                DEPOSITS_SELECT + where + " order by d.id desc limit :limit offset :offset",
+                params, DEPOSITS_ROW_MAPPER);
+
+        return new PageDto<>(rows, page, boundedSize, totalElements == null ? 0 : totalElements);
     }
 
     /**
