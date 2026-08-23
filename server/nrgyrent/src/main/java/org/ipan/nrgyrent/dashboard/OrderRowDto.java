@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
  * Column mapping (SQL -> field):
  * ID -> id, Дата -> date, Логин -> login, Имя -> name, Тип Баланса -> balanceType,
  * Кол. транзакций -> transactionsCount, Энергия всего -> totalEnergy, Тариф -> tariff,
- * Провайдер -> provider, Комиссия -> commission, Доход -> income,
+ * Провайдер -> provider, Комиссия -> commission, Доход -> income (nrg_orders.sun_amount),
  * Реф. отчисления -> referralDeductions, Остаток реф. отчисл. -> referralDeductionsRemainder,
  * Прибыль -> profit, Активация кош. -> walletActivated, Статус -> status,
  * Получатель -> recipient, № заказа -> orderNumber, Транзакция -> transaction.

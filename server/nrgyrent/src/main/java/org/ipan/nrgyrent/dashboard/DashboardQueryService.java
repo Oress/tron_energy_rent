@@ -1,45 +1,141 @@
 package org.ipan.nrgyrent.dashboard;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
+import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Service;
+
+import lombok.RequiredArgsConstructor;
 
 /**
  * Data access for the dashboard report tables.
  * <p>
- * All queries are plain SQL with parameters (not JPA). Each page method receives
+ * All queries are plain SQL with `parameters (not JPA). Each page method receives
  * {@code page} (0-based), {@code size} and the global dashboard filter
  * ({@code userId}, {@code groupId}, {@code dateFrom}, {@code dateTo} — all nullable)
  * and must return a {@link PageDto} with {@code totalElements} filled from a matching
  * COUNT query.
  */
 @Service
+@RequiredArgsConstructor
 public class DashboardQueryService {
 
     private static final int MAX_PAGE_SIZE = 200;
 
+    private final NamedParameterJdbcTemplate jdbc;
+
     /**
-     * "Заказы" report.
-     * Expected result columns (in order): id, date, login, name, balance_type,
-     * transactions_count, total_energy, tariff, provider, commission, income,
-     * referral_deductions, referral_deductions_remainder, profit, wallet_activated,
-     * status, recipient, order_number, transaction.
-     * Filter: user/group by id, period on the report date column.
+     * SELECT part of the "Заказы" report — adapted from the Metabase query.
+     * Dates are stored as UTC timestamps and converted to Turkey time for display.
+     */
+    private static final String ORDERS_SELECT = """
+            select
+                nrg_orders.id                                                     as "id",
+                ((nrg_orders.created_at at time zone 'UTC') at time zone 'Turkey') as "date",
+                coalesce(nrg_users.telegram_username, '-')                        as "login",
+                nrg_users.telegram_first_name                                     as "name",
+                case when b.type = 'GROUP' then 'Груповой' else 'Личный' end      as "balance_type",
+                nrg_orders.tx_amount                                              as "transactions_count",
+                nrg_orders.energy_amount                                          as "total_energy",
+                t.label                                                           as "tariff",
+                nrg_orders.energy_provider                                        as "provider",
+                nrg_orders.itrx_fee_sun_amount                                    as "commission",
+                nrg_orders.sun_amount                                             as "income",
+                coalesce(c.amount_sun, 0)                                         as "referral_deductions",
+                coalesce(nrg_orders.ref_program_profit_remainder, 0)              as "referral_deductions_remainder",
+                nrg_orders.sun_amount - coalesce(c.amount_sun, 0)
+                    - nrg_orders.itrx_fee_sun_amount                              as "profit",
+                (coalesce(nrg_orders.activation_fee, 0) > 0)                      as "wallet_activated",
+                nrg_orders.order_status                                           as "status",
+                nrg_orders.receive_address                                        as "recipient",
+                nrg_orders.serial                                                 as "order_number",
+                nrg_orders.tx_id                                                  as "transaction"
+            from nrg_orders
+                join nrg_users on nrg_orders.user_id = nrg_users.telegram_id
+                join nrg_balances b on nrg_orders.balance_id = b.id
+                join nrg_tariffs t on nrg_orders.tariff_id = t.id
+                left join nrg_referral_commissions c on nrg_orders.id = c.order_id
+            """;
+
+    private static final String ORDERS_FROM_JOINS = """
+            from nrg_orders
+                join nrg_users on nrg_orders.user_id = nrg_users.telegram_id
+                join nrg_balances b on nrg_orders.balance_id = b.id
+                join nrg_tariffs t on nrg_orders.tariff_id = t.id
+                left join nrg_referral_commissions c on nrg_orders.id = c.order_id
+            """;
+
+    private static final RowMapper<OrderRowDto> ORDERS_ROW_MAPPER = (rs, rowNum) -> new OrderRowDto(
+            rs.getLong("id"),
+            rs.getObject("date", LocalDateTime.class),
+            rs.getString("login"),
+            rs.getString("name"),
+            rs.getString("balance_type"),
+            rs.getObject("transactions_count", Integer.class),
+            toLong(rs.getObject("total_energy", Integer.class)),
+            rs.getString("tariff"),
+            rs.getString("provider"),
+            rs.getBigDecimal("commission"),
+            rs.getBigDecimal("income"),
+            rs.getBigDecimal("referral_deductions"),
+            rs.getBigDecimal("referral_deductions_remainder"),
+            rs.getBigDecimal("profit"),
+            rs.getBoolean("wallet_activated"),
+            rs.getString("status"),
+            rs.getString("recipient"),
+            rs.getString("order_number"),
+            rs.getString("transaction"));
+
+    private static Long toLong(Integer value) {
+        return value == null ? null : value.longValue();
+    }
+
+    /**
+     * "Заказы" report (adapted from the Metabase query).
+     * Global filter:
+     * - userId: order belongs to the user ({@code nrg_orders.user_id});
+     * - groupId: id of a GROUP-type balance — matches orders placed on the group balance
+     *   or by users attached to it ({@code nrg_users.group_balance_id});
+     * - dateFrom/dateTo: inclusive, applied to the order date in Turkey time.
      */
     public PageDto<OrderRowDto> getOrdersPage(int page, int size,
                                               Long userId, Long groupId,
                                               LocalDate dateFrom, LocalDate dateTo) {
         int boundedSize = Math.min(Math.max(size, 1), MAX_PAGE_SIZE);
-        // TODO: implement queries (plain SQL with parameters, e.g. JdbcTemplate).
-        //  Add WHERE clauses for the global filter, e.g.:
-        //   (:userId IS NULL OR u.id = :userId) AND (:groupId IS NULL OR g.id = :groupId)
-        //   AND (:dateFrom IS NULL OR t.date >= :dateFrom) AND (:dateTo IS NULL OR t.date < :dateTo + 1 day)
-        //  1) SELECT ... LIMIT :size OFFSET :page*:size  -> List<OrderRowDto>
-        //  2) SELECT COUNT(*) -> totalElements
-        // For now returns an empty page so the endpoint/FE contract can be verified.
-        List<OrderRowDto> rows = List.of();
-        return new PageDto<>(rows, page, boundedSize, rows.size());
+
+        StringBuilder where = new StringBuilder(" where 1 = 1");
+        MapSqlParameterSource params = new MapSqlParameterSource();
+        if (userId != null) {
+            where.append(" and nrg_orders.user_id = :userId");
+            params.addValue("userId", userId);
+        }
+        if (groupId != null) {
+            where.append(" and (nrg_orders.balance_id = :groupId or nrg_users.group_balance_id = :groupId)");
+            params.addValue("groupId", groupId);
+        }
+        if (dateFrom != null) {
+            where.append(" and ((nrg_orders.created_at at time zone 'UTC') at time zone 'Turkey')::date >= :dateFrom");
+            params.addValue("dateFrom", dateFrom);
+        }
+        if (dateTo != null) {
+            where.append(" and ((nrg_orders.created_at at time zone 'UTC') at time zone 'Turkey')::date <= :dateTo");
+            params.addValue("dateTo", dateTo);
+        }
+
+        Long totalElements = jdbc.queryForObject(
+                "select count(*) " + ORDERS_FROM_JOINS + where, params, Long.class);
+
+        params.addValue("limit", boundedSize);
+        params.addValue("offset", (long) Math.max(page, 0) * boundedSize);
+        List<OrderRowDto> rows = jdbc.query(
+                ORDERS_SELECT + where + " order by nrg_orders.id desc limit :limit offset :offset",
+                params, ORDERS_ROW_MAPPER);
+
+        return new PageDto<>(rows, page, boundedSize, totalElements == null ? 0 : totalElements);
     }
 
     /**
