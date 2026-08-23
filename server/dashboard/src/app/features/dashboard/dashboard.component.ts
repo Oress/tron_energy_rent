@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
+import { DashboardFilterComponent } from '../filter/dashboard-filter.component';
 import { OverallStatisticsComponent } from '../statistics/overall-statistics.component';
 import { OrdersTableComponent } from '../orders/orders-table.component';
 import { DepositsTableComponent } from '../deposits/deposits-table.component';
@@ -19,6 +20,7 @@ import { buildTime } from '../../../environments/version';
   selector: 'app-dashboard',
   imports: [
     PageHeaderComponent,
+    DashboardFilterComponent,
     OverallStatisticsComponent,
     OrdersTableComponent,
     DepositsTableComponent,

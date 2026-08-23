@@ -62,6 +62,15 @@ then regenerate:
 npm run generate-api     # generates src/app/core/api (typescript-angular)
 ```
 
+### Global filter
+
+Every table endpoint also accepts the global dashboard filter as optional query params:
+`userId`, `groupId`, `dateFrom`, `dateTo` (dates are inclusive, local `YYYY-MM-DD`).
+The filter bar (`features/filter`) holds user/group selectors and a date range, pushes the
+values into `core/services/dashboard-filter.service.ts`, and all tables reload on change
+(via a `version` signal + Angular `effect`). Selector options come from
+`GET /api/v1/filter/users` and `GET /api/v1/filter/groups`.
+
 Server side (`server/nrgyrent`, package `org.ipan.nrgyrent.dashboard`):
 `DashboardController` exposes the endpoints and `DashboardQueryService` returns the pages.
 The SQL queries are not implemented yet — the methods are marked

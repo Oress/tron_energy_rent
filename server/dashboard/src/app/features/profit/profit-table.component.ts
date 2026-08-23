@@ -1,10 +1,11 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, effect, inject, OnInit, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 
 import { Table } from 'primeng/table';
 
 import { ProfitService, UserProfitRowDto } from '../../core/api';
 import { FormatUsdtPipe } from '../../shared/pipes/format-usdt.pipe';
+import { DashboardFilterService } from '../../core/services/dashboard-filter.service';
 
 /** PrimeNG page event payload (first = offset, rows = page size). */
 interface PageEvent {
@@ -24,6 +25,7 @@ interface PageEvent {
 })
 export class ProfitTableComponent implements OnInit {
   private readonly profitService = inject(ProfitService);
+  private readonly filterService = inject(DashboardFilterService);
 
   readonly rows = signal<UserProfitRowDto[]>([]);
   readonly loading = signal(true);
@@ -32,13 +34,21 @@ export class ProfitTableComponent implements OnInit {
   readonly total = signal(0);
 
   ngOnInit(): void {
-    this.load();
+    // Reload whenever the global dashboard filter is applied/reset.
+    effect(() => {
+      this.filterService.version();
+      this.first.set(0);
+      this.load();
+    });
   }
 
   load(): void {
     this.loading.set(true);
+    const f = this.filterService.filter();
     const page = Math.floor(this.first() / this.pageSize());
-    this.profitService.getUserProfit(page, this.pageSize()).subscribe({
+    this.profitService
+      .getUserProfit(page, this.pageSize(), f.userId ?? undefined, f.groupId ?? undefined, f.dateFrom ?? undefined, f.dateTo ?? undefined)
+      .subscribe({
       next: (res) => {
         this.rows.set(res.content ?? []);
         this.total.set(res.totalElements ?? 0);

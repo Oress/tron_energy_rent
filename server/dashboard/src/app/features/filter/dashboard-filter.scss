@@ -1,0 +1,63 @@
+@reference "tailwindcss";
+
+.filter-bar {
+  @apply mb-6 p-4 bg-white rounded-xl border border-gray-200;
+}
+
+.filter-grid {
+  @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3;
+}
+
+.filter-field {
+  @apply flex flex-col gap-1 min-w-0;
+}
+
+.filter-label {
+  @apply text-xs text-gray-500;
+}
+
+/* PrimeNG Select (theme: 'none' — styled here). */
+::ng-deep .filter-select {
+  @apply w-full border border-gray-300 rounded-lg bg-white cursor-pointer;
+}
+
+::ng-deep .filter-select .p-select-label {
+  @apply px-3 py-2 text-sm text-gray-900;
+}
+
+::ng-deep .filter-select .p-select-dropdown {
+  @apply pr-3 text-gray-500;
+}
+
+::ng-deep .p-select-list-container {
+  @apply border border-gray-200 rounded-lg bg-white shadow-lg;
+}
+
+::ng-deep .p-select-option {
+  @apply px-3 py-2 text-sm cursor-pointer;
+}
+
+::ng-deep .p-select-option:hover {
+  @apply bg-gray-100;
+}
+
+::ng-deep .p-select-option.p-focus {
+  @apply bg-blue-50;
+}
+
+/* PrimeNG DatePicker (theme: 'none' — styled here). */
+::ng-deep .filter-date {
+  @apply w-full;
+}
+
+::ng-deep .filter-date .p-datepicker-input {
+  @apply w-full border border-gray-300 rounded-lg bg-white px-3 py-2 text-sm;
+}
+
+.filter-actions {
+  @apply flex items-center gap-2 mt-3;
+}
+
+::ng-deep .filter-apply.p-button {
+  @apply bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm;
+}

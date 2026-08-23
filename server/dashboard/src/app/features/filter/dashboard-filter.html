@@ -1,0 +1,61 @@
+<section class="filter-bar">
+  <!-- Mobile-first: controls stack on phones, one row from lg. -->
+  <div class="filter-grid">
+    <label class="filter-field">
+      <span class="filter-label">Пользователь</span>
+      <p-select
+        [options]="users()"
+        optionLabel="label"
+        optionValue="id"
+        [(ngModel)]="userId"
+        placeholder="Все"
+        [showClear]="true"
+        styleClass="filter-select"
+      />
+    </label>
+
+    <label class="filter-field">
+      <span class="filter-label">Группа</span>
+      <p-select
+        [options]="groups()"
+        optionLabel="label"
+        optionValue="id"
+        [(ngModel)]="groupId"
+        placeholder="Все"
+        [showClear]="true"
+        styleClass="filter-select"
+      />
+    </label>
+
+    <label class="filter-field">
+      <span class="filter-label">Дата с</span>
+      <p-datepicker
+        [(ngModel)]="dateFrom"
+        showIcon
+        iconDisplay="input"
+        dateFormat="dd.mm.yy"
+        placeholder="—"
+        [showClear]="true"
+        styleClass="filter-date"
+      />
+    </label>
+
+    <label class="filter-field">
+      <span class="filter-label">Дата по</span>
+      <p-datepicker
+        [(ngModel)]="dateTo"
+        showIcon
+        iconDisplay="input"
+        dateFormat="dd.mm.yy"
+        placeholder="—"
+        [showClear]="true"
+        styleClass="filter-date"
+      />
+    </label>
+  </div>
+
+  <div class="filter-actions">
+    <p-button label="Применить" styleClass="filter-apply" (onClick)="apply()" />
+    <p-button label="Сбросить" text severity="secondary" (onClick)="reset()" />
+  </div>
+</section>
