@@ -264,6 +264,63 @@ public class DashboardQueryService {
             rs.getBigDecimal("providers_commission_period"),
             toPlainString(rs.getBigDecimal("new_field")));
 
+    /**
+     * Recursive CTE of the "Реферальная система" report — adapted from the Metabase query.
+     * Anchor rows: referrers with their program, pending commission and paid amounts
+     * (%s = period filter on the paid-amount subquery). Recursive rows: referred balances
+     * under each referrer (deduplicated by the UNION).
+     */
+    private static final String REFERRAL_SYSTEM_CTE = """
+            with recursive referrals as (
+                select
+                    pu.telegram_id as p_id,
+                    null::bigint as u_id,
+                    null::bigint as ub_id,
+                    coalesce(pu.telegram_username, '<NO_LOGIN>') || '/' || pu.telegram_first_name as p_referrer,
+                    null as p_referral,
+                    rp.label as p_program,
+                    (select sum(rc.amount_sun)
+                     from nrg_referral_commissions rc
+                     where rc.bal_ref_prog_id = pbrp.id
+                       and rc.status = 'PENDING') as p_pending_commission,
+                    (select sum(d.amount_sun)
+                     from nrg_referral_commission_deposits d
+                     where d.to_balance_id = pbrp.balance_id%s) as p_paid,
+                    (select sum(d.amount_sun)
+                     from nrg_referral_commission_deposits d
+                     where d.to_balance_id = pbrp.balance_id) as p_paid_all
+                from nrg_users pu
+                    join nrg_balances pb on pb.id = pu.balance_id
+                    join nrg_balance_referral_programs pbrp on pbrp.balance_id = pb.id
+                    join nrg_referral_programs rp on rp.id = pbrp.ref_prog_id
+                union
+                select
+                    pu.telegram_id as p_id,
+                    u.telegram_id as u_id,
+                    ub.id as ub_id,
+                    coalesce(pu.telegram_username, '<NO_LOGIN>') || '/' || pu.telegram_first_name as p_referrer,
+                    coalesce(ub.label, coalesce(u.telegram_username, '<NO_LOGIN>') || '/' || u.telegram_first_name) as p_referral,
+                    null as p_program,
+                    null as p_pending_commission,
+                    null as p_paid,
+                    null as p_paid_all
+                from referrals
+                    join nrg_users pu on pu.telegram_id = referrals.p_id
+                    join nrg_balances pb on pb.id = pu.balance_id
+                    join nrg_balance_referral_programs pbrp on pbrp.balance_id = pb.id
+                    join nrg_balances ub on ub.bal_ref_prog_id = pbrp.id
+                    left join nrg_users u on u.balance_id = ub.id
+            )
+            """;
+
+    private static final RowMapper<ReferralSystemRowDto> REFERRAL_SYSTEM_ROW_MAPPER = (rs, rowNum) -> new ReferralSystemRowDto(
+            rs.getString("referrer"),
+            rs.getString("referral"),
+            rs.getString("program"),
+            rs.getBigDecimal("pending_payout"),
+            rs.getBigDecimal("paid_period"),
+            rs.getBigDecimal("paid_total"));
+
     private static Long toLong(Integer value) {
         return value == null ? null : value.longValue();
     }
@@ -419,22 +476,62 @@ public class DashboardQueryService {
     }
 
     /**
-     * "Реферальная система" report.
-     * Expected result columns (in order): referrer, referral, program, pending_payout,
-     * paid_period, paid_total.
-     * Filter: user/group by id (referrer or referral side — depends on the query),
-     * period on the relevant date column.
+     * "Реферальная система" report (adapted from the Metabase recursive-CTE query).
+     * Global filter:
+     * - userId: rows of the given referrer ({@code p_id});
+     * - groupId: referred balances that are the group balance itself ({@code ub_id}), or
+     *   rows of referrers attached to the group ({@code nrg_users.group_balance_id});
+     * - dateFrom/dateTo: inclusive, applied to "Выплачено за период" (commission deposits
+     *   in Turkey time); "Выплачено всего" is not period-limited (as in Metabase).
      */
     public PageDto<ReferralSystemRowDto> getReferralSystemPage(int page, int size,
                                                                Long userId, Long groupId,
                                                                LocalDate dateFrom, LocalDate dateTo) {
         int boundedSize = Math.min(Math.max(size, 1), MAX_PAGE_SIZE);
-        // TODO: implement queries (plain SQL with parameters, e.g. JdbcTemplate).
-        //  Same global-filter WHERE clauses as getOrdersPage.
-        //  1) SELECT ... LIMIT :size OFFSET :page*:size  -> List<ReferralSystemRowDto>
-        //  2) SELECT COUNT(*) -> totalElements
-        List<ReferralSystemRowDto> rows = List.of();
-        return new PageDto<>(rows, page, boundedSize, rows.size());
+        MapSqlParameterSource params = new MapSqlParameterSource();
+
+        StringBuilder paidPeriodFilter = new StringBuilder();
+        if (dateFrom != null) {
+            paidPeriodFilter.append(" and ((d.created_at at time zone 'UTC') at time zone 'Turkey')::date >= :dateFrom");
+            params.addValue("dateFrom", dateFrom);
+        }
+        if (dateTo != null) {
+            paidPeriodFilter.append(" and ((d.created_at at time zone 'UTC') at time zone 'Turkey')::date <= :dateTo");
+            params.addValue("dateTo", dateTo);
+        }
+
+        StringBuilder where = new StringBuilder(" where 1 = 1");
+        if (userId != null) {
+            where.append(" and p_id = :userId");
+            params.addValue("userId", userId);
+        }
+        if (groupId != null) {
+            where.append(" and (ub_id = :groupId or p_id in (select telegram_id from nrg_users where group_balance_id = :groupId))");
+            params.addValue("groupId", groupId);
+        }
+
+        String cte = REFERRAL_SYSTEM_CTE.formatted(paidPeriodFilter);
+
+        Long totalElements = jdbc.queryForObject(
+                cte + "select count(*) from referrals" + where, params, Long.class);
+
+        params.addValue("limit", boundedSize);
+        params.addValue("offset", (long) Math.max(page, 0) * boundedSize);
+        List<ReferralSystemRowDto> rows = jdbc.query(
+                cte + """
+                        select
+                            p_referrer            as "referrer",
+                            p_referral            as "referral",
+                            p_program             as "program",
+                            p_pending_commission  as "pending_payout",
+                            p_paid                as "paid_period",
+                            p_paid_all            as "paid_total"
+                        from referrals
+                        """ + where
+                        + " order by p_referrer, p_id desc, ub_id desc limit :limit offset :offset",
+                params, REFERRAL_SYSTEM_ROW_MAPPER);
+
+        return new PageDto<>(rows, page, boundedSize, totalElements == null ? 0 : totalElements);
     }
 
     /**
