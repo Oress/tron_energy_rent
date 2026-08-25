@@ -3,7 +3,7 @@ FROM amazoncorretto:8
 RUN yum install -y git
 
 RUN git clone https://github.com/tronprotocol/event-plugin.git
-RUN git clone https://github.com/tronprotocol/java-tron.git
+RUN git clone --depth 1 --branch GreatVoyage-v4.8.2.1 https://github.com/tronprotocol/java-tron.git
 
 WORKDIR ./event-plugin
 RUN chmod +x ./gradlew && ./gradlew clean build -x test
