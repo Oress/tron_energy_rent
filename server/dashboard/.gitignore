@@ -1,0 +1,8 @@
+/.angular/
+/dist/
+/node_modules/
+/node_modules.pre-dashboard/
+/target/
+/.openapi-generator/
+npm-debug.log*
+.DS_Store

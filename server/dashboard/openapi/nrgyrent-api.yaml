@@ -1,0 +1,316 @@
+openapi: 3.0.3
+info:
+  title: Nrgyrent Dashboard API
+  description: Contract for the packaged operational dashboard. All financial amounts are decimal TRX.
+  version: 1.0.0
+servers:
+  - url: /
+paths:
+  /api/v1/dashboard/filters/users:
+    get:
+      tags: [Filters]
+      operationId: getFilterUsers
+      summary: List users available to the dashboard filter
+      responses:
+        '200':
+          description: User filter options
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FilterOption'
+        '500':
+          $ref: '#/components/responses/ServerError'
+  /api/v1/dashboard/filters/groups:
+    get:
+      tags: [Filters]
+      operationId: getFilterGroups
+      summary: List groups available to the dashboard filter
+      responses:
+        '200':
+          description: Group filter options
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FilterOption'
+        '500':
+          $ref: '#/components/responses/ServerError'
+  /api/v1/dashboard/orders:
+    get:
+      tags: [Orders]
+      operationId: getOrders
+      summary: Return one page of orders
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - $ref: '#/components/parameters/UserId'
+        - $ref: '#/components/parameters/GroupId'
+        - $ref: '#/components/parameters/DateFrom'
+        - $ref: '#/components/parameters/DateTo'
+      responses:
+        '200':
+          description: Orders page
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderPage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/ServerError'
+  /api/v1/dashboard/user-profits:
+    get:
+      tags: [UserProfit]
+      operationId: getUserProfits
+      summary: Return one page of user profit rows
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - $ref: '#/components/parameters/UserId'
+        - $ref: '#/components/parameters/GroupId'
+        - $ref: '#/components/parameters/DateFrom'
+        - $ref: '#/components/parameters/DateTo'
+      responses:
+        '200':
+          description: User profit page
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfitPage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/ServerError'
+components:
+  parameters:
+    Page:
+      name: page
+      in: query
+      description: Zero-based page index.
+      required: false
+      schema:
+        type: integer
+        format: int32
+        minimum: 0
+        default: 0
+    Size:
+      name: size
+      in: query
+      description: Requested number of rows per page.
+      required: false
+      schema:
+        type: integer
+        format: int32
+        minimum: 1
+        maximum: 200
+        default: 20
+    UserId:
+      name: userId
+      in: query
+      description: Optional user filter.
+      required: false
+      schema:
+        type: integer
+        format: int64
+    GroupId:
+      name: groupId
+      in: query
+      description: Optional group filter. Combined with userId using intersection semantics.
+      required: false
+      schema:
+        type: integer
+        format: int64
+    DateFrom:
+      name: dateFrom
+      in: query
+      description: Inclusive start date.
+      required: false
+      schema:
+        type: string
+        format: date
+    DateTo:
+      name: dateTo
+      in: query
+      description: Inclusive end date.
+      required: false
+      schema:
+        type: string
+        format: date
+  responses:
+    BadRequest:
+      description: Invalid request parameters
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+    ServerError:
+      description: Unexpected server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+  schemas:
+    FilterOption:
+      type: object
+      additionalProperties: false
+      required: [id, label]
+      properties:
+        id:
+          type: integer
+          format: int64
+        label:
+          type: string
+    OrderRow:
+      type: object
+      additionalProperties: false
+      description: One row of the Orders report. Financial fields are decimal TRX.
+      required: [id, date, login, name, balanceType, transactionsCount, totalEnergy, tariff, provider, commission, income, referralDeductions, referralDeductionsRemainder, profit, walletActivated, status, recipient, orderNumber, transaction]
+      properties:
+        id:
+          type: integer
+          format: int64
+        date:
+          type: string
+          format: date-time
+        login:
+          type: string
+          nullable: true
+        name:
+          type: string
+          nullable: true
+        balanceType:
+          type: string
+        transactionsCount:
+          type: integer
+          format: int32
+        totalEnergy:
+          type: integer
+          format: int64
+        tariff:
+          type: string
+          nullable: true
+        provider:
+          type: string
+          nullable: true
+        commission:
+          type: number
+          description: Commission in decimal TRX.
+        income:
+          type: number
+          description: Income in decimal TRX.
+        referralDeductions:
+          type: number
+          description: Referral deductions in decimal TRX.
+        referralDeductionsRemainder:
+          type: number
+          description: Referral deduction remainder in decimal TRX.
+        profit:
+          type: number
+          description: Profit in decimal TRX.
+        walletActivated:
+          type: boolean
+        status:
+          type: string
+        recipient:
+          type: string
+          nullable: true
+        orderNumber:
+          type: string
+          nullable: true
+        transaction:
+          type: string
+          nullable: true
+    UserProfitRow:
+      type: object
+      additionalProperties: false
+      description: One row of the User Profit report. Financial fields are decimal TRX.
+      required: [joinedAt, referral, balanceType, groupLogin, name, profit, tariff, availableBalance, income, itrxCommission, referralDeductions, manualAdjustments]
+      properties:
+        joinedAt:
+          type: string
+          format: date-time
+          nullable: true
+        referral:
+          type: string
+          nullable: true
+        balanceType:
+          type: string
+        groupLogin:
+          type: string
+          nullable: true
+        name:
+          type: string
+          nullable: true
+        profit:
+          type: number
+          description: Profit in decimal TRX.
+        tariff:
+          type: string
+          nullable: true
+        availableBalance:
+          type: number
+          description: Available balance in decimal TRX.
+        income:
+          type: number
+          description: Income in decimal TRX.
+        itrxCommission:
+          type: number
+          description: ITRX commission in decimal TRX.
+        referralDeductions:
+          type: number
+          description: Referral deductions in decimal TRX.
+        manualAdjustments:
+          type: number
+          description: Manual balance adjustments in decimal TRX.
+    OrderPage:
+      type: object
+      additionalProperties: false
+      required: [content, page, size, totalElements, totalPages]
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderRow'
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+    UserProfitPage:
+      type: object
+      additionalProperties: false
+      required: [content, page, size, totalElements, totalPages]
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserProfitRow'
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+    ApiError:
+      type: object
+      additionalProperties: false
+      required: [message]
+      properties:
+        message:
+          type: string
