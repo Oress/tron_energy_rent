@@ -1,0 +1,29 @@
+<section
+  class="mb-5 overflow-hidden rounded-[5px] border border-[var(--ledger-line)] bg-white shadow-[0_8px_24px_rgb(16_27_43_/_5%)]"
+  aria-labelledby="statistics-title"
+>
+  <header class="border-b border-[var(--ledger-line)] p-4 sm:px-5 sm:py-[1.15rem]">
+    <p class="m-0 mb-0.5 font-mono text-[0.62rem] font-semibold tracking-[0.11em] text-[var(--ledger-rail)]">SUMMARY / GENERAL</p>
+    <h3 id="statistics-title" class="m-0 font-[var(--font-display)] text-xl font-semibold">Общая статистика</h3>
+  </header>
+
+  @if (error()) {
+    <app-request-state [error]="error()" (retry)="retry()" />
+  } @else if (loading() && !statistics()) {
+    <app-request-state [loading]="true" />
+  } @else {
+    @if (loading()) {
+      <div class="bg-[#eaf4f7] px-4 py-1.5 text-xs font-semibold text-[var(--ledger-rail)]" role="status">Обновляем показатели…</div>
+    }
+    <dl class="m-0 divide-y divide-[#e7eef2] px-4 py-2 sm:px-5 sm:py-3" [attr.aria-busy]="loading()">
+      @for (metric of metrics(); track metric.label) {
+        <div class="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-4 px-0 py-3 transition-colors hover:bg-[#f7fafb] sm:px-1">
+          <dt class="min-w-0 text-sm font-medium leading-snug text-[#46586a]">{{ metric.label }}</dt>
+          <dd class="data-value m-0 whitespace-nowrap text-right text-sm font-bold text-[#304661]">
+            {{ metric.value | trxAmount }}
+          </dd>
+        </div>
+      }
+    </dl>
+  }
+</section>

@@ -1,6 +1,6 @@
 # @
 
-Contract for the packaged operational dashboard. All financial amounts are decimal TRX.
+Contract for the packaged operational dashboard. Financial amount currencies are documented per field.
 
 The version of the OpenAPI document: 1.0.0
 

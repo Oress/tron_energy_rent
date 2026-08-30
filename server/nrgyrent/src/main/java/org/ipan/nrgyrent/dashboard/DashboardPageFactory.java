@@ -1,7 +1,10 @@
 package org.ipan.nrgyrent.dashboard;
 
+import java.math.BigDecimal;
 import java.util.List;
 
+import org.ipan.nrgyrent.dashboard.api.model.DepositPage;
+import org.ipan.nrgyrent.dashboard.api.model.GeneralStatistics;
 import org.ipan.nrgyrent.dashboard.api.model.OrderPage;
 import org.ipan.nrgyrent.dashboard.api.model.UserProfitPage;
 
@@ -31,5 +34,28 @@ public final class DashboardPageFactory {
 
     public static UserProfitPage emptyUserProfits(Integer page, Integer size) {
         return new UserProfitPage(List.of(), normalizePage(page), normalizeSize(size), 0L, 0);
+    }
+
+    public static DepositPage emptyDeposits(Integer page, Integer size) {
+        return new DepositPage(List.of(), normalizePage(page), normalizeSize(size), 0L, 0);
+    }
+
+    public static GeneralStatistics emptyGeneralStatistics() {
+        return new GeneralStatistics(
+                BigDecimal.ZERO,
+                BigDecimal.ZERO,
+                BigDecimal.ZERO,
+                BigDecimal.ZERO,
+                BigDecimal.ZERO,
+                BigDecimal.ZERO,
+                BigDecimal.ZERO,
+                BigDecimal.ZERO,
+                BigDecimal.ZERO,
+                BigDecimal.ZERO,
+                BigDecimal.ZERO,
+                BigDecimal.ZERO,
+                BigDecimal.ZERO,
+                BigDecimal.ZERO,
+                BigDecimal.ZERO);
     }
 }

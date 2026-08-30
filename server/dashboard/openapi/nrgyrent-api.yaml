@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Nrgyrent Dashboard API
-  description: Contract for the packaged operational dashboard. All financial amounts are decimal TRX.
+  description: Contract for the packaged operational dashboard. Financial amount currencies are documented per field.
   version: 1.0.0
 servers:
   - url: /
@@ -80,6 +80,50 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserProfitPage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/ServerError'
+  /api/v1/dashboard/deposits:
+    get:
+      tags: [Deposits]
+      operationId: getDeposits
+      summary: Return one page of deposits
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - $ref: '#/components/parameters/UserId'
+        - $ref: '#/components/parameters/GroupId'
+        - $ref: '#/components/parameters/DateFrom'
+        - $ref: '#/components/parameters/DateTo'
+      responses:
+        '200':
+          description: Deposits page
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DepositPage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/ServerError'
+  /api/v1/dashboard/general-statistics:
+    get:
+      tags: [GeneralStatistics]
+      operationId: getGeneralStatistics
+      summary: Return dashboard-wide financial statistics
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+        - $ref: '#/components/parameters/GroupId'
+        - $ref: '#/components/parameters/DateFrom'
+        - $ref: '#/components/parameters/DateTo'
+      responses:
+        '200':
+          description: General statistics for the selected conditions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralStatistics'
         '400':
           $ref: '#/components/responses/BadRequest'
         '500':
@@ -265,6 +309,96 @@ components:
         manualAdjustments:
           type: number
           description: Manual balance adjustments in decimal TRX.
+    DepositRow:
+      type: object
+      additionalProperties: false
+      description: One row of the Deposits report. Amounts are decimal TRX and USDT.
+      required: [id, date, trxAmount, usdtAmount, balanceType, groupLogin, name, accountActivated, depositWallet, sender, status, transaction]
+      properties:
+        id:
+          type: integer
+          format: int64
+        date:
+          type: string
+          format: date-time
+        trxAmount:
+          type: number
+          description: Deposit amount in decimal TRX.
+        usdtAmount:
+          type: number
+          description: Deposit amount in decimal USDT.
+        balanceType:
+          type: string
+        groupLogin:
+          type: string
+          nullable: true
+        name:
+          type: string
+          nullable: true
+        accountActivated:
+          type: boolean
+        depositWallet:
+          type: string
+          nullable: true
+        sender:
+          type: string
+          nullable: true
+        status:
+          type: string
+        transaction:
+          type: string
+          nullable: true
+    GeneralStatistics:
+      type: object
+      additionalProperties: false
+      description: General dashboard statistics. All values are decimal TRX.
+      required: [periodProfit, bybitBalance, periodAmlProfit, pendingReferralPayments, itrxBalance, catfeeBalance, trxxBalance, nettsBalance, sweepWalletsBalance, userBalancesTotal, periodReferralPayments, periodReferralProgramRemainder, depositsTotal, periodProviderCommission, newField]
+      properties:
+        periodProfit:
+          type: number
+          description: Profit for the selected period in decimal TRX.
+        bybitBalance:
+          type: number
+          description: Current Bybit balance in decimal TRX.
+        periodAmlProfit:
+          type: number
+          description: AML profit for the selected period in decimal TRX.
+        pendingReferralPayments:
+          type: number
+          description: Pending referral payments in decimal TRX.
+        itrxBalance:
+          type: number
+          description: Current itrx.io balance in decimal TRX.
+        catfeeBalance:
+          type: number
+          description: Current catfee.io balance in decimal TRX.
+        trxxBalance:
+          type: number
+          description: Current trxx.io balance in decimal TRX.
+        nettsBalance:
+          type: number
+          description: Current netts.io balance in decimal TRX.
+        sweepWalletsBalance:
+          type: number
+          description: Sweep wallets balance in decimal TRX.
+        userBalancesTotal:
+          type: number
+          description: Sum of user balances in decimal TRX.
+        periodReferralPayments:
+          type: number
+          description: Referral payments for the selected period in decimal TRX.
+        periodReferralProgramRemainder:
+          type: number
+          description: Referral program remainder for the selected period in decimal TRX.
+        depositsTotal:
+          type: number
+          description: Sum of deposits in decimal TRX.
+        periodProviderCommission:
+          type: number
+          description: Provider commission for the selected period in decimal TRX.
+        newField:
+          type: number
+          description: New field value in decimal TRX.
     OrderPage:
       type: object
       additionalProperties: false
@@ -295,6 +429,27 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/UserProfitRow'
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+    DepositPage:
+      type: object
+      additionalProperties: false
+      required: [content, page, size, totalElements, totalPages]
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/DepositRow'
         page:
           type: integer
           format: int32

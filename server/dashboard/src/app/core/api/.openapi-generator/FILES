@@ -4,8 +4,12 @@ README.md
 api.base.service.ts
 api.module.ts
 api/api.ts
+api/deposits.service.ts
+api/deposits.serviceInterface.ts
 api/filters.service.ts
 api/filters.serviceInterface.ts
+api/general-statistics.service.ts
+api/general-statistics.serviceInterface.ts
 api/orders.service.ts
 api/orders.serviceInterface.ts
 api/user-profit.service.ts
@@ -15,7 +19,10 @@ encoder.ts
 git_push.sh
 index.ts
 model/api-error.model.ts
+model/deposit-page.model.ts
+model/deposit-row.model.ts
 model/filter-option.model.ts
+model/general-statistics.model.ts
 model/models.ts
 model/order-page.model.ts
 model/order-row.model.ts
