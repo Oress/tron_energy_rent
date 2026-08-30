@@ -169,6 +169,16 @@ public class AmlVerificationService {
         return verification;
     }
 
+    @Transactional
+    public AmlVerification skipVerification(Long verificationId, NettsAmlStatusResponse.DataResponse data) {
+        AmlVerification verification = refundVerification(verificationId);
+        if (AmlVerificationPaymentStatus.REFUNDED.equals(verification.getPaymentStatus())) {
+            verification.setStatus(AmlVerificationStatus.SKIPPED);
+            verification.setMessage(data.getMessage());
+        }
+        return verification;
+    }
+
     private AmlRiskLevel parseRiskLevel(String riskLevel) {
         if (riskLevel == null) return null;
         try {

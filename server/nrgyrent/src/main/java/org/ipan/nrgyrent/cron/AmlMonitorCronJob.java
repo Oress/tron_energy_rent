@@ -25,6 +25,7 @@ public class AmlMonitorCronJob {
     private static final String STATUS_COMPLETED = "completed";
     private static final String STATUS_FAILED = "failed";
     private static final String STATUS_PROCESSING = "processing";
+    private static final String STATUS_SKIPPED = "skipped";
 
     private final AmlVerificationRepo amlVerificationRepo;
     private final AppUserRepo appUserRepo;
@@ -69,6 +70,11 @@ public class AmlMonitorCronJob {
                 verification = amlVerificationService.refundVerification(verification.getId());
                 notifyUserFailed(verification);
                 logger.info("AML verification failed for wallet: {}, id: {}", verification.getWalletAddress(), verification.getId());
+            } else if (STATUS_SKIPPED.equalsIgnoreCase(status)) {
+                verification = amlVerificationService.skipVerification(verification.getId(), data);
+                notifyUserFailed(verification);
+                logger.info("AML verification skipped for wallet: {}, id: {}, message: {}",
+                        verification.getWalletAddress(), verification.getId(), data.getMessage());
             } else if (STATUS_PROCESSING.equalsIgnoreCase(status)) {
                 logger.info("AML verification still processing: id: {}", verification.getId());
             }
