@@ -6,6 +6,8 @@ import java.util.List;
 import org.ipan.nrgyrent.dashboard.api.model.DepositPage;
 import org.ipan.nrgyrent.dashboard.api.model.GeneralStatistics;
 import org.ipan.nrgyrent.dashboard.api.model.OrderPage;
+import org.ipan.nrgyrent.dashboard.api.model.ReferralProgramPaymentPage;
+import org.ipan.nrgyrent.dashboard.api.model.ReferralSystemPage;
 import org.ipan.nrgyrent.dashboard.api.model.UserProfitPage;
 
 /** Creates generated page models with stable pagination bounds. */
@@ -57,5 +59,13 @@ public final class DashboardPageFactory {
                 BigDecimal.ZERO,
                 BigDecimal.ZERO,
                 BigDecimal.ZERO);
+    }
+
+    public static ReferralSystemPage emptyReferralSystem(Integer page, Integer size) {
+        return new ReferralSystemPage(List.of(), normalizePage(page), normalizeSize(size), 0L, 0);
+    }
+
+    public static ReferralProgramPaymentPage emptyReferralProgramPayments(Integer page, Integer size) {
+        return new ReferralProgramPaymentPage(List.of(), normalizePage(page), normalizeSize(size), 0L, 0);
     }
 }

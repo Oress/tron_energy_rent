@@ -128,6 +128,52 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '500':
           $ref: '#/components/responses/ServerError'
+  /api/v1/dashboard/referral-system:
+    get:
+      tags: [ReferralSystem]
+      operationId: getReferralSystem
+      summary: Return one page of referral relationships and payments
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - $ref: '#/components/parameters/UserId'
+        - $ref: '#/components/parameters/GroupId'
+        - $ref: '#/components/parameters/DateFrom'
+        - $ref: '#/components/parameters/DateTo'
+      responses:
+        '200':
+          description: Referral system page
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReferralSystemPage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/ServerError'
+  /api/v1/dashboard/referral-program-payments:
+    get:
+      tags: [ReferralProgramPayments]
+      operationId: getReferralProgramPayments
+      summary: Return one page of referral program payments
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - $ref: '#/components/parameters/UserId'
+        - $ref: '#/components/parameters/GroupId'
+        - $ref: '#/components/parameters/DateFrom'
+        - $ref: '#/components/parameters/DateTo'
+      responses:
+        '200':
+          description: Referral program payments page
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReferralProgramPaymentPage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/ServerError'
 components:
   parameters:
     Page:
@@ -399,6 +445,45 @@ components:
         newField:
           type: number
           description: New field value in decimal TRX.
+    ReferralSystemRow:
+      type: object
+      additionalProperties: false
+      description: One row of the Referral System report. Payment amounts are decimal TRX.
+      required: [referrer, referral, program, pendingPayment, paidForPeriod, paidTotal]
+      properties:
+        referrer:
+          type: string
+          nullable: true
+        referral:
+          type: string
+          nullable: true
+        program:
+          type: string
+          nullable: true
+        pendingPayment:
+          type: number
+          description: Pending payment in decimal TRX.
+        paidForPeriod:
+          type: number
+          description: Amount paid for the selected period in decimal TRX.
+        paidTotal:
+          type: number
+          description: Total amount paid in decimal TRX.
+    ReferralProgramPaymentRow:
+      type: object
+      additionalProperties: false
+      description: One referral program payment. Amount is decimal TRX.
+      required: [user, amount, date]
+      properties:
+        user:
+          type: string
+          nullable: true
+        amount:
+          type: number
+          description: Payment amount in decimal TRX.
+        date:
+          type: string
+          format: date-time
     OrderPage:
       type: object
       additionalProperties: false
@@ -450,6 +535,48 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/DepositRow'
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+    ReferralSystemPage:
+      type: object
+      additionalProperties: false
+      required: [content, page, size, totalElements, totalPages]
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReferralSystemRow'
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+    ReferralProgramPaymentPage:
+      type: object
+      additionalProperties: false
+      required: [content, page, size, totalElements, totalPages]
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReferralProgramPaymentRow'
         page:
           type: integer
           format: int32

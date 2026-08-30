@@ -7,6 +7,8 @@ import org.ipan.nrgyrent.dashboard.api.model.FilterOption;
 import org.ipan.nrgyrent.dashboard.api.model.DepositPage;
 import org.ipan.nrgyrent.dashboard.api.model.GeneralStatistics;
 import org.ipan.nrgyrent.dashboard.api.model.OrderPage;
+import org.ipan.nrgyrent.dashboard.api.model.ReferralProgramPaymentPage;
+import org.ipan.nrgyrent.dashboard.api.model.ReferralSystemPage;
 import org.ipan.nrgyrent.dashboard.api.model.UserProfitPage;
 import org.springframework.stereotype.Service;
 
@@ -40,6 +42,18 @@ public class DashboardQueryService {
                                                   LocalDate dateFrom, LocalDate dateTo) {
         //TODO: implement queries
         return DashboardPageFactory.emptyGeneralStatistics();
+    }
+
+    public ReferralSystemPage getReferralSystem(Integer page, Integer size, Long userId, Long groupId,
+                                                LocalDate dateFrom, LocalDate dateTo) {
+        //TODO: implement queries
+        return DashboardPageFactory.emptyReferralSystem(page, size);
+    }
+
+    public ReferralProgramPaymentPage getReferralProgramPayments(
+            Integer page, Integer size, Long userId, Long groupId, LocalDate dateFrom, LocalDate dateTo) {
+        //TODO: implement queries
+        return DashboardPageFactory.emptyReferralProgramPayments(page, size);
     }
 
     public List<FilterOption> getFilterUsers() {

@@ -1,0 +1,68 @@
+<section
+  class="mb-5 overflow-hidden rounded-[5px] border border-[var(--ledger-line)] bg-white shadow-[0_8px_24px_rgb(16_27_43_/_5%)]"
+  aria-labelledby="referral-system-title"
+>
+  <header class="flex items-end justify-between gap-4 border-b border-[var(--ledger-line)] p-4 sm:px-5 sm:py-[1.15rem]">
+    <div>
+      <p class="m-0 mb-0.5 font-mono text-[0.62rem] font-semibold tracking-[0.11em] text-[var(--ledger-rail)]">REPORT / REFERRAL SYSTEM</p>
+      <h3 id="referral-system-title" class="m-0 font-[var(--font-display)] text-xl font-semibold">Реферальная система</h3>
+    </div>
+    <span class="data-value text-[0.68rem] text-[var(--ledger-slate)]">{{ total() }} записей</span>
+  </header>
+
+  @if (error()) {
+    <app-request-state [error]="error()" (retry)="retry()" />
+  } @else if (loading() && rows().length === 0) {
+    <app-request-state [loading]="true" />
+  } @else {
+    <div
+      class="relative max-w-full overflow-x-auto [scrollbar-color:var(--ledger-rail)_#e5edf1] [scrollbar-width:thin]"
+      tabindex="0"
+      aria-label="Таблица реферальной системы; прокручивается по горизонтали"
+      [attr.aria-busy]="loading()"
+    >
+      @if (loading()) {
+        <div class="sticky left-0 top-0 z-10 w-fit min-w-full bg-[#eaf4f7] px-4 py-1.5 text-xs font-semibold text-[var(--ledger-rail)]" role="status">
+          Обновляем данные…
+        </div>
+      }
+      <table
+        class="w-full min-w-[1050px] border-collapse text-left [&_td]:whitespace-nowrap [&_td]:border-b [&_td]:border-[var(--ledger-line)] [&_td]:px-3 [&_td]:py-2.5 [&_td]:text-xs [&_td]:text-[#263748] [&_th]:whitespace-nowrap [&_th]:border-b [&_th]:border-[var(--ledger-line)] [&_th]:bg-[#edf4f7] [&_th]:px-3 [&_th]:py-3 [&_th]:font-mono [&_th]:text-[0.66rem] [&_th]:font-semibold [&_th]:tracking-[0.02em] [&_th]:text-[#334455]"
+      >
+        <thead>
+          <tr>
+            <th>Реферер</th>
+            <th>Реферал</th>
+            <th>Программа</th>
+            <th class="text-right!">Выплата в ожидании</th>
+            <th class="text-right!">Выплачено за период</th>
+            <th class="text-right!">Выплачено всего</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of rows(); track $index) {
+            <tr class="even:bg-[#fbfdfe] hover:bg-[#f1f7f9]">
+              <td>{{ row.referrer ?? '—' }}</td>
+              <td>{{ row.referral ?? '—' }}</td>
+              <td>{{ row.program ?? '—' }}</td>
+              <td class="data-value text-right! font-semibold! text-[#8a5a14]!">{{ row.pendingPayment | trxAmount }}</td>
+              <td class="data-value text-right! font-semibold!">{{ row.paidForPeriod | trxAmount }}</td>
+              <td class="data-value text-right! font-semibold!">{{ row.paidTotal | trxAmount }}</td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="6" class="h-36 text-center! text-[var(--ledger-slate)]!">Нет данных по выбранным условиям.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <app-table-paginator
+      [first]="first()"
+      [pageSize]="pageSize()"
+      [total]="total()"
+      [disabled]="loading()"
+      (page)="onPage($event)"
+    />
+  }
+</section>
