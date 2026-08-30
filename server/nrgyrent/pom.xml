@@ -21,14 +21,6 @@
         <dockerfile-maven-plugin.repository>oress/energy_tg_bot</dockerfile-maven-plugin.repository>
         <mapdb.version>3.1.0</mapdb.version>
         <start-class>org.ipan.nrgyrent.NrgyrentApplication</start-class>
-
-        <!-- Angular dashboard build -->
-        <node.version>v24.19.0</node.version>
-        <npm.version>11.17.0</npm.version>
-        <frontend-maven-plugin.version>1.15.4</frontend-maven-plugin.version>
-        <git-commit-id-plugin.version>9.2.0</git-commit-id-plugin.version>
-        <angular.build.skip>false</angular.build.skip>
-        <angular.build.config>build</angular.build.config>
     </properties>
 
     <dependencies>
@@ -261,114 +253,6 @@
                         <enabled>true</enabled>
                     </layers>
                 </configuration>
-            </plugin>
-
-            <!-- Exposes ${git.commit.id.abbrev} etc. for the Angular version-info generation -->
-            <plugin>
-                <groupId>io.github.git-commit-id</groupId>
-                <artifactId>git-commit-id-maven-plugin</artifactId>
-                <version>${git-commit-id-plugin.version}</version>
-                <executions>
-                    <execution>
-                        <id>get-the-git-infos</id>
-                        <goals>
-                            <goal>revision</goal>
-                        </goals>
-                        <phase>initialize</phase>
-                    </execution>
-                </executions>
-                <configuration>
-                    <generateGitPropertiesFile>true</generateGitPropertiesFile>
-                    <generateGitPropertiesFilename>${project.build.outputDirectory}/git.properties</generateGitPropertiesFilename>
-                    <failOnNoGitDirectory>false</failOnNoGitDirectory>
-                    <failOnUnableToExtractRepoInfo>false</failOnUnableToExtractRepoInfo>
-                </configuration>
-            </plugin>
-
-            <!-- Builds the Angular dashboard (server/dashboard) and packages it into the jar -->
-            <plugin>
-                <groupId>com.github.eirslett</groupId>
-                <artifactId>frontend-maven-plugin</artifactId>
-                <version>${frontend-maven-plugin.version}</version>
-                <configuration>
-                    <skip>${angular.build.skip}</skip>
-                    <workingDirectory>${project.basedir}/../dashboard</workingDirectory>
-                    <installDirectory>target</installDirectory>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>install node and npm</id>
-                        <goals>
-                            <goal>install-node-and-npm</goal>
-                        </goals>
-                        <configuration>
-                            <nodeVersion>${node.version}</nodeVersion>
-                            <npmVersion>${npm.version}</npmVersion>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>npm install</id>
-                        <goals>
-                            <goal>npm</goal>
-                        </goals>
-                        <configuration>
-                            <arguments>install</arguments>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>npm generate-api</id>
-                        <goals>
-                            <goal>npm</goal>
-                        </goals>
-                        <configuration>
-                            <arguments>run generate-api</arguments>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>generate version info</id>
-                        <goals>
-                            <goal>npm</goal>
-                        </goals>
-                        <configuration>
-                            <arguments>run generate-version ${project.version} ${project.basedir}/../dashboard/src/environments/version.ts ${git.commit.id.abbrev}</arguments>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>npm run build</id>
-                        <goals>
-                            <goal>npm</goal>
-                        </goals>
-                        <configuration>
-                            <arguments>run ${angular.build.config}</arguments>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-resources-plugin</artifactId>
-                <version>3.3.1</version>
-                <executions>
-                    <execution>
-                        <id>copy-angular-build</id>
-                        <phase>process-resources</phase>
-                        <goals>
-                            <goal>copy-resources</goal>
-                        </goals>
-                        <configuration>
-                            <!-- Execution-level skip so the default resource copying is never affected -->
-                            <skip>${angular.build.skip}</skip>
-                            <outputDirectory>${project.build.directory}/classes/static</outputDirectory>
-                            <resources>
-                                <resource>
-                                    <directory>${project.basedir}/../dashboard/dist/dashboard/browser</directory>
-                                    <filtering>false</filtering>
-                                </resource>
-                            </resources>
-                        </configuration>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
     </build>
