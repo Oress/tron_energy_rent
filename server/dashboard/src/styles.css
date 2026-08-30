@@ -1,0 +1,66 @@
+@import 'tailwindcss';
+@import 'tailwindcss-primeui';
+
+:root {
+  color-scheme: light;
+  --ledger-ink: #101b2b;
+  --ledger-slate: #526176;
+  --ledger-mist: #f3f7fa;
+  --ledger-paper: #ffffff;
+  --ledger-rail: #16758f;
+  --ledger-signal: #20a4c8;
+  --ledger-positive: #147d64;
+  --ledger-warning: #b87333;
+  --ledger-line: #dbe5eb;
+  --font-display: Bahnschrift, 'Arial Narrow', sans-serif;
+  --font-body: 'Segoe UI Variable', 'Segoe UI', sans-serif;
+  --font-data: 'Cascadia Mono', 'Roboto Mono', monospace;
+  font-family: var(--font-body);
+  color: var(--ledger-ink);
+  background: var(--ledger-mist);
+  font-synthesis: none;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-width: 320px;
+  min-height: 100%;
+  background: var(--ledger-mist);
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  background:
+    linear-gradient(90deg, rgb(32 164 200 / 4%) 1px, transparent 1px) 0 0 / 28px 28px,
+    var(--ledger-mist);
+}
+
+button,
+input {
+  font: inherit;
+}
+
+:focus-visible {
+  outline: 3px solid rgb(32 164 200 / 35%);
+  outline-offset: 2px;
+}
+
+.data-value {
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

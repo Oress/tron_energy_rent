@@ -1,0 +1,127 @@
+:host {
+  display: block;
+  min-height: 100vh;
+}
+
+.app-header {
+  position: sticky;
+  z-index: 30;
+  top: 0;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  min-height: 68px;
+  padding: 0.7rem 1rem;
+  color: white;
+  border-bottom: 1px solid rgb(255 255 255 / 12%);
+  background: rgb(16 27 43 / 96%);
+  box-shadow: 0 8px 28px rgb(16 27 43 / 14%);
+  backdrop-filter: blur(14px);
+}
+
+.brand-mark {
+  display: flex;
+  align-items: end;
+  gap: 3px;
+  width: 32px;
+  height: 32px;
+  margin-right: 0.75rem;
+  padding: 6px;
+  border: 1px solid rgb(255 255 255 / 18%);
+  border-radius: 4px;
+  background: rgb(255 255 255 / 5%);
+
+  span {
+    width: 4px;
+    border-radius: 1px 1px 0 0;
+    background: var(--ledger-signal);
+  }
+
+  span:nth-child(1) { height: 8px; }
+  span:nth-child(2) { height: 18px; }
+  span:nth-child(3) { height: 12px; }
+}
+
+.brand-copy {
+  min-width: 0;
+
+  .eyebrow {
+    margin: 0 0 0.08rem;
+    color: #8fd9eb;
+    font-family: var(--font-data);
+    font-size: 0.58rem;
+    letter-spacing: 0.12em;
+  }
+
+  h1 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    font-stretch: condensed;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+  }
+}
+
+.build-stamp {
+  display: grid;
+  justify-items: end;
+  color: #d5e2e8;
+  font-family: var(--font-data);
+  font-size: 0.62rem;
+
+  span {
+    color: #7f95a4;
+    font-size: 0.52rem;
+    letter-spacing: 0.14em;
+  }
+
+  strong {
+    max-width: 8rem;
+    overflow: hidden;
+    font-weight: 500;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  small {
+    color: #7f95a4;
+    font-size: 0.56rem;
+  }
+}
+
+.app-main {
+  position: relative;
+  width: 100%;
+  max-width: 1680px;
+  margin: 0 auto;
+  padding: 1.35rem 1rem 4rem 1.7rem;
+}
+
+.ledger-rail {
+  position: absolute;
+  top: 1.35rem;
+  bottom: 4rem;
+  left: 0.88rem;
+  width: 3px;
+  border-radius: 2px;
+  background: linear-gradient(var(--ledger-signal), var(--ledger-rail) 55%, #9bb2be);
+  box-shadow: 0 0 0 4px rgb(32 164 200 / 7%);
+}
+
+@media (min-width: 768px) {
+  .app-header {
+    min-height: 76px;
+    padding-inline: 2rem;
+  }
+
+  .app-main {
+    padding: 2rem 2rem 5rem 3.4rem;
+  }
+
+  .ledger-rail {
+    top: 2rem;
+    bottom: 5rem;
+    left: 2.25rem;
+  }
+}

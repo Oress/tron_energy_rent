@@ -1,0 +1,21 @@
+<header class="app-header">
+  <div class="brand-mark" aria-hidden="true">
+    <span></span><span></span><span></span>
+  </div>
+
+  <div class="brand-copy">
+    <p class="eyebrow">TRON ENERGY OPERATIONS</p>
+    <h1>Nrgyrent</h1>
+  </div>
+
+  <div class="build-stamp" title="Версия интерфейса">
+    <span>BUILD</span>
+    <strong>{{ version }}</strong>
+    <small>{{ commit }}</small>
+  </div>
+</header>
+
+<main class="app-main">
+  <div class="ledger-rail" aria-hidden="true"></div>
+  <router-outlet />
+</main>

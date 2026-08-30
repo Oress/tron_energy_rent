@@ -1,0 +1,16 @@
+@if (loading()) {
+  <div class="flex min-h-36 flex-col items-center justify-center gap-3 text-sm text-muted-color" role="status">
+    <p-progress-spinner strokeWidth="3" [style]="{ width: '2rem', height: '2rem' }" />
+    <span>Загружаем данные…</span>
+  </div>
+} @else if (error()) {
+  <div class="flex min-h-36 flex-col items-start justify-center gap-3 px-4 py-6" role="alert">
+    <p class="m-0 font-medium text-color">Не удалось загрузить отчёт</p>
+    <p class="m-0 text-sm text-muted-color">{{ error() }}</p>
+    <p-button label="Повторить" icon="pi pi-refresh" severity="secondary" size="small" (onClick)="retry.emit()" />
+  </div>
+} @else if (empty()) {
+  <div class="flex min-h-36 items-center justify-center px-4 py-8 text-center text-sm text-muted-color">
+    {{ emptyText() }}
+  </div>
+}
