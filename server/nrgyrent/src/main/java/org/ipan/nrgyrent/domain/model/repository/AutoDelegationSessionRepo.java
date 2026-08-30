@@ -1,6 +1,7 @@
 package org.ipan.nrgyrent.domain.model.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.ipan.nrgyrent.domain.model.autodelegation.AutoDelegationSession;
 import org.ipan.nrgyrent.domain.model.projections.WalletWithAutoTopupSession;
@@ -13,6 +14,8 @@ public interface AutoDelegationSessionRepo extends JpaRepository<AutoDelegationS
     List<AutoDelegationSession> findByActive(Boolean active);
     List<AutoDelegationSession> findByAddressAndActive(String wallet, Boolean active);
     List<AutoDelegationSession> findByAddressAndUserTelegramIdAndActive(String wallet, Long userId, Boolean active);
+    List<AutoDelegationSession> findByUserTelegramIdAndActiveOrderByCreatedAtAsc(Long userId, Boolean active);
+    Optional<AutoDelegationSession> findByIdAndUserTelegramIdAndActive(Long id, Long userId, Boolean active);
 
     @Query(nativeQuery = true,
             value = """

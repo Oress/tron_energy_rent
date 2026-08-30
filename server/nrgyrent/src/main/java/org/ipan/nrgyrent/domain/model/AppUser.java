@@ -62,6 +62,10 @@ public class AppUser {
     @Column(name = "aml_provider")
     private AmlProvider amlProvider = AmlProvider.ELLIPTIC;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "auto_delegation_provider")
+    private EnergyProviderName autoDelegationProvider;
+
     @Column(name = "disabled_reason")
     private String disabledReason;
 
@@ -80,6 +84,14 @@ public class AppUser {
         }
 
         return bal;
+    }
+
+    public EnergyProviderName getAutoDelegationProviderToUse() {
+        if (autoDelegationProvider != null) {
+            return autoDelegationProvider;
+        }
+        Balance balanceToUse = getBalanceToUse();
+        return balanceToUse == null ? null : balanceToUse.getAutoEnergyProvider();
     }
 
     // If group balance is present -> use it, otherwise use personal balance.

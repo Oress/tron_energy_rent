@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import org.ipan.nrgyrent.domain.model.EnergyProviderName;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -112,6 +113,18 @@ public class InlineMenuCallbacks {
     public static final String MANAGE_USER_ACTION_ADJUST_BALANCE_MANUALLY = "manage_user_action_adjust_balance_manually";
     public static final String MANAGE_USER_ACTION_CHANGE_TARIFF = "manage_user_action_change_tariff";
     public static final String MANAGE_USER_ACTION_CHANGE_REF_PROGRAM = "manage_user_action_change_ref_program";
+    public static final String MANAGE_USER_AUTODELEGATION = "manage_user_autodelegation";
+    public static final String MANAGE_USER_AUTODELEGATION_PROVIDER_DEFAULT =
+            "/admin/user-auto-provider/default";
+    public static final String MANAGE_USER_AUTODELEGATION_PROVIDER_ITRX =
+            "/admin/user-auto-provider/ITRX";
+    public static final String MANAGE_USER_AUTODELEGATION_PROVIDER_TRXX =
+            "/admin/user-auto-provider/TRXX";
+    private static final String USER_AUTO_SESSION = "/admin/user-auto-session/";
+    private static final String USER_AUTO_SWITCH = "/admin/user-auto-switch/";
+    private static final String USER_AUTO_SWITCH_CONFIRM = "/admin/user-auto-switch-confirm/";
+    private static final String USER_AUTO_DEACTIVATE = "/admin/user-auto-deactivate/";
+    private static final String USER_AUTO_DEACTIVATE_CONFIRM = "/admin/user-auto-deactivate-confirm/";
 
 
     public static final String AML_CHECK = "aml_check";
@@ -139,6 +152,79 @@ public class InlineMenuCallbacks {
 
     public static final String CONFIRM_YES = "confirm_yes";
     public static final String CONFIRM_NO = "confirm_no";
+
+    public static String getUserAutoSessionCallback(Long sessionId) {
+        return USER_AUTO_SESSION + sessionId;
+    }
+
+    public static Long getUserAutoSessionId(String data) {
+        if (data != null && data.startsWith(USER_AUTO_SESSION)) {
+            return Long.parseLong(data.substring(USER_AUTO_SESSION.length()));
+        }
+        return null;
+    }
+
+    public static String getUserAutoSwitchCallback(Long sessionId, EnergyProviderName provider) {
+        return USER_AUTO_SWITCH + sessionId + "/" + provider;
+    }
+
+    public static Long getUserAutoSwitchSessionId(String data) {
+        if (data != null && data.startsWith(USER_AUTO_SWITCH)) {
+            String payload = data.substring(USER_AUTO_SWITCH.length());
+            return Long.parseLong(payload.substring(0, payload.indexOf('/')));
+        }
+        return null;
+    }
+
+    public static EnergyProviderName getUserAutoSwitchProvider(String data) {
+        if (data != null && data.startsWith(USER_AUTO_SWITCH)) {
+            String payload = data.substring(USER_AUTO_SWITCH.length());
+            return EnergyProviderName.valueOf(payload.substring(payload.indexOf('/') + 1));
+        }
+        return null;
+    }
+
+    public static String getUserAutoSwitchConfirmCallback(Long sessionId, EnergyProviderName provider) {
+        return USER_AUTO_SWITCH_CONFIRM + sessionId + "/" + provider;
+    }
+
+    public static Long getUserAutoSwitchConfirmSessionId(String data) {
+        if (data != null && data.startsWith(USER_AUTO_SWITCH_CONFIRM)) {
+            String payload = data.substring(USER_AUTO_SWITCH_CONFIRM.length());
+            return Long.parseLong(payload.substring(0, payload.indexOf('/')));
+        }
+        return null;
+    }
+
+    public static EnergyProviderName getUserAutoSwitchConfirmProvider(String data) {
+        if (data != null && data.startsWith(USER_AUTO_SWITCH_CONFIRM)) {
+            String payload = data.substring(USER_AUTO_SWITCH_CONFIRM.length());
+            return EnergyProviderName.valueOf(payload.substring(payload.indexOf('/') + 1));
+        }
+        return null;
+    }
+
+    public static String getUserAutoDeactivateCallback(Long sessionId) {
+        return USER_AUTO_DEACTIVATE + sessionId;
+    }
+
+    public static Long getUserAutoDeactivateSessionId(String data) {
+        if (data != null && data.startsWith(USER_AUTO_DEACTIVATE)) {
+            return Long.parseLong(data.substring(USER_AUTO_DEACTIVATE.length()));
+        }
+        return null;
+    }
+
+    public static String getUserAutoDeactivateConfirmCallback(Long sessionId) {
+        return USER_AUTO_DEACTIVATE_CONFIRM + sessionId;
+    }
+
+    public static Long getUserAutoDeactivateConfirmSessionId(String data) {
+        if (data != null && data.startsWith(USER_AUTO_DEACTIVATE_CONFIRM)) {
+            return Long.parseLong(data.substring(USER_AUTO_DEACTIVATE_CONFIRM.length()));
+        }
+        return null;
+    }
 
 
     private static final String QUICK_TRANSACTION = "/quick_tx/";

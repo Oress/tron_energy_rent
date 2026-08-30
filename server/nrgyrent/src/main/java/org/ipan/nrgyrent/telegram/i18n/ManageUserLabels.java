@@ -44,6 +44,66 @@ public class ManageUserLabels {
         return getLocalizedMessage("manage_users.menu.deactivate");
     }
 
+    public String menuAutoDelegation() {
+        return getLocalizedMessage("manage_users.menu.auto_delegation");
+    }
+
+    public String autoDelegationDescription() {
+        return getLocalizedMessage("manage_users.auto_delegation.description");
+    }
+
+    public String autoDelegationWarningActiveUnaffected() {
+        return getLocalizedMessage("manage_users.auto_delegation.warning_active_unaffected");
+    }
+
+    public String autoDelegationConfiguredProvider(String provider) {
+        return getLocalizedMessage("manage_users.auto_delegation.configured_provider", provider);
+    }
+
+    public String autoDelegationEffectiveProvider(String provider) {
+        return getLocalizedMessage("manage_users.auto_delegation.effective_provider", provider);
+    }
+
+    public String autoDelegationDefaultProvider() {
+        return getLocalizedMessage("manage_users.auto_delegation.default_provider");
+    }
+
+    public String autoDelegationUseDefault() {
+        return getLocalizedMessage("manage_users.auto_delegation.use_default");
+    }
+
+    public String autoDelegationActiveSessions() {
+        return getLocalizedMessage("manage_users.auto_delegation.active_sessions");
+    }
+
+    public String autoDelegationNoActiveSessions() {
+        return getLocalizedMessage("manage_users.auto_delegation.no_active_sessions");
+    }
+
+    public String autoDelegationSession(String sessionId, String address, String provider, String createdAt) {
+        return getLocalizedMessage("manage_users.auto_delegation.session", sessionId, address, provider, createdAt);
+    }
+
+    public String autoDelegationChangeProvider(String provider) {
+        return getLocalizedMessage("manage_users.auto_delegation.change_provider", provider);
+    }
+
+    public String autoDelegationDeactivate() {
+        return getLocalizedMessage("manage_users.auto_delegation.deactivate");
+    }
+
+    public String autoDelegationSwitchConfirm(String provider) {
+        return getLocalizedMessage("manage_users.auto_delegation.switch_confirm", provider);
+    }
+
+    public String autoDelegationDeactivateConfirm() {
+        return getLocalizedMessage("manage_users.auto_delegation.deactivate_confirm");
+    }
+
+    public String autoDelegationActionFailed() {
+        return getLocalizedMessage("manage_users.auto_delegation.action_failed");
+    }
+
     public String deactivateConfirm() {
         return getLocalizedMessage("manage_users.deactivate.confirm");
     }

@@ -60,4 +60,10 @@
                                  referencedColumnNames="telegram_id"/>
     </changeSet>
 
+    <changeSet id="add auto delegation provider override to users" author="oress">
+        <addColumn tableName="nrg_users">
+            <column name="auto_delegation_provider" type="text"/>
+        </addColumn>
+    </changeSet>
+
 </databaseChangeLog>

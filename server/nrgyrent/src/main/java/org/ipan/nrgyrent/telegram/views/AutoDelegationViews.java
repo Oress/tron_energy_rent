@@ -228,6 +228,7 @@ public class AutoDelegationViews {
         return switch (status){
             case AutoDelegationSessionStatus.ACTIVE -> commonLabels.greenCircle();
             case AutoDelegationSessionStatus.STOPPED_BY_USER,
+                 AutoDelegationSessionStatus.STOPPED_BY_ADMIN,
                  AutoDelegationSessionStatus.STOPPED_ENERGY_UNUSED,
                  AutoDelegationSessionStatus.STOPPED_INACTIVE_WALLET,
                  AutoDelegationSessionStatus.STOPPED_SYSTEM_RESTART,
@@ -262,6 +263,7 @@ public class AutoDelegationViews {
         return switch (status){
             case AutoDelegationSessionStatus.ACTIVE -> autoDelegateLabels.statusActive(userState.getLocaleOrDefault()) ;
             case AutoDelegationSessionStatus.STOPPED_BY_USER -> autoDelegateLabels.statusStoppedByUser(userState.getLocaleOrDefault()) ;
+            case AutoDelegationSessionStatus.STOPPED_BY_ADMIN -> autoDelegateLabels.statusStoppedByAdmin(userState.getLocaleOrDefault());
             case AutoDelegationSessionStatus.STOPPED_ENERGY_UNUSED -> autoDelegateLabels.statusEnergyUnused(userState.getLocaleOrDefault());
             case AutoDelegationSessionStatus.STOPPED_NODE_DISCONNECTED -> autoDelegateLabels.statusSystemOffline(userState.getLocaleOrDefault());
             case AutoDelegationSessionStatus.STOPPED_INSUFFICIENT_BALANCE -> autoDelegateLabels.statusInsufficientFunds(userState.getLocaleOrDefault()) ;

@@ -5,13 +5,16 @@ import java.util.List;
 
 import org.ipan.nrgyrent.domain.model.AppUser;
 import org.ipan.nrgyrent.domain.model.BalanceReferralProgram;
+import org.ipan.nrgyrent.domain.model.EnergyProviderName;
 import org.ipan.nrgyrent.domain.model.Tariff;
+import org.ipan.nrgyrent.domain.model.autodelegation.AutoDelegationSession;
 import org.ipan.nrgyrent.telegram.InlineMenuCallbacks;
 import org.ipan.nrgyrent.telegram.i18n.CommonLabels;
 import org.ipan.nrgyrent.telegram.i18n.ManageUserLabels;
 import org.ipan.nrgyrent.telegram.state.UserState;
 import org.ipan.nrgyrent.telegram.utils.FormattingTools;
 import org.ipan.nrgyrent.telegram.utils.ParseUtils;
+import org.ipan.nrgyrent.telegram.utils.WalletTools;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
@@ -196,6 +199,114 @@ public class ManageUserActionsView {
         tgClient.execute(message);
     }
 
+    public void updMenuToUserAutoDelegation(
+            UserState userState,
+            AppUser user,
+            List<AutoDelegationSession> activeSessions) {
+        String configuredProvider = user.getAutoDelegationProvider() == null
+                ? manageUserLabels.autoDelegationDefaultProvider()
+                : user.getAutoDelegationProvider().name();
+        String effectiveProvider = user.getAutoDelegationProviderToUse() == null
+                ? manageUserLabels.autoDelegationDefaultProvider()
+                : user.getAutoDelegationProviderToUse().name();
+        String sessionsText = activeSessions.isEmpty()
+                ? manageUserLabels.autoDelegationNoActiveSessions()
+                : manageUserLabels.autoDelegationActiveSessions();
+
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
+                .text(String.join("\n\n",
+                        manageUserLabels.autoDelegationDescription(),
+                        manageUserLabels.autoDelegationConfiguredProvider(configuredProvider),
+                        manageUserLabels.autoDelegationEffectiveProvider(effectiveProvider),
+                        manageUserLabels.autoDelegationWarningActiveUnaffected(),
+                        sessionsText))
+                .replyMarkup(getUserAutoDelegationMarkup(activeSessions))
+                .build();
+        executeMenuUpdate(message, "updMenuToUserAutoDelegation", userState);
+    }
+
+    public void updMenuToUserAutoDelegationSession(UserState userState, AutoDelegationSession session) {
+        EnergyProviderName targetProvider = session.getEnergyProvider() == EnergyProviderName.ITRX
+                ? EnergyProviderName.TRXX
+                : EnergyProviderName.ITRX;
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
+                .text(manageUserLabels.autoDelegationSession(
+                        session.getId().toString(),
+                        WalletTools.formatTronAddress(session.getAddress()),
+                        session.getEnergyProvider().name(),
+                        FormattingTools.formatDtUtc(session.getCreatedAt())))
+                .replyMarkup(InlineKeyboardMarkup
+                        .builder()
+                        .keyboardRow(new InlineKeyboardRow(InlineKeyboardButton
+                                .builder()
+                                .text(manageUserLabels.autoDelegationChangeProvider(targetProvider.name()))
+                                .callbackData(InlineMenuCallbacks.getUserAutoSwitchCallback(session.getId(), targetProvider))
+                                .build()))
+                        .keyboardRow(new InlineKeyboardRow(InlineKeyboardButton
+                                .builder()
+                                .text(manageUserLabels.autoDelegationDeactivate())
+                                .callbackData(InlineMenuCallbacks.getUserAutoDeactivateCallback(session.getId()))
+                                .build()))
+                        .keyboardRow(new InlineKeyboardRow(
+                                InlineKeyboardButton.builder()
+                                        .text(commonLabels.toMainMenu())
+                                        .callbackData(InlineMenuCallbacks.TO_MAIN_MENU)
+                                        .build(),
+                                InlineKeyboardButton.builder()
+                                        .text(commonLabels.goBack())
+                                        .callbackData(InlineMenuCallbacks.GO_BACK)
+                                        .build()))
+                        .build())
+                .build();
+        executeMenuUpdate(message, "updMenuToUserAutoDelegationSession", userState);
+    }
+
+    public boolean confirmUserAutoDelegationSwitch(
+            UserState userState,
+            AutoDelegationSession session,
+            EnergyProviderName targetProvider) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
+                .text(manageUserLabels.autoDelegationSwitchConfirm(targetProvider.name()))
+                .replyMarkup(confirmUserAutoDelegationActionMarkup(
+                        InlineMenuCallbacks.getUserAutoSessionCallback(session.getId()),
+                        InlineMenuCallbacks.getUserAutoSwitchConfirmCallback(session.getId(), targetProvider)))
+                .build();
+        return executeMenuUpdate(message, "confirmUserAutoDelegationSwitch", userState);
+    }
+
+    public boolean confirmUserAutoDelegationDeactivate(UserState userState, AutoDelegationSession session) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
+                .text(manageUserLabels.autoDelegationDeactivateConfirm())
+                .replyMarkup(confirmUserAutoDelegationActionMarkup(
+                        InlineMenuCallbacks.getUserAutoSessionCallback(session.getId()),
+                        InlineMenuCallbacks.getUserAutoDeactivateConfirmCallback(session.getId())))
+                .build();
+        return executeMenuUpdate(message, "confirmUserAutoDelegationDeactivate", userState);
+    }
+
+    public void userAutoDelegationActionFailed(UserState userState) {
+        EditMessageText message = EditMessageText
+                .builder()
+                .chatId(userState.getChatId())
+                .messageId(userState.getMenuMessageId())
+                .text(manageUserLabels.autoDelegationActionFailed())
+                .replyMarkup(commonViews.getToMainMenuAndBackMarkup())
+                .build();
+        executeMenuUpdate(message, "userAutoDelegationActionFailed", userState);
+    }
+
     public InlineKeyboardMarkup confirmDeleteGroupMarkup(UserState userState) {
         return InlineKeyboardMarkup
                 .builder()
@@ -241,6 +352,69 @@ public class ManageUserActionsView {
                 );
     }
 
+    private InlineKeyboardMarkup getUserAutoDelegationMarkup(List<AutoDelegationSession> activeSessions) {
+        InlineKeyboardMarkup.InlineKeyboardMarkupBuilder<?, ?> builder = InlineKeyboardMarkup
+                .builder()
+                .keyboardRow(new InlineKeyboardRow(
+                        InlineKeyboardButton.builder()
+                                .text(manageUserLabels.autoDelegationUseDefault())
+                                .callbackData(InlineMenuCallbacks.MANAGE_USER_AUTODELEGATION_PROVIDER_DEFAULT)
+                                .build(),
+                        InlineKeyboardButton.builder()
+                                .text(EnergyProviderName.ITRX.name())
+                                .callbackData(InlineMenuCallbacks.MANAGE_USER_AUTODELEGATION_PROVIDER_ITRX)
+                                .build(),
+                        InlineKeyboardButton.builder()
+                                .text(EnergyProviderName.TRXX.name())
+                                .callbackData(InlineMenuCallbacks.MANAGE_USER_AUTODELEGATION_PROVIDER_TRXX)
+                                .build()));
+        activeSessions.forEach(session -> builder.keyboardRow(new InlineKeyboardRow(
+                InlineKeyboardButton.builder()
+                        .text(manageUserLabels.autoDelegationSession(
+                                session.getId().toString(),
+                                WalletTools.formatTronAddress(session.getAddress()),
+                                session.getEnergyProvider().name(),
+                                FormattingTools.formatDtUtc(session.getCreatedAt())))
+                        .callbackData(InlineMenuCallbacks.getUserAutoSessionCallback(session.getId()))
+                        .build())));
+        return builder
+                .keyboardRow(new InlineKeyboardRow(
+                        InlineKeyboardButton.builder()
+                                .text(commonLabels.toMainMenu())
+                                .callbackData(InlineMenuCallbacks.TO_MAIN_MENU)
+                                .build(),
+                        InlineKeyboardButton.builder()
+                                .text(commonLabels.goBack())
+                                .callbackData(InlineMenuCallbacks.GO_BACK)
+                                .build()))
+                .build();
+    }
+
+    private InlineKeyboardMarkup confirmUserAutoDelegationActionMarkup(String cancelCallback, String confirmCallback) {
+        return InlineKeyboardMarkup
+                .builder()
+                .keyboardRow(new InlineKeyboardRow(
+                        InlineKeyboardButton.builder()
+                                .text(commonLabels.no())
+                                .callbackData(cancelCallback)
+                                .build(),
+                        InlineKeyboardButton.builder()
+                                .text(commonLabels.yes())
+                                .callbackData(confirmCallback)
+                                .build()))
+                .build();
+    }
+
+    private boolean executeMenuUpdate(EditMessageText message, String operation, UserState userState) {
+        try {
+            tgClient.execute(message);
+            return true;
+        } catch (Exception e) {
+            logger.error("Could not {} userstate {}", operation, userState, e);
+            return false;
+        }
+    }
+
     private InlineKeyboardMarkup getManageUserActionsMarkup(Boolean showDeactivateBtn) {
         InlineKeyboardMarkup.InlineKeyboardMarkupBuilder builder = InlineKeyboardMarkup
                 .builder()
@@ -272,6 +446,14 @@ public class ManageUserActionsView {
                                         .text(manageUserLabels.menuChangeWithdrawLimit())
                                         .callbackData(InlineMenuCallbacks.MANAGE_USER_ACTION_ADJUST_WITHDRAW_LIMIT)
                                         .build()));
+
+        builder.keyboardRow(
+                new InlineKeyboardRow(
+                        InlineKeyboardButton
+                                .builder()
+                                .text(manageUserLabels.menuAutoDelegation())
+                                .callbackData(InlineMenuCallbacks.MANAGE_USER_AUTODELEGATION)
+                                .build()));
 
         if (showDeactivateBtn) {
                 builder.keyboardRow(

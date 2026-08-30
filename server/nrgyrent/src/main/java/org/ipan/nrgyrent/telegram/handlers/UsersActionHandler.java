@@ -1,11 +1,18 @@
 package org.ipan.nrgyrent.telegram.handlers;
 
+import java.util.List;
+import java.util.Optional;
+
+import org.ipan.nrgyrent.application.service.EnergyService;
 import org.ipan.nrgyrent.domain.model.AppUser;
+import org.ipan.nrgyrent.domain.model.EnergyProviderName;
 import org.ipan.nrgyrent.domain.model.ReferralProgram;
 import org.ipan.nrgyrent.domain.model.Tariff;
 import org.ipan.nrgyrent.domain.model.Tariff_;
 import org.ipan.nrgyrent.domain.model.repository.ReferralProgramRepo;
 import org.ipan.nrgyrent.domain.model.repository.TariffRepo;
+import org.ipan.nrgyrent.domain.model.repository.AutoDelegationSessionRepo;
+import org.ipan.nrgyrent.domain.model.autodelegation.AutoDelegationSession;
 import org.ipan.nrgyrent.domain.service.BalanceService;
 import org.ipan.nrgyrent.domain.service.ReferalProgramService;
 import org.ipan.nrgyrent.domain.service.TariffService;
@@ -50,6 +57,8 @@ public class UsersActionHandler {
     private final TariffsSearchView tariffsSearchView;
     private final ReferralProgramsSearchView referralProgramsSearchView;
     private final ParseUtils parseUtils;
+    private final AutoDelegationSessionRepo autoDelegationSessionRepo;
+    private final EnergyService energyService;
     
     public UsersActionHandler(@Value("${app.pagination.tariffs.page-size:20}") int pageSize,
             TelegramState telegramState,
@@ -62,7 +71,9 @@ public class UsersActionHandler {
             ParseUtils parseUtils,
             TariffsSearchView tariffsSearchView,
             ReferralProgramsSearchView referralProgramsSearchView,
-            ReferalProgramService referalProgramService
+            ReferalProgramService referalProgramService,
+            AutoDelegationSessionRepo autoDelegationSessionRepo,
+            EnergyService energyService
             ) {
         this.pageSize = pageSize;
         this.telegramState = telegramState;
@@ -76,6 +87,210 @@ public class UsersActionHandler {
         this.referralProgramsSearchView = referralProgramsSearchView;
         this.parseUtils = parseUtils;
         this.referalProgramService = referalProgramService;
+        this.autoDelegationSessionRepo = autoDelegationSessionRepo;
+        this.energyService = energyService;
+    }
+
+    @MatchState(state = States.ADMIN_MANAGE_USERS_ACTION_PREVIEW,
+            callbackData = InlineMenuCallbacks.MANAGE_USER_AUTODELEGATION)
+    public void openUserAutoDelegation(UserState userState, Update update) {
+        renderUserAutoDelegation(userState);
+        telegramState.updateUserState(userState.getTelegramId(),
+                userState.withState(States.ADMIN_MANAGE_USER_AUTODELEGATION));
+    }
+
+    @MatchState(state = States.ADMIN_MANAGE_USER_AUTODELEGATION, updateTypes = UpdateType.CALLBACK_QUERY)
+    public void handleUserAutoDelegation(UserState userState, Update update) {
+        String data = update.getCallbackQuery().getData();
+        Long selectedUserId = selectedUserId(userState);
+
+        EnergyProviderName preference = getAutoDelegationPreference(data);
+        if (preference != null || InlineMenuCallbacks.MANAGE_USER_AUTODELEGATION_PROVIDER_DEFAULT.equals(data)) {
+            userService.setAutoDelegationProvider(selectedUserId, preference);
+            renderUserAutoDelegation(userState);
+            return;
+        }
+
+        try {
+            Long sessionId = InlineMenuCallbacks.getUserAutoSessionId(data);
+            if (sessionId == null) {
+                return;
+            }
+            findActiveUserSession(sessionId, selectedUserId).ifPresent(session -> {
+                manageUserActionsView.updMenuToUserAutoDelegationSession(userState, session);
+                telegramState.updateUserState(userState.getTelegramId(),
+                        userState.withState(States.ADMIN_MANAGE_USER_AUTODELEGATION_SESSION));
+            });
+        } catch (Exception e) {
+            logger.error("Could not open auto-delegation session {} for user {}", data, selectedUserId, e);
+            manageUserActionsView.userAutoDelegationActionFailed(userState);
+        }
+    }
+
+    @MatchState(state = States.ADMIN_MANAGE_USER_AUTODELEGATION_SESSION, updateTypes = UpdateType.CALLBACK_QUERY)
+    public void handleUserAutoDelegationSession(UserState userState, Update update) {
+        String data = update.getCallbackQuery().getData();
+        Long selectedUserId = selectedUserId(userState);
+
+        if (InlineMenuCallbacks.GO_BACK.equals(data)) {
+            renderUserAutoDelegation(userState);
+            telegramState.updateUserState(userState.getTelegramId(),
+                    userState.withState(States.ADMIN_MANAGE_USER_AUTODELEGATION));
+            return;
+        }
+
+        try {
+            Long switchSessionId = InlineMenuCallbacks.getUserAutoSwitchSessionId(data);
+            if (switchSessionId != null) {
+                EnergyProviderName targetProvider = InlineMenuCallbacks.getUserAutoSwitchProvider(data);
+                Optional<AutoDelegationSession> session = findActiveUserSession(switchSessionId, selectedUserId);
+                if (session.isEmpty() || !isValidSwitchTarget(session.get(), targetProvider)) {
+                    renderUserAutoDelegationAndSetState(userState);
+                    return;
+                }
+                if (manageUserActionsView.confirmUserAutoDelegationSwitch(userState, session.get(), targetProvider)) {
+                    telegramState.updateUserState(userState.getTelegramId(),
+                            userState.withState(States.ADMIN_MANAGE_USER_AUTODELEGATION_SWITCH_CONFIRM));
+                }
+                return;
+            }
+
+            Long deactivateSessionId = InlineMenuCallbacks.getUserAutoDeactivateSessionId(data);
+            if (deactivateSessionId != null) {
+                Optional<AutoDelegationSession> session = findActiveUserSession(deactivateSessionId, selectedUserId);
+                if (session.isEmpty()) {
+                    renderUserAutoDelegationAndSetState(userState);
+                    return;
+                }
+                if (manageUserActionsView.confirmUserAutoDelegationDeactivate(userState, session.get())) {
+                    telegramState.updateUserState(userState.getTelegramId(),
+                            userState.withState(States.ADMIN_MANAGE_USER_AUTODELEGATION_DEACTIVATE_CONFIRM));
+                }
+            }
+        } catch (Exception e) {
+            logger.error("Could not prepare auto-delegation action {} for user {}", data, selectedUserId, e);
+            manageUserActionsView.userAutoDelegationActionFailed(userState);
+        }
+    }
+
+    @MatchState(state = States.ADMIN_MANAGE_USER_AUTODELEGATION_SWITCH_CONFIRM,
+            updateTypes = UpdateType.CALLBACK_QUERY)
+    public void confirmUserAutoDelegationSwitch(UserState userState, Update update) {
+        String data = update.getCallbackQuery().getData();
+        Long selectedUserId = selectedUserId(userState);
+        Long sessionId = null;
+
+        try {
+            Long backSessionId = InlineMenuCallbacks.getUserAutoSessionId(data);
+            if (backSessionId != null) {
+                if (!showUserAutoDelegationSession(userState, selectedUserId, backSessionId)) {
+                    renderUserAutoDelegationAndSetState(userState);
+                }
+                return;
+            }
+
+            sessionId = InlineMenuCallbacks.getUserAutoSwitchConfirmSessionId(data);
+            EnergyProviderName targetProvider = InlineMenuCallbacks.getUserAutoSwitchConfirmProvider(data);
+            if (sessionId == null || !findActiveUserSession(sessionId, selectedUserId)
+                    .map(session -> isValidSwitchTarget(session, targetProvider)).orElse(false)) {
+                renderUserAutoDelegationAndSetState(userState);
+                return;
+            }
+
+            AutoDelegationSession session = energyService.switchSessionProvider(sessionId, selectedUserId, targetProvider);
+            manageUserActionsView.updMenuToUserAutoDelegationSession(userState, session);
+            telegramState.updateUserState(userState.getTelegramId(),
+                    userState.withState(States.ADMIN_MANAGE_USER_AUTODELEGATION_SESSION));
+        } catch (Exception e) {
+            logger.error("Could not switch auto-delegation session {} for user {}", sessionId, selectedUserId, e);
+            manageUserActionsView.userAutoDelegationActionFailed(userState);
+            telegramState.updateUserState(userState.getTelegramId(),
+                    userState.withState(States.ADMIN_MANAGE_USER_AUTODELEGATION_SESSION));
+        }
+    }
+
+    @MatchState(state = States.ADMIN_MANAGE_USER_AUTODELEGATION_DEACTIVATE_CONFIRM,
+            updateTypes = UpdateType.CALLBACK_QUERY)
+    public void confirmUserAutoDelegationDeactivate(UserState userState, Update update) {
+        String data = update.getCallbackQuery().getData();
+        Long selectedUserId = selectedUserId(userState);
+        Long sessionId = null;
+
+        try {
+            Long backSessionId = InlineMenuCallbacks.getUserAutoSessionId(data);
+            if (backSessionId != null) {
+                if (!showUserAutoDelegationSession(userState, selectedUserId, backSessionId)) {
+                    renderUserAutoDelegationAndSetState(userState);
+                }
+                return;
+            }
+
+            sessionId = InlineMenuCallbacks.getUserAutoDeactivateConfirmSessionId(data);
+            if (sessionId == null || findActiveUserSession(sessionId, selectedUserId).isEmpty()) {
+                renderUserAutoDelegationAndSetState(userState);
+                return;
+            }
+
+            energyService.deactivateSessionByAdmin(sessionId, selectedUserId);
+            renderUserAutoDelegation(userState);
+            telegramState.updateUserState(userState.getTelegramId(),
+                    userState.withState(States.ADMIN_MANAGE_USER_AUTODELEGATION));
+        } catch (Exception e) {
+            logger.error("Could not deactivate auto-delegation session {} for user {}", sessionId, selectedUserId, e);
+            manageUserActionsView.userAutoDelegationActionFailed(userState);
+            telegramState.updateUserState(userState.getTelegramId(),
+                    userState.withState(States.ADMIN_MANAGE_USER_AUTODELEGATION_SESSION));
+        }
+    }
+
+    private Long selectedUserId(UserState userState) {
+        return telegramState
+                .getOrCreateUserEdit(userState.getTelegramId())
+                .getSelectedUserId();
+    }
+
+    private EnergyProviderName getAutoDelegationPreference(String data) {
+        if (InlineMenuCallbacks.MANAGE_USER_AUTODELEGATION_PROVIDER_ITRX.equals(data)) {
+            return EnergyProviderName.ITRX;
+        }
+        if (InlineMenuCallbacks.MANAGE_USER_AUTODELEGATION_PROVIDER_TRXX.equals(data)) {
+            return EnergyProviderName.TRXX;
+        }
+        return null;
+    }
+
+    private Optional<AutoDelegationSession> findActiveUserSession(Long sessionId, Long selectedUserId) {
+        return autoDelegationSessionRepo.findByIdAndUserTelegramIdAndActive(sessionId, selectedUserId, true);
+    }
+
+    private boolean isValidSwitchTarget(AutoDelegationSession session, EnergyProviderName targetProvider) {
+        return (targetProvider == EnergyProviderName.ITRX || targetProvider == EnergyProviderName.TRXX)
+                && targetProvider != session.getEnergyProvider();
+    }
+
+    private boolean showUserAutoDelegationSession(UserState userState, Long selectedUserId, Long sessionId) {
+        Optional<AutoDelegationSession> session = findActiveUserSession(sessionId, selectedUserId);
+        if (session.isEmpty()) {
+            return false;
+        }
+        manageUserActionsView.updMenuToUserAutoDelegationSession(userState, session.get());
+        telegramState.updateUserState(userState.getTelegramId(),
+                userState.withState(States.ADMIN_MANAGE_USER_AUTODELEGATION_SESSION));
+        return true;
+    }
+
+    private void renderUserAutoDelegation(UserState userState) {
+        Long selectedUserId = selectedUserId(userState);
+        AppUser user = userService.getById(selectedUserId);
+        List<AutoDelegationSession> activeSessions = autoDelegationSessionRepo
+                .findByUserTelegramIdAndActiveOrderByCreatedAtAsc(selectedUserId, true);
+        manageUserActionsView.updMenuToUserAutoDelegation(userState, user, activeSessions);
+    }
+
+    private void renderUserAutoDelegationAndSetState(UserState userState) {
+        renderUserAutoDelegation(userState);
+        telegramState.updateUserState(userState.getTelegramId(),
+                userState.withState(States.ADMIN_MANAGE_USER_AUTODELEGATION));
     }
 
     @MatchState(state = States.ADMIN_MANAGE_USERS_ACTION_PREVIEW, callbackData = InlineMenuCallbacks.MANAGE_USER_ACTION_CHANGE_REF_PROGRAM)

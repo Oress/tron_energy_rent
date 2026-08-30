@@ -98,6 +98,10 @@ public class AutoDelegateLabels {
         return getLocalizedMessage("autodelegate.status.stop_by_user", localeOrDefault);
     }
 
+    public String statusStoppedByAdmin(Locale localeOrDefault) {
+        return getLocalizedMessage("autodelegate.status.stop_by_admin", localeOrDefault);
+    }
+
     public String statusEnergyUnused(Locale localeOrDefault) {
         return getLocalizedMessage("autodelegate.status.energy_unused", localeOrDefault);
     }

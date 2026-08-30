@@ -82,17 +82,7 @@ public class EnergyService implements AutoDelegationSessionDeactivator {
                 wallet
         );
 
-        CreateDelegatePolicyResponse createDelegatePolicyResponse;
-        if (newSession.getEnergyProvider() == EnergyProviderName.TRXX) {
-            createDelegatePolicyResponse = trxxRestClient.createDelegatePolicy(0, wallet);
-        } else {
-            createDelegatePolicyResponse = itrxRestClient.createDelegatePolicy(0, wallet);
-        }
-
-        if (createDelegatePolicyResponse.getErrno() != 0) {
-            logger.error("Something went wrong when creating a auto delegation session, response {}", createDelegatePolicyResponse);
-            throw new RuntimeException("Something went wrong when creating a auto delegation session");
-        }
+        createPolicy(autoDelegationClient(newSession.getEnergyProvider()), wallet);
 
         autoDelegationSessionEventPublisher.publishSessionCreated(newSession.getId());
 
@@ -152,6 +142,61 @@ public class EnergyService implements AutoDelegationSessionDeactivator {
         logger.info("AUTO DELEGATION. Deactivating auto delegation (Initialization problem) session id {} ", sessionId);
         AutoDelegationSession byId = autoTopupConfigRepo.findById(sessionId).orElseThrow(() -> new IllegalStateException("Session is not found by id"));
         deactivateSession(byId, AutoDelegationSessionStatus.STOPPED_INACTIVE_WALLET);
+    }
+
+    @Transactional
+    public AutoDelegationSession deactivateSessionByAdmin(Long sessionId, Long userId) {
+        AutoDelegationSession session = autoTopupConfigRepo
+                .findByIdAndUserTelegramIdAndActive(sessionId, userId, Boolean.TRUE)
+                .orElseThrow(() -> new IllegalArgumentException("Active session not found for user"));
+        return deactivateSession(session, AutoDelegationSessionStatus.STOPPED_BY_ADMIN);
+    }
+
+    public AutoDelegationSession switchSessionProvider(
+            Long sessionId, Long userId, EnergyProviderName newProvider) {
+        AutoDelegationSession session = autoTopupConfigRepo
+                .findByIdAndUserTelegramIdAndActive(sessionId, userId, Boolean.TRUE)
+                .orElseThrow(() -> new IllegalArgumentException("Active session not found for user"));
+        if (session.getStatus() != AutoDelegationSessionStatus.ACTIVE) {
+            throw new WalletSessionHasUnexpectedStatusException("Session has unexpected status");
+        }
+
+        EnergyProviderName oldProvider = session.getEnergyProvider();
+        if (oldProvider == newProvider) {
+            return session;
+        }
+
+        RestClient oldClient = autoDelegationClient(oldProvider);
+        RestClient newClient = autoDelegationClient(newProvider);
+        boolean oldPolicyPauseAttempted = false;
+        boolean newPolicyCreationAttempted = false;
+        try {
+            oldPolicyPauseAttempted = true;
+            setPolicyPaused(oldClient, session.getAddress(), true);
+            newPolicyCreationAttempted = true;
+            createPolicy(newClient, session.getAddress());
+            return autoDelegationSessionService.changeProvider(
+                    sessionId, userId, oldProvider, newProvider);
+        } catch (Exception switchFailure) {
+            if (newPolicyCreationAttempted) {
+                try {
+                    setPolicyPaused(newClient, session.getAddress(), true);
+                } catch (Exception compensationFailure) {
+                    switchFailure.addSuppressed(compensationFailure);
+                    logger.error("Could not pause new provider during compensation", compensationFailure);
+                }
+            }
+            if (oldPolicyPauseAttempted) {
+                try {
+                    setPolicyPaused(oldClient, session.getAddress(), false);
+                } catch (Exception compensationFailure) {
+                    switchFailure.addSuppressed(compensationFailure);
+                    logger.error("Could not resume old provider during compensation", compensationFailure);
+                }
+            }
+            throw new IllegalStateException(
+                    "Unable to switch auto-delegation provider", switchFailure);
+        }
     }
 
 /*
@@ -227,18 +272,31 @@ public class EnergyService implements AutoDelegationSessionDeactivator {
             throw new WalletSessionHasUnexpectedStatusException("Session has unexpected status");
         }
 
-        DelegatePolicyResponse delegatePolicyResponse;
-        if (session.getEnergyProvider() == EnergyProviderName.TRXX) {
-            delegatePolicyResponse = trxxRestClient.editDelegatePolicy(session.getAddress(), true);
-        } else {
-            delegatePolicyResponse = itrxRestClient.editDelegatePolicy(session.getAddress(), true);
-        }
-
-        if (delegatePolicyResponse == null || !Boolean.TRUE.equals(delegatePolicyResponse.getPause())) {
-            throw new IllegalStateException("Auto delegation provider did not pause the session");
-        }
+        setPolicyPaused(autoDelegationClient(session.getEnergyProvider()), session.getAddress(), true);
 
         return autoDelegationSessionService.deactivate(session.getId(), status);
+    }
+
+    private RestClient autoDelegationClient(EnergyProviderName provider) {
+        return switch (provider) {
+            case ITRX -> itrxRestClient;
+            case TRXX -> trxxRestClient;
+            default -> throw new IllegalArgumentException("Unsupported auto-delegation provider: " + provider);
+        };
+    }
+
+    private void setPolicyPaused(RestClient client, String address, boolean paused) {
+        DelegatePolicyResponse response = client.editDelegatePolicy(address, paused);
+        if (response == null || !Boolean.valueOf(paused).equals(response.getPause())) {
+            throw new IllegalStateException("Provider did not update the policy pause state");
+        }
+    }
+
+    private void createPolicy(RestClient client, String address) {
+        CreateDelegatePolicyResponse response = client.createDelegatePolicy(0, address);
+        if (response == null || !Integer.valueOf(0).equals(response.getErrno())) {
+            throw new IllegalStateException("Provider did not create the delegation policy");
+        }
     }
 
     public Order tryMakeSystemTransaction(Integer energyAmount, String duration, String receiveAddress) {

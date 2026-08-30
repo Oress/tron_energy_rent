@@ -47,7 +47,11 @@ public class AutoDelegationSessionService {
         newSession.setUser(user);
         newSession.setMessageToUpdate(messageId);
         newSession.setChatId(chatId);
-        newSession.setEnergyProvider(balanceToUse.getAutoEnergyProvider());
+        EnergyProviderName provider = user.getAutoDelegationProviderToUse();
+        if (provider != EnergyProviderName.ITRX && provider != EnergyProviderName.TRXX) {
+            throw new IllegalStateException("User has no supported auto-delegation provider");
+        }
+        newSession.setEnergyProvider(provider);
 
         autoDelegationSessionRepo.save(newSession);
 
@@ -59,6 +63,7 @@ public class AutoDelegationSessionService {
         AutoDelegationSession sessionToDeactivate = autoDelegationSessionRepo.findById(sessionId).orElseThrow(() -> new IllegalStateException("Session is not registered"));
 
         if (!AutoDelegationSessionStatus.STOPPED_BY_USER.equals(reason)
+                && !AutoDelegationSessionStatus.STOPPED_BY_ADMIN.equals(reason)
                 && !AutoDelegationSessionStatus.STOPPED_ENERGY_UNUSED.equals(reason)
                 && !AutoDelegationSessionStatus.STOPPED_INSUFFICIENT_BALANCE.equals(reason)
                 && !AutoDelegationSessionStatus.STOPPED_NODE_DISCONNECTED.equals(reason)
@@ -86,6 +91,25 @@ public class AutoDelegationSessionService {
         sessionToDeactivate.setActive(Boolean.FALSE);
 //        sessionToDeactivate.getEvents().add(generateSessionEndedEvent(sessionToDeactivate));
         return sessionToDeactivate;
+    }
+
+    @Transactional
+    public AutoDelegationSession changeProvider(
+            Long sessionId,
+            Long userId,
+            EnergyProviderName expectedProvider,
+            EnergyProviderName newProvider) {
+        AutoDelegationSession session = autoDelegationSessionRepo
+                .findByIdAndUserTelegramIdAndActive(sessionId, userId, Boolean.TRUE)
+                .orElseThrow(() -> new IllegalArgumentException("Active session not found for user"));
+        if (session.getStatus() != AutoDelegationSessionStatus.ACTIVE) {
+            throw new WalletSessionHasUnexpectedStatusException("Session has unexpected status");
+        }
+        if (session.getEnergyProvider() != expectedProvider) {
+            throw new IllegalStateException("Session provider changed concurrently");
+        }
+        session.setEnergyProvider(newProvider);
+        return session;
     }
 
     private AutoDelegationEvent generateSessionEndedEvent(AutoDelegationSession session) {

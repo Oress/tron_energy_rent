@@ -7,6 +7,7 @@ import org.ipan.nrgyrent.LiquibaseParameters;
 import org.ipan.nrgyrent.domain.model.AmlProvider;
 import org.ipan.nrgyrent.domain.model.AppUser;
 import org.ipan.nrgyrent.domain.model.Balance;
+import org.ipan.nrgyrent.domain.model.EnergyProviderName;
 import org.ipan.nrgyrent.domain.model.repository.BalanceReferralProgramRepo;
 import org.ipan.nrgyrent.domain.model.repository.UserRepo;
 import org.ipan.nrgyrent.domain.service.commands.TgUserId;
@@ -81,6 +82,17 @@ public class UserService {
         AppUser appUser = userRepo.findById(userId).orElse(null);
         appUser.setAmlProvider(provider);
         return appUser;
+    }
+
+    @Transactional
+    public AppUser setAutoDelegationProvider(Long userId, EnergyProviderName provider) {
+        if (provider != null && provider != EnergyProviderName.ITRX && provider != EnergyProviderName.TRXX) {
+            throw new IllegalArgumentException("Unsupported auto-delegation provider: " + provider);
+        }
+        AppUser user = userRepo.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        user.setAutoDelegationProvider(provider);
+        return user;
     }
 
     @Transactional

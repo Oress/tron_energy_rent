@@ -113,6 +113,7 @@ public class ManageUsersSearchHandler {
         @MatchState(forAdmin = true, state = States.ADMIN_MANAGE_USER_ACTION_CHANGE_REF_PROGRAM_SEARCHING, callbackData = InlineMenuCallbacks.GO_BACK),
         @MatchState(forAdmin = true, state = States.ADMIN_MANAGE_USER_ACTION_CHANGE_TARIFF_SUCCESS, callbackData = InlineMenuCallbacks.GO_BACK),
         @MatchState(forAdmin = true, state = States.ADMIN_MANAGE_USER_ACTION_CHANGE_REF_PROGRAM_SUCCESS, callbackData = InlineMenuCallbacks.GO_BACK),
+        @MatchState(forAdmin = true, state = States.ADMIN_MANAGE_USER_AUTODELEGATION, callbackData = InlineMenuCallbacks.GO_BACK),
     })
     public void openUserByCallback(UserState userState, Update update) {
         CallbackQuery callbackQuery = update.getCallbackQuery();
