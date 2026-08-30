@@ -7,6 +7,7 @@ import java.util.Locale;
 import java.util.stream.Collectors;
 
 import org.ipan.nrgyrent.domain.model.*;
+import org.ipan.nrgyrent.domain.model.autodelegation.AutoDelegationSession;
 import org.ipan.nrgyrent.domain.model.projections.ReferralDto;
 import org.ipan.nrgyrent.itrx.AppConstants;
 import org.ipan.nrgyrent.telegram.i18n.CommonLabels;
@@ -384,6 +385,27 @@ public class TelegramMessages {
                 .text(commonLabels.autoDelegationAlertBalanceLowAdmin(Locale.of("ru"),
                         FormattingTools.formatBalance(currentBalance),
                         FormattingTools.formatUser(user)))
+                .build();
+        return tgClient.execute(message);
+    }
+
+    @Retryable
+    @SneakyThrows
+    public Message sendAutoDelegationSessionCreatedAdmin(Long groupId, AutoDelegationSession session) {
+        AppUser user = session.getUser();
+        String username = user.getTelegramUsername() == null ? "-" : user.getTelegramUsername();
+        String firstName = user.getTelegramFirstName() == null ? "-" : user.getTelegramFirstName();
+        String userDescription = "%s %s (ID: %s)".formatted(username, firstName, user.getTelegramId());
+
+        SendMessage message = SendMessage
+                .builder()
+                .chatId(groupId)
+                .text(commonLabels.autoDelegationSessionCreatedAdmin(
+                        Locale.of("ru"),
+                        String.valueOf(session.getId()),
+                        userDescription,
+                        session.getAddress(),
+                        session.getEnergyProvider().name()))
                 .build();
         return tgClient.execute(message);
     }

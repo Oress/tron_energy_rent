@@ -94,6 +94,8 @@ public class EnergyService implements AutoDelegationSessionDeactivator {
             throw new RuntimeException("Something went wrong when creating a auto delegation session");
         }
 
+        autoDelegationSessionEventPublisher.publishSessionCreated(newSession.getId());
+
         // 2. save session to cache
 //        telegramState.createWalletMonitoringState(newSession.getId(), wallet);
         return newSession;
