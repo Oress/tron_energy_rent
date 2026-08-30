@@ -1,0 +1,116 @@
+:host {
+  display: block;
+}
+
+.report-card {
+  overflow: hidden;
+  margin-bottom: 1.25rem;
+  border: 1px solid var(--ledger-line);
+  border-radius: 5px;
+  background: var(--ledger-paper);
+  box-shadow: 0 8px 24px rgb(16 27 43 / 5%);
+}
+
+.report-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem;
+  border-bottom: 1px solid var(--ledger-line);
+
+  .section-code {
+    margin: 0 0 0.15rem;
+    color: var(--ledger-rail);
+    font-family: var(--font-data);
+    font-size: 0.62rem;
+    font-weight: 600;
+    letter-spacing: 0.11em;
+  }
+
+  h3 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 1.3rem;
+    font-weight: 560;
+  }
+}
+
+.record-count {
+  color: var(--ledger-slate);
+  font-size: 0.68rem;
+}
+
+.table-viewport {
+  overflow-x: auto;
+  max-width: 100%;
+  scrollbar-color: var(--ledger-rail) #e5edf1;
+  scrollbar-width: thin;
+}
+
+:host ::ng-deep .profit-table {
+  min-width: 1640px;
+
+  th {
+    padding: 0.72rem 0.65rem;
+    color: #334455;
+    background: #edf4f7;
+    font-family: var(--font-data);
+    font-size: 0.66rem;
+    font-weight: 650;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+  }
+
+  td {
+    max-width: 15rem;
+    padding: 0.62rem 0.65rem;
+    color: #263748;
+    font-size: 0.75rem;
+    white-space: nowrap;
+  }
+
+  th:first-child,
+  .sticky-cell {
+    position: sticky;
+    z-index: 2;
+    left: 0;
+    min-width: 10.5rem;
+    border-right: 2px solid #c8d9e1;
+    background: #f7fafb;
+  }
+
+  th:first-child {
+    z-index: 3;
+    background: #e3eff3;
+  }
+
+  .number-cell {
+    text-align: right;
+  }
+
+  .profit-cell {
+    color: var(--ledger-positive);
+    font-weight: 700;
+  }
+
+  .empty-cell {
+    height: 9rem;
+    color: var(--ledger-slate);
+    text-align: center;
+  }
+
+  .p-paginator {
+    position: sticky;
+    left: 0;
+    justify-content: flex-start;
+    min-width: min(100vw - 3rem, 48rem);
+    border-top: 1px solid var(--ledger-line);
+  }
+}
+
+@media (min-width: 768px) {
+  .report-heading {
+    padding: 1.15rem 1.25rem;
+  }
+}
