@@ -1,0 +1,44 @@
+<nav
+  class="flex flex-wrap items-center gap-3 border-t border-[var(--ledger-line)] bg-[#f8fbfc] px-3 py-3 text-xs text-[var(--ledger-slate)] sm:px-4"
+  aria-label="Постраничная навигация"
+>
+  <label class="flex items-center gap-2">
+    <span>Строк</span>
+    <select
+      class="rounded border border-[#b8cbd4] bg-white px-2 py-1.5 font-semibold text-[var(--ledger-ink)] disabled:cursor-not-allowed disabled:opacity-50"
+      [value]="pageSize()"
+      [disabled]="disabled()"
+      (change)="changePageSize($event)"
+    >
+      @for (option of pageSizeOptions(); track option) {
+        <option [value]="option">{{ option }}</option>
+      }
+    </select>
+  </label>
+
+  <span class="data-value mr-auto" aria-live="polite">
+    {{ rangeStart() }}–{{ rangeEnd() }} из {{ total() }}
+  </span>
+
+  <span class="data-value hidden sm:inline">Страница {{ currentPage() }} из {{ pageCount() }}</span>
+  <div class="flex gap-1.5">
+    <button
+      type="button"
+      class="min-w-10 rounded border border-[#b8cbd4] bg-white px-2.5 py-1.5 font-bold text-[var(--ledger-ink)] transition-colors hover:border-[var(--ledger-rail)] hover:text-[var(--ledger-rail)] disabled:cursor-not-allowed disabled:opacity-35"
+      aria-label="Предыдущая страница"
+      [disabled]="!canGoBack()"
+      (click)="previous()"
+    >
+      ←
+    </button>
+    <button
+      type="button"
+      class="min-w-10 rounded border border-[#b8cbd4] bg-white px-2.5 py-1.5 font-bold text-[var(--ledger-ink)] transition-colors hover:border-[var(--ledger-rail)] hover:text-[var(--ledger-rail)] disabled:cursor-not-allowed disabled:opacity-35"
+      aria-label="Следующая страница"
+      [disabled]="!canGoForward()"
+      (click)="next()"
+    >
+      →
+    </button>
+  </div>
+</nav>

@@ -1,5 +1,4 @@
 @import 'tailwindcss';
-@import 'tailwindcss-primeui';
 
 :root {
   color-scheme: light;
@@ -40,7 +39,8 @@ body {
 }
 
 button,
-input {
+input,
+select {
   font: inherit;
 }
 

@@ -1,16 +1,22 @@
 @if (loading()) {
-  <div class="flex min-h-36 flex-col items-center justify-center gap-3 text-sm text-muted-color" role="status">
-    <p-progress-spinner strokeWidth="3" [style]="{ width: '2rem', height: '2rem' }" />
+  <div class="flex min-h-36 flex-col items-center justify-center gap-3 text-sm text-[var(--ledger-slate)]" role="status">
+    <span class="size-8 animate-spin rounded-full border-3 border-[#c8d9e1] border-t-[var(--ledger-rail)]" aria-hidden="true"></span>
     <span>Загружаем данные…</span>
   </div>
 } @else if (error()) {
   <div class="flex min-h-36 flex-col items-start justify-center gap-3 px-4 py-6" role="alert">
-    <p class="m-0 font-medium text-color">Не удалось загрузить отчёт</p>
-    <p class="m-0 text-sm text-muted-color">{{ error() }}</p>
-    <p-button label="Повторить" icon="pi pi-refresh" severity="secondary" size="small" (onClick)="retry.emit()" />
+    <p class="m-0 font-semibold text-[var(--ledger-ink)]">Не удалось загрузить отчёт</p>
+    <p class="m-0 text-sm text-[var(--ledger-slate)]">{{ error() }}</p>
+    <button
+      type="button"
+      class="rounded border border-[#b8cbd4] bg-white px-3 py-2 text-sm font-semibold text-[var(--ledger-ink)] transition-colors hover:border-[var(--ledger-rail)] hover:text-[var(--ledger-rail)] disabled:cursor-not-allowed disabled:opacity-50"
+      (click)="retry.emit()"
+    >
+      Повторить
+    </button>
   </div>
 } @else if (empty()) {
-  <div class="flex min-h-36 items-center justify-center px-4 py-8 text-center text-sm text-muted-color">
+  <div class="flex min-h-36 items-center justify-center px-4 py-8 text-center text-sm text-[var(--ledger-slate)]">
     {{ emptyText() }}
   </div>
 }

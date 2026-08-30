@@ -1,93 +1,85 @@
-<section class="filter-panel" aria-labelledby="filter-title">
-  <div class="filter-heading">
+<section
+  class="mb-5 rounded-[5px] border border-[var(--ledger-line)] border-l-4 border-l-[var(--ledger-signal)] bg-white/95 p-4 shadow-[0_8px_24px_rgb(16_27_43_/_5%)] sm:p-5"
+  aria-labelledby="filter-title"
+>
+  <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
     <div>
-      <p class="section-code">CONTROL / GLOBAL FILTER</p>
-      <h3 id="filter-title">Условия отчёта</h3>
+      <h3 id="filter-title" class="m-0 font-[var(--font-display)] text-lg font-semibold">Фильтр</h3>
     </div>
-    <p>Изменения применяются ко всем таблицам одновременно.</p>
   </div>
 
-  <div class="filter-grid">
-    <label class="filter-field">
-      <span>Пользователь</span>
-      <p-select
-        [options]="users()"
+  <div class="grid gap-3.5 sm:grid-cols-2 xl:grid-cols-[1.2fr_1.2fr_1fr_1fr]">
+    <label class="grid min-w-0 gap-1.5">
+      <span class="text-[0.72rem] font-semibold uppercase tracking-[0.025em] text-[var(--ledger-slate)]">Пользователь</span>
+      <select
+        class="min-h-11 w-full rounded border border-[#b8cbd4] bg-white px-3 py-2.5 text-sm text-[var(--ledger-ink)] transition-colors hover:border-[#83aab9] focus:border-[var(--ledger-rail)] disabled:cursor-not-allowed disabled:bg-[#eef3f5]"
         [(ngModel)]="userId"
-        optionLabel="label"
-        optionValue="id"
-        placeholder="Все пользователи"
-        [filter]="true"
-        filterBy="label"
-        [showClear]="true"
-        [loading]="usersLoading()"
-        appendTo="body"
-        class="w-full"
-      />
+        [disabled]="usersLoading()"
+      >
+        <option [ngValue]="null">{{ usersLoading() ? 'Загрузка…' : 'Все пользователи' }}</option>
+        @for (user of users(); track user.id) {
+          <option [ngValue]="user.id">{{ user.label }}</option>
+        }
+      </select>
       @if (usersError()) {
-        <small>Список недоступен — можно применить остальные условия.</small>
+        <small class="text-[0.68rem] leading-snug text-[var(--ledger-warning)]">Список недоступен — можно применить остальные условия.</small>
       }
     </label>
 
-    <label class="filter-field">
-      <span>Группа</span>
-      <p-select
-        [options]="groups()"
+    <label class="grid min-w-0 gap-1.5">
+      <span class="text-[0.72rem] font-semibold uppercase tracking-[0.025em] text-[var(--ledger-slate)]">Группа</span>
+      <select
+        class="min-h-11 w-full rounded border border-[#b8cbd4] bg-white px-3 py-2.5 text-sm text-[var(--ledger-ink)] transition-colors hover:border-[#83aab9] focus:border-[var(--ledger-rail)] disabled:cursor-not-allowed disabled:bg-[#eef3f5]"
         [(ngModel)]="groupId"
-        optionLabel="label"
-        optionValue="id"
-        placeholder="Все группы"
-        [filter]="true"
-        filterBy="label"
-        [showClear]="true"
-        [loading]="groupsLoading()"
-        appendTo="body"
-        class="w-full"
-      />
+        [disabled]="groupsLoading()"
+      >
+        <option [ngValue]="null">{{ groupsLoading() ? 'Загрузка…' : 'Все группы' }}</option>
+        @for (group of groups(); track group.id) {
+          <option [ngValue]="group.id">{{ group.label }}</option>
+        }
+      </select>
       @if (groupsError()) {
-        <small>Список недоступен — можно применить остальные условия.</small>
+        <small class="text-[0.68rem] leading-snug text-[var(--ledger-warning)]">Список недоступен — можно применить остальные условия.</small>
       }
     </label>
 
-    <label class="filter-field">
-      <span>Дата с</span>
-      <p-datepicker
+    <label class="grid min-w-0 gap-1.5">
+      <span class="text-[0.72rem] font-semibold uppercase tracking-[0.025em] text-[var(--ledger-slate)]">Дата с</span>
+      <input
+        type="date"
+        class="min-h-11 w-full rounded border border-[#b8cbd4] bg-white px-3 py-2.5 text-sm text-[var(--ledger-ink)] transition-colors hover:border-[#83aab9] focus:border-[var(--ledger-rail)]"
         [(ngModel)]="dateFrom"
-        dateFormat="dd.mm.yy"
-        placeholder="Начало периода"
-        [showIcon]="true"
-        [showClear]="true"
-        appendTo="body"
-        styleClass="w-full"
       />
     </label>
 
-    <label class="filter-field">
-      <span>Дата по</span>
-      <p-datepicker
+    <label class="grid min-w-0 gap-1.5">
+      <span class="text-[0.72rem] font-semibold uppercase tracking-[0.025em] text-[var(--ledger-slate)]">Дата по</span>
+      <input
+        type="date"
+        class="min-h-11 w-full rounded border border-[#b8cbd4] bg-white px-3 py-2.5 text-sm text-[var(--ledger-ink)] transition-colors hover:border-[#83aab9] focus:border-[var(--ledger-rail)]"
         [(ngModel)]="dateTo"
-        dateFormat="dd.mm.yy"
-        placeholder="Конец периода"
-        [showIcon]="true"
-        [showClear]="true"
-        appendTo="body"
-        styleClass="w-full"
       />
     </label>
   </div>
 
   @if (dateError()) {
-    <p class="date-error" role="alert">{{ dateError() }}</p>
+    <p class="mt-3 mb-0 text-xs text-[#a23838]" role="alert">{{ dateError() }}</p>
   }
 
-  <div class="filter-actions">
-    <p-button label="Применить" icon="pi pi-filter" styleClass="w-full justify-center sm:w-auto" (onClick)="apply()" />
-    <p-button
-      label="Сбросить"
-      icon="pi pi-times"
-      severity="secondary"
-      [outlined]="true"
-      styleClass="w-full justify-center sm:w-auto"
-      (onClick)="reset()"
-    />
+  <div class="mt-4 grid gap-2.5 sm:flex sm:justify-end">
+    <button
+      type="button"
+      class="min-h-11 rounded bg-[var(--ledger-rail)] px-4 py-2.5 text-sm font-bold text-white shadow-sm transition-colors hover:bg-[#0e6379] active:bg-[#0b5366]"
+      (click)="apply()"
+    >
+      Применить
+    </button>
+    <button
+      type="button"
+      class="min-h-11 rounded border border-[#b8cbd4] bg-white px-4 py-2.5 text-sm font-bold text-[var(--ledger-ink)] transition-colors hover:border-[var(--ledger-rail)] hover:text-[var(--ledger-rail)]"
+      (click)="reset()"
+    >
+      Сбросить
+    </button>
   </div>
 </section>

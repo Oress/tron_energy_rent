@@ -1,24 +1,21 @@
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { Component, DestroyRef, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Table } from 'primeng/table';
 
 import { OrderRow, OrdersService } from '../../core/api';
 import { DashboardFilter } from '../dashboard-filter/dashboard-filter.model';
 import { DashboardFilterService } from '../dashboard-filter/dashboard-filter.service';
 import { RequestStateComponent } from '../../shared/components/request-state/request-state.component';
+import {
+  TablePageEvent,
+  TablePaginatorComponent,
+} from '../../shared/components/table-paginator/table-paginator.component';
 import { TrxAmountPipe } from '../../shared/pipes/trx-amount.pipe';
-
-interface PageEvent {
-  first?: number;
-  rows?: number;
-}
 
 @Component({
   selector: 'app-orders-table',
-  imports: [DatePipe, DecimalPipe, RequestStateComponent, Table, TrxAmountPipe],
+  imports: [DatePipe, DecimalPipe, RequestStateComponent, TablePaginatorComponent, TrxAmountPipe],
   templateUrl: './orders-table.html',
-  styleUrl: './orders-table.scss',
 })
 export class OrdersTableComponent {
   private readonly ordersApi = inject(OrdersService);
@@ -42,9 +39,9 @@ export class OrdersTableComponent {
     });
   }
 
-  onPage(event: PageEvent): void {
-    const first = event.first ?? 0;
-    const size = event.rows ?? this.pageSize();
+  onPage(event: TablePageEvent): void {
+    const first = event.first;
+    const size = event.rows;
     this.first.set(first);
     this.pageSize.set(size);
     this.loadPage(Math.floor(first / size), size, this.filterService.appliedFilter());

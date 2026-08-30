@@ -1,36 +1,37 @@
-<section class="report-card" aria-labelledby="orders-title">
-  <header class="report-heading">
+<section
+  class="mb-5 overflow-hidden rounded-[5px] border border-[var(--ledger-line)] bg-white shadow-[0_8px_24px_rgb(16_27_43_/_5%)]"
+  aria-labelledby="orders-title"
+>
+  <header class="flex items-end justify-between gap-4 border-b border-[var(--ledger-line)] p-4 sm:px-5 sm:py-[1.15rem]">
     <div>
-      <p class="section-code">REPORT / ORDERS</p>
-      <h3 id="orders-title">Заказы</h3>
+      <p class="m-0 mb-0.5 font-mono text-[0.62rem] font-semibold tracking-[0.11em] text-[var(--ledger-rail)]">REPORT / ORDERS</p>
+      <h3 id="orders-title" class="m-0 font-[var(--font-display)] text-xl font-semibold">Заказы</h3>
     </div>
-    <span class="record-count data-value">{{ total() }} записей</span>
+    <span class="data-value text-[0.68rem] text-[var(--ledger-slate)]">{{ total() }} записей</span>
   </header>
 
   @if (error()) {
     <app-request-state [error]="error()" (retry)="retry()" />
+  } @else if (loading() && rows().length === 0) {
+    <app-request-state [loading]="true" />
   } @else {
-    <div class="table-viewport" tabindex="0" aria-label="Таблица заказов; прокручивается по горизонтали">
-      <p-table
-        [value]="rows()"
-        [lazy]="true"
-        [loading]="loading()"
-        [paginator]="true"
-        [rows]="pageSize()"
-        [first]="first()"
-        [totalRecords]="total()"
-        [rowsPerPageOptions]="[10, 20, 50]"
-        [showCurrentPageReport]="true"
-        currentPageReportTemplate="{first}–{last} из {totalRecords}"
-        [stripedRows]="true"
-        [showGridlines]="true"
-        size="small"
-        styleClass="ledger-table orders-table"
-        (onPage)="onPage($event)"
+    <div
+      class="relative max-w-full overflow-x-auto [scrollbar-color:var(--ledger-rail)_#e5edf1] [scrollbar-width:thin]"
+      tabindex="0"
+      aria-label="Таблица заказов; прокручивается по горизонтали"
+      [attr.aria-busy]="loading()"
+    >
+      @if (loading()) {
+        <div class="sticky left-0 top-0 z-10 w-fit min-w-full bg-[#eaf4f7] px-4 py-1.5 text-xs font-semibold text-[var(--ledger-rail)]" role="status">
+          Обновляем данные…
+        </div>
+      }
+      <table
+        class="w-full min-w-[2320px] border-collapse text-left [&_td]:max-w-60 [&_td]:whitespace-nowrap [&_td]:border-b [&_td]:border-[var(--ledger-line)] [&_td]:px-2.5 [&_td]:py-2.5 [&_td]:text-xs [&_td]:text-[#263748] [&_th]:whitespace-nowrap [&_th]:border-b [&_th]:border-[var(--ledger-line)] [&_th]:bg-[#edf4f7] [&_th]:px-2.5 [&_th]:py-3 [&_th]:font-mono [&_th]:text-[0.66rem] [&_th]:font-semibold [&_th]:tracking-[0.02em] [&_th]:text-[#334455]"
       >
-        <ng-template #header>
+        <thead>
           <tr>
-            <th>ID</th>
+            <th class="sticky left-0 z-[3] min-w-20 border-r-2! border-r-[#c8d9e1]! bg-[#e3eff3]!">ID</th>
             <th>Дата</th>
             <th>Логин</th>
             <th>Имя</th>
@@ -50,44 +51,53 @@
             <th>№ заказа</th>
             <th>Транзакция</th>
           </tr>
-        </ng-template>
-
-        <ng-template #body let-row>
-          <tr>
-            <td class="sticky-cell data-value">{{ row.id }}</td>
-            <td class="data-value">{{ row.date | date: 'dd.MM.yyyy HH:mm' }}</td>
-            <td>{{ row.login ?? '—' }}</td>
-            <td>{{ row.name ?? '—' }}</td>
-            <td>{{ row.balanceType }}</td>
-            <td class="number-cell data-value">{{ row.transactionsCount }}</td>
-            <td class="number-cell data-value">{{ row.totalEnergy | number: '1.0-0' }}</td>
-            <td>{{ row.tariff ?? '—' }}</td>
-            <td>{{ row.provider ?? '—' }}</td>
-            <td class="number-cell data-value">{{ row.commission | trxAmount }}</td>
-            <td class="number-cell data-value">{{ row.income | trxAmount }}</td>
-            <td class="number-cell data-value">{{ row.referralDeductions | trxAmount }}</td>
-            <td class="number-cell data-value">{{ row.referralDeductionsRemainder | trxAmount }}</td>
-            <td class="number-cell data-value profit-cell">{{ row.profit | trxAmount }}</td>
-            <td class="activation-cell">
-              @if (row.walletActivated) {
-                <i class="pi pi-check-circle" aria-hidden="true"></i><span class="sr-only">Да</span>
-              } @else {
-                <i class="pi pi-minus-circle" aria-hidden="true"></i><span class="sr-only">Нет</span>
-              }
-            </td>
-            <td>{{ row.status }}</td>
-            <td class="mono-cell" [title]="row.recipient ?? ''">{{ row.recipient ?? '—' }}</td>
-            <td class="mono-cell" [title]="row.orderNumber ?? ''">{{ row.orderNumber ?? '—' }}</td>
-            <td class="mono-cell" [title]="row.transaction ?? ''">{{ row.transaction ?? '—' }}</td>
-          </tr>
-        </ng-template>
-
-        <ng-template #emptymessage>
-          <tr>
-            <td colspan="19" class="empty-cell">Нет данных по выбранным условиям.</td>
-          </tr>
-        </ng-template>
-      </p-table>
+        </thead>
+        <tbody>
+          @for (row of rows(); track row.id) {
+            <tr class="even:bg-[#fbfdfe] hover:bg-[#f1f7f9]">
+              <td class="data-value sticky left-0 z-[2] min-w-20 border-r-2! border-r-[#c8d9e1]! bg-[#f7fafb]!">{{ row.id }}</td>
+              <td class="data-value">{{ row.date | date: 'dd.MM.yyyy HH:mm' }}</td>
+              <td>{{ row.login ?? '—' }}</td>
+              <td>{{ row.name ?? '—' }}</td>
+              <td>{{ row.balanceType }}</td>
+              <td class="data-value text-right!">{{ row.transactionsCount }}</td>
+              <td class="data-value text-right!">{{ row.totalEnergy | number: '1.0-0' }}</td>
+              <td>{{ row.tariff ?? '—' }}</td>
+              <td>{{ row.provider ?? '—' }}</td>
+              <td class="data-value text-right!">{{ row.commission | trxAmount }}</td>
+              <td class="data-value text-right!">{{ row.income | trxAmount }}</td>
+              <td class="data-value text-right!">{{ row.referralDeductions | trxAmount }}</td>
+              <td class="data-value text-right!">{{ row.referralDeductionsRemainder | trxAmount }}</td>
+              <td class="data-value text-right! font-bold! text-[var(--ledger-positive)]!">{{ row.profit | trxAmount }}</td>
+              <td class="text-center!">
+                <span
+                  class="inline-flex min-w-8 justify-center rounded-full px-2 py-0.5 text-[0.68rem] font-bold"
+                  [class]="row.walletActivated
+                    ? 'bg-[#e4f3ee] text-[var(--ledger-positive)]'
+                    : 'bg-[#edf1f3] text-[#667984]'"
+                >
+                  {{ row.walletActivated ? 'Да' : 'Нет' }}
+                </span>
+              </td>
+              <td>{{ row.status }}</td>
+              <td class="max-w-52! overflow-hidden font-mono! text-ellipsis" [title]="row.recipient ?? ''">{{ row.recipient ?? '—' }}</td>
+              <td class="max-w-52! overflow-hidden font-mono! text-ellipsis" [title]="row.orderNumber ?? ''">{{ row.orderNumber ?? '—' }}</td>
+              <td class="max-w-52! overflow-hidden font-mono! text-ellipsis" [title]="row.transaction ?? ''">{{ row.transaction ?? '—' }}</td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="19" class="h-36 text-center! text-[var(--ledger-slate)]!">Нет данных по выбранным условиям.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
     </div>
+    <app-table-paginator
+      [first]="first()"
+      [pageSize]="pageSize()"
+      [total]="total()"
+      [disabled]="loading()"
+      (page)="onPage($event)"
+    />
   }
 </section>

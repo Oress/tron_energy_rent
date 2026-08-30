@@ -1,18 +1,14 @@
 import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Button } from 'primeng/button';
-import { DatePicker } from 'primeng/datepicker';
-import { Select } from 'primeng/select';
 
 import { FilterOption, FiltersService } from '../../core/api';
 import { DashboardFilterService } from './dashboard-filter.service';
 
 @Component({
   selector: 'app-dashboard-filter',
-  imports: [FormsModule, Button, DatePicker, Select],
+  imports: [FormsModule],
   templateUrl: './dashboard-filter.html',
-  styleUrl: './dashboard-filter.scss',
 })
 export class DashboardFilterComponent implements OnInit {
   private readonly filtersApi = inject(FiltersService);
@@ -29,8 +25,8 @@ export class DashboardFilterComponent implements OnInit {
 
   userId: number | null = null;
   groupId: number | null = null;
-  dateFrom: Date | null = null;
-  dateTo: Date | null = null;
+  dateFrom: string | null = null;
+  dateTo: string | null = null;
 
   ngOnInit(): void {
     this.loadUsers();
@@ -47,8 +43,8 @@ export class DashboardFilterComponent implements OnInit {
     this.filterService.apply({
       userId: this.userId,
       groupId: this.groupId,
-      dateFrom: this.toIsoDate(this.dateFrom),
-      dateTo: this.toIsoDate(this.dateTo),
+      dateFrom: this.dateFrom,
+      dateTo: this.dateTo,
     });
   }
 
@@ -89,16 +85,5 @@ export class DashboardFilterComponent implements OnInit {
         },
         complete: () => this.groupsLoading.set(false),
       });
-  }
-
-  private toIsoDate(value: Date | null): string | null {
-    if (!value) {
-      return null;
-    }
-
-    const year = value.getFullYear();
-    const month = String(value.getMonth() + 1).padStart(2, '0');
-    const day = String(value.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
   }
 }

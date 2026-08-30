@@ -1,24 +1,21 @@
 import { DatePipe } from '@angular/common';
 import { Component, DestroyRef, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Table } from 'primeng/table';
 
 import { UserProfitRow, UserProfitService } from '../../core/api';
 import { DashboardFilter } from '../dashboard-filter/dashboard-filter.model';
 import { DashboardFilterService } from '../dashboard-filter/dashboard-filter.service';
 import { RequestStateComponent } from '../../shared/components/request-state/request-state.component';
+import {
+  TablePageEvent,
+  TablePaginatorComponent,
+} from '../../shared/components/table-paginator/table-paginator.component';
 import { TrxAmountPipe } from '../../shared/pipes/trx-amount.pipe';
-
-interface PageEvent {
-  first?: number;
-  rows?: number;
-}
 
 @Component({
   selector: 'app-user-profit-table',
-  imports: [DatePipe, RequestStateComponent, Table, TrxAmountPipe],
+  imports: [DatePipe, RequestStateComponent, TablePaginatorComponent, TrxAmountPipe],
   templateUrl: './user-profit-table.html',
-  styleUrl: './user-profit-table.scss',
 })
 export class UserProfitTableComponent {
   private readonly userProfitApi = inject(UserProfitService);
@@ -42,9 +39,9 @@ export class UserProfitTableComponent {
     });
   }
 
-  onPage(event: PageEvent): void {
-    const first = event.first ?? 0;
-    const size = event.rows ?? this.pageSize();
+  onPage(event: TablePageEvent): void {
+    const first = event.first;
+    const size = event.rows;
     this.first.set(first);
     this.pageSize.set(size);
     this.loadPage(Math.floor(first / size), size, this.filterService.appliedFilter());
