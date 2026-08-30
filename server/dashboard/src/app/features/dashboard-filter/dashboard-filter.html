@@ -1,0 +1,93 @@
+<section class="filter-panel" aria-labelledby="filter-title">
+  <div class="filter-heading">
+    <div>
+      <p class="section-code">CONTROL / GLOBAL FILTER</p>
+      <h3 id="filter-title">Условия отчёта</h3>
+    </div>
+    <p>Изменения применяются ко всем таблицам одновременно.</p>
+  </div>
+
+  <div class="filter-grid">
+    <label class="filter-field">
+      <span>Пользователь</span>
+      <p-select
+        [options]="users()"
+        [(ngModel)]="userId"
+        optionLabel="label"
+        optionValue="id"
+        placeholder="Все пользователи"
+        [filter]="true"
+        filterBy="label"
+        [showClear]="true"
+        [loading]="usersLoading()"
+        appendTo="body"
+        class="w-full"
+      />
+      @if (usersError()) {
+        <small>Список недоступен — можно применить остальные условия.</small>
+      }
+    </label>
+
+    <label class="filter-field">
+      <span>Группа</span>
+      <p-select
+        [options]="groups()"
+        [(ngModel)]="groupId"
+        optionLabel="label"
+        optionValue="id"
+        placeholder="Все группы"
+        [filter]="true"
+        filterBy="label"
+        [showClear]="true"
+        [loading]="groupsLoading()"
+        appendTo="body"
+        class="w-full"
+      />
+      @if (groupsError()) {
+        <small>Список недоступен — можно применить остальные условия.</small>
+      }
+    </label>
+
+    <label class="filter-field">
+      <span>Дата с</span>
+      <p-datepicker
+        [(ngModel)]="dateFrom"
+        dateFormat="dd.mm.yy"
+        placeholder="Начало периода"
+        [showIcon]="true"
+        [showClear]="true"
+        appendTo="body"
+        styleClass="w-full"
+      />
+    </label>
+
+    <label class="filter-field">
+      <span>Дата по</span>
+      <p-datepicker
+        [(ngModel)]="dateTo"
+        dateFormat="dd.mm.yy"
+        placeholder="Конец периода"
+        [showIcon]="true"
+        [showClear]="true"
+        appendTo="body"
+        styleClass="w-full"
+      />
+    </label>
+  </div>
+
+  @if (dateError()) {
+    <p class="date-error" role="alert">{{ dateError() }}</p>
+  }
+
+  <div class="filter-actions">
+    <p-button label="Применить" icon="pi pi-filter" styleClass="w-full justify-center sm:w-auto" (onClick)="apply()" />
+    <p-button
+      label="Сбросить"
+      icon="pi pi-times"
+      severity="secondary"
+      [outlined]="true"
+      styleClass="w-full justify-center sm:w-auto"
+      (onClick)="reset()"
+    />
+  </div>
+</section>
