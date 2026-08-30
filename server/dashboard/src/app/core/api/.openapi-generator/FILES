@@ -3,6 +3,8 @@
 README.md
 api.base.service.ts
 api.module.ts
+api/aml-checks.service.ts
+api/aml-checks.serviceInterface.ts
 api/api.ts
 api/deposits.service.ts
 api/deposits.serviceInterface.ts
@@ -18,10 +20,14 @@ api/referral-system.service.ts
 api/referral-system.serviceInterface.ts
 api/user-profit.service.ts
 api/user-profit.serviceInterface.ts
+api/user-withdrawals.service.ts
+api/user-withdrawals.serviceInterface.ts
 configuration.ts
 encoder.ts
 git_push.sh
 index.ts
+model/aml-check-page.model.ts
+model/aml-check-row.model.ts
 model/api-error.model.ts
 model/deposit-page.model.ts
 model/deposit-row.model.ts
@@ -36,6 +42,8 @@ model/referral-system-page.model.ts
 model/referral-system-row.model.ts
 model/user-profit-page.model.ts
 model/user-profit-row.model.ts
+model/user-withdrawal-page.model.ts
+model/user-withdrawal-row.model.ts
 param.ts
 provide-api.ts
 query.params.ts

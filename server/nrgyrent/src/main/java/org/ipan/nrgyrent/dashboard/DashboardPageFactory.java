@@ -4,11 +4,13 @@ import java.math.BigDecimal;
 import java.util.List;
 
 import org.ipan.nrgyrent.dashboard.api.model.DepositPage;
+import org.ipan.nrgyrent.dashboard.api.model.AmlCheckPage;
 import org.ipan.nrgyrent.dashboard.api.model.GeneralStatistics;
 import org.ipan.nrgyrent.dashboard.api.model.OrderPage;
 import org.ipan.nrgyrent.dashboard.api.model.ReferralProgramPaymentPage;
 import org.ipan.nrgyrent.dashboard.api.model.ReferralSystemPage;
 import org.ipan.nrgyrent.dashboard.api.model.UserProfitPage;
+import org.ipan.nrgyrent.dashboard.api.model.UserWithdrawalPage;
 
 /** Creates generated page models with stable pagination bounds. */
 public final class DashboardPageFactory {
@@ -67,5 +69,13 @@ public final class DashboardPageFactory {
 
     public static ReferralProgramPaymentPage emptyReferralProgramPayments(Integer page, Integer size) {
         return new ReferralProgramPaymentPage(List.of(), normalizePage(page), normalizeSize(size), 0L, 0);
+    }
+
+    public static UserWithdrawalPage emptyUserWithdrawals(Integer page, Integer size) {
+        return new UserWithdrawalPage(List.of(), normalizePage(page), normalizeSize(size), 0L, 0);
+    }
+
+    public static AmlCheckPage emptyAmlChecks(Integer page, Integer size) {
+        return new AmlCheckPage(List.of(), normalizePage(page), normalizeSize(size), 0L, 0);
     }
 }

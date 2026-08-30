@@ -1,3 +1,5 @@
+export * from './aml-check-page.model';
+export * from './aml-check-row.model';
 export * from './api-error.model';
 export * from './deposit-page.model';
 export * from './deposit-row.model';
@@ -11,3 +13,5 @@ export * from './referral-system-page.model';
 export * from './referral-system-row.model';
 export * from './user-profit-page.model';
 export * from './user-profit-row.model';
+export * from './user-withdrawal-page.model';
+export * from './user-withdrawal-row.model';

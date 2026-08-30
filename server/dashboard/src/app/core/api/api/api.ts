@@ -1,3 +1,6 @@
+export * from './aml-checks.service';
+import { AmlChecksService } from './aml-checks.service';
+export * from './aml-checks.serviceInterface';
 export * from './deposits.service';
 import { DepositsService } from './deposits.service';
 export * from './deposits.serviceInterface';
@@ -19,4 +22,7 @@ export * from './referral-system.serviceInterface';
 export * from './user-profit.service';
 import { UserProfitService } from './user-profit.service';
 export * from './user-profit.serviceInterface';
-export const APIS = [DepositsService, FiltersService, GeneralStatisticsService, OrdersService, ReferralProgramPaymentsService, ReferralSystemService, UserProfitService];
+export * from './user-withdrawals.service';
+import { UserWithdrawalsService } from './user-withdrawals.service';
+export * from './user-withdrawals.serviceInterface';
+export const APIS = [AmlChecksService, DepositsService, FiltersService, GeneralStatisticsService, OrdersService, ReferralProgramPaymentsService, ReferralSystemService, UserProfitService, UserWithdrawalsService];

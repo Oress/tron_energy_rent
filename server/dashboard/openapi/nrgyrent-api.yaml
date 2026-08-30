@@ -174,6 +174,52 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '500':
           $ref: '#/components/responses/ServerError'
+  /api/v1/dashboard/user-withdrawals:
+    get:
+      tags: [UserWithdrawals]
+      operationId: getUserWithdrawals
+      summary: Return one page of user withdrawals
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - $ref: '#/components/parameters/UserId'
+        - $ref: '#/components/parameters/GroupId'
+        - $ref: '#/components/parameters/DateFrom'
+        - $ref: '#/components/parameters/DateTo'
+      responses:
+        '200':
+          description: User withdrawals page
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserWithdrawalPage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/ServerError'
+  /api/v1/dashboard/aml-checks:
+    get:
+      tags: [AmlChecks]
+      operationId: getAmlChecks
+      summary: Return one page of AML checks
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - $ref: '#/components/parameters/UserId'
+        - $ref: '#/components/parameters/GroupId'
+        - $ref: '#/components/parameters/DateFrom'
+        - $ref: '#/components/parameters/DateTo'
+      responses:
+        '200':
+          description: AML checks page
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AmlCheckPage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/ServerError'
 components:
   parameters:
     Page:
@@ -484,6 +530,85 @@ components:
         date:
           type: string
           format: date-time
+    UserWithdrawalRow:
+      type: object
+      additionalProperties: false
+      description: One user withdrawal. Amount and commission are decimal TRX.
+      required: [id, date, nickname, name, balanceType, amount, commission, status, recipient, transaction]
+      properties:
+        id:
+          type: integer
+          format: int64
+        date:
+          type: string
+          format: date-time
+        nickname:
+          type: string
+          nullable: true
+        name:
+          type: string
+          nullable: true
+        balanceType:
+          type: string
+        amount:
+          type: number
+          description: Withdrawal amount in decimal TRX.
+        commission:
+          type: number
+          description: Withdrawal commission in decimal TRX.
+        status:
+          type: string
+        recipient:
+          type: string
+          nullable: true
+        transaction:
+          type: string
+          nullable: true
+    AmlCheckRow:
+      type: object
+      additionalProperties: false
+      description: One AML check. Financial values are decimal TRX.
+      required: [id, date, nickname, name, balanceType, provider, tariff, walletToCheck, amount, profit, commission, status, internalStatus, orderNumber]
+      properties:
+        id:
+          type: integer
+          format: int64
+        date:
+          type: string
+          format: date-time
+        nickname:
+          type: string
+          nullable: true
+        name:
+          type: string
+          nullable: true
+        balanceType:
+          type: string
+        provider:
+          type: string
+          nullable: true
+        tariff:
+          type: string
+          nullable: true
+        walletToCheck:
+          type: string
+          nullable: true
+        amount:
+          type: number
+          description: AML check amount in decimal TRX.
+        profit:
+          type: number
+          description: AML check profit in decimal TRX.
+        commission:
+          type: number
+          description: AML check commission in decimal TRX.
+        status:
+          type: string
+        internalStatus:
+          type: string
+        orderNumber:
+          type: string
+          nullable: true
     OrderPage:
       type: object
       additionalProperties: false
@@ -577,6 +702,48 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ReferralProgramPaymentRow'
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+    UserWithdrawalPage:
+      type: object
+      additionalProperties: false
+      required: [content, page, size, totalElements, totalPages]
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserWithdrawalRow'
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+    AmlCheckPage:
+      type: object
+      additionalProperties: false
+      required: [content, page, size, totalElements, totalPages]
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/AmlCheckRow'
         page:
           type: integer
           format: int32

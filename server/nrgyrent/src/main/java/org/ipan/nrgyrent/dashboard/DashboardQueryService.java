@@ -4,12 +4,14 @@ import java.time.LocalDate;
 import java.util.List;
 
 import org.ipan.nrgyrent.dashboard.api.model.FilterOption;
+import org.ipan.nrgyrent.dashboard.api.model.AmlCheckPage;
 import org.ipan.nrgyrent.dashboard.api.model.DepositPage;
 import org.ipan.nrgyrent.dashboard.api.model.GeneralStatistics;
 import org.ipan.nrgyrent.dashboard.api.model.OrderPage;
 import org.ipan.nrgyrent.dashboard.api.model.ReferralProgramPaymentPage;
 import org.ipan.nrgyrent.dashboard.api.model.ReferralSystemPage;
 import org.ipan.nrgyrent.dashboard.api.model.UserProfitPage;
+import org.ipan.nrgyrent.dashboard.api.model.UserWithdrawalPage;
 import org.springframework.stereotype.Service;
 
 /**
@@ -54,6 +56,18 @@ public class DashboardQueryService {
             Integer page, Integer size, Long userId, Long groupId, LocalDate dateFrom, LocalDate dateTo) {
         //TODO: implement queries
         return DashboardPageFactory.emptyReferralProgramPayments(page, size);
+    }
+
+    public UserWithdrawalPage getUserWithdrawals(Integer page, Integer size, Long userId, Long groupId,
+                                                 LocalDate dateFrom, LocalDate dateTo) {
+        //TODO: implement queries
+        return DashboardPageFactory.emptyUserWithdrawals(page, size);
+    }
+
+    public AmlCheckPage getAmlChecks(Integer page, Integer size, Long userId, Long groupId,
+                                     LocalDate dateFrom, LocalDate dateTo) {
+        //TODO: implement queries
+        return DashboardPageFactory.emptyAmlChecks(page, size);
     }
 
     public List<FilterOption> getFilterUsers() {

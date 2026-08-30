@@ -1,0 +1,76 @@
+<section
+  class="mb-5 overflow-hidden rounded-[5px] border border-[var(--ledger-line)] bg-white shadow-[0_8px_24px_rgb(16_27_43_/_5%)]"
+  aria-labelledby="user-withdrawals-title"
+>
+  <header class="flex items-end justify-between gap-4 border-b border-[var(--ledger-line)] p-4 sm:px-5 sm:py-[1.15rem]">
+    <div>
+      <p class="m-0 mb-0.5 font-mono text-[0.62rem] font-semibold tracking-[0.11em] text-[var(--ledger-rail)]">REPORT / USER WITHDRAWALS</p>
+      <h3 id="user-withdrawals-title" class="m-0 font-[var(--font-display)] text-xl font-semibold">Выводы Пользователей</h3>
+    </div>
+    <span class="data-value text-[0.68rem] text-[var(--ledger-slate)]">{{ total() }} записей</span>
+  </header>
+
+  @if (error()) {
+    <app-request-state [error]="error()" (retry)="retry()" />
+  } @else if (loading() && rows().length === 0) {
+    <app-request-state [loading]="true" />
+  } @else {
+    <div
+      class="relative max-w-full overflow-x-auto [scrollbar-color:var(--ledger-rail)_#e5edf1] [scrollbar-width:thin]"
+      tabindex="0"
+      aria-label="Таблица выводов пользователей; прокручивается по горизонтали"
+      [attr.aria-busy]="loading()"
+    >
+      @if (loading()) {
+        <div class="sticky left-0 top-0 z-10 w-fit min-w-full bg-[#eaf4f7] px-4 py-1.5 text-xs font-semibold text-[var(--ledger-rail)]" role="status">
+          Обновляем данные…
+        </div>
+      }
+      <table
+        class="w-full min-w-[1500px] border-collapse text-left [&_td]:max-w-60 [&_td]:whitespace-nowrap [&_td]:border-b [&_td]:border-[var(--ledger-line)] [&_td]:px-2.5 [&_td]:py-2.5 [&_td]:text-xs [&_td]:text-[#263748] [&_th]:whitespace-nowrap [&_th]:border-b [&_th]:border-[var(--ledger-line)] [&_th]:bg-[#edf4f7] [&_th]:px-2.5 [&_th]:py-3 [&_th]:font-mono [&_th]:text-[0.66rem] [&_th]:font-semibold [&_th]:tracking-[0.02em] [&_th]:text-[#334455]"
+      >
+        <thead>
+          <tr>
+            <th class="sticky left-0 z-[3] min-w-20 border-r-2! border-r-[#c8d9e1]! bg-[#e3eff3]!">ID</th>
+            <th>Дата</th>
+            <th>Ник</th>
+            <th>Имя</th>
+            <th>Тип Баланса</th>
+            <th class="text-right!">Сумма</th>
+            <th class="text-right!">Комиссия</th>
+            <th>Статус</th>
+            <th>Получатель</th>
+            <th>Транзакция</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of rows(); track row.id) {
+            <tr class="even:bg-[#fbfdfe] hover:bg-[#f1f7f9]">
+              <td class="data-value sticky left-0 z-[2] min-w-20 border-r-2! border-r-[#c8d9e1]! bg-[#f7fafb]!">{{ row.id }}</td>
+              <td class="data-value">{{ row.date | date: 'dd.MM.yyyy HH:mm' }}</td>
+              <td>{{ row.nickname ?? '—' }}</td>
+              <td>{{ row.name ?? '—' }}</td>
+              <td>{{ row.balanceType }}</td>
+              <td class="data-value text-right! font-semibold!">{{ row.amount | trxAmount }}</td>
+              <td class="data-value text-right! font-semibold!">{{ row.commission | trxAmount }}</td>
+              <td>{{ row.status }}</td>
+              <td class="max-w-52! overflow-hidden font-mono! text-ellipsis" [title]="row.recipient ?? ''">{{ row.recipient ?? '—' }}</td>
+              <td class="max-w-52! overflow-hidden font-mono! text-ellipsis" [title]="row.transaction ?? ''">{{ row.transaction ?? '—' }}</td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="10" class="h-36 text-center! text-[var(--ledger-slate)]!">Нет данных по выбранным условиям.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <app-table-paginator
+      [first]="first()"
+      [pageSize]="pageSize()"
+      [total]="total()"
+      [disabled]="loading()"
+      (page)="onPage($event)"
+    />
+  }
+</section>
