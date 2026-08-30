@@ -199,12 +199,21 @@ public class RestClient {
                 .addHeader("SIGNATURE", signature)
                 .addHeader("Content-Type", "application/json")
                 .build();
-        Response response = client.newCall(request).execute();
+        try (Response response = client.newCall(request).execute()) {
+            if (!response.isSuccessful()) {
+                throw new IllegalStateException("Unable to update delegate policy. HTTP status: " + response.code());
+            }
+            if (response.body() == null) {
+                throw new IllegalStateException("Unable to update delegate policy. Empty response body");
+            }
 
-        DelegatePolicyResponse createDelegatePolicyResponse = gson.fromJson(response.body().charStream(), DelegatePolicyResponse.class);
+            DelegatePolicyResponse delegatePolicyResponse = gson.fromJson(
+                    response.body().charStream(),
+                    DelegatePolicyResponse.class);
 
-        logger.info("DelegatePolicyResponse" + createDelegatePolicyResponse);
-        return createDelegatePolicyResponse;
+            logger.info("DelegatePolicyResponse" + delegatePolicyResponse);
+            return delegatePolicyResponse;
+        }
     }
 
     @SneakyThrows

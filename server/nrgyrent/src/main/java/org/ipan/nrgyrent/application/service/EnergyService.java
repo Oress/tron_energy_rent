@@ -3,10 +3,13 @@ package org.ipan.nrgyrent.application.service;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.ipan.nrgyrent.domain.events.autotopup.AutoDelegationSessionEventPublisher;
+import org.ipan.nrgyrent.domain.exception.WalletSessionAlreadyDeactivatedException;
+import org.ipan.nrgyrent.domain.exception.WalletSessionHasUnexpectedStatusException;
 import org.ipan.nrgyrent.domain.model.*;
 import org.ipan.nrgyrent.domain.model.autodelegation.AutoDelegationSession;
 import org.ipan.nrgyrent.domain.model.autodelegation.AutoDelegationSessionStatus;
 import org.ipan.nrgyrent.domain.model.repository.AutoDelegationSessionRepo;
+import org.ipan.nrgyrent.domain.service.AutoDelegationSessionDeactivator;
 import org.ipan.nrgyrent.domain.service.AutoDelegationSessionService;
 import org.ipan.nrgyrent.domain.service.OrderService;
 import org.ipan.nrgyrent.domain.service.commands.orders.AddOrUpdateOrderCommand;
@@ -28,7 +31,7 @@ import java.util.UUID;
 
 @Service
 @Slf4j
-public class EnergyService {
+public class EnergyService implements AutoDelegationSessionDeactivator {
     private static final int ITRX_OK_CODE = 0;
 
     private final TelegramState telegramState;
@@ -113,6 +116,7 @@ public class EnergyService {
     }
 
     @Transactional
+    @Override
     public AutoDelegationSession deactivateSessionManually(Long sessionId) {
         logger.info("AUTO DELEGATION. Deactivating auto delegation (manually) session id {} ", sessionId);
         AutoDelegationSession byId = autoTopupConfigRepo.findById(sessionId).orElseThrow(() -> new IllegalStateException("Session is not found by id"));
@@ -214,15 +218,25 @@ public class EnergyService {
 */
 
     private AutoDelegationSession deactivateSession(AutoDelegationSession session, AutoDelegationSessionStatus status) {
-        AutoDelegationSession removedSession = autoDelegationSessionService.deactivate(session.getId(), status);
-
-        if (removedSession.getEnergyProvider() == EnergyProviderName.TRXX) {
-            trxxRestClient.editDelegatePolicy(session.getAddress(), true);
-        } else {
-            itrxRestClient.editDelegatePolicy(session.getAddress(), true);
+        if (!Boolean.TRUE.equals(session.getActive())) {
+            throw new WalletSessionAlreadyDeactivatedException("Session has already been deactivated");
+        }
+        if (!AutoDelegationSessionStatus.ACTIVE.equals(session.getStatus())) {
+            throw new WalletSessionHasUnexpectedStatusException("Session has unexpected status");
         }
 
-        return removedSession;
+        DelegatePolicyResponse delegatePolicyResponse;
+        if (session.getEnergyProvider() == EnergyProviderName.TRXX) {
+            delegatePolicyResponse = trxxRestClient.editDelegatePolicy(session.getAddress(), true);
+        } else {
+            delegatePolicyResponse = itrxRestClient.editDelegatePolicy(session.getAddress(), true);
+        }
+
+        if (delegatePolicyResponse == null || !Boolean.TRUE.equals(delegatePolicyResponse.getPause())) {
+            throw new IllegalStateException("Auto delegation provider did not pause the session");
+        }
+
+        return autoDelegationSessionService.deactivate(session.getId(), status);
     }
 
     public Order tryMakeSystemTransaction(Integer energyAmount, String duration, String receiveAddress) {

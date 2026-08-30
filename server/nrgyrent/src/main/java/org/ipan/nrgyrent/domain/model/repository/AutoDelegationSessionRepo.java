@@ -12,6 +12,7 @@ import org.springframework.stereotype.Repository;
 public interface AutoDelegationSessionRepo extends JpaRepository<AutoDelegationSession, Long> {
     List<AutoDelegationSession> findByActive(Boolean active);
     List<AutoDelegationSession> findByAddressAndActive(String wallet, Boolean active);
+    List<AutoDelegationSession> findByAddressAndUserTelegramIdAndActive(String wallet, Long userId, Boolean active);
 
     @Query(nativeQuery = true,
             value = """

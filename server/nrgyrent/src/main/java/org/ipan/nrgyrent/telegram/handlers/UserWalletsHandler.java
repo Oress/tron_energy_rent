@@ -67,7 +67,10 @@ public class UserWalletsHandler {
         if (data.startsWith(InlineMenuCallbacks.DELETE_WALLETS)) {
             String walletId = data.split(" ")[1];
             userWalletService
-                    .deleteWallet(DeleteUserWalletCommand.builder().walletId(Long.parseLong(walletId)).build());
+                    .deleteWallet(DeleteUserWalletCommand.builder()
+                            .walletId(Long.parseLong(walletId))
+                            .userId(userState.getTelegramId())
+                            .build());
             walletsViews.updMenuToDeleteWalletSuccessMenu(userState);
             telegramState.updateUserState(userState.getTelegramId(),
                     userState.withState(States.DELETE_WALLETS_SUCCESS));

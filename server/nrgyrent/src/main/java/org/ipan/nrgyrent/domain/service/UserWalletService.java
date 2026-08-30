@@ -5,6 +5,8 @@ import java.util.List;
 import org.apache.commons.lang3.NotImplementedException;
 import org.ipan.nrgyrent.domain.model.AppUser;
 import org.ipan.nrgyrent.domain.model.UserWallet;
+import org.ipan.nrgyrent.domain.model.autodelegation.AutoDelegationSession;
+import org.ipan.nrgyrent.domain.model.repository.AutoDelegationSessionRepo;
 import org.ipan.nrgyrent.domain.model.repository.UserWalletRepo;
 import org.ipan.nrgyrent.domain.service.commands.userwallet.AddOrUpdateUserWalletCommand;
 import org.ipan.nrgyrent.domain.service.commands.userwallet.DeleteUserWalletCommand;
@@ -20,6 +22,8 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public class UserWalletService {
     private UserWalletRepo userWalletRepo;
+    private AutoDelegationSessionRepo autoDelegationSessionRepo;
+    private AutoDelegationSessionDeactivator autoDelegationSessionDeactivator;
 
     @Transactional
     public UserWallet createWallet(AddOrUpdateUserWalletCommand command) {
@@ -53,9 +57,17 @@ public class UserWalletService {
         EntityManager em = getEntityManager();
 
         UserWallet userWallet = em.find(UserWallet.class, command.getWalletId());
-        if (userWallet == null) {
+        if (userWallet == null || !userWallet.getUser().getTelegramId().equals(command.getUserId())) {
             throw new IllegalArgumentException("Wallet not found");
         }
+
+        List<AutoDelegationSession> activeSessions = autoDelegationSessionRepo
+                .findByAddressAndUserTelegramIdAndActive(
+                        userWallet.getAddress(),
+                        userWallet.getUser().getTelegramId(),
+                        Boolean.TRUE);
+        activeSessions.forEach(session -> autoDelegationSessionDeactivator
+                .deactivateSessionManually(session.getId()));
 
         em.remove(userWallet);
     }
