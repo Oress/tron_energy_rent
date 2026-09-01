@@ -410,6 +410,27 @@ public class TelegramMessages {
         return tgClient.execute(message);
     }
 
+    @Retryable
+    @SneakyThrows
+    public Message sendAutoDelegationSessionStoppedByUserAdmin(Long groupId, AutoDelegationSession session) {
+        AppUser user = session.getUser();
+        String username = user.getTelegramUsername() == null ? "-" : user.getTelegramUsername();
+        String firstName = user.getTelegramFirstName() == null ? "-" : user.getTelegramFirstName();
+        String userDescription = "%s %s (ID: %s)".formatted(username, firstName, user.getTelegramId());
+
+        SendMessage message = SendMessage
+                .builder()
+                .chatId(groupId)
+                .text(commonLabels.autoDelegationSessionStoppedByUserAdmin(
+                        Locale.of("ru"),
+                        String.valueOf(session.getId()),
+                        userDescription,
+                        session.getAddress(),
+                        session.getEnergyProvider().name()))
+                .build();
+        return tgClient.execute(message);
+    }
+
     @SneakyThrows
     public void sendLowNettsBalanceAlert(UserState userState, Long currentBalance) {
         SendMessage message = SendMessage

@@ -20,6 +20,10 @@ public class AutoDelegationSessionEventPublisher {
         eventPublisher.publishEvent(new AutoDelegationSessionCreatedEvent(this, sessionId));
     }
 
+    public void publishSessionStoppedByUser(Long sessionId) {
+        eventPublisher.publishEvent(new AutoDelegationSessionStoppedByUserEvent(this, sessionId));
+    }
+
     //I don't see the reason for different event types at this moment
     // because it's only used for updating status message.
     public void publishSessionDeactivated(Long sessionId) {

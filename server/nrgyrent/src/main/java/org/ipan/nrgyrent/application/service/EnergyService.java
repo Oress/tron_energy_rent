@@ -113,6 +113,7 @@ public class EnergyService implements AutoDelegationSessionDeactivator {
         logger.info("AUTO DELEGATION. Deactivating auto delegation (manually) session id {} ", sessionId);
         AutoDelegationSession byId = autoTopupConfigRepo.findById(sessionId).orElseThrow(() -> new IllegalStateException("Session is not found by id"));
         byId = deactivateSession(byId, AutoDelegationSessionStatus.STOPPED_BY_USER);
+        autoDelegationSessionEventPublisher.publishSessionStoppedByUser(byId.getId());
         return byId;
     }
 

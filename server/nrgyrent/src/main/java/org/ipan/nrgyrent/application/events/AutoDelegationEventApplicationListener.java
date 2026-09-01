@@ -2,6 +2,7 @@ package org.ipan.nrgyrent.application.events;
 
 import lombok.extern.slf4j.Slf4j;
 import org.ipan.nrgyrent.domain.events.autotopup.AutoDelegationSessionCreatedEvent;
+import org.ipan.nrgyrent.domain.events.autotopup.AutoDelegationSessionStoppedByUserEvent;
 import org.ipan.nrgyrent.domain.events.autotopup.AutoDelegatedManuallyDeactivatedEvent;
 import org.ipan.nrgyrent.domain.events.autotopup.AutoEnergyDelegatedEvent;
 import org.ipan.nrgyrent.domain.model.autodelegation.AutoDelegationSession;
@@ -83,5 +84,22 @@ public class AutoDelegationEventApplicationListener {
         }
         UserState userState = telegramState.getOrCreateUserState(session.getUser().getTelegramId());
         autoDelegationViews.updateSessionStatus(userState, session);
+    }
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @Transactional(readOnly = true, propagation = Propagation.REQUIRES_NEW)
+    public void notifySessionStoppedByUser(AutoDelegationSessionStoppedByUserEvent event) {
+        AutoDelegationSession session = autoDelegationSessionRepo.findById(event.getSessionId()).orElse(null);
+        if (session == null) {
+            logger.error("AUTO DELEGATION. Session not found for stopped by user event: {}", event);
+            return;
+        }
+
+        try {
+            telegramMessages.sendAutoDelegationSessionStoppedByUserAdmin(tgGroupId, session);
+        } catch (Exception e) {
+            logger.error("Could not send auto delegation session stopped by user notification. Session id {}",
+                    session.getId(), e);
+        }
     }
 }
