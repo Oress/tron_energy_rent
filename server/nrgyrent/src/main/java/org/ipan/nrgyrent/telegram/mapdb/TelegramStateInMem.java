@@ -30,6 +30,7 @@ public class TelegramStateInMem implements TelegramState {
     private final HTreeMap<Long, TransactionParamsInMem> transactionParamsMap;
     private final HTreeMap<Long, UserEditInMem> userEditMap;
     private final HTreeMap<Long, WithdrawParamsInMem> withdrawParamsMap;
+    private final HTreeMap<Long, BybitWithdrawParams> bybitWithdrawParamsMap;
     private final HTreeMap<Long, GroupSearchStateInMem> groupSearchState;
     private final HTreeMap<Long, UserSearchStateInMem> userSearchState;
     private final HTreeMap<Long, TariffSearchStateInMem> tariffSearchState;
@@ -75,6 +76,11 @@ public class TelegramStateInMem implements TelegramState {
         this.withdrawParamsMap = db.hashMap("withdrawParams")
                 .keySerializer(Serializer.LONG)
                 .valueSerializer(new GenericSerializer<>(WithdrawParamsInMem.class, objectMapper))
+                .createOrOpen();
+
+        this.bybitWithdrawParamsMap = db.hashMap("bybitWithdrawParams")
+                .keySerializer(Serializer.LONG)
+                .valueSerializer(new GenericSerializer<>(BybitWithdrawParams.class, objectMapper))
                 .createOrOpen();
 
         this.groupSearchState = db.hashMap("groupSearchState")
@@ -125,6 +131,26 @@ public class TelegramStateInMem implements TelegramState {
     @Override
     public UserState getOrCreateUserState(Long userId) {
         return this.userStateMap.computeIfAbsent(userId, key -> UserStateInMem.builder().telegramId(userId).state(States.START).build());
+    }
+
+    @Override
+    public BybitWithdrawParams getBybitWithdrawParams(Long userId) {
+        return bybitWithdrawParamsMap.get(userId);
+    }
+
+    @Override
+    public void updateBybitWithdrawParams(Long userId, BybitWithdrawParams params) {
+        bybitWithdrawParamsMap.put(userId, params);
+    }
+
+    @Override
+    public void removeBybitWithdrawParams(Long userId) {
+        bybitWithdrawParamsMap.remove(userId);
+    }
+
+    @Override
+    public boolean consumeBybitWithdrawParams(Long userId, BybitWithdrawParams params) {
+        return bybitWithdrawParamsMap.remove(userId, params);
     }
 
     @Override

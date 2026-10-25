@@ -49,6 +49,8 @@ public class InlineMenuCallbacks {
     public static final String MANAGE_ENERGY_PROVIDER_CHOOSE_NETTS = "energy_provider_choose_netts";
     public static final String MANAGE_SWEEP_BALANCE = "manage_sweep_balance";
     public static final String MANAGE_WITHDRAW_TRX = "manage_withdraw_trx";
+    public static final String MANAGE_BYBIT_WITHDRAW = "manage_bybit_withdraw";
+    public static final String BYBIT_WITHDRAW_CONFIRM = "bybit_withdraw:";
     public static final String MANAGE_TARIFFS = "manage_tarifs";
     public static final String MANAGE_REFERRAL_PROGRAMS = "manage_ref_programs";
     public static final String MANAGE_AML_PROVIDER = "manage_aml_provider";

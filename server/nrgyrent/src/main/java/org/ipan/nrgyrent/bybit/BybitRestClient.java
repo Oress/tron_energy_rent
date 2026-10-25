@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
+import okio.BufferedSink;
 import org.ipan.nrgyrent.BybitConfig;
 import org.ipan.nrgyrent.bybit.dto.*;
 import org.springframework.retry.annotation.Retryable;
@@ -14,8 +15,10 @@ import org.springframework.stereotype.Component;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
@@ -30,6 +33,66 @@ public class BybitRestClient {
     private final MediaType mediaType = MediaType.parse("application/json");
 
     private final BybitConfig bybitConfig;
+
+    // Never retry a withdrawal automatically: a lost response can still mean funds were sent.
+    @SneakyThrows
+    public WithdrawResponse withdrawTrx(String address, BigDecimal amount, String requestId) {
+        long timestamp = System.currentTimeMillis();
+        Map<String, Object> params = new HashMap<>();
+        params.put("coin", "TRX");
+        params.put("chain", "TRX");
+        params.put("address", address);
+        params.put("amount", amount.toPlainString());
+        params.put("timestamp", timestamp);
+        params.put("forceChain", 1);
+        params.put("accountType", "FUND,UTA");
+        params.put("feeType", 1);
+        params.put("requestId", requestId);
+
+        String json = JSON.toJSONString(params);
+        RequestBody body = new RequestBody() {
+            @Override
+            public MediaType contentType() {
+                return mediaType;
+            }
+
+            @Override
+            public long contentLength() {
+                return json.getBytes(StandardCharsets.UTF_8).length;
+            }
+
+            @Override
+            public void writeTo(BufferedSink sink) throws IOException {
+                sink.writeUtf8(json);
+            }
+
+            @Override
+            public boolean isOneShot() {
+                return true;
+            }
+        };
+
+        Request request = new Request.Builder()
+                .url(bybitConfig.getUrlToUse() + "/v5/asset/withdraw/create")
+                .post(body)
+                .addHeader("X-BAPI-API-KEY", bybitConfig.getApiKey())
+                .addHeader("X-BAPI-TIMESTAMP", String.valueOf(timestamp))
+                .addHeader("X-BAPI-SIGN", genPostSign(params, String.valueOf(timestamp)))
+                .addHeader("X-BAPI-SIGN-TYPE", "2")
+                .addHeader("X-BAPI-RECV-WINDOW", bybitConfig.getRecvWindow())
+                .build();
+        OkHttpClient withdrawalClient = client.newBuilder()
+                .retryOnConnectionFailure(false)
+                .followRedirects(false)
+                .followSslRedirects(false)
+                .build();
+        try (Response response = withdrawalClient.newCall(request).execute()) {
+            if (!response.isSuccessful() || response.body() == null) {
+                throw new IOException("Bybit withdrawal returned HTTP " + response.code());
+            }
+            return gson.fromJson(response.body().string(), WithdrawResponse.class);
+        }
+    }
 
     @SneakyThrows
     public GetCoinBalanceResp getCoinBalance(String coin, String accountType) {

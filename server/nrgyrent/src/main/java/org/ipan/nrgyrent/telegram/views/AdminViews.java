@@ -329,6 +329,12 @@ public class AdminViews {
                                         .build()))
                 .keyboardRow(
                         new InlineKeyboardRow(
+                                InlineKeyboardButton.builder()
+                                        .text(adminLabels.menuBybitWithdraw())
+                                        .callbackData(InlineMenuCallbacks.MANAGE_BYBIT_WITHDRAW)
+                                        .build()))
+                .keyboardRow(
+                        new InlineKeyboardRow(
                                 InlineKeyboardButton
                                         .builder()
                                         .text(adminLabels.menuTariffs())

@@ -54,6 +54,38 @@ public class AdminLabels {
         return getLocalizedMessage("admin.menu_withdraw_sweep");
     }
 
+    public String menuBybitWithdraw() {
+        return getLocalizedMessage("admin.menu_bybit_withdraw");
+    }
+
+    public String bybitWithdrawPromptAmount(String address) {
+        return getLocalizedMessage("admin.bybit_withdraw.prompt_amount", address);
+    }
+
+    public String bybitWithdrawInvalidAmount() {
+        return getLocalizedMessage("admin.bybit_withdraw.invalid_amount");
+    }
+
+    public String bybitWithdrawConfirm(String amount, String address) {
+        return getLocalizedMessage("admin.bybit_withdraw.confirm", amount, address);
+    }
+
+    public String bybitWithdrawNoWallet() {
+        return getLocalizedMessage("admin.bybit_withdraw.no_wallet");
+    }
+
+    public String bybitWithdrawSubmitted(String amount, String address, String withdrawalId) {
+        return getLocalizedMessage("admin.bybit_withdraw.submitted", amount, address, withdrawalId);
+    }
+
+    public String bybitWithdrawRejected(String code, String reason) {
+        return getLocalizedMessage("admin.bybit_withdraw.rejected", code, reason);
+    }
+
+    public String bybitWithdrawUnknown(String requestId) {
+        return getLocalizedMessage("admin.bybit_withdraw.unknown", requestId);
+    }
+
     public String menuTariffs() {
         return getLocalizedMessage("admin.menu_tariffs");
     }

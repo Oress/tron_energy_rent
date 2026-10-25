@@ -35,6 +35,11 @@ public interface TelegramState {
     WithdrawParams updateWithdrawParams(Long userId, WithdrawParams withdrawParams);
     WithdrawParams removeWithdrawParams(Long userId); // TODO: cleanup after finishing workflow
 
+    BybitWithdrawParams getBybitWithdrawParams(Long userId);
+    void updateBybitWithdrawParams(Long userId, BybitWithdrawParams params);
+    void removeBybitWithdrawParams(Long userId);
+    boolean consumeBybitWithdrawParams(Long userId, BybitWithdrawParams params);
+
     GroupSearchState getOrCreateGroupSearchState(Long userId);
     GroupSearchState updateGroupSearchState(Long userId, GroupSearchState groupSearchState);
     GroupSearchState removeGroupSearchState(Long userId); // TODO: cleanup after finishing workflow
