@@ -30,6 +30,8 @@ import org.telegram.telegrambots.meta.api.objects.message.Message;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
+import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
+import org.telegram.telegrambots.meta.exceptions.TelegramApiRequestException;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
 
 import lombok.AllArgsConstructor;
@@ -295,7 +297,7 @@ public class TelegramMessages {
                     .parseMode("MARKDOWN")
 //                    .replyMarkup(getOkNotificationMarkup())
                     .build();
-            tgClient.execute(message);
+            editAmlReport(message);
         } else {
             SendMessage message = SendMessage
                     .builder()
@@ -321,7 +323,7 @@ public class TelegramMessages {
                     .text(text)
 //                    .replyMarkup(getOkNotificationMarkup())
                     .build();
-            tgClient.execute(message);
+            editAmlReport(message);
         } else {
             SendMessage message = SendMessage
                     .builder()
@@ -331,6 +333,21 @@ public class TelegramMessages {
 //                    .replyMarkup(getOkNotificationMarkup())
                     .build();
             tgClient.execute(message);
+        }
+    }
+
+    private void editAmlReport(EditMessageText message) throws TelegramApiException {
+        try {
+            tgClient.execute(message);
+        } catch (TelegramApiRequestException e) {
+            if (Integer.valueOf(400).equals(e.getErrorCode()) && e.getApiResponse() != null
+                    && e.getApiResponse().startsWith("Bad Request: message is not modified")) {
+                // Telegram already has the requested report; repeated delivery is a success.
+                logger.debug("AML report is already up to date for chat {}, message {}",
+                        message.getChatId(), message.getMessageId());
+                return;
+            }
+            throw e;
         }
     }
 

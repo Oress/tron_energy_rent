@@ -114,7 +114,9 @@ public class AmlVerificationService {
         AmlVerification verification = amlVerificationRepo.findById(verificationId)
                 .orElseThrow(() -> new IllegalArgumentException("AML verification not found: " + verificationId));
 
-        if (AmlVerificationStatus.COMPLETED.equals(verification.getStatus())) {
+        // markProcessing can receive an already-completed provider result while payment is still pending.
+        if (AmlVerificationStatus.COMPLETED.equals(verification.getStatus())
+                && AmlVerificationPaymentStatus.COMPLETED.equals(verification.getPaymentStatus())) {
             logger.warn("AML verification {} is already completed, skipping", verificationId);
             return verification;
         }
