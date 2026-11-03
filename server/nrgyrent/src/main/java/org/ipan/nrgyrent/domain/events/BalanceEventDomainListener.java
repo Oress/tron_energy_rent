@@ -67,7 +67,7 @@ public class BalanceEventDomainListener {
                 alertService.resolveBalanceLowAlert(activeAlert.getId());
             }
         } catch (Exception e) {
-            logger.error("Failed to check ITRX balance", e);
+            logger.error("Failed to update CATFEE balance", e);
         }
 
     }

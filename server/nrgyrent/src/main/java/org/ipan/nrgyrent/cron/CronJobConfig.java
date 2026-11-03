@@ -32,6 +32,7 @@ public class CronJobConfig {
     private final ItrxBalanceMonitorCronJob itrxBalanceMonitorCronJob;
     private final ItrxBalanceMonitorCronJob trxxBalanceMonitorCronJob;
     private final NettsBalanceMonitorCronJob nettsBalanceMonitorCronJob;
+    private final CatfeeBalanceMonitorCronJob catfeeBalanceMonitorCronJob;
 
     private final AutoDelegationLowBalanceMonitorJob autoDelegationLowBalanceMonitorJob;
     private final AmlMonitorCronJob amlMonitorCronJob;
@@ -46,6 +47,7 @@ public class CronJobConfig {
                          AutoDelegationMonitorJob autoDelegationMonitorJob,
                          ItrxBalanceMonitorCronJob itrxBalanceMonitorCronJob,
                          NettsBalanceMonitorCronJob nettsBalanceMonitorCronJob,
+                         CatfeeBalanceMonitorCronJob catfeeBalanceMonitorCronJob,
                          AutoDelegationLowBalanceMonitorJob autoDelegationLowBalanceMonitorJob,
                          AmlMonitorCronJob amlMonitorCronJob,
                          AmlPriceMonitorCronJob amlPriceMonitorCronJob,
@@ -60,6 +62,7 @@ public class CronJobConfig {
         this.itrxBalanceMonitorCronJob = itrxBalanceMonitorCronJob;
         this.trxxBalanceMonitorCronJob = trxxBalanceMonitorCronJob;
         this.nettsBalanceMonitorCronJob = nettsBalanceMonitorCronJob;
+        this.catfeeBalanceMonitorCronJob = catfeeBalanceMonitorCronJob;
         this.autoDelegationLowBalanceMonitorJob = autoDelegationLowBalanceMonitorJob;
         this.amlMonitorCronJob = amlMonitorCronJob;
         this.amlPriceMonitorCronJob = amlPriceMonitorCronJob;
@@ -122,6 +125,11 @@ public class CronJobConfig {
     @Scheduled(fixedDelayString = "${app.alerts.itrx-balance.interval:180}", timeUnit = TimeUnit.SECONDS)
     public void monitorNettsBalance() {
         nettsBalanceMonitorCronJob.checkBalance();
+    }
+
+    @Scheduled(fixedDelayString = "${app.alerts.itrx-balance.interval:180}", timeUnit = TimeUnit.SECONDS)
+    public void monitorCatfeeBalance() {
+        catfeeBalanceMonitorCronJob.checkBalance();
     }
 
     @Scheduled(fixedRate = 5, timeUnit = TimeUnit.MINUTES)

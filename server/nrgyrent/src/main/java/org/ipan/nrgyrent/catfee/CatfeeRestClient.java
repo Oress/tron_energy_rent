@@ -9,6 +9,7 @@ import okhttp3.*;
 import org.apache.commons.codec.digest.HmacAlgorithms;
 import org.apache.commons.codec.digest.HmacUtils;
 import org.bouncycastle.util.encoders.Base64;
+import org.ipan.nrgyrent.catfee.dto.CfAccountResponse;
 import org.ipan.nrgyrent.catfee.dto.CfPlaceOrderResponse;
 import org.ipan.nrgyrent.catfee.dto.CfResponse;
 import org.ipan.nrgyrent.itrx.AppConstants;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.io.IOException;
 import java.time.Instant;
 
 @Service
@@ -33,6 +35,45 @@ public class CatfeeRestClient {
     public String apiKey;
     @Value("${app.catfee.secret}")
     public String apiSecret;
+
+    @SneakyThrows
+    public CfResponse<CfAccountResponse> getAccount() {
+        String timestamp = Instant.now().toString();
+        String path = "/v1/account";
+        String signature = Base64.toBase64String(new HmacUtils(HmacAlgorithms.HMAC_SHA_256, apiSecret)
+                .hmac(timestamp + "GET" + path));
+
+        Request request = new Request.Builder()
+                .url(baseUrl + path)
+                .get()
+                .addHeader("Content-Type", "application/json")
+                .addHeader("CF-ACCESS-KEY", apiKey)
+                .addHeader("CF-ACCESS-TIMESTAMP", timestamp)
+                .addHeader("CF-ACCESS-SIGN", signature)
+                .build();
+
+        try (Response response = client.newCall(request).execute()) {
+            if (!response.isSuccessful()) {
+                throw new IOException("Error getting CATFEE account: HTTP " + response.code());
+            }
+            if (response.body() == null) {
+                throw new IOException("Empty CATFEE account response");
+            }
+
+            CfResponse<CfAccountResponse> accountResponse = gson.fromJson(response.body().string(), new TypeToken<>() {});
+            if (accountResponse == null || accountResponse.getCode() == null) {
+                throw new IOException("Invalid CATFEE account response: missing result code");
+            }
+            if (accountResponse.getCode() != 0) {
+                throw new IOException("Error getting CATFEE account: code " + accountResponse.getCode()
+                        + ", " + accountResponse.getMsg());
+            }
+            if (accountResponse.getData() == null || accountResponse.getData().getBalance() == null) {
+                throw new IOException("Invalid CATFEE account response: missing balance");
+            }
+            return accountResponse;
+        }
+    }
 
     @SneakyThrows
     public void config() {
