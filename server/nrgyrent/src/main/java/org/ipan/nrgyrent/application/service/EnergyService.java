@@ -320,6 +320,7 @@ public class EnergyService implements AutoDelegationSessionDeactivator {
                         .itrxFeeSunAmount(estimateOrderResponse.getTotal_price())
                         .correlationId(correlationId.toString());
                 pendingOrder = orderService.createPendingOrder(builder.build());
+                // TODO: replace with strategy instead of a fixed provider.
                 nettsService.placeOrder(estimateOrderResponse.getEnergy_amount(), duration, receiveAddress, correlationId);
             } catch (Exception e) {
                 logger.error("Error while placing order ", e);

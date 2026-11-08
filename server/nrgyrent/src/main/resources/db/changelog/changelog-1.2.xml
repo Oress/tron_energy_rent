@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet id="add usdt exchange provider and fixedfloat order" author="codex">
+        <addColumn tableName="nrg_deposit_transactions">
+            <column name="exchange_provider" type="varchar(32)"/>
+            <column name="exchange_order_id" type="varchar(255)"/>
+            <column name="exchange_order_token" type="text"/>
+            <column name="exchange_deposit_address" type="varchar(255)"/>
+            <column name="exchange_payout_address" type="varchar(255)"/>
+            <column name="exchange_send_amount" type="bigint"/>
+            <column name="exchange_usdt_tx" type="varchar(255)"/>
+            <column name="exchange_trx_tx" type="varchar(255)"/>
+        </addColumn>
+        <createIndex tableName="nrg_deposit_transactions" indexName="idx_deposit_exchange_status">
+            <column name="exchange_provider"/>
+            <column name="status"/>
+        </createIndex>
+        <addUniqueConstraint tableName="nrg_deposit_transactions"
+                             columnNames="exchange_provider,exchange_order_id"
+                             constraintName="uq_deposit_exchange_order"/>
+        <addUniqueConstraint tableName="nrg_deposit_transactions" columnNames="exchange_trx_tx"
+                             constraintName="uq_deposit_exchange_payout"/>
+    </changeSet>
+    <changeSet id="default USDT_EXCHANGE_PROVIDER config record" author="codex">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">SELECT COUNT(*) FROM nrg_configs WHERE id = 'USDT_EXCHANGE_PROVIDER'</sqlCheck>
+        </preConditions>
+        <insert tableName="nrg_configs">
+            <column name="id" value="USDT_EXCHANGE_PROVIDER"/>
+            <column name="value" value="BYBIT"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+    </changeSet>
+    <changeSet id="track fixedfloat review notifications per recipient" author="codex">
+        <createTable tableName="nrg_ff_review_notifications">
+            <column name="deposit_id" type="bigint">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_ff_review_notification"
+                             foreignKeyName="fk_ff_review_deposit" references="nrg_deposit_transactions(id)"/>
+            </column>
+            <column name="telegram_id" type="bigint">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_ff_review_notification"/>
+            </column>
+            <column name="sent_at" type="timestamp with time zone">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+</databaseChangeLog>

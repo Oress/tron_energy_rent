@@ -21,6 +21,7 @@ import org.ipan.nrgyrent.telegram.views.ManageGroupSearchView;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.ipan.nrgyrent.domain.model.UsdtExchangeProvider;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessages;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
@@ -133,22 +134,6 @@ public class TelegramMessages {
         }
     }
 
-    /*@SneakyThrows
-    public void sendTransactionRefundNotification(UserState userState, Order order) {
-        EditMessageText message = EditMessageText
-                .builder()
-                .chatId(order.getChatId())
-                .messageId(order.getMessageToUpdate())
-                .text(getFailedTransactionMessage(userState, order))
-                // .replyMarkup(getToMainMenuNotificationMarkup())
-                .build();
-        try {
-            tgClient.execute(message);
-        } catch (Exception e) {
-            logger.error("Failed to sendTransactionRefundNotification user: {}", userState, e);
-        }
-    }*/
-
     public void sendTransactionSuccessNotification(UserState userState, Order order) {
         EditMessageText message = EditMessageText
                 .builder()
@@ -260,13 +245,30 @@ public class TelegramMessages {
         SendMessage message = SendMessage
                 .builder()
                 .chatId(userState.getChatId())
-                .text(commonLabels.topupUsdt(userState.getLocaleOrDefault(),
-                        FormattingTools.formatUsdt(depositTransaction.getOriginalAmount()),
-                        depositTransaction.getTrxToUsdtRate().toString(),
-                        BigDecimal.valueOf(depositTransaction.getBybitFeeSun()).divide(AppConstants.trxToSunRate, 6, RoundingMode.DOWN).toString(),
-                        FormattingTools.formatBalance(depositTransaction.getAmount()))
-                )
+                .text(depositTransaction.getExchangeProvider() == UsdtExchangeProvider.FIXEDFLOAT
+                        ? commonLabels.topupUsdtFixedFloat(userState.getLocaleOrDefault(),
+                            FormattingTools.formatUsdt(depositTransaction.getOriginalAmount()),
+                            depositTransaction.getTrxToUsdtRate().toPlainString(),
+                            FormattingTools.formatBalance(depositTransaction.getAmount()))
+                        : commonLabels.topupUsdt(userState.getLocaleOrDefault(),
+                            FormattingTools.formatUsdt(depositTransaction.getOriginalAmount()),
+                            depositTransaction.getTrxToUsdtRate().toPlainString(),
+                            BigDecimal.valueOf(depositTransaction.getBybitFeeSun()).divide(AppConstants.trxToSunRate, 6, RoundingMode.DOWN).toString(),
+                            FormattingTools.formatBalance(depositTransaction.getAmount())))
                 .parseMode("MARKDOWN")
+                .replyMarkup(getOkNotificationMarkup())
+                .build();
+        tgClient.execute(message);
+    }
+
+    @SneakyThrows
+    public void sendFixedFloatReviewNotification(UserState userState, DepositTransaction deposit) {
+        SendMessage message = SendMessage.builder()
+                .chatId(userState.getChatId())
+                .text(commonLabels.fixedFloatReview(userState.getLocaleOrDefault(), deposit.getExchangeOrderId(),
+                        deposit.getExchangeUsdtTx() == null ? "—" : deposit.getExchangeUsdtTx(),
+                        deposit.getExchangeDepositAddress(), deposit.getExchangePayoutAddress()))
+                // Plain text keeps externally supplied order details from becoming Telegram markup.
                 .replyMarkup(getOkNotificationMarkup())
                 .build();
         tgClient.execute(message);

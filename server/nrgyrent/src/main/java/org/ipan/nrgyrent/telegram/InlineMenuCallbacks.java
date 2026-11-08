@@ -9,6 +9,9 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class InlineMenuCallbacks {
+    public static final String MANAGE_USDT_EXCHANGE = "manage_usdt_exchange";
+    public static final String USDT_EXCHANGE_BYBIT = "usdt_exchange_bybit";
+    public static final String USDT_EXCHANGE_FIXEDFLOAT = "usdt_exchange_fixedfloat";
     public static final String MANAGE_USER_ACTION_ADJUST_WITHDRAW_LIMIT = "manage_user_action_adjust_withdraw_limit";
     private final static Gson gson = new GsonBuilder().disableHtmlEscaping().create();
 

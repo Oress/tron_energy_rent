@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.ipan.nrgyrent.BybitConfig;
+import org.ipan.nrgyrent.UsdtDepositConfig;
 import org.ipan.nrgyrent.application.service.EnergyService;
 import org.ipan.nrgyrent.bybit.BybitRestClient;
 import org.ipan.nrgyrent.bybit.dto.*;
@@ -97,7 +98,7 @@ public class UsdtDepositHelper {
         BigDecimal bybitFeeTrx = new BigDecimal(result.getCumExecFee());
         BigDecimal deposit = trxTotal
                 .subtract(bybitFeeTrx)  // Bybit fee ~ 0.1%
-                .subtract(BigDecimal.ONE.divide(new BigDecimal(result.getAvgPrice()), 6, RoundingMode.DOWN)) // 1 USDT for renting energy
+                .subtract(UsdtDepositConfig.BOT_FEE_USDT.divide(new BigDecimal(result.getAvgPrice()), 6, RoundingMode.DOWN)) // bot fee
                 .add(new BigDecimal("0.01").divide(new BigDecimal(result.getAvgPrice()), 6, RoundingMode.DOWN)); // 0.01 USDT compensation left on the account
         long depositSun = deposit.multiply(AppConstants.trxToSunRate).longValue();
 
@@ -136,12 +137,21 @@ public class UsdtDepositHelper {
         }
     }
 
-    public void rentEnergyForUsdtTransfer(DepositTransaction depositTransaction) {
-        EstimateOrderAmountResponse estimateOrderResponse = itrxService.estimateOrderPrice(null, AppConstants.DURATION_1H, bybitConfig.getUsdtDepositAddress());
+    public void rentEnergyForUsdtTransfer(DepositTransaction depositTransaction, String destination) {
+        logger.info("USDT transfer estimating energy: depositId={}, provider={}, exchangeOrderId={}, destination={}",
+                depositTransaction.getId(), depositTransaction.getExchangeProvider(), depositTransaction.getExchangeOrderId(), destination);
+        EstimateOrderAmountResponse estimateOrderResponse = itrxService.estimateOrderPrice(null, AppConstants.DURATION_1H, destination);
+        logger.info("USDT transfer renting energy: depositId={}, energyAmount={}, receivingWallet={}",
+                depositTransaction.getId(), estimateOrderResponse.getEnergy_amount(), depositTransaction.getWalletTo());
         Order order = energyService.tryMakeSystemTransaction(estimateOrderResponse.getEnergy_amount(), AppConstants.DURATION_1H, depositTransaction.getWalletTo());
+        if (order == null) {
+            throw new IllegalStateException("Could not rent energy for USDT deposit " + depositTransaction.getId());
+        }
         depositTransaction.setStatus(DepositStatus.USDT_ENERGY_RENTED);
         depositTransaction.setSystemOrder(order);
         depositTransactionRepo.save(depositTransaction);
+        logger.info("USDT transfer energy order recorded: depositId={}, exchangeOrderId={}, energyOrderId={}, status={}",
+                depositTransaction.getId(), depositTransaction.getExchangeOrderId(), order.getCorrelationId(), depositTransaction.getStatus());
     }
 
     public String transferUsdtToBybit(DepositTransaction depositTransaction) {
@@ -173,56 +183,4 @@ public class UsdtDepositHelper {
 
         return txid;
     }
-
-/*    @SneakyThrows
-    public QuoteCheck exchangeUsdtToTrx(DepositTransaction depositTransaction) {
-        QuoteApply quoteApply = bybitRestClient.quoteApply(BigDecimal.valueOf(depositTransaction.getOriginalAmount()).divide(BigDecimal.valueOf(1_000_000), 2, RoundingMode.DOWN));
-
-        if (quoteApply.getRetCode() != 0) {
-            logger.error("Bybit. Error applying quote for dep id:{},  {}", depositTransaction.getId(), quoteApply);
-            depositTransaction.setStatus(DepositStatus.USDT_EXCHANGE_FAILED_TO_START);
-            depositTransactionRepo.save(depositTransaction);
-        }
-
-        logger.info("Bybit. Successfully applied quote for dep id: {},  {}", depositTransaction.getId(), quoteApply);
-        depositTransaction.setStatus(DepositStatus.USDT_EXCHANGE_STARTED);
-//        depositTransaction.setQuoteTxId(quoteApply.getResult().getQuoteTxId());
-        depositTransactionRepo.save(depositTransaction);
-
-        QuoteConfirm quoteConfirm = bybitRestClient.confirmQuote(quoteApply.getResult().getQuoteTxId());
-
-        if (quoteConfirm.getRetCode() != 0) {
-            logger.error("Bybit. Error confirming quote for dep id:{},  {}", depositTransaction.getId(), quoteConfirm);
-            depositTransaction.setStatus(DepositStatus.USDT_EXCHANGE_FAILED_TO_CONFIRM);
-            depositTransactionRepo.save(depositTransaction);
-        }
-
-        logger.info("Bybit. Successfully confirmed quote for dep id: {},  {}", depositTransaction.getId(), quoteConfirm);
-        depositTransaction.setStatus(DepositStatus.USDT_EXCHANGE_IN_PROGRESS);
-        depositTransactionRepo.save(depositTransaction);
-
-        while (true) {
-            QuoteCheck checkResult = bybitRestClient.convertResultQuery(quoteConfirm.getResult().getQuoteTxId());
-            String status = checkResult.getResult().getResult().getExchangeStatus();
-
-            if ("processing".equals(status) || "init".equals(status)) {
-                Thread.sleep(3000);
-            } else if ("success".equals(status)) {
-                logger.info("Bybit. Successfully exchanged dep id: {},  {}", depositTransaction.getId(), checkResult);
-                depositTransaction.setStatus(DepositStatus.USDT_EXCHANGE_COMPLETED);
-                depositTransaction.setAmount(new BigDecimal(checkResult.getResult().getResult().getToAmount()).multiply(AppConstants.trxToSunRate).longValue());
-                depositTransaction.setUsdtToTrxRate(new BigDecimal(checkResult.getResult().getResult().getConvertRate()));
-                depositTransactionRepo.save(depositTransaction);
-                Balance byDepositAddress = balanceRepo.findByDepositAddress(depositTransaction.getWalletTo());
-                byDepositAddress.makeDeposit(depositTransaction.getAmount());
-                balanceRepo.save(byDepositAddress);
-                return checkResult;
-            } else {
-                logger.error("Bybit. Failed to exchanged dep id: {},  {}", depositTransaction.getId(), checkResult);
-                depositTransaction.setStatus(DepositStatus.USDT_EXCHANGE_FAILED);
-                depositTransactionRepo.save(depositTransaction);
-                return checkResult;
-            }
-        }
-    }*/
 }

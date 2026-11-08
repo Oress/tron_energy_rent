@@ -1,6 +1,8 @@
 package org.ipan.nrgyrent.telegram.i18n;
 
 import java.util.Locale;
+import org.ipan.nrgyrent.domain.service.UsdtExchangeSettingsService;
+import org.ipan.nrgyrent.domain.model.UsdtExchangeProvider;
 
 import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Component;
@@ -12,6 +14,7 @@ import lombok.AllArgsConstructor;
 public class DepositLabels {
     private final MessageSource messageSource;
     private final TgUserLocaleProvider tgUserLocaleProvider;
+    private final UsdtExchangeSettingsService exchangeSettings;
 
     private String getLocalizedMessage(String key, Object... args) {
         Locale userLocale = tgUserLocaleProvider.getUserLocale();
@@ -19,11 +22,17 @@ public class DepositLabels {
     }
 
     public String depositGroup(String address, String trx) {
-        return getLocalizedMessage("deposits.manage_group", address, trx);
+        return getLocalizedMessage("deposits.manage_group", address, trx, exchangeRules());
     }
 
     public String depositPersonal(String address, String trx) {
-        return getLocalizedMessage("deposits.manage_personal", address, trx);
+        return getLocalizedMessage("deposits.manage_personal", address, trx, exchangeRules());
+    }
+
+    private String exchangeRules() {
+        return getLocalizedMessage(exchangeSettings.currentProvider()
+                == UsdtExchangeProvider.FIXEDFLOAT
+                ? "deposits.rules_fixedfloat" : "deposits.rules_bybit");
     }
 
     public String depositGroupTrxOnly(String address, String trx) {

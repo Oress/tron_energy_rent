@@ -84,6 +84,12 @@ app:
   deposit:
     usdt:
       enabled: ${APP_USDT_TOPUP_ENABLED:true}
+  fixedfloat:
+    base-url: ${APP_FIXEDFLOAT_BASE_URL:https://ff.io/api/v2}
+    api-key: ${APP_FIXEDFLOAT_API_KEY:}
+    api-secret: ${APP_FIXEDFLOAT_API_SECRET:}
+    refcode: ${APP_FIXEDFLOAT_REFCODE:ap3ea7ba}
+    poll-interval-ms: 30000
   rounding:
     scale: ${APP_ROUNDING_SCALE:3}
   pagination:

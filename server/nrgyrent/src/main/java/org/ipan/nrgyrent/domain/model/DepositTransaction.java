@@ -42,6 +42,31 @@ public class DepositTransaction {
     @Enumerated(EnumType.STRING)
     private DepositStatus status;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "exchange_provider")
+    private UsdtExchangeProvider exchangeProvider;
+
+    @Column(name = "exchange_order_id")
+    private String exchangeOrderId;
+
+    @Column(name = "exchange_order_token")
+    private String exchangeOrderToken;
+
+    @Column(name = "exchange_deposit_address")
+    private String exchangeDepositAddress;
+
+    @Column(name = "exchange_payout_address")
+    private String exchangePayoutAddress;
+
+    @Column(name = "exchange_send_amount")
+    private Long exchangeSendAmount;
+
+    @Column(name = "exchange_usdt_tx")
+    private String exchangeUsdtTx;
+
+    @Column(name = "exchange_trx_tx")
+    private String exchangeTrxTx;
+
     @Column(name = "usdt_to_trx_rate", precision = 20, scale = 6)
     private BigDecimal trxToUsdtRate;
 

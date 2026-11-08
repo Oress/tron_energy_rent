@@ -17,6 +17,10 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface BalanceRepo extends JpaRepository<Balance, Long> {
+    @Modifying
+    @Query("update Balance b set b.sunBalance = b.sunBalance + :amount, b.version = b.version + 1 where b.depositAddress = :address")
+    int creditDeposit(String address, Long amount);
+
     Page<Balance> findAllByTypeOrderById(BalanceType type, Pageable pageable);
     Page<Balance> findAllByTypeAndLabelContainingIgnoreCaseOrderById(BalanceType group, String label, PageRequest of);
     List<Balance> findAllByIsActive(Boolean isActive);

@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.ipan.nrgyrent.domain.model.AmlProvider;
+import org.ipan.nrgyrent.domain.model.UsdtExchangeProvider;
 import org.ipan.nrgyrent.domain.model.CollectionWallet;
 import org.ipan.nrgyrent.domain.model.EnergyProviderName;
 import org.ipan.nrgyrent.domain.model.UserWallet;
@@ -181,6 +182,26 @@ public class AdminViews {
         tgClient.execute(message);
     }
 
+    @SneakyThrows
+    public void usdtExchangeProvider(UserState userState,
+                                    UsdtExchangeProvider provider,
+                                    boolean configured) {
+        boolean ff = provider == UsdtExchangeProvider.FIXEDFLOAT;
+        tgClient.execute(EditMessageText.builder()
+                .chatId(userState.getChatId()).messageId(userState.getMenuMessageId())
+                .text(adminLabels.usdtExchangeProvider(ff ? "ff.io (Float)" : "Bybit", configured))
+                .replyMarkup(InlineKeyboardMarkup.builder()
+                        .keyboardRow(new InlineKeyboardRow(InlineKeyboardButton.builder()
+                                .text((ff ? "" : "✅ ") + "Bybit")
+                                .callbackData(InlineMenuCallbacks.USDT_EXCHANGE_BYBIT).build()))
+                        .keyboardRow(new InlineKeyboardRow(InlineKeyboardButton.builder()
+                                .text((ff ? "✅ " : "") + "ff.io (Float, 0.5%)")
+                                .callbackData(InlineMenuCallbacks.USDT_EXCHANGE_FIXEDFLOAT).build()))
+                        .keyboardRow(new InlineKeyboardRow(InlineKeyboardButton.builder()
+                                .text(commonLabels.goBack()).callbackData(InlineMenuCallbacks.GO_BACK).build()))
+                        .build()).build());
+    }
+
     private InlineKeyboardMarkup getAmlProvidersReplyMarkup() {
         return InlineKeyboardMarkup
                 .builder()
@@ -278,6 +299,9 @@ public class AdminViews {
     private InlineKeyboardMarkup getAdminMenuReplyMarkup() {
         return InlineKeyboardMarkup
                 .builder()
+                .keyboardRow(new InlineKeyboardRow(InlineKeyboardButton.builder()
+                        .text(adminLabels.menuUsdtExchange())
+                        .callbackData(InlineMenuCallbacks.MANAGE_USDT_EXCHANGE).build()))
                 .keyboardRow(
                         new InlineKeyboardRow(
                                 InlineKeyboardButton

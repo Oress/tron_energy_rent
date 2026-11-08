@@ -59,6 +59,7 @@ public class AdminMenuHandler {
     private final AmlPriceCache amlPriceCache;
 
     @MatchStates({
+        @MatchState(forAdmin = true, state = States.ADMIN_USDT_EXCHANGE_PROVIDER, callbackData = InlineMenuCallbacks.GO_BACK),
         @MatchState(forAdmin = true, state = States.MAIN_MENU, callbackData = InlineMenuCallbacks.ADMIN_MENU),
         @MatchState(forAdmin = true, state = States.ADMIN_VIEW_ITRX_BALANCE, callbackData = InlineMenuCallbacks.GO_BACK),
         @MatchState(forAdmin = true, state = States.ADMIN_VIEW_SWEEP_BALANCE, callbackData = InlineMenuCallbacks.GO_BACK),

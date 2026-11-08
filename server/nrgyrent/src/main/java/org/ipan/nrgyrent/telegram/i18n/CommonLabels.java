@@ -195,6 +195,14 @@ public class CommonLabels {
         return getLocalizedMessage("notification.topup_usdt", loc, usdt, rate, bybitFee, resultTrx);
     }
 
+    public String topupUsdtFixedFloat(Locale loc, String usdt, String rate, String resultTrx) {
+        return getLocalizedMessage("notification.topup_usdt_fixedfloat", loc, usdt, rate, resultTrx);
+    }
+
+    public String fixedFloatReview(Locale loc, String orderId, String transaction, String depositAddress, String payoutAddress) {
+        return getLocalizedMessage("notification.fixedfloat_review", loc, orderId, transaction, depositAddress, payoutAddress);
+    }
+
     public String withdrawFail(Locale loc) {
         return getLocalizedMessage("notification.withdraw.fail", loc);
     }

@@ -18,6 +18,15 @@ public class AdminLabels {
         return messageSource.getMessage(key, args, userLocale);
     }
 
+    public String menuUsdtExchange() {
+        return getLocalizedMessage("admin.menu_usdt_exchange");
+    }
+
+    public String usdtExchangeProvider(String provider, boolean configured) {
+        return getLocalizedMessage("admin.usdt_exchange_provider", provider)
+                + (configured ? "" : "\n\n" + getLocalizedMessage("admin.usdt_exchange_unconfigured"));
+    }
+
     public String manage() {
         return getLocalizedMessage("admin.manage");
     }
