@@ -1,6 +1,5 @@
 package org.ipan.nrgyrent.fixedfloat;
 
-import org.ipan.nrgyrent.TrongridConfig;
 import org.ipan.nrgyrent.domain.model.*;
 import org.ipan.nrgyrent.domain.model.repository.*;
 import org.ipan.nrgyrent.domain.service.ManagedWalletService;
@@ -26,13 +25,11 @@ class FixedFloatUsdtExchangeStrategyTest {
     private final ManagedWalletRepo wallets = mock(ManagedWalletRepo.class);
     private final ManagedWalletService signing = mock(ManagedWalletService.class);
     private final TrongridRestClient tron = mock(TrongridRestClient.class);
-    private final TrongridConfig config = new TrongridConfig();
     private final FixedFloatUsdtExchangeStrategy strategy = new FixedFloatUsdtExchangeStrategy(
-            client, deposits, collectionWallets, wallets, signing, tron, config);
+            client, deposits, collectionWallets, wallets, signing, tron);
     private DepositTransaction deposit;
 
     @BeforeEach void setup() {
-        config.setUsdtAddress("TR7NHqjeKQxGTCi8q8ZY4pL8otgjLj6t");
         deposit = FixedFloatSettlementServiceTest.deposit();
     }
 
@@ -57,12 +54,6 @@ class FixedFloatUsdtExchangeStrategyTest {
         collection.setWalletAddress(deposit.getExchangePayoutAddress());
         when(collectionWallets.findFirstByIsActive(true)).thenReturn(collection);
         assertThrows(IllegalArgumentException.class, () -> strategy.prepare(deposit));
-        verifyNoInteractions(client, tron);
-    }
-
-    @Test void refusesTestnetBeforeCreatingAnOrder() {
-        config.setUsdtAddress("nile-contract");
-        assertThrows(IllegalStateException.class, () -> strategy.prepare(deposit));
         verifyNoInteractions(client, tron);
     }
 

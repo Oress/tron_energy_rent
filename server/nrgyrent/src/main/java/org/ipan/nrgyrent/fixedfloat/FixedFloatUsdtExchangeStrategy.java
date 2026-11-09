@@ -3,7 +3,6 @@ package org.ipan.nrgyrent.fixedfloat;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.ipan.nrgyrent.UsdtDepositConfig;
-import org.ipan.nrgyrent.TrongridConfig;
 import org.ipan.nrgyrent.cron.UsdtExchangeStrategy;
 import org.ipan.nrgyrent.domain.model.*;
 import org.ipan.nrgyrent.domain.model.repository.*;
@@ -27,7 +26,6 @@ public class FixedFloatUsdtExchangeStrategy implements UsdtExchangeStrategy {
     private final ManagedWalletRepo wallets;
     private final ManagedWalletService walletService;
     private final TrongridRestClient trongrid;
-    private final TrongridConfig tronConfig;
 
     @Override
     public UsdtExchangeProvider provider() {
@@ -36,9 +34,6 @@ public class FixedFloatUsdtExchangeStrategy implements UsdtExchangeStrategy {
 
     @Override
     public String prepare(DepositTransaction deposit) {
-        if (!"TR7NHqjeKQxGTCi8q8ZY4pL8otgjLj6t".equals(tronConfig.getUsdtAddress())) {
-            throw new IllegalStateException("FixedFloat requires TRON mainnet USDT");
-        }
         if (deposit.getExchangeOrderId() != null) {
             throw new IllegalStateException("FixedFloat order already exists for deposit " + deposit.getId());
         }
@@ -103,9 +98,6 @@ public class FixedFloatUsdtExchangeStrategy implements UsdtExchangeStrategy {
                 deposit.getId(), deposit.getExchangeOrderId(), deposit.getExchangeSendAmount(),
                 deposit.getWalletTo(), deposit.getExchangeDepositAddress());
         try {
-            if (!"TR7NHqjeKQxGTCi8q8ZY4pL8otgjLj6t".equals(tronConfig.getUsdtAddress())) {
-                throw new IllegalStateException("FixedFloat requires TRON mainnet USDT");
-            }
             FixedFloatOrder order = client.getOrder(deposit.getExchangeOrderId(), deposit.getExchangeOrderToken());
             validateOrder(order, deposit);
             if (!"NEW".equals(order.status())
